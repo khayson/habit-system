@@ -1,0 +1,8 @@
+{
+  "description": "Request body or batch exceeds its cap (e.g. more than 100 sync mutations).",
+  "status": 413,
+  "body": {
+    "error": { "code": "payload_too_large", "message": "This request is too large." },
+    "meta": { "request_id": "{{uuid}}", "server_time": "{{timestamp}}" }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "description": "Missing or foreign resource. Identical for both cases: no distinguishing detail.",
+  "status": 404,
+  "body": {
+    "error": { "code": "not_found", "message": "Not found." },
+    "meta": { "request_id": "{{uuid}}", "server_time": "{{timestamp}}" }
+  }
+}

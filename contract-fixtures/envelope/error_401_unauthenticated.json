@@ -1,0 +1,8 @@
+{
+  "description": "Missing, expired or revoked bearer token.",
+  "status": 401,
+  "body": {
+    "error": { "code": "unauthenticated", "message": "Sign in to continue." },
+    "meta": { "request_id": "{{uuid}}", "server_time": "{{timestamp}}" }
+  }
+}

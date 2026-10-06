@@ -1,0 +1,9 @@
+{
+  "description": "Rate limit hit. Retry-After header (seconds) is mandatory.",
+  "status": 429,
+  "headers": { "Retry-After": "{{int}}" },
+  "body": {
+    "error": { "code": "rate_limited", "message": "Too many requests. Try again shortly." },
+    "meta": { "request_id": "{{uuid}}", "server_time": "{{timestamp}}" }
+  }
+}

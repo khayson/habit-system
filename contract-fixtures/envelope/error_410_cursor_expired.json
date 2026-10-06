@@ -1,0 +1,8 @@
+{
+  "description": "Sync cursor older than the 180-day journal retention. Client runs /sync/bootstrap and keeps its outbox.",
+  "status": 410,
+  "body": {
+    "error": { "code": "cursor_expired", "message": "A full refresh is needed. Your unsent changes are kept." },
+    "meta": { "request_id": "{{uuid}}", "server_time": "{{timestamp}}" }
+  }
+}

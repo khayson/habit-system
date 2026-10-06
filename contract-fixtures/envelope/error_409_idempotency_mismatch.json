@@ -1,0 +1,11 @@
+{
+  "description": "Same mutation_id / Idempotency-Key re-sent with a different payload hash.",
+  "status": 409,
+  "body": {
+    "error": {
+      "code": "idempotency_mismatch",
+      "message": "This change was already sent with different content."
+    },
+    "meta": { "request_id": "{{uuid}}", "server_time": "{{timestamp}}" }
+  }
+}

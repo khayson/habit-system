@@ -1,0 +1,8 @@
+{
+  "description": "Unhandled failure. Retriable. Never leaks exception text, traces or secrets.",
+  "status": 500,
+  "body": {
+    "error": { "code": "server_error", "message": "Something went wrong. Try again." },
+    "meta": { "request_id": "{{uuid}}", "server_time": "{{timestamp}}" }
+  }
+}

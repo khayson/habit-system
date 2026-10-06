@@ -1,0 +1,12 @@
+{
+  "description": "Field validation (spec 06 example).",
+  "status": 422,
+  "body": {
+    "error": {
+      "code": "validation_failed",
+      "message": "Check the highlighted fields.",
+      "fields": { "target_value": ["Duration must be greater than zero."] }
+    },
+    "meta": { "request_id": "{{uuid}}", "server_time": "{{timestamp}}" }
+  }
+}
