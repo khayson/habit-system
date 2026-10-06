@@ -1,0 +1,123 @@
+# Build plan — Habit System
+
+Sizes: S ≈ days · M ≈ 1–2 weeks · L ≈ 2–4 weeks of focused work. Rough, not promises.
+
+**Loop for every phase**
+1. Claude Code builds the phase against `CLAUDE.md` + `SPEC_AMENDMENTS.md`.
+2. It stops at the gate and posts a **review packet** (what shipped · tests + output · deviations · open questions · risks).
+3. Khay Studios pastes the packet into the architect chat. Review happens before the next phase starts.
+
+The spec's MVP (auth, binary habits, daily logs, offline outbox + sync, heatmap/streaks, local reminders) already contains the whole sync engine — the riskiest part. That is why Phase 2 is a walking skeleton before anything else is layered on.
+
+---
+
+## Phase 0 — Foundations · S
+
+- Monorepo per `CLAUDE.md`; docs and both PDFs in `docs/spec/`; `docker-compose.yml` with PostgreSQL 16+ only; GitHub Actions CI (api tests against a PostgreSQL service container; app `analyze` + `test`).
+- Windows notes: PHP runs natively with `pdo_pgsql` enabled in `php.ini`; PostgreSQL in Docker; helper scripts in `scripts/*.ps1`.
+- **api**: Laravel API-only, Sanctum, Pest, Pint, Larastan; `GET /api/v1/health`; the spec envelope (`data/meta`, `error/meta`) with `request_id` + `server_time` middleware; exception handler emitting the spec error shapes (401, 403, 404, 409, 410, 413, 422, 429); UTC everywhere; rate-limiter definitions; v7 UUID base model.
+- **app**: structure per `CLAUDE.md`; drift DB boots with schema v1 (empty) and a spike proves a second isolate can open it safely (A23); `HabitTokens` ThemeExtension (light + dark); go_router with auth redirect (no splash delay); singleton `ApiClient` adapted to the spec envelope; l10n scaffolding.
+
+**Gate**: CI green. App on an Android emulator calls `/health` and displays `server_time`.
+
+## Phase 1 — Domain core, test-first · M
+
+No HTTP, no DB, no UI.
+- **PHP** (`api/app/Domain/`, pure, injected `Clock`): `TimezoneTimeline`, `DayResolver`, `PeriodEngine` (daily / weekdays / weekly_count / interval, active ranges, definition versions), `StreakCalculator`, `XpRules`, `FreezeEvaluator` (wallet + policy + periods → decisions, ordering per A8), `HabitTypeRegistry` + `HabitType` strategy (A21) with binary / quantity / duration registered through it. `DayResolver` and `PeriodEngine` take a per-user `day_start_offset` (A22, default 0).
+- **Dart** (`app/lib/domain/`): provisional progress only — today's value vs target, weekly distinct days, pending vs complete. No streaks, XP or freezes.
+- **`contract-fixtures/*.json`** written first, consumed by both suites. Each declares its seed (A12). Minimum set:
+  - Day resolution: `2026-05-29T06:30:00Z` in America/Los_Angeles → `2026-05-28`; later switch to Europe/Paris does not rewrite it; DST spring-forward and fall-back (US and EU); 5-minute future tolerance; 90-day offline limit.
+  - Weekly: target 3 = 3 distinct days; 3 taps on one day fail; open week is pending.
+  - Streak: 17–28 May = 12 with 20 May protected and 16 May missed; an unfinished current period leaves the prior streak intact.
+  - XP: complete → reverse → recomplete = net +10; 99 → L1, 100 → L2, 1,250 → L13; 240 → L3 40/100; 1,240 → 1,250.
+  - Freeze: two failures + one token → exactly one protected; opt-in on 20 May is not retroactive (misses on 4/9/13/16 stay unprotected); monthly refill is idempotent; refund at cap writes a zero-delta audit row; a failed week costs 1.
+  - Insights: monthly 95/125 = 76 %; weekly 9/15 = 60 % with an explicit seed.
+- Property tests: closure is idempotent; balance never leaves [0, 2]; toggling nets zero XP.
+
+**Gate**: all fixtures pass in PHP and Dart; public method signatures of every domain class included in the review packet (reviewed before any DB work).
+
+## Phase 2 — Walking skeleton: binary habits end-to-end · L
+
+- Migrations 1–4 (A18). Auth: register / login / logout / `me` / refresh. `MutationApplier` with `habit.create` and `log.set_binary`. Receipts. Journal with A1 sequencing. `/sync` and `/sync/bootstrap`.
+- **app**: drift tables (habits, logs, outbox, sync_state) in a per-account DB; unknown habit types and fields preserved opaquely (A21); `LocalMutationService` as the single local write path (A23); foreground sync engine; screens 02, 03, 04 (minimal), 05 (binary only) and 18 (queue).
+
+**Gate (automated unless noted)**: duplicate retry → one log; interrupted pull replays safely; delete vs queued mutation → `resource_deleted`; three days offline → three original dates; **A1 concurrency test**; cross-owner 404 on every route and sync entity; manual demo: two emulators converge.
+
+## Phase 3 — MVP complete · L
+
+- Streak cache + `period_evaluations` (daily), closure runner (A10), heatmap endpoint + screen 12, history and ≤ 30-day backdate (13), local reminders with permission states (11), token refresh, account-isolated logout, best-effort background sync (through `LocalMutationService`), notification action payload schema (A23), XP chip behind a flag (A13c).
+
+**Gate**: the spec's MVP list; real Android device incl. battery restriction; DST reminder test.
+
+## Phase 3b — Profile photo and location · S–M
+
+- Migration for the A20 columns; `profile.update` and `profile.set_timezone` mutations; avatar upload / read / delete endpoints and the image pipeline; private object storage (local disk in dev); Profile (20) with photo picker + crop, location fields and the durable `pending_uploads` queue.
+
+**Gate**: EXIF/GPS stripped (test image); oversized, polyglot and decompression-bomb inputs rejected; cross-owner avatar read → 404; photo visible offline and uploaded after reconnect; account purge removes the objects.
+
+## Phase 4 — Habit types and schedules · L
+
+- Quantity and duration; amount entry (34) and timers (33/36); weekdays / weekly_count / interval; versioned edits (09/10); archive / restore (22); conflict review (19).
+
+**Gate**: spec acceptance rows for concurrent increments, stale absolute edit and weekly distinct days.
+
+## Phase 4b — Tier-1 habit types · L (needs a design drop)
+
+- The Tier-1 types chosen in `docs/EXPANSION_PLAN.md` (checklist, limit, rating, measurement) plus universal log notes. Each type is a registry entry (A21); no type-specific branching elsewhere.
+- **Blocked until** Khay Studios supplies Figma for each type: Today card × 4 states, entry control, create/edit fields, detail view.
+
+**Gate**: per-type fixtures (rule, timing, XP, insights); an old-app-version simulation syncs a new type without data loss or a crash.
+
+## Phase 5 — Rewards and freezes · L
+
+- XP entitlements + ledger; freeze ledger / usage / policy versions; monthly job; late-completion reconciliation; screens 06, 16, 17, 35; insights 14/15; enable `rewards_enabled`.
+
+**Gate**: spec rows for XP toggling, level boundaries, two failures / one token, monthly refill retry, late protected completion with cap audit.
+
+## Phase 6 — Account and portability · L
+
+- Password reset + app links (A15); account deletion with status receipt; exports; imports with signed manifest (A16); milestone push (FCM; APNs once a macOS CI route exists).
+
+**Gate**: export round-trip; bad-import preview; deletion flow; secrets absent from exports.
+
+## Phase 7 — Hardening and release · M
+
+- OWASP API Top 10 pass; `/sync` load test; accessibility audit (TalkBack, font scale, contrast tool); store listing; hosted Terms of Service and Privacy Policy (screen 03 links them and both stores need a privacy-policy URL); a web page for account-deletion requests (Google Play expects one; check current store requirements); iOS verification when a Mac route exists.
+
+## Phase 8 — Retention pack · L
+
+- Quick-log notification actions and home-screen widgets (Android first), on-device smart-reminder suggestions, weekly review ritual (`weekly_reviews`, A23), starter packs, comeback flow (`habit.pause`, shrink-and-restart). **Gate**: a notification action logs a habit with the app closed, and the log syncs exactly once. See `docs/EXPANSION_PLAN.md` §6.
+
+## Phase 9 — Tier-2 types, achievements, correlation insights · L
+
+- Time-of-day, period-total goals, challenges, multi-slot; deterministic personal achievements; correlation insights over rating data.
+
+## Phase 10 — Integrations · L
+
+- Health-platform-backed values (Health Connect on Android first) and companion surfaces. Needs a privacy review first.
+
+---
+
+## Prompts to paste into Claude Code
+
+**Phase 0**
+```
+Read CLAUDE.md, docs/SPEC_AMENDMENTS.md and both PDFs in docs/spec/.
+Execute Phase 0 of docs/BUILD_PLAN.md only. Honour every invariant in CLAUDE.md.
+Stop when the Phase 0 gate passes and post the review packet.
+```
+
+**Phase 1**
+```
+Execute Phase 1 of docs/BUILD_PLAN.md. Write contract-fixtures first (spec worked
+examples + the DST/offline cases in the plan, each with an explicit seed), then the pure
+PHP domain classes until the fixtures pass, then the minimal Dart mirror.
+No HTTP, no DB, no UI. Stop at the gate and post the review packet, including the
+public method signatures of every domain class.
+```
+
+**Any later phase**
+```
+Re-read CLAUDE.md and docs/SPEC_AMENDMENTS.md. Execute Phase N of docs/BUILD_PLAN.md only.
+Stop at its gate and post the review packet.
+```
