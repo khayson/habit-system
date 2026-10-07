@@ -1,0 +1,15 @@
+{
+  "@@locale": "en",
+  "appTitle": "Habit System",
+  "statusTitle": "Server connection",
+  "statusSubtitle": "Checks that this device can reach the habit service.",
+  "statusChecking": "Checking the connection…",
+  "statusOnline": "Connected",
+  "statusOffline": "Not connected",
+  "statusServerTime": "Server time (UTC)",
+  "statusServerTimeLocal": "On this device",
+  "statusRequestId": "Request ID",
+  "statusCheckAgain": "Check again",
+  "statusOfflineHint": "Logging never waits for the network. Changes stay on this device until they sync.",
+  "protectedPlaceholder": "Signed in. Your habits appear here in a later build."
+}
