@@ -92,6 +92,23 @@ Plain HTTP is allowed only in debug builds and only to `10.0.2.2` / `localhost`
 After changing drift tables: `dart run build_runner build` in `app\` (CI fails if generated code
 is stale).
 
+## Sync smoke run (not in CI)
+
+Runs the real `SyncEngine`, `LocalMutationService` and `HttpSyncTransport` against the local API,
+with two device databases (temp files) and two device tokens for one fresh account. Device A
+creates a habit and ticks today; B bootstraps, sees both and unticks; A pulls. It prints each
+sync outcome and outbox state, then `CONVERGED` (exit 0) or `DIVERGED` (exit 1).
+
+```powershell
+scripts\db-up.ps1
+scripts\api-serve.ps1                     # in another terminal
+cd app
+dart run tool/sync_smoke.dart             # default http://127.0.0.1:8000/api/v1
+dart run tool/sync_smoke.dart http://127.0.0.1:8000/api/v1
+```
+
+Each run registers a new `smoke+<ms>@example.test` account in the dev database.
+
 ## Known toolchain pins
 
 - `analyzer` is pinned below 14.5 in `app/pubspec.yaml` (dev): `build_runner` 2.16.1 declares

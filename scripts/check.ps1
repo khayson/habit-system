@@ -13,7 +13,7 @@ try {
 Push-Location $AppDir
 try {
     flutter pub get
-    dart format --output=none --set-exit-if-changed lib test integration_test
+    dart format --output=none --set-exit-if-changed lib test integration_test tool
     if ($LASTEXITCODE -ne 0) { throw 'dart format found changes' }
     flutter analyze
     if ($LASTEXITCODE -ne 0) { throw 'flutter analyze failed' }
