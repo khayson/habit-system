@@ -15,12 +15,6 @@ final readonly class PeriodEvaluation
         public int $completedDays,
     ) {}
 
-    /** Closed and eligible: enters consistency denominators. */
-    public function countsAsClosed(): bool
-    {
-        return $this->closed;
-    }
-
     public function keepsStreak(): bool
     {
         return $this->status === PeriodStatus::Complete || $this->status === PeriodStatus::Protected;
