@@ -1,7 +1,8 @@
 {
   "description": "A29/B2: log.set_value with base_version equal to the tombstone version restores the deleted row (same id, version + 1, deleted_at cleared, journaled as an upsert).",
   "suites": [
-    "php"
+    "php",
+    "dart"
   ],
   "expect": {
     "mutation_id": "{{uuid}}",

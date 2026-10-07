@@ -1,7 +1,8 @@
 {
   "description": "A29/B1: an unexpected failure inside one mutation. Reported server-side; the batch continues; no receipt is stored, so the client retries this mutation later (backoff) without blocking unrelated work.",
   "suites": [
-    "php"
+    "php",
+    "dart"
   ],
   "expect": {
     "mutation_id": "{{uuid}}",

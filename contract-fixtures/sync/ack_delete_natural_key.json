@@ -1,7 +1,8 @@
 {
   "description": "A29/B3: log.delete with an entity id the server never saw falls back to payload.habit_id + payload.log_date and deletes the canonical row.",
   "suites": [
-    "php"
+    "php",
+    "dart"
   ],
   "expect": {
     "mutation_id": "{{uuid}}",

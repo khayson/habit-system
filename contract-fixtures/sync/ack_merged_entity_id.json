@@ -1,7 +1,8 @@
 {
   "description": "A29/B3: two devices tick the same habit-day offline with different client log ids. The server keeps the first row; the second mutation is an identical desired state, accepted without a new version, and its ack carries the canonical entity_id, which differs from the mutation's. The client remaps its local row and outbox rows in one transaction.",
   "suites": [
-    "php"
+    "php",
+    "dart"
   ],
   "expect": {
     "mutation_id": "{{uuid}}",

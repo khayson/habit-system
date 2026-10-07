@@ -1,7 +1,8 @@
 {
   "kind": "day_resolution",
   "suites": [
-    "php"
+    "php",
+    "dart"
   ],
   "description": "Business date from occurred_at via the user's calendar history (timezone + day_start_offset, A22). Spec 08, amendments 0.2, A5.",
   "rules": {
