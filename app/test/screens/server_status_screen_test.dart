@@ -107,4 +107,46 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.text('Connected'), findsOneWidget);
   });
+
+  testWidgets('a re-check never shows the previous result as current', (tester) async {
+    // First check succeeds, then the server goes away.
+    var pending = Completer<HealthStatus>()..complete(okStatus);
+    await tester.pumpWidget(harness(FakeHealthService(() => pending.future)));
+    await tester.pumpAndSettle();
+    expect(find.text('Connected'), findsOneWidget);
+
+    pending = Completer<HealthStatus>();
+    await tester.tap(find.text('Check again'));
+    await tester.pump();
+
+    // While the new check is in flight the stale "Connected" must not be shown.
+    expect(find.text('Connected'), findsNothing);
+    expect(find.text('Checking the connection…'), findsOneWidget);
+
+    pending.completeError(
+      const AppException(
+        kind: AppErrorKind.network,
+        code: 'network_unavailable',
+        message: 'Could not reach the server.',
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Not connected'), findsOneWidget);
+
+    // Another failing check: still not connected, never a flash of the old success.
+    pending = Completer<HealthStatus>();
+    await tester.tap(find.text('Check again'));
+    await tester.pump();
+    expect(find.text('Connected'), findsNothing);
+    pending.completeError(
+      const AppException(
+        kind: AppErrorKind.network,
+        code: 'network_unavailable',
+        message: 'Could not reach the server.',
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Not connected'), findsOneWidget);
+    expect(find.text('Connected'), findsNothing);
+  });
 }

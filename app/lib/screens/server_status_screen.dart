@@ -60,7 +60,8 @@ class _StatusCard extends StatelessWidget {
     final error = health.error;
 
     final Widget body;
-    if (health.isLoading && status == null) {
+    // Any check in flight shows "checking", never the previous answer as if it were current.
+    if (health.isLoading) {
       body = Semantics(
         liveRegion: true,
         child: Row(

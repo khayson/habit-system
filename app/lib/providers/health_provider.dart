@@ -26,6 +26,8 @@ class HealthProvider extends ChangeNotifier {
     try {
       _status = await _service.check();
     } on AppException catch (e) {
+      // A failed check means the last success is no longer true: never show it as current.
+      _status = null;
       _error = e;
     } finally {
       _isLoading = false;
