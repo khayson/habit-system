@@ -6,8 +6,10 @@ namespace App\Domain\Habit;
  * Everything type-specific about a habit lives behind this strategy (A21). Code outside the
  * registry never switches on a type key.
  *
- * Values are integer "units" so arithmetic is exact: binary 0/1, quantity thousandths
- * (numeric(12,3)), duration whole seconds. Wire values are converted at the edge.
+ * A habit-day is a LogState: `value` is an integer in the type's units so arithmetic is exact
+ * (binary 0/1, quantity thousandths, duration whole seconds), `detail` carries type-specific
+ * state. Operations and completion see the effective DefinitionVersion, including its `config`
+ * (for example checklist item ids), so new types need no engine change.
  */
 interface HabitType
 {
@@ -15,7 +17,7 @@ interface HabitType
     public function key(): string;
 
     /**
-     * Wire value to units. Rejects floats, wrong shapes and out-of-range values.
+     * Wire scalar value to units. Rejects floats, wrong shapes and out-of-range values.
      *
      * @throws InvalidHabitValue
      */
@@ -32,22 +34,31 @@ interface HabitType
     public function parseTarget(mixed $wire): int;
 
     /**
-     * Log operations this type accepts (spec 07 names and A21 generic names).
+     * Canonical log operations this type accepts (A27): log.set_value, log.increment,
+     * log.set_item, log.set_note.
      *
      * @return list<string>
      */
     public function operations(): array;
 
     /**
-     * New stored value after an operation. Increments are positive and commute.
+     * Legacy spec operation names accepted for this type, alias => canonical (A27). Normalised
+     * by HabitTypeRegistry::canonicalOperation(), never by callers.
+     *
+     * @return array<string, string>
+     */
+    public function operationAliases(): array;
+
+    /**
+     * New state after a canonical operation. Increments are positive and commute.
      *
      * @throws UnsupportedOperation
      * @throws InvalidHabitValue
      */
-    public function apply(string $operation, int $current, mixed $operand): int;
+    public function apply(string $operation, LogState $current, mixed $operand, DefinitionVersion $definition): LogState;
 
-    /** Completion predicate for one habit-day against the effective target. */
-    public function isComplete(int $value, int $target): bool;
+    /** Completion predicate for one habit-day against its effective definition. */
+    public function isComplete(LogState $state, DefinitionVersion $definition): bool;
 
     public function evaluation(): EvaluationTiming;
 

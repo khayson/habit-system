@@ -3,15 +3,17 @@
 namespace App\Domain\Habit\Types;
 
 use App\Domain\Habit\Aggregation;
+use App\Domain\Habit\DefinitionVersion;
 use App\Domain\Habit\EvaluationTiming;
 use App\Domain\Habit\HabitType;
 use App\Domain\Habit\InvalidHabitValue;
+use App\Domain\Habit\LogState;
 use App\Domain\Habit\UnsupportedOperation;
 
 /** Duration in whole seconds (invariant 10). */
 final class DurationType implements HabitType
 {
-    // ASSUMPTION(A1-duration-max): one habit-day holds at most 25 hours (the fall-back day).
+    /** One habit-day holds at most 25 hours, the fall-back day (A28). */
     public const int MAX_SECONDS = 25 * 3600;
 
     public function key(): string
@@ -45,21 +47,26 @@ final class DurationType implements HabitType
 
     public function operations(): array
     {
-        return ['log.increment_duration', 'log.increment', 'log.set_value'];
+        return ['log.set_value', 'log.increment'];
     }
 
-    public function apply(string $operation, int $current, mixed $operand): int
+    public function operationAliases(): array
+    {
+        return ['log.increment_duration' => 'log.increment'];
+    }
+
+    public function apply(string $operation, LogState $current, mixed $operand, DefinitionVersion $definition): LogState
     {
         return match ($operation) {
-            'log.set_value' => $this->parseValue($operand),
-            'log.increment_duration', 'log.increment' => $this->increment($current, $this->parseValue($operand)),
+            'log.set_value' => $current->withValue($this->parseValue($operand)),
+            'log.increment' => $current->withValue($this->increment($current->value, $this->parseValue($operand))),
             default => throw new UnsupportedOperation($this->key(), $operation),
         };
     }
 
-    public function isComplete(int $value, int $target): bool
+    public function isComplete(LogState $state, DefinitionVersion $definition): bool
     {
-        return $value >= $target;
+        return $state->value >= $definition->target;
     }
 
     public function evaluation(): EvaluationTiming

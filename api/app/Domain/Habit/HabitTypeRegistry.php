@@ -45,6 +45,23 @@ final class HabitTypeRegistry
         return isset($this->types[$key]);
     }
 
+    /**
+     * The one place operation aliases are normalised (A27). Returns the canonical name the type
+     * accepts; an alias used on the wrong type, or an unknown operation, is unsupported.
+     *
+     * @throws UnknownHabitType
+     * @throws UnsupportedOperation
+     */
+    public function canonicalOperation(string $typeKey, string $operation): string
+    {
+        $type = $this->get($typeKey);
+        if (in_array($operation, $type->operations(), true)) {
+            return $operation;
+        }
+
+        return $type->operationAliases()[$operation] ?? throw new UnsupportedOperation($typeKey, $operation);
+    }
+
     /** @return list<string> */
     public function keys(): array
     {

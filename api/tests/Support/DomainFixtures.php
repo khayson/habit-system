@@ -10,6 +10,7 @@ use App\Domain\Habit\DefinitionVersion;
 use App\Domain\Habit\Frequency;
 use App\Domain\Habit\HabitSchedule;
 use App\Domain\Habit\HabitTypeRegistry;
+use App\Domain\Habit\LogState;
 use DateTimeImmutable;
 use DateTimeZone;
 
@@ -61,13 +62,19 @@ final class DomainFixtures
 
     /**
      * @param  array<string, mixed>  $habit
-     * @return array<string, int>
+     * @return array<string, LogState>
      */
     public static function logValues(array $habit, HabitTypeRegistry $types): array
     {
         $type = $types->get($habit['definitions'][0]['type']);
 
-        return array_map(fn (mixed $wire) => $type->parseValue($wire), $habit['logs']);
+        return array_map(fn (mixed $wire) => new LogState($type->parseValue($wire)), $habit['logs']);
+    }
+
+    /** A daily definition for type-level tests. */
+    public static function definition(string $type, mixed $target, HabitTypeRegistry $types): DefinitionVersion
+    {
+        return new DefinitionVersion(1, LocalDate::fromString('2026-05-01'), $type, $types->get($type)->parseTarget($target), null, 'health', Frequency::daily());
     }
 
     /**

@@ -3,9 +3,11 @@
 namespace App\Domain\Habit\Types;
 
 use App\Domain\Habit\Aggregation;
+use App\Domain\Habit\DefinitionVersion;
 use App\Domain\Habit\EvaluationTiming;
 use App\Domain\Habit\HabitType;
 use App\Domain\Habit\InvalidHabitValue;
+use App\Domain\Habit\LogState;
 use App\Domain\Habit\UnsupportedOperation;
 
 /**
@@ -48,21 +50,26 @@ final class QuantityType implements HabitType
 
     public function operations(): array
     {
-        return ['log.increment_quantity', 'log.increment', 'log.set_value'];
+        return ['log.set_value', 'log.increment'];
     }
 
-    public function apply(string $operation, int $current, mixed $operand): int
+    public function operationAliases(): array
+    {
+        return ['log.increment_quantity' => 'log.increment'];
+    }
+
+    public function apply(string $operation, LogState $current, mixed $operand, DefinitionVersion $definition): LogState
     {
         return match ($operation) {
-            'log.set_value' => $this->parseValue($operand),
-            'log.increment_quantity', 'log.increment' => $this->increment($current, $this->parseValue($operand)),
+            'log.set_value' => $current->withValue($this->parseValue($operand)),
+            'log.increment' => $current->withValue($this->increment($current->value, $this->parseValue($operand))),
             default => throw new UnsupportedOperation($this->key(), $operation),
         };
     }
 
-    public function isComplete(int $value, int $target): bool
+    public function isComplete(LogState $state, DefinitionVersion $definition): bool
     {
-        return $value >= $target;
+        return $state->value >= $definition->target;
     }
 
     public function evaluation(): EvaluationTiming

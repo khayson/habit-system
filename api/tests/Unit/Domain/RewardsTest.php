@@ -7,6 +7,7 @@ use App\Domain\Freeze\FreezePolicyVersion;
 use App\Domain\Freeze\FreezeUsage;
 use App\Domain\Freeze\FreezeUsageState;
 use App\Domain\Habit\HabitTypeRegistry;
+use App\Domain\Habit\LogState;
 use App\Domain\Reward\XpRules;
 use Tests\Support\DomainFixtures as F;
 
@@ -28,14 +29,15 @@ it('applies XP entitlement transitions', function (array $case) {
 })->with(fn () => F::named(F::load('xp')['toggles']));
 
 it('awards XP only when a value crosses the target', function (array $case) {
-    $type = HabitTypeRegistry::withBuiltins()->get($case['type']);
-    $target = $type->parseTarget($case['target']);
+    $types = HabitTypeRegistry::withBuiltins();
+    $type = $types->get($case['type']);
+    $definition = F::definition($case['type'], $case['target'], $types);
     $rules = new XpRules;
     $entitlement = null;
     $deltas = [];
 
     foreach ($case['values'] as $wire) {
-        $transition = $rules->transition($entitlement, $type->isComplete($type->parseValue($wire), $target));
+        $transition = $rules->transition($entitlement, $type->isComplete(new LogState($type->parseValue($wire)), $definition));
         $entitlement = $transition->entitlement;
         $deltas[] = $transition->delta;
     }

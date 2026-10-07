@@ -3,9 +3,11 @@
 namespace App\Domain\Habit\Types;
 
 use App\Domain\Habit\Aggregation;
+use App\Domain\Habit\DefinitionVersion;
 use App\Domain\Habit\EvaluationTiming;
 use App\Domain\Habit\HabitType;
 use App\Domain\Habit\InvalidHabitValue;
+use App\Domain\Habit\LogState;
 use App\Domain\Habit\UnsupportedOperation;
 
 /** Yes/no habit: value 0 or 1, target fixed at 1. */
@@ -41,21 +43,26 @@ final class BinaryType implements HabitType
 
     public function operations(): array
     {
-        return ['log.set_binary', 'log.set_value'];
+        return ['log.set_value'];
     }
 
-    public function apply(string $operation, int $current, mixed $operand): int
+    public function operationAliases(): array
     {
-        if (! in_array($operation, $this->operations(), true)) {
+        return ['log.set_binary' => 'log.set_value'];
+    }
+
+    public function apply(string $operation, LogState $current, mixed $operand, DefinitionVersion $definition): LogState
+    {
+        if ($operation !== 'log.set_value') {
             throw new UnsupportedOperation($this->key(), $operation);
         }
 
-        return $this->parseValue($operand);
+        return $current->withValue($this->parseValue($operand));
     }
 
-    public function isComplete(int $value, int $target): bool
+    public function isComplete(LogState $state, DefinitionVersion $definition): bool
     {
-        return $value >= 1;
+        return $state->value >= 1;
     }
 
     public function evaluation(): EvaluationTiming

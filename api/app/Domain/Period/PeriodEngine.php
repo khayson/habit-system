@@ -6,6 +6,7 @@ use App\Domain\Calendar\LocalDate;
 use App\Domain\Calendar\TimezoneTimeline;
 use App\Domain\Habit\HabitSchedule;
 use App\Domain\Habit\HabitTypeRegistry;
+use App\Domain\Habit\LogState;
 use DateTimeImmutable;
 
 /**
@@ -66,20 +67,20 @@ final readonly class PeriodEngine
 
     /**
      * @param  list<Period>  $periods
-     * @param  array<string, int>  $logValues  local date (Y-m-d) => stored value in type units
+     * @param  array<string, LogState>  $logs  local date (Y-m-d) => that habit-day's state
      * @param  list<string>  $protectedKeys  period keys with an active freeze usage
      * @return list<PeriodEvaluation>
      */
-    public function evaluate(array $periods, array $logValues, LocalDate $today, array $protectedKeys = []): array
+    public function evaluate(array $periods, array $logs, LocalDate $today, array $protectedKeys = []): array
     {
         $protected = array_flip($protectedKeys);
 
-        return array_map(function (Period $period) use ($logValues, $today, $protected): PeriodEvaluation {
+        return array_map(function (Period $period) use ($logs, $today, $protected): PeriodEvaluation {
             $type = $this->types->get($period->definition->type);
             $completedDays = 0;
             foreach ($period->activeDates as $date) {
-                $value = $logValues[$date->toString()] ?? null;
-                if ($value !== null && $type->isComplete($value, $period->definition->target)) {
+                $state = $logs[$date->toString()] ?? null;
+                if ($state !== null && $type->isComplete($state, $period->definition)) {
                     $completedDays++;
                 }
             }

@@ -13,6 +13,9 @@ final readonly class DefinitionVersion
 {
     public const array CATEGORIES = ['health', 'mindfulness', 'learning', 'productivity', 'other'];
 
+    /**
+     * @param  array<string, mixed>  $config
+     */
     public function __construct(
         public int $version,
         public LocalDate $effectiveDate,
@@ -22,6 +25,8 @@ final readonly class DefinitionVersion
         public ?string $unit,
         public string $category,
         public Frequency $frequency,
+        /** Type-specific settings (A21), e.g. checklist item ids. Empty for built-in types. */
+        public array $config = [],
     ) {
         if ($version < 1) {
             throw new InvalidArgumentException('Definition versions start at 1.');
