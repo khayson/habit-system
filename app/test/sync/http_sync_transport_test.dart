@@ -83,6 +83,18 @@ void main() {
     expect(page.unknownCollections.keys, ['routines']);
   });
 
+  test('a whole-request 4xx carries the server code (F7)', () async {
+    http.on('POST /sync', Reply(403, errorEnvelope('forbidden')));
+    await expectLater(
+      push(),
+      throwsA(
+        isA<SyncTransportException>()
+            .having((e) => e.kind, 'kind', SyncFailure.requestRejected)
+            .having((e) => e.code, 'code', 'forbidden'),
+      ),
+    );
+  });
+
   final cases = <(Reply, SyncFailure, Duration?)>[
     (Reply(401, errorEnvelope('unauthenticated')), SyncFailure.unauthorized, null),
     (Reply(410, errorEnvelope('cursor_expired')), SyncFailure.cursorExpired, null),
@@ -95,7 +107,8 @@ void main() {
       const Duration(seconds: 42),
     ),
     (Reply(503, errorEnvelope('maintenance')), SyncFailure.server, null),
-    (Reply(422, errorEnvelope('validation_failed')), SyncFailure.server, null),
+    (Reply(422, errorEnvelope('validation_failed')), SyncFailure.requestRejected, null),
+    (const Reply(404, '<html>not found</html>'), SyncFailure.requestRejected, null),
     (const Reply.offline(), SyncFailure.network, null),
     (const Reply(200, '<html>captive portal</html>'), SyncFailure.network, null),
   ];

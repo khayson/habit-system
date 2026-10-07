@@ -78,11 +78,18 @@ class HttpSyncTransport implements SyncTransport {
         SyncFailure.rateLimited,
         retryAfter: _retryAfter(response.headers.value('retry-after')),
       ),
-      // ASSUMPTION(A2b-request-rejected): a whole-request 4xx other than the above (403, 404,
-      // 422) is a client or deployment fault, not a per-mutation answer. Treat it like a 5xx:
-      // back off and keep every outbox row; nothing is dropped.
+      final status when status >= 400 && status < 500 => SyncTransportException(
+        SyncFailure.requestRejected,
+        code: _code(response.data) ?? 'http_$status',
+      ),
       _ => const SyncTransportException(SyncFailure.server),
     };
+  }
+
+  static String? _code(Object? body) {
+    final error = body is Map ? body['error'] : null;
+    final code = error is Map ? error['code'] : null;
+    return code is String ? code : null;
   }
 
   static Duration? _retryAfter(String? header) {

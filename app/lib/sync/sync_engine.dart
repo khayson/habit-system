@@ -29,6 +29,10 @@ enum SyncOutcome {
   /// 401 and the single refresh failed; the session ended, the database was kept.
   loggedOut,
 
+  /// Three whole-request 4xx in a row: `sync_state.status` is `paused` (F7). Nothing was
+  /// dropped; the engine keeps trying with backoff and the first success resumes.
+  paused,
+
   /// Something unexpected (not a transport failure) stopped the run. Rows went back to pending
   /// and `sync_state.last_error` says what happened (F2).
   failed,
@@ -45,6 +49,7 @@ class SyncEngine {
   static const int maxChunk = 100;
   static const int maxAttemptsBeforeSurfacing = 20;
   static const Duration surfaceAfter = Duration(hours: 24);
+  static const int pauseAfterRejections = 3;
 
   final AppDatabase db;
   final SyncTransport transport;
@@ -102,14 +107,33 @@ class SyncEngine {
             consecutiveFailures: Value(0),
             backoffUntil: Value(null),
             nextSyncAt: Value(null),
+            requestRejections: Value(0),
+            status: Value(SyncStatus.active),
+            statusCode: Value(null),
           ),
         );
-      case SyncOutcome.backoff || SyncOutcome.offline || SyncOutcome.failed:
+      case SyncOutcome.backoff || SyncOutcome.offline || SyncOutcome.failed || SyncOutcome.paused:
         await _recordFailure();
       case SyncOutcome.busy || SyncOutcome.rateLimited || SyncOutcome.loggedOut:
         break;
     }
     return outcome;
+  }
+
+  /// Whole-request 4xx: keep every row and back off; after [pauseAfterRejections] in a row the
+  /// status becomes paused with the server's code, for screen 18 (F7).
+  Future<SyncOutcome> _countRejection(String code) async {
+    final count = (await _state()).requestRejections + 1;
+    final paused = count >= pauseAfterRejections;
+    await _updateState(
+      SyncStateCompanion(
+        requestRejections: Value(count),
+        status: paused ? const Value(SyncStatus.paused) : const Value.absent(),
+        statusCode: paused ? Value(code) : const Value.absent(),
+        lastError: Value(_error(code, 'The server refused the sync request.')),
+      ),
+    );
+    return paused ? SyncOutcome.paused : SyncOutcome.backoff;
   }
 
   /// 30 s doubling to 15 min, with jitter; persisted so every trigger honours it (F6).
@@ -218,6 +242,8 @@ class SyncEngine {
             return SyncOutcome.rateLimited;
           case SyncFailure.server:
             return SyncOutcome.backoff;
+          case SyncFailure.requestRejected:
+            return _countRejection(e.code ?? 'request_rejected');
           case SyncFailure.network:
             return SyncOutcome.offline;
         }

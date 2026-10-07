@@ -1,3 +1,11 @@
+/// `sync_state.status` values (F7).
+abstract final class SyncStatus {
+  static const active = 'active';
+
+  /// Three whole-request 4xx in a row; `status_code` holds the server's code.
+  static const paused = 'paused';
+}
+
 /// Outbox row states (PHASE_2A_REVIEW §5, PHASE_2A1_REVIEW §5).
 abstract final class OutboxState {
   /// Written locally, not sent yet. Only these rows may be coalesced.

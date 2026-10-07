@@ -61,6 +61,10 @@ enum SyncFailure {
   /// 5xx.
   server,
 
+  /// A whole-request 4xx other than 401/410/413/429 (403, 404, 422, ...): the request itself
+  /// was refused, not one mutation. Counted toward the paused status (F7).
+  requestRejected,
+
   /// No response at all.
   network,
 }
@@ -69,10 +73,13 @@ class SyncTransportException implements Exception {
   final SyncFailure kind;
   final Duration? retryAfter;
 
-  const SyncTransportException(this.kind, {this.retryAfter});
+  /// The server's error code, when it sent the error envelope.
+  final String? code;
+
+  const SyncTransportException(this.kind, {this.retryAfter, this.code});
 
   @override
-  String toString() => 'SyncTransportException($kind)';
+  String toString() => 'SyncTransportException($kind${code == null ? '' : ', $code'})';
 }
 
 class SyncPage {

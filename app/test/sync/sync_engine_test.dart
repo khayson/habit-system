@@ -428,6 +428,33 @@ void main() {
     });
   });
 
+  test('F7: three whole-request 4xx pause sync; nothing is dropped; success resumes', () async {
+    final habit = await phone.habit();
+    await phone.sync();
+    await phone.writer.setLogValue(habitId: habit, value: 1);
+    const refused = SyncTransportException(SyncFailure.requestRejected, code: 'validation_failed');
+
+    server.failNextSync.add(refused);
+    expect(await phone.sync(force: true), SyncOutcome.backoff);
+    server.failNextSync.add(refused);
+    expect(await phone.sync(force: true), SyncOutcome.backoff);
+    expect((await phone.state()).status, SyncStatus.active);
+    server.failNextSync.add(refused);
+    expect(await phone.sync(force: true), SyncOutcome.paused);
+
+    var state = await phone.state();
+    expect(
+      (state.status, state.statusCode, state.requestRejections),
+      (SyncStatus.paused, 'validation_failed', 3),
+    );
+    expect((await phone.outbox()).single.state, OutboxState.pending, reason: 'nothing dropped');
+
+    expect(await phone.sync(force: true), SyncOutcome.completed);
+    state = await phone.state();
+    expect((state.status, state.statusCode, state.requestRejections), (SyncStatus.active, null, 0));
+    expect(server.logs, hasLength(1));
+  });
+
   test('HTTP 413 sends smaller chunks until everything is through', () async {
     await phone.sync();
     for (var i = 0; i < 70; i++) {
