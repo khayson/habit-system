@@ -52,11 +52,17 @@ R1–R5 of `docs/reviews/PHASE_1_REVIEW.md`: first calendar entry governs earlie
 
 B1–B3 and S1–S9 of `docs/reviews/PHASE_2A_REVIEW.md`: per-mutation `Throwable` boundary (`server_error`, `retryable`), restore via `log.set_value` on the tombstone version, canonical `entity_id` in acks and a natural-key fallback for `log.delete`, 410 for every unusable cursor, hint-aware timezone mismatch, canonical `frequency_config`, baseline capabilities, refresh grace window, dummy-hash login, `LogState::equals()`, per-type unit validation, and the review's missing tests. A29 records the contract.
 
-## Phase 2b — Walking skeleton, app · L
+## Phase 2b.1 — App data layer and sync engine · M
 
-- drift tables (habits, logs, outbox, sync_state) in a per-account DB; unknown habit types and fields preserved opaquely (A21); `LocalMutationService` as the single local write path (A23); foreground sync engine; screens 02, 03, 04 (minimal), 05 (binary only) and 18 (queue).
+Requirements in `docs/reviews/PHASE_2A_REVIEW.md` §5 and `docs/reviews/PHASE_2A1_REVIEW.md` §5: Dart `TimezoneTimeline` + `DayResolver` passing `day_resolution.json`; confirmed rows separate from the pending overlay derived from the outbox (invariant 9); unknown entity types, fields and habit types survive (invariant 13); per-account drift database (habits, habit_logs, outbox, sync_state); pure-Dart `LocalMutationService` as the only local writer (A23); foreground sync engine with a database lease, bootstrap, chunked push, transactional apply, ack remapping, waiting / blocked / needs-attention states, and 410 / 401 / 429 / 413 handling; auth plumbing over `ApiClient`. No screens.
 
-**Gate**: app-side replay and outbox tests; manual demo: two emulators converge.
+**Gate**: Dart consumes the day-resolution and sync fixtures; scripted-transport engine tests (duplicate retry, crash between commit and ack, interrupted pull, delete vs queued edit, restore, merged-id remap, server_error isolation, dependency cascade, 410, 401, 429, 413, single-flight, unknown-type round trip); a documented manual run of the real engine against the local API converging two databases. Review stop.
+
+## Phase 2b.2 — Walking skeleton screens · M
+
+Screens 02, 03, 04 (minimal), 05 (binary only) and 18 (queue) on top of the 2b.1 engine.
+
+**Gate**: app-side tests for the screens; manual demo: two emulators converge.
 
 ## Phase 3 — MVP complete · L
 
@@ -105,7 +111,7 @@ B1–B3 and S1–S9 of `docs/reviews/PHASE_2A_REVIEW.md`: per-mutation `Throwabl
 
 ## Phase 7 — Hardening and release · M
 
-- OWASP API Top 10 pass; `/sync` load test; accessibility audit (TalkBack, font scale, contrast tool); store listing; hosted Terms of Service and Privacy Policy (screen 03 links them and both stores need a privacy-policy URL); a web page for account-deletion requests (Google Play expects one; check current store requirements); iOS verification when a Mac route exists. Production PHP has a current timezone database; log `timezone_version_get()` at boot. The journal and receipt pruning job (180-day retention) with indexes on `server_changes.created_at` and `mutation_receipts.committed_at`.
+- OWASP API Top 10 pass; `/sync` load test; accessibility audit (TalkBack, font scale, contrast tool); store listing; hosted Terms of Service and Privacy Policy (screen 03 links them and both stores need a privacy-policy URL); a web page for account-deletion requests (Google Play expects one; check current store requirements); iOS verification when a Mac route exists. Production PHP has a current timezone database; log `timezone_version_get()` at boot. A database-restore runbook, and a **journal epoch inside the signed sync cursor** that the runbook changes, so every pre-restore cursor gets a 410 even after the restored journal passes the client's old seq (Phase 2a.1 review §5). Alerting on the `server_error` ack rate. The journal and receipt pruning job (180-day retention) with indexes on `server_changes.created_at` and `mutation_receipts.committed_at`.
 
 ## Phase 8 — Retention pack · L
 
