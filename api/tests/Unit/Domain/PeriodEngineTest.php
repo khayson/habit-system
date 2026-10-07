@@ -66,3 +66,21 @@ it('counts distinct completed days for weekly targets', function (array $case) {
         ->and($evaluation->completedDays)->toBe($case['expect']['completed_days'])
         ->and($evaluation->period->requiredDays())->toBe($case['provisional']['target_days']);
 })->with(fn () => F::named(F::load('weekly')['cases']));
+
+it('supports a future-dated active range: no eligibility before it starts (A23 habit.pause)', function () {
+    $types = HabitTypeRegistry::withBuiltins();
+    // Paused on 5 May until 10 May: the current range ends today, a new one starts on until_date.
+    $schedule = F::schedule([
+        'id' => '01970000-0000-7000-8000-000000000005',
+        'category' => 'health',
+        'definitions' => [['version' => 1, 'effective_date' => '2026-05-01', 'type' => 'binary', 'target' => 1, 'unit' => null, 'frequency_type' => 'daily', 'frequency_config' => []]],
+        'active_ranges' => [['starts_on' => '2026-05-01', 'ends_before' => '2026-05-05'], ['starts_on' => '2026-05-10', 'ends_before' => null]],
+    ], $types);
+
+    $periods = engine()->periods($schedule, LocalDate::fromString('2026-05-01'), LocalDate::fromString('2026-05-12'));
+    $evaluations = engine()->evaluate($periods, [], LocalDate::fromString('2026-05-07'));
+
+    expect(array_map(fn (Period $p) => $p->key, $periods))
+        ->toBe(['d:2026-05-01', 'd:2026-05-02', 'd:2026-05-03', 'd:2026-05-04', 'd:2026-05-10', 'd:2026-05-11', 'd:2026-05-12'])
+        ->and(array_map(fn ($e) => $e->status->value, array_slice($evaluations, 4)))->toBe(['pending', 'pending', 'pending']);
+});
