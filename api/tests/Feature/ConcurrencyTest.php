@@ -57,6 +57,8 @@ function startWriter(string $userId, int $index, array $mutations): array
 
 it('delivers every change exactly once under concurrent writers (A1)', function () {
     $this->freezeClock(NOW);
+    // The puller polls as fast as it can; the per-user sync limit is not under test here.
+    config(['api.rate_limits.sync_per_minute' => 1_000_000]);
     $user = $this->registerUser();
     $start = ['start_local_date' => '2026-04-29', 'date_mode' => 'backdate'];
 
@@ -81,7 +83,17 @@ it('delivers every change exactly once under concurrent writers (A1)', function 
     $exitCodes = [];
     $running = WRITERS;
     $polls = 0;
+    // Writers must never outlive the test: a failure would otherwise leave them committing
+    // into the next test's database (and deadlock the schema reset).
+    $this->beforeApplicationDestroyed(function () use ($writers) {
+        foreach ($writers as [$process]) {
+            if (is_resource($process) && proc_get_status($process)['running']) {
+                proc_terminate($process);
+            }
+        }
+    });
     while ($running > 0 && $polls++ < 5000) {
+        usleep(5000);
         $page = $this->sync($user['token'], cursor: $cursor, pullLimit: 7)->assertOk();
         array_push($seen, ...array_column($page->json('data.changes'), 'seq'));
         $cursor = $page->json('data.next_cursor');
