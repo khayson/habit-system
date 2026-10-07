@@ -15,7 +15,16 @@ class AccountSession {
   final String deviceId;
   final AppDatabase db;
 
-  const AccountSession({required this.userId, required this.deviceId, required this.db});
+  /// True when this device had no data for the account before this sign-in (design flow: 02
+  /// goes to 04 on first setup).
+  final bool firstOnDevice;
+
+  const AccountSession({
+    required this.userId,
+    required this.deviceId,
+    required this.db,
+    this.firstOnDevice = false,
+  });
 }
 
 /// Register, log in, refresh and log out (spec 05, A6, A29). Also the engine's [AuthSession].
@@ -151,7 +160,14 @@ class AuthService implements AuthSession {
   Future<AccountSession> _signIn(_Session session, String deviceId) async {
     await _tokens.write(session.token);
     await _accounts.writeSession(userId: session.userId, tokenIssuedAt: _clock());
-    final account = await _open(session.userId, deviceId);
+    final opened = await _open(session.userId, deviceId);
+    final known = await opened.db.select(opened.db.syncState).getSingleOrNull();
+    final account = AccountSession(
+      userId: opened.userId,
+      deviceId: opened.deviceId,
+      db: opened.db,
+      firstOnDevice: known == null,
+    );
     await initAccountState(
       account.db,
       userId: session.userId,

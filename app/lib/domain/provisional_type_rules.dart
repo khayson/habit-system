@@ -19,6 +19,9 @@ abstract interface class ProvisionalTypeRules {
   int? increment(int current, Object? delta);
 
   bool isComplete(int value, int target);
+
+  /// Logged with one tap (check / undo) rather than an amount or a timer.
+  bool get oneTap;
 }
 
 /// Registry of the types this app version understands. Unknown types return null so callers
@@ -35,6 +38,8 @@ class ProvisionalTypeRegistry {
   ProvisionalTypeRules? lookup(String key) => _rules[key];
 
   Iterable<String> get keys => _rules.keys;
+
+  Iterable<ProvisionalTypeRules> get all => _rules.values;
 }
 
 class BinaryRules implements ProvisionalTypeRules {
@@ -58,6 +63,9 @@ class BinaryRules implements ProvisionalTypeRules {
 
   @override
   bool isComplete(int value, int target) => value >= 1;
+
+  @override
+  bool get oneTap => true;
 }
 
 class QuantityRules implements ProvisionalTypeRules {
@@ -97,6 +105,9 @@ class QuantityRules implements ProvisionalTypeRules {
 
   @override
   bool isComplete(int value, int target) => value >= target;
+
+  @override
+  bool get oneTap => false;
 }
 
 class DurationRules implements ProvisionalTypeRules {
@@ -129,4 +140,7 @@ class DurationRules implements ProvisionalTypeRules {
 
   @override
   bool isComplete(int value, int target) => value >= target;
+
+  @override
+  bool get oneTap => false;
 }

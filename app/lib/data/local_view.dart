@@ -1,9 +1,12 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
 
+import '../domain/calendar/local_date.dart';
 import '../domain/provisional_type_rules.dart';
 import '../sync/outbox_states.dart';
+import 'account_calendar.dart';
 import 'app_database.dart';
 import 'entity_codec.dart';
 
@@ -105,6 +108,186 @@ class LocalView {
       confirmedVersion: confirmed?.version,
       syncState: state,
     );
+  }
+
+  // Today (screen 05) ---------------------------------------------------------------------------
+
+  /// Re-evaluates on every relevant table change and once a minute, so the habit-day rolls over
+  /// at the calendar's day start without a table change.
+  Stream<TodayView?> watchToday(
+    DateTime Function() deviceNow, {
+    Duration tick = const Duration(minutes: 1),
+  }) {
+    late StreamController<void> triggers;
+    StreamSubscription<void>? tables;
+    Timer? timer;
+    triggers = StreamController<void>(
+      onListen: () {
+        tables = db
+            .customSelect('SELECT 1', readsFrom: {db.habits, db.habitLogs, db.outbox, db.syncState})
+            .watch()
+            .listen((_) => triggers.add(null), onError: triggers.addError);
+        timer = Timer.periodic(tick, (_) => triggers.add(null));
+      },
+      onCancel: () async {
+        timer?.cancel();
+        await tables?.cancel();
+        await triggers.close();
+      },
+    );
+    return triggers.stream.asyncMap((_) => today(deviceNow()));
+  }
+
+  /// The account's habit-day on the server's clock (F10) and each active habit's provisional
+  /// state for it. Null until the account's calendar is known.
+  Future<TodayView?> today(DateTime deviceNow) async {
+    final calendar = await AccountCalendar.load(db);
+    if (calendar == null) return null;
+    final date = calendar.today(deviceNow);
+    final day = date.toString();
+    final attention = {
+      for (final row
+          in await (db.select(db.outbox)..where(
+                (o) =>
+                    o.state.equals(OutboxState.needsAttention) &
+                    (o.localDateHint.equals(day) | o.entity.equals('habit')),
+              ))
+              .get())
+        row.habitId ?? row.entityId: row,
+    };
+
+    final items = <TodayItem>[];
+    for (final habit in await habits()) {
+      final p = habit.payload;
+      if (p['archived_at'] != null) continue;
+      final start = p['start_local_date'];
+      if (start is String && start.compareTo(day) > 0) continue;
+      final log = await this.log(habit.id, day);
+      final rules = types.lookup(p['type'] as String? ?? '');
+      items.add(
+        TodayItem(
+          habit: habit,
+          log: log,
+          rules: rules,
+          complete: _complete(rules, log.value, p['target_value']),
+          attention: attention[habit.id],
+        ),
+      );
+    }
+    items.sort(
+      (a, b) => (a.habit.payload['name'] as String? ?? '').compareTo(
+        b.habit.payload['name'] as String? ?? '',
+      ),
+    );
+
+    final state = await (db.select(db.syncState)..where((s) => s.id.equals(1))).getSingle();
+    final user = EntityCodec.decodeJson(state.userPayload);
+    return TodayView(
+      date: date,
+      localNow: calendar.localNow(deviceNow),
+      userName: user is Map ? user['name'] as String? : null,
+      items: items,
+    );
+  }
+
+  static bool _complete(ProvisionalTypeRules? rules, Object? value, Object? target) {
+    if (rules == null) return false;
+    final v = rules.parseValue(value);
+    final t = rules.parseTarget(target);
+    return v != null && t != null && rules.isComplete(v, t);
+  }
+
+  // Queue (screen 18) ---------------------------------------------------------------------------
+
+  Stream<QueueView> watchQueue() => db
+      .customSelect('SELECT 1', readsFrom: {db.outbox, db.syncState, db.habits})
+      .watch()
+      .asyncMap((_) => queue());
+
+  Future<QueueView> queue() async {
+    final rows =
+        await (db.select(db.outbox)
+              ..where((o) => o.state.isIn(OutboxState.unacked))
+              ..orderBy([(o) => OrderingTerm.asc(o.seq)]))
+            .get();
+    final names = {for (final h in await habits()) h.id: h.payload['name'] as String?};
+    final state = await (db.select(db.syncState)..where((s) => s.id.equals(1))).getSingle();
+    return QueueView(
+      items: [for (final row in rows) QueueItem(row, names[row.habitId ?? row.entityId])],
+      state: state,
+    );
+  }
+}
+
+class TodayView {
+  final LocalDate date;
+
+  /// Wall-clock time in the account's calendar zone, on the server's clock.
+  final DateTime localNow;
+  final String? userName;
+  final List<TodayItem> items;
+
+  const TodayView({
+    required this.date,
+    required this.localNow,
+    required this.userName,
+    required this.items,
+  });
+
+  int get completeCount => items.where((i) => i.complete).length;
+  bool get hasPending => items.any((i) => i.pending);
+}
+
+class TodayItem {
+  final HabitView habit;
+  final LogView log;
+
+  /// Null for a type this app version does not know (show the "update the app" card).
+  final ProvisionalTypeRules? rules;
+
+  /// Provisional when [pending]: computed locally from the overlay (invariant 9).
+  final bool complete;
+
+  /// The row that needs the user's decision before more changes queue behind it.
+  final OutboxRow? attention;
+
+  const TodayItem({
+    required this.habit,
+    required this.log,
+    required this.rules,
+    required this.complete,
+    required this.attention,
+  });
+
+  String get name => habit.payload['name'] as String? ?? '';
+  bool get pending => log.provisional || habit.provisional;
+  bool get needsAttention => attention != null;
+  bool get canToggle => rules?.oneTap == true && !needsAttention;
+}
+
+class QueueView {
+  final List<QueueItem> items;
+  final SyncStateRow state;
+
+  const QueueView({required this.items, required this.state});
+
+  /// Changes still on their way (everything not needing the user).
+  int get waiting => items.where((i) => i.row.state != OutboxState.needsAttention).length;
+  List<QueueItem> get needsAttention =>
+      items.where((i) => i.row.state == OutboxState.needsAttention).toList();
+  bool get paused => state.status == SyncStatus.paused;
+}
+
+class QueueItem {
+  final OutboxRow row;
+  final String? habitName;
+
+  const QueueItem(this.row, this.habitName);
+
+  Map<String, dynamic> get payload => (jsonDecode(row.payload) as Map).cast<String, dynamic>();
+  Map<String, dynamic>? get error {
+    final decoded = EntityCodec.decodeJson(row.lastError);
+    return decoded is Map ? decoded.cast<String, dynamic>() : null;
   }
 }
 

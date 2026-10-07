@@ -1,3 +1,5 @@
+import 'package:timezone/timezone.dart' as tz;
+
 import '../domain/calendar/local_date.dart';
 import '../domain/calendar/timezone_timeline.dart';
 import 'app_database.dart';
@@ -39,4 +41,8 @@ class AccountCalendar {
 
   /// The habit-day of the corrected [deviceNow].
   LocalDate today(DateTime deviceNow) => timeline.localDateAt(now(deviceNow));
+
+  /// Wall-clock time in the calendar zone (for display, e.g. the greeting), corrected.
+  DateTime localNow(DateTime deviceNow) =>
+      tz.TZDateTime.from(now(deviceNow), tz.getLocation(timezone));
 }
