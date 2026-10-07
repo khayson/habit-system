@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'app/app.dart';
 import 'app/router.dart';
+import 'config/api_config.dart';
 import 'core/network/api_client.dart';
 import 'core/storage/token_store.dart';
 import 'providers/health_provider.dart';
@@ -11,6 +12,7 @@ import 'services/health_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  ApiConfig.ensureSafe();
 
   const tokens = SecureTokenStore();
   final api = ApiClient(tokens: tokens);
