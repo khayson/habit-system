@@ -40,3 +40,17 @@ it('applies the api limiter to the api route group', function () {
         ->assertOk()
         ->assertHeader('X-RateLimit-Limit', '120');
 });
+
+it('reads limits from config, so operators can tune them via env', function () {
+    config(['api.rate_limits.sync_per_minute' => 7]);
+
+    [$limit] = limitsFor('sync', Request::create('/'));
+
+    expect($limit->maxAttempts)->toBe(7);
+});
+
+it('keys signed-out traffic by IP', function () {
+    [$limit] = limitsFor('api', Request::create('/', server: ['REMOTE_ADDR' => '10.0.0.9']));
+
+    expect($limit->key)->toBe('ip:10.0.0.9');
+});

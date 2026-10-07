@@ -30,31 +30,32 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
-     * ASSUMPTION(A0-limits): the spec asks for per-user/device/IP limits but gives a number only for
-     * avatar uploads (A20: 10/hour). The other values are conservative defaults to tune in Phase 7.
+     * Limits come from config/api.php (env-tunable). Keyed by user id when authenticated, IP
+     * otherwise, so users behind one carrier IP get independent buckets.
      */
     private function configureRateLimiting(): void
     {
+        $limit = fn (string $key): int => config()->integer("api.rate_limits.{$key}");
         $byUserOrIp = fn (Request $request): string => $request->user()
             ? 'user:'.$request->user()->getAuthIdentifier()
             : 'ip:'.$request->ip();
         $email = fn (Request $request): string => mb_strtolower(trim($request->string('email')->toString()));
 
-        RateLimiter::for('api', fn (Request $request) => Limit::perMinute(120)->by($byUserOrIp($request)));
+        RateLimiter::for('api', fn (Request $request) => Limit::perMinute($limit('api_per_minute'))->by($byUserOrIp($request)));
 
         // Login / register: per IP, and per normalized email + IP to slow credential stuffing.
         RateLimiter::for('auth', fn (Request $request) => [
-            Limit::perMinute(20)->by('ip:'.$request->ip()),
-            Limit::perMinute(5)->by('email:'.$email($request).'|'.$request->ip()),
+            Limit::perMinute($limit('auth_per_minute_per_ip'))->by('ip:'.$request->ip()),
+            Limit::perMinute($limit('auth_per_minute_per_email'))->by('email:'.$email($request).'|'.$request->ip()),
         ]);
 
         RateLimiter::for('password-reset', fn (Request $request) => [
-            Limit::perHour(20)->by('ip:'.$request->ip()),
-            Limit::perHour(5)->by('email:'.$email($request)),
+            Limit::perHour($limit('password_reset_per_hour_per_ip'))->by('ip:'.$request->ip()),
+            Limit::perHour($limit('password_reset_per_hour_per_email'))->by('email:'.$email($request)),
         ]);
 
-        RateLimiter::for('sync', fn (Request $request) => Limit::perMinute(60)->by($byUserOrIp($request)));
+        RateLimiter::for('sync', fn (Request $request) => Limit::perMinute($limit('sync_per_minute'))->by($byUserOrIp($request)));
 
-        RateLimiter::for('avatar-upload', fn (Request $request) => Limit::perHour(10)->by($byUserOrIp($request)));
+        RateLimiter::for('avatar-upload', fn (Request $request) => Limit::perHour($limit('avatar_uploads_per_hour'))->by($byUserOrIp($request)));
     }
 }
