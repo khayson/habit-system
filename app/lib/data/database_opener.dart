@@ -45,6 +45,8 @@ String databaseNameFor(String accountKey) {
 void configureConnection(CommonDatabase db) {
   db.execute('PRAGMA busy_timeout = 5000');
   db.execute('PRAGMA journal_mode = WAL');
-  db.execute('PRAGMA synchronous = NORMAL');
+  // FULL, not NORMAL: in WAL mode NORMAL can drop the latest commits on an OS crash or power
+  // loss, which would break "saved on this device" (invariant 8). Write volume is tiny.
+  db.execute('PRAGMA synchronous = FULL');
   db.execute('PRAGMA foreign_keys = ON');
 }

@@ -51,12 +51,13 @@ void main() {
     }
   });
 
-  test('boots schema v1 empty, in WAL mode with foreign keys on', () async {
+  test('boots schema v1 empty: WAL, synchronous FULL, foreign keys on', () async {
     final db = AppDatabase(NativeDatabase(file, setup: configureConnection));
 
     final userVersion = await db.customSelect('PRAGMA user_version').getSingle();
     final journal = await db.customSelect('PRAGMA journal_mode').getSingle();
     final fk = await db.customSelect('PRAGMA foreign_keys').getSingle();
+    final synchronous = await db.customSelect('PRAGMA synchronous').getSingle();
     final tables = await db
         .customSelect(
           "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'",
@@ -67,6 +68,7 @@ void main() {
     expect(userVersion.data.values.single, 1);
     expect(journal.data.values.single, 'wal');
     expect(fk.data.values.single, 1);
+    expect(synchronous.data.values.single, 2, reason: 'synchronous = FULL (2)');
     expect(tables, isEmpty);
     await db.close();
   });

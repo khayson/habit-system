@@ -59,6 +59,8 @@ void main() {
 
     final journal = await ui.customSelect('PRAGMA journal_mode').getSingle();
     expect(journal.data.values.single, 'wal');
+    final synchronous = await ui.customSelect('PRAGMA synchronous').getSingle();
+    expect(synchronous.data.values.single, 2, reason: 'synchronous = FULL');
     await ui.close();
   });
 }

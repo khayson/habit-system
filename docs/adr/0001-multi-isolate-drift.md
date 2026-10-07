@@ -23,10 +23,15 @@ account database, from any isolate.
    server shuts down after its last client disconnects; if it vanished without unregistering,
    drift pings it and replaces it.
 2. **Safe connection settings as a second line.** `configureConnection` runs on every raw
-   connection: `busy_timeout = 5000` **first**, then `journal_mode = WAL`, `synchronous = NORMAL`,
+   connection: `busy_timeout = 5000` **first**, then `journal_mode = WAL`, `synchronous = FULL`,
    `foreign_keys = ON`. If two independent connections ever exist (another process, such as a
    future home-screen widget process, or a lost name-server race), SQLite's file locking plus the
    busy timeout serialises them instead of failing.
+
+   `synchronous = FULL` (changed from `NORMAL` after the Phase 0 review, F6): in WAL mode
+   `NORMAL` can lose the most recent commits on an OS crash or power loss, which would break
+   "saved on this device" (invariant 8). Each check-in is a tiny write, so the extra fsync is
+   negligible.
 3. **One file per account**: `habit_<userId>.sqlite` in application-support storage. Account ids
    are validated as UUIDs before use in a file name. Logout or account switch never opens or
    purges another owner's file.
@@ -34,14 +39,14 @@ account database, from any isolate.
 ## Evidence
 
 - `test/data/database_spike_test.dart` (host, runs in CI):
-  - schema v1 boots empty, `user_version = 1`, WAL on, foreign keys on;
+  - schema v1 boots empty, `user_version = 1`, WAL on, `synchronous = FULL`, foreign keys on;
   - a second isolate writes through the shared server concurrently with the UI isolate; no rows
     lost; the UI receives the background isolate's table-update notification;
   - two **independent** connections in two isolates write 300 transactions each concurrently:
     600 rows, no `SQLITE_BUSY`.
 - `integration_test/multi_isolate_db_test.dart` (Android emulator): the production opener, with
   the real `IsolateNameServer`, used from the UI isolate and a background isolate at the same
-  time (200 + 200 writes, cross-isolate notification, WAL confirmed).
+  time (200 + 200 writes, cross-isolate notification, WAL and `synchronous = FULL` confirmed).
 
 **Bug found by the spike:** setting `journal_mode = WAL` before `busy_timeout` made a second
 connection opening during the first one's WAL switch fail immediately with "database is locked".
