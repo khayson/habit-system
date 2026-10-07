@@ -1,0 +1,17 @@
+{
+  "description": "Route exists but not for this method. Allow lists the supported methods.",
+  "status": 405,
+  "headers": {
+    "Allow": "GET, HEAD"
+  },
+  "body": {
+    "error": {
+      "code": "method_not_allowed",
+      "message": "This method is not supported here."
+    },
+    "meta": {
+      "request_id": "{{uuid}}",
+      "server_time": "{{timestamp}}"
+    }
+  }
+}

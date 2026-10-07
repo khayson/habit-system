@@ -1,0 +1,14 @@
+{
+  "description": "Body sent with a content type the endpoint does not accept.",
+  "status": 415,
+  "body": {
+    "error": {
+      "code": "unsupported_media_type",
+      "message": "Send JSON."
+    },
+    "meta": {
+      "request_id": "{{uuid}}",
+      "server_time": "{{timestamp}}"
+    }
+  }
+}

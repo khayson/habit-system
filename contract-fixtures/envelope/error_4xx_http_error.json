@@ -1,0 +1,14 @@
+{
+  "description": "Any other 4xx without a dedicated code (fallback). Example: 418.",
+  "status": 418,
+  "body": {
+    "error": {
+      "code": "http_error",
+      "message": "The request could not be completed."
+    },
+    "meta": {
+      "request_id": "{{uuid}}",
+      "server_time": "{{timestamp}}"
+    }
+  }
+}

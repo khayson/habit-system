@@ -19,8 +19,7 @@ use Throwable;
  */
 final class ApiExceptionRenderer
 {
-    // ASSUMPTION(A0-codes): the spec names validation_failed, version_conflict, idempotency_mismatch,
-    // resource_deleted and cursor_expired; the remaining codes below are ours.
+    // Every code is contract: docs/api-error-codes.md, one fixture each in contract-fixtures/envelope/.
     private const array HTTP_CODES = [
         400 => ['bad_request', 'The request could not be read.'],
         401 => ['unauthenticated', 'Sign in to continue.'],

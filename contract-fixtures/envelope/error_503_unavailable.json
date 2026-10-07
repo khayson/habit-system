@@ -1,0 +1,14 @@
+{
+  "description": "Maintenance mode or a dependency is briefly down. Retriable.",
+  "status": 503,
+  "body": {
+    "error": {
+      "code": "unavailable",
+      "message": "The service is briefly unavailable. Try again shortly."
+    },
+    "meta": {
+      "request_id": "{{uuid}}",
+      "server_time": "{{timestamp}}"
+    }
+  }
+}

@@ -44,11 +44,14 @@ class ApiException extends RuntimeException
         return new self(409, 'idempotency_mismatch', 'This change was already sent with different content.');
     }
 
-    /** 409: target is tombstoned; `$tombstoneVersion` is needed for a reviewed restore. */
-    public static function resourceDeleted(string $resourceId, int $tombstoneVersion): self
+    /**
+     * 409: target is tombstoned. `$entity` is the entity type (e.g. habit_log); `$tombstoneVersion`
+     * is needed for a reviewed restore and travels as `current_version` (docs/api-error-codes.md).
+     */
+    public static function resourceDeleted(string $entity, string $resourceId, int $tombstoneVersion): self
     {
-        // ASSUMPTION(A0-409): the tombstone version travels as `current_version`, matching version_conflict.
         return new self(409, 'resource_deleted', 'This item was deleted on another device.', [
+            'entity' => $entity,
             'resource_id' => $resourceId,
             'current_version' => $tombstoneVersion,
         ]);

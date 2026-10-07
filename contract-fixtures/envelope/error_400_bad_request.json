@@ -1,0 +1,14 @@
+{
+  "description": "The request was rejected as unreadable (a BadRequestHttpException raised by a handler or middleware).",
+  "status": 400,
+  "body": {
+    "error": {
+      "code": "bad_request",
+      "message": "The request could not be read."
+    },
+    "meta": {
+      "request_id": "{{uuid}}",
+      "server_time": "{{timestamp}}"
+    }
+  }
+}

@@ -1,13 +1,17 @@
 {
-  "description": "Mutation targets a tombstoned resource. current_version is the tombstone version needed for a reviewed restore.",
+  "description": "Mutation targets a tombstoned resource. entity is the entity type; current_version is the tombstone version needed for a reviewed restore.",
   "status": 409,
   "body": {
     "error": {
       "code": "resource_deleted",
       "message": "This item was deleted on another device.",
+      "entity": "habit_log",
       "resource_id": "55555555-5555-4555-8555-555555555555",
       "current_version": 10
     },
-    "meta": { "request_id": "{{uuid}}", "server_time": "{{timestamp}}" }
+    "meta": {
+      "request_id": "{{uuid}}",
+      "server_time": "{{timestamp}}"
+    }
   }
 }

@@ -22,8 +22,12 @@ beforeEach(function () {
             '55555555-5555-4555-8555-555555555555', 8, 9, ['value' => '1750.000'],
         ));
         Route::get('/idempotency-mismatch', fn () => throw ApiException::idempotencyMismatch());
-        Route::get('/resource-deleted', fn () => throw ApiException::resourceDeleted('55555555-5555-4555-8555-555555555555', 10));
+        Route::get('/resource-deleted', fn () => throw ApiException::resourceDeleted('habit_log', '55555555-5555-4555-8555-555555555555', 10));
         Route::get('/cursor-expired', fn () => throw ApiException::cursorExpired());
+        Route::get('/bad-request', fn () => abort(400, 'parser detail must not leak'));
+        Route::post('/media-type', fn () => abort(415));
+        Route::get('/unavailable', fn () => abort(503));
+        Route::get('/teapot', fn () => abort(418));
         Route::post('/too-large', fn () => throw new PostTooLargeException);
         Route::post('/validate', function (Request $request) {
             $request->validate(
@@ -118,10 +122,26 @@ it('429 with Retry-After once the auth limiter is exhausted', function () {
 });
 
 it('405 for a wrong method keeps the envelope and the Allow header', function () {
-    $response = $this->deleteJson('/api/v1/health');
+    expectFixture('error_405_method_not_allowed', $this->deleteJson('/api/v1/health'));
+});
 
-    $response->assertStatus(405)->assertJsonPath('error.code', 'method_not_allowed');
-    expect($response->headers->get('Allow'))->toContain('GET');
+it('400 bad_request without leaking the reason', function () {
+    $response = $this->getJson('/api/v1/__test/bad-request');
+
+    expectFixture('error_400_bad_request', $response);
+    expect($response->getContent())->not->toContain('parser detail');
+});
+
+it('415 unsupported_media_type', function () {
+    expectFixture('error_415_unsupported_media_type', $this->postJson('/api/v1/__test/media-type'));
+});
+
+it('503 unavailable', function () {
+    expectFixture('error_503_unavailable', $this->getJson('/api/v1/__test/unavailable'));
+});
+
+it('falls back to http_error for any other 4xx', function () {
+    expectFixture('error_4xx_http_error', $this->getJson('/api/v1/__test/teapot'));
 });
 
 it('500 never leaks exception text, even with debug on', function () {
