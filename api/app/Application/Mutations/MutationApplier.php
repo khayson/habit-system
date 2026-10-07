@@ -219,7 +219,11 @@ final readonly class MutationApplier
         // Review needed (stale edit, deleted target) is a conflict; anything else is rejected.
         $status = in_array($e->errorCode, ['version_conflict', 'resource_deleted'], true) ? MutationAck::CONFLICT : MutationAck::REJECTED;
 
-        return new MutationAck($m->mutationId, $status, false, $m->entity, $m->entityId, error: [
+        // A29: acks carry the canonical id; a conflict names the server's row, which can differ
+        // from the client's id after a merge.
+        $entityId = is_string($e->extra['resource_id'] ?? null) ? $e->extra['resource_id'] : $m->entityId;
+
+        return new MutationAck($m->mutationId, $status, false, $m->entity, $entityId, error: [
             'code' => $e->errorCode,
             'message' => $e->getMessage(),
             ...$e->extra,

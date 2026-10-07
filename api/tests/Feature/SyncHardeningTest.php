@@ -130,3 +130,53 @@ it('restores a deleted day with the tombstone version; a stale edit still confli
         ->and($logChanges->last()['version'])->toBe(3)
         ->and($logChanges->last()['payload']['deleted_at'])->toBeNull();
 });
+
+// B3 ------------------------------------------------------------------------------------------
+
+it('acks the canonical entity_id when two devices create the same habit-day (B3)', function () {
+    $this->sync($this->user['token'], [M::habitCreate($this->habit)]);
+    $first = $this->sync($this->user['token'], [M::setValue($this->habit, 1, 0)], deviceId: '01970000-0000-7000-8000-00000000d001')->json('data.acks.0');
+    $secondMutation = M::setValue($this->habit, 1, 0);
+
+    $second = $this->sync($this->user['token'], [$secondMutation], deviceId: '01970000-0000-7000-8000-00000000d002')->json('data.acks.0');
+
+    assertMatchesContract(syncFixture('ack_merged_entity_id')['expect'], $second);
+    expect($second['entity_id'])->not->toBe($secondMutation['entity_id'])
+        ->and($second['entity_id'])->toBe($first['entity_id'])
+        ->and(DB::table('habit_logs')->count())->toBe(1);
+});
+
+it('names the canonical row in a conflict ack, not the client id (B3)', function () {
+    $this->sync($this->user['token'], [M::habitCreate($this->habit)]);
+    $canonical = $this->sync($this->user['token'], [M::setValue($this->habit, 1, 0)])->json('data.acks.0.entity_id');
+
+    $conflict = $this->sync($this->user['token'], [M::setValue($this->habit, 0, 0)])->json('data.acks.0');
+
+    expect($conflict['status'])->toBe('conflict')
+        ->and($conflict['entity_id'])->toBe($canonical)
+        ->and($conflict['error']['resource_id'])->toBe($canonical);
+});
+
+it('deletes by habit_id + log_date when the log id is unknown to the server (B3)', function () {
+    $this->sync($this->user['token'], [M::habitCreate($this->habit)]);
+    $canonical = $this->sync($this->user['token'], [M::setValue($this->habit, 1, 0)])->json('data.acks.0.entity_id');
+    $delete = M::delete((string) Str::uuid7(), 1, $this->habit);
+    $delete['payload']['log_date'] = '2026-05-28';
+
+    $ack = $this->sync($this->user['token'], [$delete])->json('data.acks.0');
+
+    assertMatchesContract(syncFixture('ack_delete_natural_key')['expect'], $ack);
+    expect($ack['entity_id'])->toBe($canonical)->not->toBe($delete['entity_id'])
+        ->and(DB::table('habit_logs')->where('id', $canonical)->value('deleted_at'))->not->toBeNull();
+});
+
+it('keeps the natural-key fallback owner-scoped', function () {
+    $other = $this->registerUser('Other');
+    $this->sync($this->user['token'], [M::habitCreate($this->habit)]);
+    $this->sync($this->user['token'], [M::setValue($this->habit, 1, 0)]);
+    $delete = M::delete((string) Str::uuid7(), 1, $this->habit);
+    $delete['payload']['log_date'] = '2026-05-28';
+
+    $this->sync($other['token'], [$delete])->assertJsonPath('data.acks.0.error.code', 'not_found');
+    expect(DB::table('habit_logs')->whereNotNull('deleted_at')->count())->toBe(0);
+});
