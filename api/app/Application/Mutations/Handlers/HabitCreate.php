@@ -93,7 +93,8 @@ final readonly class HabitCreate
 
         $definition = new DefinitionVersion(1, $start, $typeKey, $target, $p['unit'] ?? null, (string) $p['category'], $frequency);
         $now = UtcTime::format($this->clock->now());
-        $frequencyConfig = json_encode((object) $p['frequency_config'], JSON_THROW_ON_ERROR);
+        // S3: store the canonical form, never the raw client object.
+        $frequencyConfig = json_encode((object) $frequency->toArray(), JSON_THROW_ON_ERROR);
 
         DB::table('habits')->insert([
             'id' => $id,

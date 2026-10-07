@@ -168,3 +168,15 @@ it('fits a non-scalar type (checklist) without engine changes (R2, A21)', functi
         ->and($statuses)->toBe([PeriodStatus::Complete, PeriodStatus::Missed])
         ->and(fn () => $type->apply($op, $day1, ['item_id' => 'zzz', 'done' => true], $definition))->toThrow(InvalidHabitValue::class);
 });
+
+it('serialises frequencies canonically and round-trips them (S3)', function (string $type, array $config, array $canonical) {
+    $frequency = Frequency::fromArray($type, $config);
+
+    expect($frequency->toArray())->toBe($canonical)
+        ->and(Frequency::fromArray($type, $frequency->toArray())->toArray())->toBe($canonical);
+})->with([
+    'daily drops unknown keys' => ['daily', ['junk' => 1], []],
+    'weekdays sorted' => ['weekdays', ['days' => [5, 1, 3], 'extra' => 'x'], ['days' => [1, 3, 5]]],
+    'weekly count' => ['weekly_count', ['count' => 3, 'pad' => [1, 2]], ['count' => 3]],
+    'interval' => ['interval', ['anchor_date' => '2026-05-01', 'every_n_days' => 2], ['every_n_days' => 2, 'anchor_date' => '2026-05-01']],
+]);

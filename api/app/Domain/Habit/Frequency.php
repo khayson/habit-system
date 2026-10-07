@@ -81,6 +81,22 @@ final readonly class Frequency
         };
     }
 
+    /**
+     * Canonical `frequency_config`: only the keys the type defines, days sorted (A29). This is
+     * what is stored and sent, never the client's raw object.
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray(): array
+    {
+        return match ($this->type) {
+            FrequencyType::Daily => [],
+            FrequencyType::Weekdays => ['days' => $this->days],
+            FrequencyType::WeeklyCount => ['count' => $this->count],
+            FrequencyType::Interval => ['every_n_days' => $this->everyNDays, 'anchor_date' => $this->anchorDate?->toString()],
+        };
+    }
+
     public function isWeekly(): bool
     {
         return $this->type === FrequencyType::WeeklyCount;

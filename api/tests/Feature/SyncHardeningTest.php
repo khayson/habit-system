@@ -217,3 +217,17 @@ it('accepts a different captured zone when the hint matches; otherwise returns t
         ->and($acks[1]['resolved_date'])->toBe('2026-05-28')
         ->and(DB::table('habit_logs')->value('resolved_timezone'))->toBe('America/Los_Angeles');
 });
+
+// S3 ------------------------------------------------------------------------------------------
+
+it('stores and journals the canonical frequency_config, not the client object (S3)', function () {
+    $response = $this->sync($this->user['token'], [M::habitCreate($this->habit, overrides: [
+        'frequency_type' => 'weekdays',
+        'frequency_config' => ['days' => [5, 1, 3], 'junk' => str_repeat('x', 100)],
+    ])]);
+
+    $response->assertJsonPath('data.acks.0.status', 'accepted');
+    expect(json_decode((string) DB::table('habits')->value('frequency_config'), true))->toBe(['days' => [1, 3, 5]])
+        ->and(json_decode((string) DB::table('habit_definition_versions')->value('frequency_config'), true))->toBe(['days' => [1, 3, 5]])
+        ->and($response->json('data.changes.1.payload.frequency_config'))->toBe(['days' => [1, 3, 5]]);
+});
