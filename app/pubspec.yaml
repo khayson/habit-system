@@ -37,3 +37,14 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   generate: true
+
+  assets:
+    - assets/fonts/inter/LICENSE.txt
+
+  # Inter 4.1 variable font (SIL OFL 1.1), bundled: no runtime font downloads (offline-first).
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/inter/InterVariable.ttf
+        - asset: assets/fonts/inter/InterVariable-Italic.ttf
+          style: italic

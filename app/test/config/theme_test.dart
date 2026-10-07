@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -95,6 +96,24 @@ void main() {
     check(t.bodySmall, 13, 19);
     check(t.titleSmall, 14, 20);
     check(t.labelSmall, 11, 16);
+  });
+
+  test('uses the bundled Inter font with weights on the wght axis', () {
+    final t = AppTheme.textTheme(Colors.black);
+    expect(AppTheme.light.textTheme.bodyLarge!.fontFamily, 'Inter');
+    expect(t.titleLarge!.fontVariations, [const FontVariation.weight(600)]);
+    expect(t.titleSmall!.fontVariations, [const FontVariation.weight(500)]);
+    expect(t.bodyLarge!.fontVariations, [const FontVariation.weight(400)]);
+  });
+
+  test('Inter files and their OFL licence are bundled', () {
+    for (final f in ['InterVariable.ttf', 'InterVariable-Italic.ttf', 'LICENSE.txt']) {
+      expect(File('assets/fonts/inter/$f').existsSync(), isTrue, reason: f);
+    }
+    expect(
+      File('assets/fonts/inter/LICENSE.txt').readAsStringSync(),
+      contains('SIL Open Font License'),
+    );
   });
 
   test('scales: space, radius, control heights', () {

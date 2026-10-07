@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'app/app.dart';
@@ -13,6 +15,7 @@ import 'services/health_service.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   ApiConfig.ensureSafe();
+  LicenseRegistry.addLicense(_interLicense);
 
   const tokens = SecureTokenStore();
   final api = ApiClient(tokens: tokens);
@@ -29,4 +32,10 @@ Future<void> main() async {
       child: HabitApp(router: buildRouter(session)),
     ),
   );
+}
+
+/// Inter is bundled under the SIL Open Font License; its notice ships with the app.
+Stream<LicenseEntry> _interLicense() async* {
+  final text = await rootBundle.loadString('assets/fonts/inter/LICENSE.txt');
+  yield LicenseEntryWithLineBreaks(const ['Inter'], text);
 }

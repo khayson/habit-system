@@ -9,9 +9,19 @@ abstract final class AppTheme {
   static ThemeData get dark => _build(HabitTokens.dark, Brightness.dark);
 
   /// Type ramp (size / line height) from HABIT DESIGN SYSTEM / 3.
+  /// Bundled Inter (variable). Glyphs Inter lacks fall back to the platform font.
+  static const String fontFamily = 'Inter';
+
   static TextTheme textTheme(Color ink) {
-    TextStyle s(double size, double lineHeight, FontWeight weight) =>
-        TextStyle(fontSize: size, height: lineHeight / size, fontWeight: weight, color: ink);
+    // A variable font needs the weight on its `wght` axis as well as in fontWeight.
+    TextStyle s(double size, double lineHeight, FontWeight weight) => TextStyle(
+      fontFamily: fontFamily,
+      fontSize: size,
+      height: lineHeight / size,
+      fontWeight: weight,
+      fontVariations: [FontVariation.weight(weight.value.toDouble())],
+      color: ink,
+    );
     return TextTheme(
       displayLarge: s(36, 50, FontWeight.w600), // Display
       headlineMedium: s(28, 40, FontWeight.w600), // Title
@@ -67,6 +77,7 @@ abstract final class AppTheme {
 
     return ThemeData(
       useMaterial3: true,
+      fontFamily: fontFamily,
       brightness: brightness,
       colorScheme: scheme,
       textTheme: text,
