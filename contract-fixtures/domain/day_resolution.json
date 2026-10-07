@@ -1,0 +1,556 @@
+{
+  "kind": "day_resolution",
+  "suites": [
+    "php"
+  ],
+  "description": "Business date from occurred_at via the user's calendar history (timezone + day_start_offset, A22). Spec 08, amendments 0.2, A5.",
+  "rules": {
+    "future_tolerance_seconds": 300,
+    "max_offline_age_seconds": 7776000,
+    "max_backdate_days": 30,
+    "day_start": "first instant whose wall clock shows 00:00 + day_start_offset; inside a DST gap, the transition instant",
+    "event_date": "latest local date whose start is at or before the event, using the calendar entry effective at occurred_at",
+    "period_boundaries": "a date's start uses the latest calendar entry effective at or before that start"
+  },
+  "calendars": {
+    "la": [
+      {
+        "effective_at": "2026-01-01T00:00:00Z",
+        "timezone": "America/Los_Angeles",
+        "day_start_offset_minutes": 0
+      }
+    ],
+    "paris": [
+      {
+        "effective_at": "2026-01-01T00:00:00Z",
+        "timezone": "Europe/Paris",
+        "day_start_offset_minutes": 0
+      }
+    ],
+    "la_then_paris": [
+      {
+        "effective_at": "2026-01-01T00:00:00Z",
+        "timezone": "America/Los_Angeles",
+        "day_start_offset_minutes": 0
+      },
+      {
+        "effective_at": "2026-05-30T07:00:00Z",
+        "timezone": "Europe/Paris",
+        "day_start_offset_minutes": 0
+      }
+    ],
+    "la_offset_120": [
+      {
+        "effective_at": "2026-01-01T00:00:00Z",
+        "timezone": "America/Los_Angeles",
+        "day_start_offset_minutes": 120
+      }
+    ],
+    "la_offset_60": [
+      {
+        "effective_at": "2026-01-01T00:00:00Z",
+        "timezone": "America/Los_Angeles",
+        "day_start_offset_minutes": 60
+      }
+    ],
+    "la_offset_150": [
+      {
+        "effective_at": "2026-01-01T00:00:00Z",
+        "timezone": "America/Los_Angeles",
+        "day_start_offset_minutes": 150
+      }
+    ],
+    "paris_offset_150": [
+      {
+        "effective_at": "2026-01-01T00:00:00Z",
+        "timezone": "Europe/Paris",
+        "day_start_offset_minutes": 150
+      }
+    ]
+  },
+  "resolve": [
+    {
+      "name": "spec midnight/travel example: Pacific evening is still 28 May",
+      "calendar": "la",
+      "now": "2026-05-29T07:00:00Z",
+      "occurred_at": "2026-05-29T06:30:00Z",
+      "expect": {
+        "local_date": "2026-05-28"
+      }
+    },
+    {
+      "name": "later switch to Paris does not rewrite the earlier event",
+      "calendar": "la_then_paris",
+      "now": "2026-06-01T12:00:00Z",
+      "occurred_at": "2026-05-29T06:30:00Z",
+      "expect": {
+        "local_date": "2026-05-28"
+      }
+    },
+    {
+      "name": "after the switch, events use Paris",
+      "calendar": "la_then_paris",
+      "now": "2026-06-01T12:00:00Z",
+      "occurred_at": "2026-05-30T08:00:00Z",
+      "expect": {
+        "local_date": "2026-05-30"
+      }
+    },
+    {
+      "name": "Paris after switch, late evening UTC is next Paris day",
+      "calendar": "la_then_paris",
+      "now": "2026-06-01T12:00:00Z",
+      "occurred_at": "2026-05-30T23:00:00Z",
+      "expect": {
+        "local_date": "2026-05-31"
+      }
+    },
+    {
+      "name": "US spring: 23:59:59 PST on 7 Mar",
+      "calendar": "la",
+      "now": "2026-03-08T07:59:59Z",
+      "occurred_at": "2026-03-08T07:59:59Z",
+      "expect": {
+        "local_date": "2026-03-07"
+      }
+    },
+    {
+      "name": "US spring: 01:59:59 PST",
+      "calendar": "la",
+      "now": "2026-03-08T09:59:59Z",
+      "occurred_at": "2026-03-08T09:59:59Z",
+      "expect": {
+        "local_date": "2026-03-08"
+      }
+    },
+    {
+      "name": "US spring: 03:00 PDT right after the gap",
+      "calendar": "la",
+      "now": "2026-03-08T10:00:00Z",
+      "occurred_at": "2026-03-08T10:00:00Z",
+      "expect": {
+        "local_date": "2026-03-08"
+      }
+    },
+    {
+      "name": "US spring: 23:59:59 PDT on the 23-hour day",
+      "calendar": "la",
+      "now": "2026-03-09T06:59:59Z",
+      "occurred_at": "2026-03-09T06:59:59Z",
+      "expect": {
+        "local_date": "2026-03-08"
+      }
+    },
+    {
+      "name": "US spring: midnight PDT starts 9 Mar",
+      "calendar": "la",
+      "now": "2026-03-09T07:00:00Z",
+      "occurred_at": "2026-03-09T07:00:00Z",
+      "expect": {
+        "local_date": "2026-03-09"
+      }
+    },
+    {
+      "name": "US fall: first 01:30 (PDT)",
+      "calendar": "la",
+      "now": "2026-11-01T08:30:00Z",
+      "occurred_at": "2026-11-01T08:30:00Z",
+      "expect": {
+        "local_date": "2026-11-01"
+      }
+    },
+    {
+      "name": "US fall: second 01:30 (PST)",
+      "calendar": "la",
+      "now": "2026-11-01T09:30:00Z",
+      "occurred_at": "2026-11-01T09:30:00Z",
+      "expect": {
+        "local_date": "2026-11-01"
+      }
+    },
+    {
+      "name": "US fall: 23:59:59 PST on the 25-hour day",
+      "calendar": "la",
+      "now": "2026-11-02T07:59:59Z",
+      "occurred_at": "2026-11-02T07:59:59Z",
+      "expect": {
+        "local_date": "2026-11-01"
+      }
+    },
+    {
+      "name": "US fall: midnight PST starts 2 Nov",
+      "calendar": "la",
+      "now": "2026-11-02T08:00:00Z",
+      "occurred_at": "2026-11-02T08:00:00Z",
+      "expect": {
+        "local_date": "2026-11-02"
+      }
+    },
+    {
+      "name": "EU spring: 23:59:59 CET on 28 Mar",
+      "calendar": "paris",
+      "now": "2026-03-28T22:59:59Z",
+      "occurred_at": "2026-03-28T22:59:59Z",
+      "expect": {
+        "local_date": "2026-03-28"
+      }
+    },
+    {
+      "name": "EU spring: 01:59:59 CET",
+      "calendar": "paris",
+      "now": "2026-03-29T00:59:59Z",
+      "occurred_at": "2026-03-29T00:59:59Z",
+      "expect": {
+        "local_date": "2026-03-29"
+      }
+    },
+    {
+      "name": "EU spring: 03:00 CEST right after the gap",
+      "calendar": "paris",
+      "now": "2026-03-29T01:00:00Z",
+      "occurred_at": "2026-03-29T01:00:00Z",
+      "expect": {
+        "local_date": "2026-03-29"
+      }
+    },
+    {
+      "name": "EU spring: 23:59:59 CEST",
+      "calendar": "paris",
+      "now": "2026-03-29T21:59:59Z",
+      "occurred_at": "2026-03-29T21:59:59Z",
+      "expect": {
+        "local_date": "2026-03-29"
+      }
+    },
+    {
+      "name": "EU spring: midnight CEST starts 30 Mar",
+      "calendar": "paris",
+      "now": "2026-03-29T22:00:00Z",
+      "occurred_at": "2026-03-29T22:00:00Z",
+      "expect": {
+        "local_date": "2026-03-30"
+      }
+    },
+    {
+      "name": "EU fall: first 02:30 (CEST)",
+      "calendar": "paris",
+      "now": "2026-10-25T00:30:00Z",
+      "occurred_at": "2026-10-25T00:30:00Z",
+      "expect": {
+        "local_date": "2026-10-25"
+      }
+    },
+    {
+      "name": "EU fall: second 02:30 (CET)",
+      "calendar": "paris",
+      "now": "2026-10-25T01:30:00Z",
+      "occurred_at": "2026-10-25T01:30:00Z",
+      "expect": {
+        "local_date": "2026-10-25"
+      }
+    },
+    {
+      "name": "EU fall: 23:59:59 CET",
+      "calendar": "paris",
+      "now": "2026-10-25T22:59:59Z",
+      "occurred_at": "2026-10-25T22:59:59Z",
+      "expect": {
+        "local_date": "2026-10-25"
+      }
+    },
+    {
+      "name": "EU fall: midnight CET starts 26 Oct",
+      "calendar": "paris",
+      "now": "2026-10-25T23:00:00Z",
+      "occurred_at": "2026-10-25T23:00:00Z",
+      "expect": {
+        "local_date": "2026-10-26"
+      }
+    },
+    {
+      "name": "future tolerance: exactly +5 minutes is accepted",
+      "calendar": "la",
+      "now": "2026-05-28T17:22:00Z",
+      "occurred_at": "2026-05-28T17:27:00Z",
+      "expect": {
+        "local_date": "2026-05-28"
+      }
+    },
+    {
+      "name": "future tolerance: +5 minutes 1 second is rejected",
+      "calendar": "la",
+      "now": "2026-05-28T17:22:00Z",
+      "occurred_at": "2026-05-28T17:27:01Z",
+      "expect": {
+        "error": "future_event"
+      }
+    },
+    {
+      "name": "offline limit: exactly 90 days old is accepted",
+      "calendar": "la",
+      "now": "2026-05-28T17:22:00Z",
+      "occurred_at": "2026-02-27T17:22:00Z",
+      "expect": {
+        "local_date": "2026-02-27"
+      }
+    },
+    {
+      "name": "offline limit: 90 days and 1 second is rejected",
+      "calendar": "la",
+      "now": "2026-05-28T17:22:00Z",
+      "occurred_at": "2026-02-27T17:21:59Z",
+      "expect": {
+        "error": "event_too_old"
+      }
+    },
+    {
+      "name": "captured zone matches: accepted",
+      "calendar": "la",
+      "now": "2026-05-28T17:22:00Z",
+      "occurred_at": "2026-05-28T17:15:00Z",
+      "captured_timezone": "America/Los_Angeles",
+      "local_date_hint": "2026-05-28",
+      "expect": {
+        "local_date": "2026-05-28",
+        "hint_matches": true
+      }
+    },
+    {
+      "name": "captured zone disagrees with the server timeline: review, never re-dated",
+      "calendar": "la",
+      "now": "2026-05-28T17:22:00Z",
+      "occurred_at": "2026-05-28T17:15:00Z",
+      "captured_timezone": "Europe/Paris",
+      "local_date_hint": "2026-05-28",
+      "expect": {
+        "error": "timezone_context_mismatch"
+      }
+    },
+    {
+      "name": "unchecked date hint loses to the trusted timeline",
+      "calendar": "la",
+      "now": "2026-05-29T07:00:00Z",
+      "occurred_at": "2026-05-29T06:30:00Z",
+      "captured_timezone": "America/Los_Angeles",
+      "local_date_hint": "2026-05-29",
+      "expect": {
+        "local_date": "2026-05-28",
+        "hint_matches": false
+      }
+    },
+    {
+      "name": "event before any calendar entry is rejected",
+      "calendar": "la",
+      "now": "2026-01-01T01:00:00Z",
+      "occurred_at": "2025-12-31T23:00:00Z",
+      "expect": {
+        "error": "no_calendar"
+      }
+    },
+    {
+      "name": "offset 120: 01:30 PDT still belongs to the previous day",
+      "calendar": "la_offset_120",
+      "now": "2026-05-29T10:00:00Z",
+      "occurred_at": "2026-05-29T08:30:00Z",
+      "expect": {
+        "local_date": "2026-05-28"
+      }
+    },
+    {
+      "name": "offset 120: 02:00 PDT starts the new day",
+      "calendar": "la_offset_120",
+      "now": "2026-05-29T10:00:00Z",
+      "occurred_at": "2026-05-29T09:00:00Z",
+      "expect": {
+        "local_date": "2026-05-29"
+      }
+    },
+    {
+      "name": "offset 120 on US spring day: 01:30 PST belongs to 7 Mar",
+      "calendar": "la_offset_120",
+      "now": "2026-03-08T09:30:00Z",
+      "occurred_at": "2026-03-08T09:30:00Z",
+      "expect": {
+        "local_date": "2026-03-07"
+      }
+    },
+    {
+      "name": "offset 120 on US spring day: day starts at 03:00 PDT (gap moves forward)",
+      "calendar": "la_offset_120",
+      "now": "2026-03-08T10:00:00Z",
+      "occurred_at": "2026-03-08T10:00:00Z",
+      "expect": {
+        "local_date": "2026-03-08"
+      }
+    },
+    {
+      "name": "offset 150 on US spring day: 03:00 PDT is the first valid instant",
+      "calendar": "la_offset_150",
+      "now": "2026-03-08T10:00:00Z",
+      "occurred_at": "2026-03-08T10:00:00Z",
+      "expect": {
+        "local_date": "2026-03-08"
+      }
+    },
+    {
+      "name": "offset 150 on US spring day: one second before is 7 Mar",
+      "calendar": "la_offset_150",
+      "now": "2026-03-08T09:59:59Z",
+      "occurred_at": "2026-03-08T09:59:59Z",
+      "expect": {
+        "local_date": "2026-03-07"
+      }
+    },
+    {
+      "name": "offset 60 on US fall day: day starts at the first 01:00 (PDT)",
+      "calendar": "la_offset_60",
+      "now": "2026-11-01T08:00:00Z",
+      "occurred_at": "2026-11-01T08:00:00Z",
+      "expect": {
+        "local_date": "2026-11-01"
+      }
+    },
+    {
+      "name": "offset 60 on US fall day: one second before is 31 Oct",
+      "calendar": "la_offset_60",
+      "now": "2026-11-01T07:59:59Z",
+      "occurred_at": "2026-11-01T07:59:59Z",
+      "expect": {
+        "local_date": "2026-10-31"
+      }
+    },
+    {
+      "name": "offset 60 on US fall day: second 01:30 (PST) stays on 1 Nov",
+      "calendar": "la_offset_60",
+      "now": "2026-11-01T09:30:00Z",
+      "occurred_at": "2026-11-01T09:30:00Z",
+      "expect": {
+        "local_date": "2026-11-01"
+      }
+    },
+    {
+      "name": "offset 150 on EU fall day: day starts at the first 02:30 (CEST)",
+      "calendar": "paris_offset_150",
+      "now": "2026-10-25T00:30:00Z",
+      "occurred_at": "2026-10-25T00:30:00Z",
+      "expect": {
+        "local_date": "2026-10-25"
+      }
+    },
+    {
+      "name": "offset 150 on EU fall day: the repeated 02:15 (CET) stays on 25 Oct (dates never go backwards)",
+      "calendar": "paris_offset_150",
+      "now": "2026-10-25T01:15:00Z",
+      "occurred_at": "2026-10-25T01:15:00Z",
+      "expect": {
+        "local_date": "2026-10-25"
+      }
+    }
+  ],
+  "start_of_day": [
+    {
+      "calendar": "la",
+      "date": "2026-03-08",
+      "starts_at": "2026-03-08T08:00:00Z",
+      "ends_at": "2026-03-09T07:00:00Z",
+      "note": "23-hour day"
+    },
+    {
+      "calendar": "la",
+      "date": "2026-11-01",
+      "starts_at": "2026-11-01T07:00:00Z",
+      "ends_at": "2026-11-02T08:00:00Z",
+      "note": "25-hour day"
+    },
+    {
+      "calendar": "paris",
+      "date": "2026-03-29",
+      "starts_at": "2026-03-28T23:00:00Z",
+      "ends_at": "2026-03-29T22:00:00Z"
+    },
+    {
+      "calendar": "paris",
+      "date": "2026-10-25",
+      "starts_at": "2026-10-24T22:00:00Z",
+      "ends_at": "2026-10-25T23:00:00Z"
+    },
+    {
+      "calendar": "la_offset_120",
+      "date": "2026-03-08",
+      "starts_at": "2026-03-08T10:00:00Z",
+      "ends_at": "2026-03-09T09:00:00Z",
+      "note": "02:00 does not exist; next valid instant"
+    },
+    {
+      "calendar": "la_offset_150",
+      "date": "2026-03-08",
+      "starts_at": "2026-03-08T10:00:00Z",
+      "ends_at": "2026-03-09T09:30:00Z",
+      "note": "02:30 does not exist; the transition instant 03:00 PDT"
+    },
+    {
+      "calendar": "la_offset_60",
+      "date": "2026-11-01",
+      "starts_at": "2026-11-01T08:00:00Z",
+      "ends_at": "2026-11-02T09:00:00Z",
+      "note": "01:00 repeats; first occurrence"
+    },
+    {
+      "calendar": "paris_offset_150",
+      "date": "2026-10-25",
+      "starts_at": "2026-10-25T00:30:00Z",
+      "ends_at": "2026-10-26T01:30:00Z",
+      "note": "02:30 repeats; first occurrence"
+    },
+    {
+      "calendar": "la_then_paris",
+      "date": "2026-05-30",
+      "starts_at": "2026-05-30T07:00:00Z",
+      "ends_at": "2026-05-30T22:00:00Z",
+      "note": "zone change effective at LA midnight: 30 May keeps LA start, 31 May starts at Paris midnight"
+    },
+    {
+      "calendar": "la_then_paris",
+      "date": "2026-05-31",
+      "starts_at": "2026-05-30T22:00:00Z",
+      "ends_at": "2026-05-31T22:00:00Z"
+    }
+  ],
+  "backdate": [
+    {
+      "name": "30 days back is allowed",
+      "calendar": "la",
+      "now": "2026-05-28T17:22:00Z",
+      "date": "2026-04-28",
+      "expect": "ok"
+    },
+    {
+      "name": "31 days back is rejected",
+      "calendar": "la",
+      "now": "2026-05-28T17:22:00Z",
+      "date": "2026-04-27",
+      "expect": "backdate_too_old"
+    },
+    {
+      "name": "today is allowed",
+      "calendar": "la",
+      "now": "2026-05-28T17:22:00Z",
+      "date": "2026-05-28",
+      "expect": "ok"
+    },
+    {
+      "name": "tomorrow is rejected",
+      "calendar": "la",
+      "now": "2026-05-28T17:22:00Z",
+      "date": "2026-05-29",
+      "expect": "backdate_future"
+    },
+    {
+      "name": "today follows the user's calendar, not UTC (UTC is already 29 May)",
+      "calendar": "la",
+      "now": "2026-05-29T06:30:00Z",
+      "date": "2026-05-29",
+      "expect": "backdate_future"
+    }
+  ]
+}

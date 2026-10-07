@@ -1,0 +1,440 @@
+{
+  "kind": "streaks",
+  "suites": [
+    "php"
+  ],
+  "description": "Current = eligible success/protected suffix of closed periods, plus the current daily period if complete. An unfinished current period leaves the prior streak intact. Weekly streaks grow at closure (spec 08, 10).",
+  "cases": [
+    {
+      "name": "spec: 17-28 May = 12 with 20 May protected and 16 May missed",
+      "calendar": [
+        {
+          "effective_at": "2026-01-01T00:00:00Z",
+          "timezone": "America/Los_Angeles",
+          "day_start_offset_minutes": 0
+        }
+      ],
+      "habit": {
+        "id": "01970000-0000-7000-8000-000000000002",
+        "name": "Meditation",
+        "category": "mindfulness",
+        "definitions": [
+          {
+            "version": 1,
+            "effective_date": "2026-05-01",
+            "type": "duration",
+            "target": 600,
+            "unit": null,
+            "frequency_type": "daily",
+            "frequency_config": {}
+          }
+        ],
+        "active_ranges": [
+          {
+            "starts_on": "2026-05-01",
+            "ends_before": null
+          }
+        ],
+        "logs": {
+          "2026-05-01": 600,
+          "2026-05-02": 600,
+          "2026-05-03": 600,
+          "2026-05-05": 600,
+          "2026-05-06": 600,
+          "2026-05-07": 600,
+          "2026-05-08": 600,
+          "2026-05-10": 600,
+          "2026-05-11": 600,
+          "2026-05-12": 600,
+          "2026-05-13": 300,
+          "2026-05-14": 600,
+          "2026-05-15": 600,
+          "2026-05-17": 600,
+          "2026-05-18": 600,
+          "2026-05-19": 600,
+          "2026-05-21": 600,
+          "2026-05-22": 600,
+          "2026-05-23": 600,
+          "2026-05-24": 600,
+          "2026-05-25": 600,
+          "2026-05-26": 600,
+          "2026-05-27": 600,
+          "2026-05-28": 600
+        }
+      },
+      "protected": [
+        "d:2026-05-20"
+      ],
+      "now": "2026-05-28T20:00:00Z",
+      "expect": {
+        "current": 12,
+        "longest": 12,
+        "unit": "days",
+        "statuses": {
+          "d:2026-05-16": "missed",
+          "d:2026-05-20": "protected",
+          "d:2026-05-28": "complete"
+        }
+      }
+    },
+    {
+      "name": "unfinished current day leaves the prior streak intact",
+      "calendar": [
+        {
+          "effective_at": "2026-01-01T00:00:00Z",
+          "timezone": "America/Los_Angeles",
+          "day_start_offset_minutes": 0
+        }
+      ],
+      "habit": {
+        "id": "01970000-0000-7000-8000-000000000002",
+        "name": "Meditation",
+        "category": "mindfulness",
+        "definitions": [
+          {
+            "version": 1,
+            "effective_date": "2026-05-01",
+            "type": "duration",
+            "target": 600,
+            "unit": null,
+            "frequency_type": "daily",
+            "frequency_config": {}
+          }
+        ],
+        "active_ranges": [
+          {
+            "starts_on": "2026-05-01",
+            "ends_before": null
+          }
+        ],
+        "logs": {
+          "2026-05-01": 600,
+          "2026-05-02": 600,
+          "2026-05-03": 600,
+          "2026-05-05": 600,
+          "2026-05-06": 600,
+          "2026-05-07": 600,
+          "2026-05-08": 600,
+          "2026-05-10": 600,
+          "2026-05-11": 600,
+          "2026-05-12": 600,
+          "2026-05-13": 300,
+          "2026-05-14": 600,
+          "2026-05-15": 600,
+          "2026-05-17": 600,
+          "2026-05-18": 600,
+          "2026-05-19": 600,
+          "2026-05-21": 600,
+          "2026-05-22": 600,
+          "2026-05-23": 600,
+          "2026-05-24": 600,
+          "2026-05-25": 600,
+          "2026-05-26": 600,
+          "2026-05-27": 600,
+          "2026-05-28": 360
+        }
+      },
+      "protected": [
+        "d:2026-05-20"
+      ],
+      "now": "2026-05-28T20:00:00Z",
+      "expect": {
+        "current": 11,
+        "longest": 11,
+        "unit": "days",
+        "statuses": {
+          "d:2026-05-28": "pending"
+        }
+      }
+    },
+    {
+      "name": "without the freeze, 20 May breaks the streak",
+      "calendar": [
+        {
+          "effective_at": "2026-01-01T00:00:00Z",
+          "timezone": "America/Los_Angeles",
+          "day_start_offset_minutes": 0
+        }
+      ],
+      "habit": {
+        "id": "01970000-0000-7000-8000-000000000002",
+        "name": "Meditation",
+        "category": "mindfulness",
+        "definitions": [
+          {
+            "version": 1,
+            "effective_date": "2026-05-01",
+            "type": "duration",
+            "target": 600,
+            "unit": null,
+            "frequency_type": "daily",
+            "frequency_config": {}
+          }
+        ],
+        "active_ranges": [
+          {
+            "starts_on": "2026-05-01",
+            "ends_before": null
+          }
+        ],
+        "logs": {
+          "2026-05-01": 600,
+          "2026-05-02": 600,
+          "2026-05-03": 600,
+          "2026-05-05": 600,
+          "2026-05-06": 600,
+          "2026-05-07": 600,
+          "2026-05-08": 600,
+          "2026-05-10": 600,
+          "2026-05-11": 600,
+          "2026-05-12": 600,
+          "2026-05-13": 300,
+          "2026-05-14": 600,
+          "2026-05-15": 600,
+          "2026-05-17": 600,
+          "2026-05-18": 600,
+          "2026-05-19": 600,
+          "2026-05-21": 600,
+          "2026-05-22": 600,
+          "2026-05-23": 600,
+          "2026-05-24": 600,
+          "2026-05-25": 600,
+          "2026-05-26": 600,
+          "2026-05-27": 600,
+          "2026-05-28": 600
+        }
+      },
+      "protected": [],
+      "now": "2026-05-28T20:00:00Z",
+      "expect": {
+        "current": 8,
+        "longest": 8,
+        "unit": "days",
+        "statuses": {
+          "d:2026-05-20": "missed"
+        }
+      }
+    },
+    {
+      "name": "weekly: a completed open week does not count until it closes",
+      "calendar": [
+        {
+          "effective_at": "2026-01-01T00:00:00Z",
+          "timezone": "America/Los_Angeles",
+          "day_start_offset_minutes": 0
+        }
+      ],
+      "habit": {
+        "id": "01970000-0000-7000-8000-000000000006",
+        "name": "Pilates",
+        "category": "health",
+        "definitions": [
+          {
+            "version": 1,
+            "effective_date": "2026-05-04",
+            "type": "duration",
+            "target": 1200,
+            "unit": null,
+            "frequency_type": "weekly_count",
+            "frequency_config": {
+              "count": 3
+            }
+          }
+        ],
+        "active_ranges": [
+          {
+            "starts_on": "2026-05-04",
+            "ends_before": null
+          }
+        ],
+        "logs": {
+          "2026-05-04": 1200,
+          "2026-05-06": 1200,
+          "2026-05-08": 1200,
+          "2026-05-11": 1200,
+          "2026-05-12": 1200,
+          "2026-05-14": 1200,
+          "2026-05-18": 1200,
+          "2026-05-20": 1500,
+          "2026-05-22": 1200,
+          "2026-05-25": 1200,
+          "2026-05-26": 1200,
+          "2026-05-27": 1200
+        }
+      },
+      "protected": [],
+      "now": "2026-05-28T20:00:00Z",
+      "expect": {
+        "current": 3,
+        "longest": 3,
+        "unit": "weeks",
+        "statuses": {
+          "w:2026-05-25": "complete"
+        }
+      }
+    },
+    {
+      "name": "weekly: the week counts once it has closed",
+      "calendar": [
+        {
+          "effective_at": "2026-01-01T00:00:00Z",
+          "timezone": "America/Los_Angeles",
+          "day_start_offset_minutes": 0
+        }
+      ],
+      "habit": {
+        "id": "01970000-0000-7000-8000-000000000006",
+        "name": "Pilates",
+        "category": "health",
+        "definitions": [
+          {
+            "version": 1,
+            "effective_date": "2026-05-04",
+            "type": "duration",
+            "target": 1200,
+            "unit": null,
+            "frequency_type": "weekly_count",
+            "frequency_config": {
+              "count": 3
+            }
+          }
+        ],
+        "active_ranges": [
+          {
+            "starts_on": "2026-05-04",
+            "ends_before": null
+          }
+        ],
+        "logs": {
+          "2026-05-04": 1200,
+          "2026-05-06": 1200,
+          "2026-05-08": 1200,
+          "2026-05-11": 1200,
+          "2026-05-12": 1200,
+          "2026-05-14": 1200,
+          "2026-05-18": 1200,
+          "2026-05-20": 1500,
+          "2026-05-22": 1200,
+          "2026-05-25": 1200,
+          "2026-05-26": 1200,
+          "2026-05-27": 1200
+        }
+      },
+      "protected": [],
+      "now": "2026-06-01T08:00:00Z",
+      "expect": {
+        "current": 4,
+        "longest": 4,
+        "unit": "weeks",
+        "statuses": {
+          "w:2026-05-25": "complete"
+        }
+      }
+    },
+    {
+      "name": "interval habits count scheduled periods",
+      "calendar": [
+        {
+          "effective_at": "2026-01-01T00:00:00Z",
+          "timezone": "America/Los_Angeles",
+          "day_start_offset_minutes": 0
+        }
+      ],
+      "habit": {
+        "id": "01970000-0000-7000-8000-000000000007",
+        "name": "Run",
+        "category": "health",
+        "definitions": [
+          {
+            "version": 1,
+            "effective_date": "2026-05-01",
+            "type": "binary",
+            "target": 1,
+            "unit": null,
+            "frequency_type": "interval",
+            "frequency_config": {
+              "every_n_days": 2,
+              "anchor_date": "2026-05-01"
+            }
+          }
+        ],
+        "active_ranges": [
+          {
+            "starts_on": "2026-05-01",
+            "ends_before": null
+          }
+        ],
+        "logs": {
+          "2026-05-01": 1,
+          "2026-05-03": 1,
+          "2026-05-05": 1
+        }
+      },
+      "protected": [],
+      "now": "2026-05-06T20:00:00Z",
+      "expect": {
+        "current": 3,
+        "longest": 3,
+        "unit": "periods",
+        "statuses": {
+          "d:2026-05-05": "complete"
+        }
+      }
+    },
+    {
+      "name": "archive gap is not a miss",
+      "calendar": [
+        {
+          "effective_at": "2026-01-01T00:00:00Z",
+          "timezone": "America/Los_Angeles",
+          "day_start_offset_minutes": 0
+        }
+      ],
+      "habit": {
+        "id": "01970000-0000-7000-8000-000000000005",
+        "name": "Less sugar",
+        "category": "health",
+        "definitions": [
+          {
+            "version": 1,
+            "effective_date": "2026-05-01",
+            "type": "binary",
+            "target": 1,
+            "unit": null,
+            "frequency_type": "daily",
+            "frequency_config": {}
+          }
+        ],
+        "active_ranges": [
+          {
+            "starts_on": "2026-05-01",
+            "ends_before": "2026-05-05"
+          },
+          {
+            "starts_on": "2026-05-08",
+            "ends_before": null
+          }
+        ],
+        "logs": {
+          "2026-05-01": 1,
+          "2026-05-02": 1,
+          "2026-05-03": 1,
+          "2026-05-04": 1,
+          "2026-05-08": 1,
+          "2026-05-09": 1,
+          "2026-05-10": 1
+        }
+      },
+      "protected": [],
+      "now": "2026-05-10T20:00:00Z",
+      "expect": {
+        "current": 7,
+        "longest": 7,
+        "unit": "days",
+        "statuses": {
+          "d:2026-05-10": "complete"
+        }
+      }
+    }
+  ]
+}

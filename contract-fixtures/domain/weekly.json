@@ -1,0 +1,262 @@
+{
+  "kind": "weekly",
+  "suites": [
+    "php",
+    "dart"
+  ],
+  "description": "Weekly target = distinct completed local days in the Monday-Sunday week (spec 03, 08, 10). `provisional` is what the app may show before sync; the server decides `status`.",
+  "cases": [
+    {
+      "name": "target 3 = three distinct completed days",
+      "calendar": [
+        {
+          "effective_at": "2026-01-01T00:00:00Z",
+          "timezone": "America/Los_Angeles",
+          "day_start_offset_minutes": 0
+        }
+      ],
+      "habit": {
+        "id": "01970000-0000-7000-8000-000000000006",
+        "name": "Pilates",
+        "category": "health",
+        "definitions": [
+          {
+            "version": 1,
+            "effective_date": "2026-05-04",
+            "type": "duration",
+            "target": 1200,
+            "unit": null,
+            "frequency_type": "weekly_count",
+            "frequency_config": {
+              "count": 3
+            }
+          }
+        ],
+        "active_ranges": [
+          {
+            "starts_on": "2026-05-04",
+            "ends_before": null
+          }
+        ],
+        "logs": {
+          "2026-05-04": 1200,
+          "2026-05-06": 1200,
+          "2026-05-08": 1500
+        }
+      },
+      "period_key": "w:2026-05-04",
+      "today": "2026-05-12",
+      "expect": {
+        "status": "complete",
+        "closed": true,
+        "completed_days": 3
+      },
+      "provisional": {
+        "distinct_completed_days": 3,
+        "target_days": 3,
+        "complete": true
+      }
+    },
+    {
+      "name": "three sessions on one day count once and the closed week fails",
+      "calendar": [
+        {
+          "effective_at": "2026-01-01T00:00:00Z",
+          "timezone": "America/Los_Angeles",
+          "day_start_offset_minutes": 0
+        }
+      ],
+      "habit": {
+        "id": "01970000-0000-7000-8000-000000000006",
+        "name": "Pilates",
+        "category": "health",
+        "definitions": [
+          {
+            "version": 1,
+            "effective_date": "2026-05-04",
+            "type": "duration",
+            "target": 1200,
+            "unit": null,
+            "frequency_type": "weekly_count",
+            "frequency_config": {
+              "count": 3
+            }
+          }
+        ],
+        "active_ranges": [
+          {
+            "starts_on": "2026-05-04",
+            "ends_before": null
+          }
+        ],
+        "logs": {
+          "2026-05-04": 3600
+        }
+      },
+      "period_key": "w:2026-05-04",
+      "today": "2026-05-12",
+      "expect": {
+        "status": "missed",
+        "closed": true,
+        "completed_days": 1
+      },
+      "provisional": {
+        "distinct_completed_days": 1,
+        "target_days": 3,
+        "complete": false
+      }
+    },
+    {
+      "name": "an open week below target is pending, not missed",
+      "calendar": [
+        {
+          "effective_at": "2026-01-01T00:00:00Z",
+          "timezone": "America/Los_Angeles",
+          "day_start_offset_minutes": 0
+        }
+      ],
+      "habit": {
+        "id": "01970000-0000-7000-8000-000000000006",
+        "name": "Pilates",
+        "category": "health",
+        "definitions": [
+          {
+            "version": 1,
+            "effective_date": "2026-05-04",
+            "type": "duration",
+            "target": 1200,
+            "unit": null,
+            "frequency_type": "weekly_count",
+            "frequency_config": {
+              "count": 3
+            }
+          }
+        ],
+        "active_ranges": [
+          {
+            "starts_on": "2026-05-04",
+            "ends_before": null
+          }
+        ],
+        "logs": {
+          "2026-05-25": 1200,
+          "2026-05-27": 1200
+        }
+      },
+      "period_key": "w:2026-05-25",
+      "today": "2026-05-28",
+      "expect": {
+        "status": "pending",
+        "closed": false,
+        "completed_days": 2
+      },
+      "provisional": {
+        "distinct_completed_days": 2,
+        "target_days": 3,
+        "complete": false
+      }
+    },
+    {
+      "name": "a partial day below the per-session target does not count",
+      "calendar": [
+        {
+          "effective_at": "2026-01-01T00:00:00Z",
+          "timezone": "America/Los_Angeles",
+          "day_start_offset_minutes": 0
+        }
+      ],
+      "habit": {
+        "id": "01970000-0000-7000-8000-000000000006",
+        "name": "Pilates",
+        "category": "health",
+        "definitions": [
+          {
+            "version": 1,
+            "effective_date": "2026-05-04",
+            "type": "duration",
+            "target": 1200,
+            "unit": null,
+            "frequency_type": "weekly_count",
+            "frequency_config": {
+              "count": 3
+            }
+          }
+        ],
+        "active_ranges": [
+          {
+            "starts_on": "2026-05-04",
+            "ends_before": null
+          }
+        ],
+        "logs": {
+          "2026-05-04": 1200,
+          "2026-05-05": 600,
+          "2026-05-06": 1200
+        }
+      },
+      "period_key": "w:2026-05-04",
+      "today": "2026-05-12",
+      "expect": {
+        "status": "missed",
+        "closed": true,
+        "completed_days": 2
+      },
+      "provisional": {
+        "distinct_completed_days": 2,
+        "target_days": 3,
+        "complete": false
+      }
+    },
+    {
+      "name": "reaching the target inside an open week completes it early",
+      "calendar": [
+        {
+          "effective_at": "2026-01-01T00:00:00Z",
+          "timezone": "America/Los_Angeles",
+          "day_start_offset_minutes": 0
+        }
+      ],
+      "habit": {
+        "id": "01970000-0000-7000-8000-000000000006",
+        "name": "Pilates",
+        "category": "health",
+        "definitions": [
+          {
+            "version": 1,
+            "effective_date": "2026-05-04",
+            "type": "duration",
+            "target": 1200,
+            "unit": null,
+            "frequency_type": "weekly_count",
+            "frequency_config": {
+              "count": 3
+            }
+          }
+        ],
+        "active_ranges": [
+          {
+            "starts_on": "2026-05-04",
+            "ends_before": null
+          }
+        ],
+        "logs": {
+          "2026-05-25": 1200,
+          "2026-05-26": 1200,
+          "2026-05-27": 1200
+        }
+      },
+      "period_key": "w:2026-05-25",
+      "today": "2026-05-28",
+      "expect": {
+        "status": "complete",
+        "closed": false,
+        "completed_days": 3
+      },
+      "provisional": {
+        "distinct_completed_days": 3,
+        "target_days": 3,
+        "complete": true
+      }
+    }
+  ]
+}

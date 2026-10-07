@@ -1,0 +1,431 @@
+{
+  "kind": "freezes",
+  "suites": [
+    "php"
+  ],
+  "description": "Wallet cap 2, balance in [0, 2]. Spend 1 per eligible closed failed period, once per (habit, period_key); a failed week costs 1. Order: ends_at ASC, streak_at_risk DESC, habit_id ASC (A8). Opt-in is prospective: the policy effective at the period's end decides. Monthly grant +max(0, 2 - balance) once per month; late completion refunds min(1, 2 - balance) once, else a zero-delta cap_reached audit row (amendments 0.2, spec 08).",
+  "closures": [
+    {
+      "name": "two failures and one token: exactly one protected (longest streak first, A8)",
+      "balance": 1,
+      "policy": [
+        {
+          "enabled": true,
+          "effective_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "used": [],
+      "candidates": [
+        {
+          "habit_id": "01970000-0000-7000-8000-000000000001",
+          "period_key": "d:2026-05-20",
+          "ends_at": "2026-05-21T07:00:00Z",
+          "streak_at_risk": 3,
+          "definition_version": 1,
+          "closed": true
+        },
+        {
+          "habit_id": "01970000-0000-7000-8000-000000000003",
+          "period_key": "d:2026-05-20",
+          "ends_at": "2026-05-21T07:00:00Z",
+          "streak_at_risk": 7,
+          "definition_version": 1,
+          "closed": true
+        }
+      ],
+      "expect": {
+        "decisions": [
+          [
+            "01970000-0000-7000-8000-000000000003",
+            "d:2026-05-20",
+            "spent"
+          ],
+          [
+            "01970000-0000-7000-8000-000000000001",
+            "d:2026-05-20",
+            "no_balance"
+          ]
+        ],
+        "balance": 0
+      }
+    },
+    {
+      "name": "equal streaks: habit id breaks the tie",
+      "balance": 1,
+      "policy": [
+        {
+          "enabled": true,
+          "effective_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "used": [],
+      "candidates": [
+        {
+          "habit_id": "01970000-0000-7000-8000-000000000003",
+          "period_key": "d:2026-05-20",
+          "ends_at": "2026-05-21T07:00:00Z",
+          "streak_at_risk": 5,
+          "definition_version": 1,
+          "closed": true
+        },
+        {
+          "habit_id": "01970000-0000-7000-8000-000000000001",
+          "period_key": "d:2026-05-20",
+          "ends_at": "2026-05-21T07:00:00Z",
+          "streak_at_risk": 5,
+          "definition_version": 1,
+          "closed": true
+        }
+      ],
+      "expect": {
+        "decisions": [
+          [
+            "01970000-0000-7000-8000-000000000001",
+            "d:2026-05-20",
+            "spent"
+          ],
+          [
+            "01970000-0000-7000-8000-000000000003",
+            "d:2026-05-20",
+            "no_balance"
+          ]
+        ],
+        "balance": 0
+      }
+    },
+    {
+      "name": "the earlier period end is protected first",
+      "balance": 1,
+      "policy": [
+        {
+          "enabled": true,
+          "effective_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "used": [],
+      "candidates": [
+        {
+          "habit_id": "01970000-0000-7000-8000-000000000003",
+          "period_key": "d:2026-05-21",
+          "ends_at": "2026-05-22T07:00:00Z",
+          "streak_at_risk": 9,
+          "definition_version": 1,
+          "closed": true
+        },
+        {
+          "habit_id": "01970000-0000-7000-8000-000000000001",
+          "period_key": "d:2026-05-20",
+          "ends_at": "2026-05-21T07:00:00Z",
+          "streak_at_risk": 1,
+          "definition_version": 1,
+          "closed": true
+        }
+      ],
+      "expect": {
+        "decisions": [
+          [
+            "01970000-0000-7000-8000-000000000001",
+            "d:2026-05-20",
+            "spent"
+          ],
+          [
+            "01970000-0000-7000-8000-000000000003",
+            "d:2026-05-21",
+            "no_balance"
+          ]
+        ],
+        "balance": 0
+      }
+    },
+    {
+      "name": "opt-in on 20 May is not retroactive: misses on 4/9/13/16 stay unprotected; 20 May spends 1 of 2",
+      "balance": 2,
+      "policy": [
+        {
+          "enabled": false,
+          "effective_at": "2026-01-01T00:00:00Z"
+        },
+        {
+          "enabled": true,
+          "effective_at": "2026-05-20T15:00:00Z"
+        }
+      ],
+      "used": [],
+      "candidates": [
+        {
+          "habit_id": "01970000-0000-7000-8000-000000000002",
+          "period_key": "d:2026-05-04",
+          "ends_at": "2026-05-05T07:00:00Z",
+          "streak_at_risk": 3,
+          "definition_version": 1,
+          "closed": true
+        },
+        {
+          "habit_id": "01970000-0000-7000-8000-000000000002",
+          "period_key": "d:2026-05-09",
+          "ends_at": "2026-05-10T07:00:00Z",
+          "streak_at_risk": 4,
+          "definition_version": 1,
+          "closed": true
+        },
+        {
+          "habit_id": "01970000-0000-7000-8000-000000000002",
+          "period_key": "d:2026-05-13",
+          "ends_at": "2026-05-14T07:00:00Z",
+          "streak_at_risk": 3,
+          "definition_version": 1,
+          "closed": true
+        },
+        {
+          "habit_id": "01970000-0000-7000-8000-000000000002",
+          "period_key": "d:2026-05-16",
+          "ends_at": "2026-05-17T07:00:00Z",
+          "streak_at_risk": 2,
+          "definition_version": 1,
+          "closed": true
+        },
+        {
+          "habit_id": "01970000-0000-7000-8000-000000000002",
+          "period_key": "d:2026-05-20",
+          "ends_at": "2026-05-21T07:00:00Z",
+          "streak_at_risk": 3,
+          "definition_version": 1,
+          "closed": true
+        }
+      ],
+      "expect": {
+        "decisions": [
+          [
+            "01970000-0000-7000-8000-000000000002",
+            "d:2026-05-04",
+            "policy_disabled"
+          ],
+          [
+            "01970000-0000-7000-8000-000000000002",
+            "d:2026-05-09",
+            "policy_disabled"
+          ],
+          [
+            "01970000-0000-7000-8000-000000000002",
+            "d:2026-05-13",
+            "policy_disabled"
+          ],
+          [
+            "01970000-0000-7000-8000-000000000002",
+            "d:2026-05-16",
+            "policy_disabled"
+          ],
+          [
+            "01970000-0000-7000-8000-000000000002",
+            "d:2026-05-20",
+            "spent"
+          ]
+        ],
+        "balance": 1
+      }
+    },
+    {
+      "name": "a failed week costs 1, not 1 per day",
+      "balance": 2,
+      "policy": [
+        {
+          "enabled": true,
+          "effective_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "used": [],
+      "candidates": [
+        {
+          "habit_id": "01970000-0000-7000-8000-000000000006",
+          "period_key": "w:2026-05-18",
+          "ends_at": "2026-05-25T07:00:00Z",
+          "streak_at_risk": 2,
+          "definition_version": 1,
+          "closed": true
+        }
+      ],
+      "expect": {
+        "decisions": [
+          [
+            "01970000-0000-7000-8000-000000000006",
+            "w:2026-05-18",
+            "spent"
+          ]
+        ],
+        "balance": 1
+      }
+    },
+    {
+      "name": "one spend per (habit, period): an existing or refunded usage never spends again",
+      "balance": 2,
+      "policy": [
+        {
+          "enabled": true,
+          "effective_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "used": [
+        [
+          "01970000-0000-7000-8000-000000000002",
+          "d:2026-05-20"
+        ]
+      ],
+      "candidates": [
+        {
+          "habit_id": "01970000-0000-7000-8000-000000000002",
+          "period_key": "d:2026-05-20",
+          "ends_at": "2026-05-21T07:00:00Z",
+          "streak_at_risk": 3,
+          "definition_version": 1,
+          "closed": true
+        }
+      ],
+      "expect": {
+        "decisions": [
+          [
+            "01970000-0000-7000-8000-000000000002",
+            "d:2026-05-20",
+            "already_used"
+          ]
+        ],
+        "balance": 2
+      }
+    },
+    {
+      "name": "open periods consume nothing",
+      "balance": 2,
+      "policy": [
+        {
+          "enabled": true,
+          "effective_at": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "used": [],
+      "candidates": [
+        {
+          "habit_id": "01970000-0000-7000-8000-000000000006",
+          "period_key": "w:2026-05-25",
+          "ends_at": "2026-06-01T07:00:00Z",
+          "streak_at_risk": 4,
+          "definition_version": 1,
+          "closed": false
+        }
+      ],
+      "expect": {
+        "decisions": [
+          [
+            "01970000-0000-7000-8000-000000000006",
+            "w:2026-05-25",
+            "period_open"
+          ]
+        ],
+        "balance": 2
+      }
+    }
+  ],
+  "grants": [
+    {
+      "name": "signup grants 2 (A11)",
+      "kind": "signup",
+      "balance": 0,
+      "already_granted": false,
+      "expect": {
+        "delta": 2,
+        "source_key": "signup",
+        "reason": "signup",
+        "balance": 2
+      }
+    },
+    {
+      "name": "monthly refill tops up to the cap",
+      "kind": "monthly",
+      "month": "2026-06",
+      "balance": 1,
+      "already_granted": false,
+      "expect": {
+        "delta": 1,
+        "source_key": "month:2026-06",
+        "reason": "monthly",
+        "balance": 2
+      }
+    },
+    {
+      "name": "monthly refill retry is idempotent",
+      "kind": "monthly",
+      "month": "2026-06",
+      "balance": 2,
+      "already_granted": true,
+      "expect": null
+    },
+    {
+      "name": "monthly refill from empty",
+      "kind": "monthly",
+      "month": "2026-07",
+      "balance": 0,
+      "already_granted": false,
+      "expect": {
+        "delta": 2,
+        "source_key": "month:2026-07",
+        "reason": "monthly",
+        "balance": 2
+      }
+    },
+    {
+      "name": "monthly refill at cap records a zero-delta row that marks the month done",
+      "kind": "monthly",
+      "month": "2026-08",
+      "balance": 2,
+      "already_granted": false,
+      "expect": {
+        "delta": 0,
+        "source_key": "month:2026-08",
+        "reason": "cap_reached",
+        "balance": 2
+      }
+    }
+  ],
+  "refunds": [
+    {
+      "name": "late real completion refunds 1",
+      "balance": 1,
+      "usage": [
+        "01970000-0000-7000-8000-000000000002",
+        "d:2026-05-20",
+        "active"
+      ],
+      "expect": {
+        "delta": 1,
+        "reason": "late_completion",
+        "source_key": "refund:01970000-0000-7000-8000-000000000002:d:2026-05-20",
+        "balance": 2,
+        "usage_state": "refunded"
+      }
+    },
+    {
+      "name": "refund at cap writes a zero-delta cap_reached audit row",
+      "balance": 2,
+      "usage": [
+        "01970000-0000-7000-8000-000000000002",
+        "d:2026-05-20",
+        "active"
+      ],
+      "expect": {
+        "delta": 0,
+        "reason": "cap_reached",
+        "source_key": "refund:01970000-0000-7000-8000-000000000002:d:2026-05-20",
+        "balance": 2,
+        "usage_state": "refunded"
+      }
+    },
+    {
+      "name": "a usage refunds at most once",
+      "balance": 1,
+      "usage": [
+        "01970000-0000-7000-8000-000000000002",
+        "d:2026-05-20",
+        "refunded"
+      ],
+      "expect": null
+    }
+  ]
+}

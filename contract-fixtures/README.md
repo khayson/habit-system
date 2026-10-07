@@ -17,4 +17,27 @@ the format and then treat them as equal.
 ## Layout
 
 - `envelope/` — response envelope and error shapes (Phase 0). Each file has
-  `description`, `status`, optional `headers`, and `body`.
+  `description`, `status`, optional `headers`, and `body`. One file per error code
+  (`docs/api-error-codes.md`).
+- `domain/` — business rules (Phase 1). Each file has `kind`, `suites` (which test suites must
+  consume it: `php`, `dart`) and `description`. Cases inside may narrow `suites` further.
+
+## Domain seeds (A12)
+
+Every domain case declares its whole world. Nothing is implied.
+
+| Field | Meaning |
+|---|---|
+| `calendar` | Ordered calendar history: `effective_at` (UTC), `timezone` (IANA), `day_start_offset_minutes` (A22). |
+| `habit.definitions[]` | `version`, `effective_date`, `type`, `target`, `unit`, `frequency_type`, `frequency_config`. |
+| `habit.active_ranges[]` | Half-open local-date ranges `[starts_on, ends_before)`; `ends_before: null` is open. |
+| `habit.logs` | `{ "YYYY-MM-DD": value }`, one row per habit and local date. |
+| `protected` | Period keys with an active freeze usage. |
+| `now` / `today` | The injected clock instant, or the user's local date when only dates matter. |
+
+Values travel in wire form: binary `0`/`1` (integer), quantity a decimal string with up to three
+decimals (`"2000.000"`), duration whole seconds (integer). Period keys follow A3:
+`d:YYYY-MM-DD`, `w:<Monday>`.
+
+The spec example account (May 2026, America/Los_Angeles) is in `insights.json`; its numbers
+reconcile with the spec: 95/125 for May, 9/15 for the week of 25 May.

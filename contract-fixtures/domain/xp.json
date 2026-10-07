@@ -1,0 +1,160 @@
+{
+  "kind": "xp",
+  "suites": [
+    "php"
+  ],
+  "description": "10 XP per completed habit-day, one entitlement per (habit, date); reversal -10; recompletion +10 only after a reversal; partial progress and increments after completion 0. Level = 1 + floor(xp/100); progress = xp mod 100; next_level_threshold = 100 x level (amendments 0.2, A9).",
+  "toggles": [
+    {
+      "name": "complete, reverse, recomplete nets +10",
+      "steps": [
+        true,
+        false,
+        true
+      ],
+      "expect": [
+        {
+          "delta": 10,
+          "revision": 1,
+          "reason": "completion",
+          "state": "active"
+        },
+        {
+          "delta": -10,
+          "revision": 2,
+          "reason": "reversal",
+          "state": "reversed"
+        },
+        {
+          "delta": 10,
+          "revision": 3,
+          "reason": "recompletion",
+          "state": "active"
+        }
+      ],
+      "net": 10
+    },
+    {
+      "name": "repeated completion awards once",
+      "steps": [
+        true,
+        true
+      ],
+      "expect": [
+        {
+          "delta": 10,
+          "revision": 1,
+          "reason": "completion",
+          "state": "active"
+        },
+        {
+          "delta": 0,
+          "revision": 1,
+          "reason": null,
+          "state": "active"
+        }
+      ],
+      "net": 10
+    },
+    {
+      "name": "reversing what was never earned does nothing",
+      "steps": [
+        false
+      ],
+      "expect": [
+        {
+          "delta": 0,
+          "revision": null,
+          "reason": null,
+          "state": null
+        }
+      ],
+      "net": 0
+    }
+  ],
+  "value_sequences": [
+    {
+      "name": "water: partial 0, threshold +10, later increments 0, edit below -10, back above +10",
+      "type": "quantity",
+      "target": "2000.000",
+      "values": [
+        "1500.000",
+        "2000.000",
+        "2250.000",
+        "1500.000",
+        "2000.000"
+      ],
+      "deltas": [
+        0,
+        10,
+        0,
+        -10,
+        10
+      ],
+      "net": 10
+    },
+    {
+      "name": "meditation: 6 minutes earns nothing, 10 minutes earns 10",
+      "type": "duration",
+      "target": 600,
+      "values": [
+        360,
+        600
+      ],
+      "deltas": [
+        0,
+        10
+      ],
+      "net": 10
+    }
+  ],
+  "levels": [
+    {
+      "xp": 0,
+      "level": 1,
+      "progress_into_level": 0,
+      "next_level_threshold": 100
+    },
+    {
+      "xp": 99,
+      "level": 1,
+      "progress_into_level": 99,
+      "next_level_threshold": 100
+    },
+    {
+      "xp": 100,
+      "level": 2,
+      "progress_into_level": 0,
+      "next_level_threshold": 200
+    },
+    {
+      "xp": 240,
+      "level": 3,
+      "progress_into_level": 40,
+      "next_level_threshold": 300
+    },
+    {
+      "xp": 1240,
+      "level": 13,
+      "progress_into_level": 40,
+      "next_level_threshold": 1300
+    },
+    {
+      "xp": 1250,
+      "level": 13,
+      "progress_into_level": 50,
+      "next_level_threshold": 1300
+    }
+  ],
+  "award": {
+    "name": "meditation completion: 1,240 -> 1,250, Level 13, 50/100 toward 14",
+    "xp_before": 1240,
+    "completed": true,
+    "expect": {
+      "xp": 1250,
+      "level": 13,
+      "progress_into_level": 50,
+      "next_level_threshold": 1300
+    }
+  }
+}

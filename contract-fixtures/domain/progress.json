@@ -1,0 +1,219 @@
+{
+  "kind": "progress",
+  "suites": [
+    "php",
+    "dart"
+  ],
+  "description": "Value vs target for today (spec 01 example: Today 3/5, then meditation makes 4/5). Quantities are exact decimals, durations whole seconds, binary 0/1. The app shows this as provisional until sync.",
+  "today": {
+    "habits": [
+      {
+        "id": "01970000-0000-7000-8000-000000000001",
+        "name": "Water",
+        "type": "quantity",
+        "target": "2000.000",
+        "value": "1250.000",
+        "complete": false
+      },
+      {
+        "id": "01970000-0000-7000-8000-000000000002",
+        "name": "Meditation",
+        "type": "duration",
+        "target": 600,
+        "value": 360,
+        "complete": false
+      },
+      {
+        "id": "01970000-0000-7000-8000-000000000003",
+        "name": "Reading",
+        "type": "quantity",
+        "target": "20.000",
+        "value": "20.000",
+        "complete": true
+      },
+      {
+        "id": "01970000-0000-7000-8000-000000000004",
+        "name": "Morning plan",
+        "type": "binary",
+        "target": 1,
+        "value": 1,
+        "complete": true
+      },
+      {
+        "id": "01970000-0000-7000-8000-000000000005",
+        "name": "Less sugar",
+        "type": "binary",
+        "target": 1,
+        "value": 1,
+        "complete": true
+      }
+    ],
+    "expect": {
+      "complete": 3,
+      "total": 5
+    }
+  },
+  "after": {
+    "changes": {
+      "01970000-0000-7000-8000-000000000002": 600
+    },
+    "expect": {
+      "complete": 4,
+      "total": 5
+    }
+  },
+  "values": [
+    {
+      "name": "1.25 L + 250 mL = 1.50 L, not complete",
+      "type": "quantity",
+      "target": "2000.000",
+      "value": "1250.000",
+      "increment": "250.000",
+      "result": "1500.000",
+      "complete": false
+    },
+    {
+      "name": "1.25 L + 750 mL = 2 L, complete",
+      "type": "quantity",
+      "target": "2000.000",
+      "value": "1250.000",
+      "increment": "750.000",
+      "result": "2000.000",
+      "complete": true
+    },
+    {
+      "name": "exact decimals: 0.1 + 0.2 = 0.3",
+      "type": "quantity",
+      "target": "0.300",
+      "value": "0.100",
+      "increment": "0.200",
+      "result": "0.300",
+      "complete": true
+    },
+    {
+      "name": "meditation +1 min from 6 min",
+      "type": "duration",
+      "target": 600,
+      "value": 360,
+      "increment": 60,
+      "result": 420,
+      "complete": false
+    },
+    {
+      "name": "binary set",
+      "type": "binary",
+      "target": 1,
+      "value": 0,
+      "set": 1,
+      "result": 1,
+      "complete": true
+    },
+    {
+      "name": "binary undo",
+      "type": "binary",
+      "target": 1,
+      "value": 1,
+      "set": 0,
+      "result": 0,
+      "complete": false
+    }
+  ],
+  "invalid_values": [
+    {
+      "type": "quantity",
+      "value": 250.5,
+      "reason": "floats are never accepted"
+    },
+    {
+      "type": "quantity",
+      "value": "250.0005",
+      "reason": "more than 3 decimals"
+    },
+    {
+      "type": "quantity",
+      "value": "-1.000",
+      "reason": "negative"
+    },
+    {
+      "type": "quantity",
+      "value": "1e3",
+      "reason": "not a plain decimal"
+    },
+    {
+      "type": "duration",
+      "value": 60.5,
+      "reason": "durations are whole seconds"
+    },
+    {
+      "type": "duration",
+      "value": "60",
+      "reason": "durations are integers, not strings"
+    },
+    {
+      "type": "binary",
+      "value": 2,
+      "reason": "binary is 0 or 1"
+    }
+  ],
+  "unknown_type": {
+    "suites": [
+      "dart"
+    ],
+    "note": "Tolerant reader (A21): a type this app version does not know is preserved, shown as an update card and left out of today's count.",
+    "habits": [
+      {
+        "id": "01970000-0000-7000-8000-000000000001",
+        "name": "Water",
+        "type": "quantity",
+        "target": "2000.000",
+        "value": "1250.000",
+        "complete": false
+      },
+      {
+        "id": "01970000-0000-7000-8000-000000000002",
+        "name": "Meditation",
+        "type": "duration",
+        "target": 600,
+        "value": 360,
+        "complete": false
+      },
+      {
+        "id": "01970000-0000-7000-8000-000000000003",
+        "name": "Reading",
+        "type": "quantity",
+        "target": "20.000",
+        "value": "20.000",
+        "complete": true
+      },
+      {
+        "id": "01970000-0000-7000-8000-000000000004",
+        "name": "Morning plan",
+        "type": "binary",
+        "target": 1,
+        "value": 1,
+        "complete": true
+      },
+      {
+        "id": "01970000-0000-7000-8000-000000000005",
+        "name": "Less sugar",
+        "type": "binary",
+        "target": 1,
+        "value": 1,
+        "complete": true
+      },
+      {
+        "id": "01970000-0000-7000-8000-0000000000ff",
+        "name": "Morning checklist",
+        "type": "checklist",
+        "target": 3,
+        "value": 2,
+        "complete": null
+      }
+    ],
+    "expect": {
+      "complete": 3,
+      "total": 5,
+      "unknown": 1
+    }
+  }
+}
