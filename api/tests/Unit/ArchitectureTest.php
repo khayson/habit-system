@@ -98,3 +98,39 @@ it('never disables mass-assignment protection (invariant 1)', function () {
 it('never reads whole request payloads (invariant 1)', function () {
     expect(offenders(phpSources('app'), WHOLE_PAYLOAD))->toBe([]);
 });
+
+// Only TimezoneTimeline computes day instants, and only PeriodEngine::bounds() asks it for
+// period instants (A26, R4). Anything else that derives a day start/end is a second, drifting
+// definition of a day.
+const DAY_BOUNDARY_CALL = '/\b(startOfLocalDay|endOfLocalDay)\s*\(/';
+const AD_HOC_DAY_MATH = '/->\s*(startOf(Day|Week|Month)|endOf(Day|Week|Month)|setTime)\s*\(|modify\s*\(\s*[\'"][^\'"]*\b(midnight|today|tomorrow|yesterday|noon)\b|getTransitions\s*\(/i';
+
+it('detects day-boundary computations (guard self-test)', function (string $code, bool $call, bool $adHoc) {
+    expect(preg_match(DAY_BOUNDARY_CALL, $code) === 1)->toBe($call)
+        ->and(preg_match(AD_HOC_DAY_MATH, $code) === 1)->toBe($adHoc);
+})->with([
+    ['$t->startOfLocalDay($d)', true, false],
+    ['$timeline->endOfLocalDay($d);', true, false],
+    ['$now->startOfDay()', false, true],
+    ['$x->setTime(0, 0)', false, true],
+    ["\$x->modify('tomorrow midnight')", false, true],
+    ['$zone->getTransitions($a, $b)', false, true],
+    ["\$x->modify('+1 day')", false, false],
+    ['$date->addDays(1)', false, false],
+]);
+
+it('computes day and period instants only in TimezoneTimeline and PeriodEngine::bounds() (R4)', function () {
+    $sources = phpSources('app');
+    $timeline = 'app'.DIRECTORY_SEPARATOR.'Domain'.DIRECTORY_SEPARATOR.'Calendar'.DIRECTORY_SEPARATOR.'TimezoneTimeline.php';
+    $engine = 'app'.DIRECTORY_SEPARATOR.'Domain'.DIRECTORY_SEPARATOR.'Period'.DIRECTORY_SEPARATOR.'PeriodEngine.php';
+
+    $callers = array_diff(offenders($sources, DAY_BOUNDARY_CALL), [$timeline, $engine]);
+    $adHoc = array_diff(offenders($sources, AD_HOC_DAY_MATH), [$timeline]);
+
+    expect(array_values($callers))->toBe([])->and(array_values($adHoc))->toBe([]);
+
+    // Inside PeriodEngine, only bounds() may ask for instants.
+    preg_match_all('/function\s+(\w+)\s*\([^)]*\)[^{]*\{((?:[^{}]|\{(?2)\})*)\}/', $sources[$engine], $methods, PREG_SET_ORDER);
+    $using = array_map(fn ($m) => $m[1], array_filter($methods, fn ($m) => preg_match(DAY_BOUNDARY_CALL, $m[2]) === 1));
+    expect(array_values($using))->toBe(['bounds']);
+});

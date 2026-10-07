@@ -4,7 +4,6 @@ namespace App\Domain\Calendar;
 
 use App\Domain\Clock;
 use DateInterval;
-use DateTimeImmutable;
 use DateTimeInterface;
 
 /**
@@ -70,10 +69,5 @@ final readonly class DayResolver
         if ($date->daysUntil($today) > self::MAX_BACKDATE_DAYS) {
             throw new DayResolutionException('backdate_too_old');
         }
-    }
-
-    public function startOfLocalDay(LocalDate $date): DateTimeImmutable
-    {
-        return $this->timeline->startOfLocalDay($date);
     }
 }
