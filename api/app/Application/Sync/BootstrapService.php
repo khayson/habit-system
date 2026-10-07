@@ -3,8 +3,8 @@
 namespace App\Application\Sync;
 
 use App\Application\Presenters\EntityPresenter;
+use App\Exceptions\ApiException;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 use stdClass;
 
 /**
@@ -35,8 +35,8 @@ final readonly class BootstrapService
             $state = ['snap' => (int) DB::table('users')->where('id', $userId)->value('change_seq'), 'phase' => self::PHASE_HABITS, 'after' => null];
             $first = true;
         } else {
-            $state = SyncCursor::decode($cursor, $userId, 'b')
-                ?? throw ValidationException::withMessages(['cursor' => ['The cursor is not valid for this account.']]);
+            // A29: an unusable page cursor means "start the bootstrap again".
+            $state = SyncCursor::decode($cursor, $userId, 'b') ?? throw ApiException::cursorExpired();
             $first = false;
         }
 

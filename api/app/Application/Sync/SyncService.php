@@ -6,7 +6,6 @@ use App\Application\Habits\HabitRepository;
 use App\Application\Mutations\MutationApplier;
 use App\Exceptions\ApiException;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 use stdClass;
 
 /**
@@ -79,10 +78,13 @@ final readonly class SyncService
         if ($cursor === null) {
             return 0;
         }
+        // A29: a cursor that cannot be honoured is expired, not invalid input. Signatures break on
+        // app.key rotation and positions run ahead of the head after a database restore; in both
+        // cases the client's safe reaction is a bootstrap.
         $seq = SyncCursor::seqOf($cursor, $userId);
         $head = (int) DB::table('users')->where('id', $userId)->value('change_seq');
         if ($seq === null || $seq > $head) {
-            throw ValidationException::withMessages(['cursor' => ['The cursor is not valid for this account.']]);
+            throw ApiException::cursorExpired();
         }
 
         // Journal rows older than retention are pruned (180 days); a cursor before the oldest

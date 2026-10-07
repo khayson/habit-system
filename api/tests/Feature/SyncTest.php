@@ -175,19 +175,21 @@ it('an interrupted pull replays safely: re-reading a cursor returns the same pag
     expect($this->sync($this->user['token'], cursor: $cursor)->json('data.changes'))->toBe([]);
 });
 
-it('rejects cursors that are tampered, from another user, or ahead of the journal', function () {
+it('expires cursors that are tampered, from another user, or unusable (A29)', function () {
     $other = $this->registerUser('Other');
     $foreign = $this->sync($other['token'])->json('data.next_cursor');
     $mine = $this->sync($this->user['token'])->json('data.next_cursor');
     [$payload, $signature] = explode('.', $mine);
     $tampered = rtrim(strtr(base64_encode(json_encode(['v' => 1, 't' => 's', 'u' => $this->user['id'], 's' => 999])), '+/', '-_'), '=').'.'.$signature;
 
+    // A29: every cursor that cannot be honoured is 410 cursor_expired (the client bootstraps).
     foreach ([$foreign, $tampered, 'not-a-cursor'] as $cursor) {
         $this->sync($this->user['token'], [M::habitCreate((string) Str::uuid7())], cursor: $cursor)
-            ->assertStatus(422)
-            ->assertJsonPath('error.code', 'validation_failed')
-            ->assertJsonStructure(['error' => ['fields' => ['cursor']]]);
+            ->assertStatus(410)
+            ->assertJsonPath('error.code', 'cursor_expired');
     }
+    // Only a malformed parameter is invalid input.
+    $this->sync($this->user['token'], cursor: str_repeat('x', 2000))->assertStatus(422)->assertJsonStructure(['error' => ['fields' => ['cursor']]]);
     // A rejected request applies nothing.
     expect(DB::table('habits')->count())->toBe(0);
 });

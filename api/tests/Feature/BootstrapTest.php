@@ -51,14 +51,14 @@ it('pages a consistent snapshot, then /sync from snapshot_seq delivers later cha
         ->and(array_column($delta, 'id'))->toContain($late['entity_id']);
 });
 
-it('rejects a bootstrap cursor from another account', function () {
+it('expires a bootstrap cursor from another account (A29)', function () {
     $other = $this->registerUser('Other');
     $this->sync($other['token'], [M::habitCreate((string) Str::uuid7()), M::habitCreate((string) Str::uuid7())]);
     $foreignCursor = $this->bootstrapPage($other['token'], null, 1)->json('data.next_cursor');
 
     $this->app['auth']->forgetGuards();
     $this->withToken($this->user['token'])->getJson('/api/v1/sync/bootstrap?cursor='.urlencode($foreignCursor))
-        ->assertStatus(422)->assertJsonStructure(['error' => ['fields' => ['cursor']]]);
+        ->assertStatus(410)->assertJsonPath('error.code', 'cursor_expired');
 });
 
 it('validates the page size', function (string $limit) {

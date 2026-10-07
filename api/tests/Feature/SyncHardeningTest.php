@@ -180,3 +180,23 @@ it('keeps the natural-key fallback owner-scoped', function () {
     $this->sync($other['token'], [$delete])->assertJsonPath('data.acks.0.error.code', 'not_found');
     expect(DB::table('habit_logs')->whereNotNull('deleted_at')->count())->toBe(0);
 });
+
+// S1 ------------------------------------------------------------------------------------------
+
+it('answers 410 when a database restore leaves the cursor ahead of the journal (S1)', function () {
+    $this->sync($this->user['token'], [M::habitCreate($this->habit), M::habitCreate((string) Str::uuid7())]);
+    $cursor = $this->sync($this->user['token'])->json('data.next_cursor');
+
+    // Restore from a backup taken before the last two changes.
+    DB::table('server_changes')->where('user_id', $this->user['id'])->where('seq', '>', 1)->delete();
+    DB::table('users')->where('id', $this->user['id'])->update(['change_seq' => 1]);
+
+    $this->sync($this->user['token'], cursor: $cursor)->assertStatus(410)->assertJsonPath('error.code', 'cursor_expired');
+});
+
+it('answers 410 for cursors signed with a rotated app key (S1)', function () {
+    $cursor = $this->sync($this->user['token'])->json('data.next_cursor');
+    config(['app.key' => 'base64:'.base64_encode(random_bytes(32))]);
+
+    $this->sync($this->user['token'], cursor: $cursor)->assertStatus(410);
+});
