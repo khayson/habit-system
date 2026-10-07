@@ -8,6 +8,7 @@ use App\Domain\Habit\EvaluationTiming;
 use App\Domain\Habit\HabitType;
 use App\Domain\Habit\InvalidHabitValue;
 use App\Domain\Habit\LogState;
+use App\Domain\Habit\StoredDecimal;
 use App\Domain\Habit\UnsupportedOperation;
 
 /**
@@ -36,6 +37,16 @@ final class QuantityType implements HabitType
     public function formatValue(int $units): string
     {
         return intdiv($units, 1000).'.'.str_pad((string) ($units % 1000), 3, '0', STR_PAD_LEFT);
+    }
+
+    public function toStorage(int $units): string
+    {
+        return StoredDecimal::fromUnits($units, 3);
+    }
+
+    public function fromStorage(string $stored): int
+    {
+        return StoredDecimal::toUnits($stored, 3);
     }
 
     public function parseTarget(mixed $wire): int

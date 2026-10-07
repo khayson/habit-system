@@ -26,6 +26,16 @@ interface HabitType
     /** Units to wire value (int for binary/duration, decimal string for quantity). */
     public function formatValue(int $units): int|string;
 
+    /** Units to the stored numeric(12,3) decimal string (habit_logs.value, target_value). */
+    public function toStorage(int $units): string;
+
+    /**
+     * Stored numeric(12,3) decimal string back to units.
+     *
+     * @throws InvalidHabitValue
+     */
+    public function fromStorage(string $stored): int;
+
     /**
      * Wire target to units, enforcing the type's target rule.
      *

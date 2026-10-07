@@ -8,6 +8,7 @@ use App\Domain\Habit\EvaluationTiming;
 use App\Domain\Habit\HabitType;
 use App\Domain\Habit\InvalidHabitValue;
 use App\Domain\Habit\LogState;
+use App\Domain\Habit\StoredDecimal;
 use App\Domain\Habit\UnsupportedOperation;
 
 /** Duration in whole seconds (invariant 10). */
@@ -33,6 +34,16 @@ final class DurationType implements HabitType
     public function formatValue(int $units): int
     {
         return $units;
+    }
+
+    public function toStorage(int $units): string
+    {
+        return StoredDecimal::fromUnits($units, 0);
+    }
+
+    public function fromStorage(string $stored): int
+    {
+        return StoredDecimal::toUnits($stored, 0);
     }
 
     public function parseTarget(mixed $wire): int
