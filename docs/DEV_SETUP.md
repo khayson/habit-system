@@ -104,10 +104,10 @@ grace window). It prints PASS/FAIL per scenario, then `CONVERGED` (exit 0) or st
 
 ```powershell
 scripts\db-up.ps1
-scriptspi-serve.ps1                     # in another terminal
+scripts\api-serve.ps1                     # in another terminal
 cd app
 $env:E2E_DATABASE_URL = 'postgresql://habit:habit@127.0.0.1:5432/habit'
-$env:E2E_PSQL = "$env:USERPROFILE	ools\pgsql-17in\psql.exe"   # if psql is not on PATH
+$env:E2E_PSQL = "$env:USERPROFILE\tools\pgsql-17\bin\psql.exe"   # if psql is not on PATH
 dart run tool/sync_e2e.dart               # default http://127.0.0.1:8000/api/v1
 ```
 
