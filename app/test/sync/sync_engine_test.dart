@@ -540,6 +540,59 @@ void main() {
     expect((await phone.state()).leaseOwner, 'other', reason: 'the new owner keeps its lease');
   });
 
+  group('F4: base versions come from acks, never predictions', () {
+    test('a no-op ack followed by another queued write is accepted', () async {
+      final habit = await phone.habit();
+      await phone.writer.setLogValue(habitId: habit, value: 1);
+      await phone.sync(); // confirmed v1, value 1
+      await phone.writer.setLogValue(habitId: habit, value: 1, at: DateTime.utc(2026, 5, 28, 18));
+      server.gate = Completer<void>();
+      final calls = server.syncCalls;
+      final run = phone.sync();
+      while (server.syncCalls == calls) {
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+      }
+      // The no-op is in flight; the next tap queues behind it.
+      await phone.writer.setLogValue(habitId: habit, value: 0, at: DateTime.utc(2026, 5, 28, 19));
+      server.gate!.complete();
+
+      expect(await run, SyncOutcome.completed);
+      expect(server.logs.values.single['value'], 0);
+      expect(server.logs.values.single['version'], 2, reason: 'the no-op did not bump');
+      expect(await phone.outbox(), isEmpty, reason: 'no false conflict');
+    });
+
+    test('three queued rows for one day converge', () async {
+      final habit = await phone.habit();
+      await phone.sync();
+      Future<void> queue(int value, int hour) async {
+        await phone.writer.setLogValue(
+          habitId: habit,
+          value: value,
+          at: DateTime.utc(2026, 5, 28, hour),
+        );
+        // Mark it sent so the next write cannot coalesce into it.
+        await phone.db.customStatement("UPDATE outbox SET state = 'in_flight'");
+      }
+
+      await queue(1, 16);
+      await queue(0, 17);
+      await queue(1, 18);
+      expect((await phone.outbox()).map((r) => r.baseVersion), [0, 0, 0]);
+
+      expect(await phone.sync(), SyncOutcome.completed); // recovers in-flight rows first
+      final log = server.logs.values.single;
+      expect((log['value'], log['version']), (1, 3));
+      expect((await phone.logs()).single.version, 3);
+      expect(await phone.outbox(), isEmpty);
+      expect(
+        server.sentMutationIds.where((ids) => ids.isNotEmpty).every((ids) => ids.length == 1),
+        isTrue,
+        reason: 'one row per habit-day per request',
+      );
+    });
+  });
+
   test('unknown habit types, unknown fields and unknown entities survive a round trip', () async {
     final unknownHabit = {
       'id': 'future-habit',

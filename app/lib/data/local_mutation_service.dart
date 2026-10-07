@@ -88,9 +88,8 @@ class LocalMutationService {
         entity: 'habit_log',
         entityId: confirmed?.id ?? last?.entityId ?? _uuid.v7(),
         operation: 'log.set_value',
-        // Base on the version the server will have once everything ahead has applied. A
-        // tombstone's version here is an explicit restore (A29).
-        baseVersion: await _expectedVersion(confirmed, rows),
+        // A tombstone's version here is an explicit restore (A29).
+        baseVersion: _baseVersion(confirmed, rows),
         calendar: calendar,
         localDate: date,
         habitId: habitId,
@@ -115,7 +114,7 @@ class LocalMutationService {
         entity: 'habit_log',
         entityId: confirmed?.id ?? rows.last.entityId,
         operation: 'log.delete',
-        baseVersion: await _expectedVersion(confirmed, rows),
+        baseVersion: _baseVersion(confirmed, rows),
         calendar: calendar,
         localDate: date,
         habitId: habitId,
@@ -125,19 +124,16 @@ class LocalMutationService {
     });
   }
 
-  /// The version the server will hold for this habit-day after every outstanding row ahead of
-  /// a new one has applied: confirmed (or acked) version plus one per outstanding write.
-  /// ASSUMPTION(A2b-version): each accepted write bumps the version by one; an identical-state
-  /// no-op on the server then surfaces as a conflict the user reviews, never as lost data.
-  Future<int> _expectedVersion(ConfirmedLog? confirmed, List<OutboxRow> rows) async {
+  /// The newest version this device has seen for the habit-day (confirmed or acked). Rows queued
+  /// behind an unacknowledged one carry it only as a placeholder: the engine sends one row per
+  /// habit-day at a time and rebases the next from the server's ack (F4). The client never
+  /// predicts versions.
+  int _baseVersion(ConfirmedLog? confirmed, List<OutboxRow> rows) {
     var version = confirmed?.version ?? 0;
     for (final row in rows) {
       if (row.state == OutboxState.acked && (row.ackVersion ?? 0) > version) {
         version = row.ackVersion!;
       }
-    }
-    for (final row in rows) {
-      if (OutboxState.outstanding.contains(row.state)) version++;
     }
     return version;
   }

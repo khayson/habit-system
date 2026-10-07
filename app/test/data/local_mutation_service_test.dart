@@ -73,7 +73,7 @@ void main() {
       (OutboxState.inFlight, 1),
       (OutboxState.pending, 0),
     ]);
-    expect(logs.last.baseVersion, 1, reason: 'based on the in-flight write landing first');
+    expect(logs.last.baseVersion, 0, reason: 'a placeholder; the engine rebases it (F4)');
   });
 
   test('bases a write on the confirmed version; on a tombstone it restores (A29)', () async {
@@ -96,7 +96,7 @@ void main() {
 
     final delete = (await phone.outbox()).last;
     expect(jsonDecode(delete.payload), {'habit_id': habit, 'log_date': '2026-05-28'});
-    expect(delete.baseVersion, 1);
+    expect(delete.baseVersion, 0, reason: 'a placeholder until the tick is acked (F4)');
   });
 
   test('refuses to write before the server calendar is known', () async {

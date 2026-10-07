@@ -240,7 +240,8 @@ class SyncEngine {
 
   /// Unacknowledged rows in order, at most [limit]. Ordering is per entity: a waiting, blocked or
   /// needs-attention row holds back later rows of the same entity (and logs of its habit), and
-  /// nothing else.
+  /// nothing else. At most ONE row per entity goes in a request (F4): the next one waits for this
+  /// one's ack, which gives it its base version.
   Future<List<OutboxRow>> _eligible(int limit) async {
     final rows =
         await (db.select(db.outbox)
@@ -256,9 +257,10 @@ class SyncEngine {
             .get();
     final now = _now;
     final held = <String>{};
+    final inRequest = <String>{};
     final result = <OutboxRow>[];
     for (final row in rows) {
-      final key = '${row.entity}:${row.entityId}';
+      final key = _entityKey(row);
       final parentKey = row.entity == 'habit_log' ? 'habit:${row.habitId}' : null;
       final due =
           row.state == OutboxState.pending ||
@@ -267,11 +269,18 @@ class SyncEngine {
         held.add(key);
         continue;
       }
+      // Later rows of this entity go in a later round; its logs may still ride along.
+      if (!inRequest.add(key)) continue;
       result.add(row);
       if (result.length >= limit) break;
     }
     return result;
   }
+
+  /// A log is identified by its habit-day: its id may change on a merge, its day never does.
+  static String _entityKey(OutboxRow row) => row.entity == 'habit_log'
+      ? 'habit_log:${row.habitId}:${row.localDateHint}'
+      : '${row.entity}:${row.entityId}';
 
   /// Selects the next rows and marks them in flight in ONE transaction (F1). A local write can
   /// only coalesce into a pending row, so once this commits nothing can change what is sent; a
@@ -344,12 +353,14 @@ class SyncEngine {
 
     if (status == 'accepted') {
       final canonical = ack['entity_id'] as String? ?? row.entityId;
+      final version = ack['version'] as int?;
       if (canonical != row.entityId) await _remap(row.entityId, canonical);
+      if (version != null) await _rebase(row, canonical, version);
       await _update(
         row,
         OutboxCompanion(
           state: const Value(OutboxState.acked),
-          ackVersion: Value(ack['version'] as int?),
+          ackVersion: Value(version),
           entityId: Value(canonical),
           lastError: const Value(null),
         ),
@@ -403,6 +414,29 @@ class SyncEngine {
       );
     }
   }
+
+  /// The client never predicts versions (F4): once a row is acked, the entity's later unsent
+  /// rows are based on the version the server actually holds. An identical-state write is
+  /// acked without a bump, and this keeps the next write from a false conflict.
+  Future<void> _rebase(OutboxRow row, String entityId, int version) => db.customUpdate(
+    '''UPDATE outbox SET base_version = ?
+       WHERE seq > ? AND state IN (?, ?, ?) AND (
+         (entity = 'habit_log' AND ? = 'habit_log' AND habit_id = ? AND local_date_hint = ?)
+         OR (entity = ? AND entity <> 'habit_log' AND entity_id = ?))''',
+    variables: [
+      Variable(version),
+      Variable(row.seq),
+      const Variable(OutboxState.pending),
+      const Variable(OutboxState.blocked),
+      const Variable(OutboxState.waiting),
+      Variable(row.entity),
+      Variable(row.habitId),
+      Variable(row.localDateHint),
+      Variable(row.entity),
+      Variable(entityId),
+    ],
+    updates: {db.outbox},
+  );
 
   /// Exponential backoff with jitter: 1 min doubling to 1 h.
   Duration _backoff(int attempts) {
