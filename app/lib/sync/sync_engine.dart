@@ -55,6 +55,9 @@ class SyncEngine {
   /// Test hook: runs inside the apply transaction just before it commits.
   final Future<void> Function()? beforeApplyCommit;
 
+  /// Test hook: runs inside the claim transaction, between selecting rows and marking them.
+  final Future<void> Function()? betweenSelectAndMark;
+
   SyncEngine({
     required this.db,
     required this.transport,
@@ -66,6 +69,7 @@ class SyncEngine {
     this.leaseDuration = const Duration(seconds: 60),
     this.pullLimit = 200,
     this.beforeApplyCommit,
+    this.betweenSelectAndMark,
   }) : clock = clock ?? (() => DateTime.now().toUtc()),
        random = random ?? Random(),
        ownerId = ownerId ?? const Uuid().v4();
@@ -93,8 +97,7 @@ class SyncEngine {
           await _bootstrap(state.bootstrapCursor);
           continue;
         }
-        rows = await _eligible(chunk);
-        await _setState(rows, OutboxState.inFlight);
+        rows = await _claim(chunk);
         final page = await transport.sync(
           deviceId: state.deviceId,
           cursor: state.cursor,
@@ -228,6 +231,16 @@ class SyncEngine {
     }
     return result;
   }
+
+  /// Selects the next rows and marks them in flight in ONE transaction (F1). A local write can
+  /// only coalesce into a pending row, so once this commits nothing can change what is sent; a
+  /// write that arrives later becomes a new row. The wire payload is built from these rows.
+  Future<List<OutboxRow>> _claim(int limit) => db.transaction(() async {
+    final rows = await _eligible(limit);
+    if (betweenSelectAndMark != null) await betweenSelectAndMark!();
+    await _setState(rows, OutboxState.inFlight);
+    return rows;
+  });
 
   Map<String, Object?> _wire(OutboxRow row) => {
     'mutation_id': row.mutationId,

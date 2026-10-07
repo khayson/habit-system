@@ -6,6 +6,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:habit/data/database_opener.dart';
 import 'package:habit/data/entity_codec.dart';
+import 'package:habit/data/local_mutation_service.dart';
 import 'package:habit/domain/calendar/local_date.dart';
 import 'package:habit/sync/outbox_states.dart';
 import 'package:habit/sync/sync_engine.dart';
@@ -41,6 +42,29 @@ void main() {
     expect((log.value, log.provisional, log.confirmedVersion), (1, false, 1));
     expect(await phone.outbox(), isEmpty, reason: 'acked rows are pruned once confirmed');
     expect((await phone.state()).cursor, 'c:${server.seq}');
+  });
+
+  test('F1: a write racing the claim is sent or queued, never lost', () async {
+    final habit = await phone.habit();
+    await phone.sync();
+    await phone.writer.setLogValue(habitId: habit, value: 1);
+    Future<LocalWrite>? racing;
+    final engine = phone.engine(
+      betweenSelectAndMark: () async {
+        // A tap from outside the engine (root zone, not this transaction): it must wait for
+        // the claim and must not edit a row being sent.
+        racing ??= Zone.root.run(() => phone.writer.setLogValue(habitId: habit, value: 0));
+      },
+    );
+
+    await engine.run();
+    final write = await racing!;
+
+    expect(write.coalesced, isFalse, reason: 'the claimed row was no longer pending');
+    // The new row went out in a later round of the same run.
+    expect(server.logs.values.single['value'], 0, reason: 'the latest tap reaches the server');
+    expect((await phone.logs()).single.value, '0');
+    expect(await phone.outbox(), isEmpty);
   });
 
   test('sends the server calendar zone as captured_timezone, never the device zone', () async {

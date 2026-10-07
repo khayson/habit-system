@@ -57,6 +57,7 @@ class Device {
   SyncEngine engine({
     SyncTransport? transport,
     Future<void> Function()? beforeApplyCommit,
+    Future<void> Function()? betweenSelectAndMark,
     String? owner,
   }) => SyncEngine(
     db: db,
@@ -67,6 +68,7 @@ class Device {
     random: Random(1),
     ownerId: owner,
     beforeApplyCommit: beforeApplyCommit,
+    betweenSelectAndMark: betweenSelectAndMark,
   );
 
   Future<SyncOutcome> sync() => engine().run();
