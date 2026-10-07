@@ -273,3 +273,26 @@ Decisions from the architect's Phase 1 review (`docs/reviews/PHASE_1_REVIEW.md`)
 - Increments are greater than zero. Percentages round half up with integer arithmetic only.
 - `HabitType` operates on a `LogState` (`value` + `detail`) and the effective `DefinitionVersion` (with `config`), so non-scalar types (checklist) need no engine change (A21).
 - Domain errors map to API codes in one place: `future_event`, `event_too_old`, `timezone_context_mismatch`, `backdate_future`, `backdate_too_old`, `unsupported_type`, `unsupported_operation`, `invalid_value` (`docs/api-error-codes.md`).
+
+---
+
+## 9. Added after the Phase 2a review (2026-10-07)
+
+Decisions from the architect's Phase 2a review (`docs/reviews/PHASE_2A_REVIEW.md`).
+
+### A29 — Sync contract hardening · ADOPT
+
+- **Restore.** `log.set_value` with `base_version` equal to a tombstone's version restores that row: `deleted_at` cleared, `version + 1`, journaled as an upsert. A lower `base_version` (an edit queued before the delete) still returns `resource_deleted`, so nothing is silently resurrected (spec 07).
+- **Canonical ids.** Every ack carries the server's canonical `entity_id`, which can differ from the mutation's (the server keeps the existing row for `(habit_id, log_date)` and never reuses a client id that exists elsewhere). The client remaps the local row and every outbox row referencing it in one transaction.
+- **Natural-key delete.** `log.delete` falls back to `payload.habit_id` + `payload.log_date` when the entity id is unknown to the server.
+- **Server errors.** An unexpected failure inside one mutation is reported and returned as a `rejected` ack with `error.code = server_error` and `error.retryable = true`; no receipt is stored, so a later retry (or deploy) can accept it. The rest of the batch is unaffected.
+- **Cursors.** Any cursor that cannot be honoured (bad signature, other user, ahead of the journal head, older than retention) is 410 `cursor_expired`, for both `/sync` and `/sync/bootstrap`; the client bootstraps. 422 is only for a malformed `cursor` parameter.
+- **Capabilities.** A request without `X-Capabilities` declares the baseline set `type.binary, type.quantity`.
+- **Timezone context.** A `captured_timezone` that differs from the server's calendar at `occurred_at` is accepted when `local_date_hint` equals the server-resolved date (the server still resolves the date). Otherwise `timezone_context_mismatch`, with the server's calendar entry for that instant in `error.calendar`.
+- **Caps.** One mutation is at most 16 KB of JSON and 8 levels deep (`payload_too_large` / `validation_failed` in its ack). Values are range- and scale-checked per type; `frequency_config` is stored in canonical form; units are validated per type.
+- **Auth.** Refresh shortens the old token to a 10-minute grace window instead of deleting it. Login always runs a password hash check, including for unknown emails.
+
+### A30 — Calendar gaps and frequency boundaries · ADOPT (Phase 3)
+
+- **Zero-length dates.** A local date with no instants (eastward travel across the date line, e.g. Pago_Pago → Auckland on 2026-03-11; Pacific/Apia 2011-12-30) is not part of the period grid: not due, not evaluated, and it neither breaks nor extends a streak.
+- **`nextEffectiveDate`** is the next Monday when either the old or the new frequency is `weekly_count`, so a frequency change never leaves days outside every period.

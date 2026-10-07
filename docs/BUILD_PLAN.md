@@ -48,6 +48,10 @@ R1–R5 of `docs/reviews/PHASE_1_REVIEW.md`: first calendar entry governs earlie
 
 **Gate (automated)**: duplicate retry → one log; interrupted pull replays safely; delete vs queued mutation → `resource_deleted`; three days offline → three original dates; **A1 concurrency test on real PostgreSQL**; cross-owner 404 on every route and sync entity; two users behind one IP get independent `api` and `sync` limiter buckets. Then a review checkpoint before 2b.
 
+## Phase 2a.1 — Backend fixes before 2b · S
+
+B1–B3 and S1–S9 of `docs/reviews/PHASE_2A_REVIEW.md`: per-mutation `Throwable` boundary (`server_error`, `retryable`), restore via `log.set_value` on the tombstone version, canonical `entity_id` in acks and a natural-key fallback for `log.delete`, 410 for every unusable cursor, hint-aware timezone mismatch, canonical `frequency_config`, baseline capabilities, refresh grace window, dummy-hash login, `LogState::equals()`, per-type unit validation, and the review's missing tests. A29 records the contract.
+
 ## Phase 2b — Walking skeleton, app · L
 
 - drift tables (habits, logs, outbox, sync_state) in a per-account DB; unknown habit types and fields preserved opaquely (A21); `LocalMutationService` as the single local write path (A23); foreground sync engine; screens 02, 03, 04 (minimal), 05 (binary only) and 18 (queue).
@@ -56,6 +60,10 @@ R1–R5 of `docs/reviews/PHASE_1_REVIEW.md`: first calendar entry governs earlie
 
 ## Phase 3 — MVP complete · L
 
+- **Calendar changes (D1, A26):** `CalendarHistory::appendChange()` as a pure domain method (injected `Clock`) that computes the effective instant (the next local day start in the old calendar); `profile.set_timezone` and day-offset changes go through it. `TimezoneTimeline` asserts monotonic dates at construction so a bad history fails loudly. Fixture to write first: Pacific/Auckland → America/Los_Angeles effective at an arbitrary instant (2026-03-10T12:00Z) produces a backwards date (2026-03-11 → 2026-03-10); the same change at the A26 instant produces none.
+- **Zero-length dates (D2, A30):** a local date with no instants is not part of the period grid (not due, not evaluated, neither breaks nor extends a streak) in `PeriodEngine`, `StreakCalculator` and `ConsistencyCalculator`. Fixtures to write first: Pacific/Pago_Pago → Pacific/Auckland at the A26 instant skips 2026-03-11; real-zone cases Pacific/Apia 2011-12-30 and Pacific/Kiritimati 1994-12-31.
+- `HabitSchedule::nextEffectiveDate()` returns the next Monday when **either** the old or the new frequency is weekly (A30), so a frequency change never leaves days outside every period.
+- `period_evaluations.user_id` (owner FK on every user resource) in the migration that first fills the table.
 - Streak cache + `period_evaluations` (daily), closure runner (A10), heatmap endpoint + screen 12, history and ≤ 30-day backdate (13), local reminders with permission states (11), token refresh, account-isolated logout, best-effort background sync (through `LocalMutationService`), notification action payload schema (A23), XP chip behind a flag (A13c).
 
 **Gate**: the spec's MVP list; real Android device incl. battery restriction; DST reminder test.
@@ -70,6 +78,7 @@ R1–R5 of `docs/reviews/PHASE_1_REVIEW.md`: first calendar entry governs earlie
 
 - Quantity and duration; amount entry (34) and timers (33/36); weekdays / weekly_count / interval; versioned edits (09/10); archive / restore (22); conflict review (19).
 
+- Before any `profile.*` mutation: `users.version` and journaling the user entity on every profile change (review 2a, section 6).
 - The server enforces "next eligible period" for new definition versions via `HabitSchedule::nextEffectiveDate(LocalDate $today)` (daily/weekdays → tomorrow; weekly → next Monday; interval → start of the next period under the current definition). Never accept a client-chosen effective date.
 
 **Gate**: spec acceptance rows for concurrent increments, stale absolute edit and weekly distinct days.
@@ -83,6 +92,7 @@ R1–R5 of `docs/reviews/PHASE_1_REVIEW.md`: first calendar entry governs earlie
 
 ## Phase 5 — Rewards and freezes · L
 
+- Decide in the packet: does logging a not-due day earn XP? Architect's default: allowed, same XP, never affects a streak (Khay Studios to confirm).
 - XP entitlements + ledger; freeze ledger / usage / policy versions; monthly job; late-completion reconciliation; screens 06, 16, 17, 35; insights 14/15; enable `rewards_enabled`.
 
 **Gate**: spec rows for XP toggling, level boundaries, two failures / one token, monthly refill retry, late protected completion with cap audit.
@@ -95,7 +105,7 @@ R1–R5 of `docs/reviews/PHASE_1_REVIEW.md`: first calendar entry governs earlie
 
 ## Phase 7 — Hardening and release · M
 
-- OWASP API Top 10 pass; `/sync` load test; accessibility audit (TalkBack, font scale, contrast tool); store listing; hosted Terms of Service and Privacy Policy (screen 03 links them and both stores need a privacy-policy URL); a web page for account-deletion requests (Google Play expects one; check current store requirements); iOS verification when a Mac route exists. Production PHP has a current timezone database; log `timezone_version_get()` at boot.
+- OWASP API Top 10 pass; `/sync` load test; accessibility audit (TalkBack, font scale, contrast tool); store listing; hosted Terms of Service and Privacy Policy (screen 03 links them and both stores need a privacy-policy URL); a web page for account-deletion requests (Google Play expects one; check current store requirements); iOS verification when a Mac route exists. Production PHP has a current timezone database; log `timezone_version_get()` at boot. The journal and receipt pruning job (180-day retention) with indexes on `server_changes.created_at` and `mutation_receipts.committed_at`.
 
 ## Phase 8 — Retention pack · L
 
