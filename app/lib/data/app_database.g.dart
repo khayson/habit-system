@@ -3283,6 +3283,84 @@ class $SyncStateTable extends SyncState
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _consecutiveFailuresMeta =
+      const VerificationMeta('consecutiveFailures');
+  @override
+  late final GeneratedColumn<int> consecutiveFailures = GeneratedColumn<int>(
+    'consecutive_failures',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _backoffUntilMeta = const VerificationMeta(
+    'backoffUntil',
+  );
+  @override
+  late final GeneratedColumn<int> backoffUntil = GeneratedColumn<int>(
+    'backoff_until',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _requestRejectionsMeta = const VerificationMeta(
+    'requestRejections',
+  );
+  @override
+  late final GeneratedColumn<int> requestRejections = GeneratedColumn<int>(
+    'request_rejections',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('active'),
+  );
+  static const VerificationMeta _statusCodeMeta = const VerificationMeta(
+    'statusCode',
+  );
+  @override
+  late final GeneratedColumn<String> statusCode = GeneratedColumn<String>(
+    'status_code',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _lastErrorMeta = const VerificationMeta(
+    'lastError',
+  );
+  @override
+  late final GeneratedColumn<String> lastError = GeneratedColumn<String>(
+    'last_error',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _clockSkewMsMeta = const VerificationMeta(
+    'clockSkewMs',
+  );
+  @override
+  late final GeneratedColumn<int> clockSkewMs = GeneratedColumn<int>(
+    'clock_skew_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3299,6 +3377,13 @@ class $SyncStateTable extends SyncState
     leaseUntil,
     nextSyncAt,
     lastSyncedAt,
+    consecutiveFailures,
+    backoffUntil,
+    requestRejections,
+    status,
+    statusCode,
+    lastError,
+    clockSkewMs,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3421,6 +3506,60 @@ class $SyncStateTable extends SyncState
         ),
       );
     }
+    if (data.containsKey('consecutive_failures')) {
+      context.handle(
+        _consecutiveFailuresMeta,
+        consecutiveFailures.isAcceptableOrUnknown(
+          data['consecutive_failures']!,
+          _consecutiveFailuresMeta,
+        ),
+      );
+    }
+    if (data.containsKey('backoff_until')) {
+      context.handle(
+        _backoffUntilMeta,
+        backoffUntil.isAcceptableOrUnknown(
+          data['backoff_until']!,
+          _backoffUntilMeta,
+        ),
+      );
+    }
+    if (data.containsKey('request_rejections')) {
+      context.handle(
+        _requestRejectionsMeta,
+        requestRejections.isAcceptableOrUnknown(
+          data['request_rejections']!,
+          _requestRejectionsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('status_code')) {
+      context.handle(
+        _statusCodeMeta,
+        statusCode.isAcceptableOrUnknown(data['status_code']!, _statusCodeMeta),
+      );
+    }
+    if (data.containsKey('last_error')) {
+      context.handle(
+        _lastErrorMeta,
+        lastError.isAcceptableOrUnknown(data['last_error']!, _lastErrorMeta),
+      );
+    }
+    if (data.containsKey('clock_skew_ms')) {
+      context.handle(
+        _clockSkewMsMeta,
+        clockSkewMs.isAcceptableOrUnknown(
+          data['clock_skew_ms']!,
+          _clockSkewMsMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -3486,6 +3625,34 @@ class $SyncStateTable extends SyncState
         DriftSqlType.int,
         data['${effectivePrefix}last_synced_at'],
       ),
+      consecutiveFailures: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}consecutive_failures'],
+      )!,
+      backoffUntil: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}backoff_until'],
+      ),
+      requestRejections: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}request_rejections'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      statusCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status_code'],
+      ),
+      lastError: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_error'],
+      ),
+      clockSkewMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}clock_skew_ms'],
+      )!,
     );
   }
 
@@ -3510,8 +3677,27 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
   final String? userPayload;
   final String? leaseOwner;
   final int? leaseUntil;
+
+  /// 429: no request before this instant (Retry-After). Nothing bypasses it.
   final int? nextSyncAt;
   final int? lastSyncedAt;
+
+  /// 5xx, network and whole-request 4xx failures in a row, and the backoff they earned (F6).
+  final int consecutiveFailures;
+  final int? backoffUntil;
+
+  /// Whole-request 403/404/422 on /sync in a row; at 3 the status becomes paused (F7).
+  final int requestRejections;
+
+  /// `active` or `paused`; [statusCode] is the server's error code while paused.
+  final String status;
+  final String? statusCode;
+
+  /// The last failure of a run, as JSON `{code, message}` (F2). Cleared by a completed run.
+  final String? lastError;
+
+  /// Server time minus device time, from `meta.server_time` (F10).
+  final int clockSkewMs;
   const SyncStateRow({
     required this.id,
     required this.userId,
@@ -3527,6 +3713,13 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
     this.leaseUntil,
     this.nextSyncAt,
     this.lastSyncedAt,
+    required this.consecutiveFailures,
+    this.backoffUntil,
+    required this.requestRejections,
+    required this.status,
+    this.statusCode,
+    this.lastError,
+    required this.clockSkewMs,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3565,6 +3758,19 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
     if (!nullToAbsent || lastSyncedAt != null) {
       map['last_synced_at'] = Variable<int>(lastSyncedAt);
     }
+    map['consecutive_failures'] = Variable<int>(consecutiveFailures);
+    if (!nullToAbsent || backoffUntil != null) {
+      map['backoff_until'] = Variable<int>(backoffUntil);
+    }
+    map['request_rejections'] = Variable<int>(requestRejections);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || statusCode != null) {
+      map['status_code'] = Variable<String>(statusCode);
+    }
+    if (!nullToAbsent || lastError != null) {
+      map['last_error'] = Variable<String>(lastError);
+    }
+    map['clock_skew_ms'] = Variable<int>(clockSkewMs);
     return map;
   }
 
@@ -3604,6 +3810,19 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
       lastSyncedAt: lastSyncedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(lastSyncedAt),
+      consecutiveFailures: Value(consecutiveFailures),
+      backoffUntil: backoffUntil == null && nullToAbsent
+          ? const Value.absent()
+          : Value(backoffUntil),
+      requestRejections: Value(requestRejections),
+      status: Value(status),
+      statusCode: statusCode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(statusCode),
+      lastError: lastError == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastError),
+      clockSkewMs: Value(clockSkewMs),
     );
   }
 
@@ -3631,6 +3850,15 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
       leaseUntil: serializer.fromJson<int?>(json['leaseUntil']),
       nextSyncAt: serializer.fromJson<int?>(json['nextSyncAt']),
       lastSyncedAt: serializer.fromJson<int?>(json['lastSyncedAt']),
+      consecutiveFailures: serializer.fromJson<int>(
+        json['consecutiveFailures'],
+      ),
+      backoffUntil: serializer.fromJson<int?>(json['backoffUntil']),
+      requestRejections: serializer.fromJson<int>(json['requestRejections']),
+      status: serializer.fromJson<String>(json['status']),
+      statusCode: serializer.fromJson<String?>(json['statusCode']),
+      lastError: serializer.fromJson<String?>(json['lastError']),
+      clockSkewMs: serializer.fromJson<int>(json['clockSkewMs']),
     );
   }
   @override
@@ -3651,6 +3879,13 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
       'leaseUntil': serializer.toJson<int?>(leaseUntil),
       'nextSyncAt': serializer.toJson<int?>(nextSyncAt),
       'lastSyncedAt': serializer.toJson<int?>(lastSyncedAt),
+      'consecutiveFailures': serializer.toJson<int>(consecutiveFailures),
+      'backoffUntil': serializer.toJson<int?>(backoffUntil),
+      'requestRejections': serializer.toJson<int>(requestRejections),
+      'status': serializer.toJson<String>(status),
+      'statusCode': serializer.toJson<String?>(statusCode),
+      'lastError': serializer.toJson<String?>(lastError),
+      'clockSkewMs': serializer.toJson<int>(clockSkewMs),
     };
   }
 
@@ -3669,6 +3904,13 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
     Value<int?> leaseUntil = const Value.absent(),
     Value<int?> nextSyncAt = const Value.absent(),
     Value<int?> lastSyncedAt = const Value.absent(),
+    int? consecutiveFailures,
+    Value<int?> backoffUntil = const Value.absent(),
+    int? requestRejections,
+    String? status,
+    Value<String?> statusCode = const Value.absent(),
+    Value<String?> lastError = const Value.absent(),
+    int? clockSkewMs,
   }) => SyncStateRow(
     id: id ?? this.id,
     userId: userId ?? this.userId,
@@ -3691,6 +3933,13 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
     leaseUntil: leaseUntil.present ? leaseUntil.value : this.leaseUntil,
     nextSyncAt: nextSyncAt.present ? nextSyncAt.value : this.nextSyncAt,
     lastSyncedAt: lastSyncedAt.present ? lastSyncedAt.value : this.lastSyncedAt,
+    consecutiveFailures: consecutiveFailures ?? this.consecutiveFailures,
+    backoffUntil: backoffUntil.present ? backoffUntil.value : this.backoffUntil,
+    requestRejections: requestRejections ?? this.requestRejections,
+    status: status ?? this.status,
+    statusCode: statusCode.present ? statusCode.value : this.statusCode,
+    lastError: lastError.present ? lastError.value : this.lastError,
+    clockSkewMs: clockSkewMs ?? this.clockSkewMs,
   );
   SyncStateRow copyWithCompanion(SyncStateCompanion data) {
     return SyncStateRow(
@@ -3728,6 +3977,23 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
       lastSyncedAt: data.lastSyncedAt.present
           ? data.lastSyncedAt.value
           : this.lastSyncedAt,
+      consecutiveFailures: data.consecutiveFailures.present
+          ? data.consecutiveFailures.value
+          : this.consecutiveFailures,
+      backoffUntil: data.backoffUntil.present
+          ? data.backoffUntil.value
+          : this.backoffUntil,
+      requestRejections: data.requestRejections.present
+          ? data.requestRejections.value
+          : this.requestRejections,
+      status: data.status.present ? data.status.value : this.status,
+      statusCode: data.statusCode.present
+          ? data.statusCode.value
+          : this.statusCode,
+      lastError: data.lastError.present ? data.lastError.value : this.lastError,
+      clockSkewMs: data.clockSkewMs.present
+          ? data.clockSkewMs.value
+          : this.clockSkewMs,
     );
   }
 
@@ -3747,13 +4013,20 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
           ..write('leaseOwner: $leaseOwner, ')
           ..write('leaseUntil: $leaseUntil, ')
           ..write('nextSyncAt: $nextSyncAt, ')
-          ..write('lastSyncedAt: $lastSyncedAt')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('consecutiveFailures: $consecutiveFailures, ')
+          ..write('backoffUntil: $backoffUntil, ')
+          ..write('requestRejections: $requestRejections, ')
+          ..write('status: $status, ')
+          ..write('statusCode: $statusCode, ')
+          ..write('lastError: $lastError, ')
+          ..write('clockSkewMs: $clockSkewMs')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     userId,
     deviceId,
@@ -3768,7 +4041,14 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
     leaseUntil,
     nextSyncAt,
     lastSyncedAt,
-  );
+    consecutiveFailures,
+    backoffUntil,
+    requestRejections,
+    status,
+    statusCode,
+    lastError,
+    clockSkewMs,
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3786,7 +4066,14 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
           other.leaseOwner == this.leaseOwner &&
           other.leaseUntil == this.leaseUntil &&
           other.nextSyncAt == this.nextSyncAt &&
-          other.lastSyncedAt == this.lastSyncedAt);
+          other.lastSyncedAt == this.lastSyncedAt &&
+          other.consecutiveFailures == this.consecutiveFailures &&
+          other.backoffUntil == this.backoffUntil &&
+          other.requestRejections == this.requestRejections &&
+          other.status == this.status &&
+          other.statusCode == this.statusCode &&
+          other.lastError == this.lastError &&
+          other.clockSkewMs == this.clockSkewMs);
 }
 
 class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
@@ -3804,6 +4091,13 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
   final Value<int?> leaseUntil;
   final Value<int?> nextSyncAt;
   final Value<int?> lastSyncedAt;
+  final Value<int> consecutiveFailures;
+  final Value<int?> backoffUntil;
+  final Value<int> requestRejections;
+  final Value<String> status;
+  final Value<String?> statusCode;
+  final Value<String?> lastError;
+  final Value<int> clockSkewMs;
   const SyncStateCompanion({
     this.id = const Value.absent(),
     this.userId = const Value.absent(),
@@ -3819,6 +4113,13 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
     this.leaseUntil = const Value.absent(),
     this.nextSyncAt = const Value.absent(),
     this.lastSyncedAt = const Value.absent(),
+    this.consecutiveFailures = const Value.absent(),
+    this.backoffUntil = const Value.absent(),
+    this.requestRejections = const Value.absent(),
+    this.status = const Value.absent(),
+    this.statusCode = const Value.absent(),
+    this.lastError = const Value.absent(),
+    this.clockSkewMs = const Value.absent(),
   });
   SyncStateCompanion.insert({
     this.id = const Value.absent(),
@@ -3835,6 +4136,13 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
     this.leaseUntil = const Value.absent(),
     this.nextSyncAt = const Value.absent(),
     this.lastSyncedAt = const Value.absent(),
+    this.consecutiveFailures = const Value.absent(),
+    this.backoffUntil = const Value.absent(),
+    this.requestRejections = const Value.absent(),
+    this.status = const Value.absent(),
+    this.statusCode = const Value.absent(),
+    this.lastError = const Value.absent(),
+    this.clockSkewMs = const Value.absent(),
   }) : userId = Value(userId),
        deviceId = Value(deviceId);
   static Insertable<SyncStateRow> custom({
@@ -3852,6 +4160,13 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
     Expression<int>? leaseUntil,
     Expression<int>? nextSyncAt,
     Expression<int>? lastSyncedAt,
+    Expression<int>? consecutiveFailures,
+    Expression<int>? backoffUntil,
+    Expression<int>? requestRejections,
+    Expression<String>? status,
+    Expression<String>? statusCode,
+    Expression<String>? lastError,
+    Expression<int>? clockSkewMs,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -3870,6 +4185,14 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
       if (leaseUntil != null) 'lease_until': leaseUntil,
       if (nextSyncAt != null) 'next_sync_at': nextSyncAt,
       if (lastSyncedAt != null) 'last_synced_at': lastSyncedAt,
+      if (consecutiveFailures != null)
+        'consecutive_failures': consecutiveFailures,
+      if (backoffUntil != null) 'backoff_until': backoffUntil,
+      if (requestRejections != null) 'request_rejections': requestRejections,
+      if (status != null) 'status': status,
+      if (statusCode != null) 'status_code': statusCode,
+      if (lastError != null) 'last_error': lastError,
+      if (clockSkewMs != null) 'clock_skew_ms': clockSkewMs,
     });
   }
 
@@ -3888,6 +4211,13 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
     Value<int?>? leaseUntil,
     Value<int?>? nextSyncAt,
     Value<int?>? lastSyncedAt,
+    Value<int>? consecutiveFailures,
+    Value<int?>? backoffUntil,
+    Value<int>? requestRejections,
+    Value<String>? status,
+    Value<String?>? statusCode,
+    Value<String?>? lastError,
+    Value<int>? clockSkewMs,
   }) {
     return SyncStateCompanion(
       id: id ?? this.id,
@@ -3905,6 +4235,13 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
       leaseUntil: leaseUntil ?? this.leaseUntil,
       nextSyncAt: nextSyncAt ?? this.nextSyncAt,
       lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
+      consecutiveFailures: consecutiveFailures ?? this.consecutiveFailures,
+      backoffUntil: backoffUntil ?? this.backoffUntil,
+      requestRejections: requestRejections ?? this.requestRejections,
+      status: status ?? this.status,
+      statusCode: statusCode ?? this.statusCode,
+      lastError: lastError ?? this.lastError,
+      clockSkewMs: clockSkewMs ?? this.clockSkewMs,
     );
   }
 
@@ -3957,6 +4294,27 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
     if (lastSyncedAt.present) {
       map['last_synced_at'] = Variable<int>(lastSyncedAt.value);
     }
+    if (consecutiveFailures.present) {
+      map['consecutive_failures'] = Variable<int>(consecutiveFailures.value);
+    }
+    if (backoffUntil.present) {
+      map['backoff_until'] = Variable<int>(backoffUntil.value);
+    }
+    if (requestRejections.present) {
+      map['request_rejections'] = Variable<int>(requestRejections.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (statusCode.present) {
+      map['status_code'] = Variable<String>(statusCode.value);
+    }
+    if (lastError.present) {
+      map['last_error'] = Variable<String>(lastError.value);
+    }
+    if (clockSkewMs.present) {
+      map['clock_skew_ms'] = Variable<int>(clockSkewMs.value);
+    }
     return map;
   }
 
@@ -3976,7 +4334,546 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
           ..write('leaseOwner: $leaseOwner, ')
           ..write('leaseUntil: $leaseUntil, ')
           ..write('nextSyncAt: $nextSyncAt, ')
-          ..write('lastSyncedAt: $lastSyncedAt')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('consecutiveFailures: $consecutiveFailures, ')
+          ..write('backoffUntil: $backoffUntil, ')
+          ..write('requestRejections: $requestRejections, ')
+          ..write('status: $status, ')
+          ..write('statusCode: $statusCode, ')
+          ..write('lastError: $lastError, ')
+          ..write('clockSkewMs: $clockSkewMs')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $DiscardedMutationsTable extends DiscardedMutations
+    with TableInfo<$DiscardedMutationsTable, DiscardedMutation> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DiscardedMutationsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _mutationIdMeta = const VerificationMeta(
+    'mutationId',
+  );
+  @override
+  late final GeneratedColumn<String> mutationId = GeneratedColumn<String>(
+    'mutation_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _entityMeta = const VerificationMeta('entity');
+  @override
+  late final GeneratedColumn<String> entity = GeneratedColumn<String>(
+    'entity',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _entityIdMeta = const VerificationMeta(
+    'entityId',
+  );
+  @override
+  late final GeneratedColumn<String> entityId = GeneratedColumn<String>(
+    'entity_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _operationMeta = const VerificationMeta(
+    'operation',
+  );
+  @override
+  late final GeneratedColumn<String> operation = GeneratedColumn<String>(
+    'operation',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _payloadMeta = const VerificationMeta(
+    'payload',
+  );
+  @override
+  late final GeneratedColumn<String> payload = GeneratedColumn<String>(
+    'payload',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _localDateHintMeta = const VerificationMeta(
+    'localDateHint',
+  );
+  @override
+  late final GeneratedColumn<String> localDateHint = GeneratedColumn<String>(
+    'local_date_hint',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _lastErrorMeta = const VerificationMeta(
+    'lastError',
+  );
+  @override
+  late final GeneratedColumn<String> lastError = GeneratedColumn<String>(
+    'last_error',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _discardedAtMeta = const VerificationMeta(
+    'discardedAt',
+  );
+  @override
+  late final GeneratedColumn<int> discardedAt = GeneratedColumn<int>(
+    'discarded_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    mutationId,
+    entity,
+    entityId,
+    operation,
+    payload,
+    localDateHint,
+    lastError,
+    discardedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'discarded_mutations';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DiscardedMutation> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('mutation_id')) {
+      context.handle(
+        _mutationIdMeta,
+        mutationId.isAcceptableOrUnknown(data['mutation_id']!, _mutationIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_mutationIdMeta);
+    }
+    if (data.containsKey('entity')) {
+      context.handle(
+        _entityMeta,
+        entity.isAcceptableOrUnknown(data['entity']!, _entityMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_entityMeta);
+    }
+    if (data.containsKey('entity_id')) {
+      context.handle(
+        _entityIdMeta,
+        entityId.isAcceptableOrUnknown(data['entity_id']!, _entityIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_entityIdMeta);
+    }
+    if (data.containsKey('operation')) {
+      context.handle(
+        _operationMeta,
+        operation.isAcceptableOrUnknown(data['operation']!, _operationMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_operationMeta);
+    }
+    if (data.containsKey('payload')) {
+      context.handle(
+        _payloadMeta,
+        payload.isAcceptableOrUnknown(data['payload']!, _payloadMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_payloadMeta);
+    }
+    if (data.containsKey('local_date_hint')) {
+      context.handle(
+        _localDateHintMeta,
+        localDateHint.isAcceptableOrUnknown(
+          data['local_date_hint']!,
+          _localDateHintMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_error')) {
+      context.handle(
+        _lastErrorMeta,
+        lastError.isAcceptableOrUnknown(data['last_error']!, _lastErrorMeta),
+      );
+    }
+    if (data.containsKey('discarded_at')) {
+      context.handle(
+        _discardedAtMeta,
+        discardedAt.isAcceptableOrUnknown(
+          data['discarded_at']!,
+          _discardedAtMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_discardedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {mutationId};
+  @override
+  DiscardedMutation map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DiscardedMutation(
+      mutationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}mutation_id'],
+      )!,
+      entity: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entity'],
+      )!,
+      entityId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entity_id'],
+      )!,
+      operation: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}operation'],
+      )!,
+      payload: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload'],
+      )!,
+      localDateHint: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}local_date_hint'],
+      ),
+      lastError: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_error'],
+      ),
+      discardedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}discarded_at'],
+      )!,
+    );
+  }
+
+  @override
+  $DiscardedMutationsTable createAlias(String alias) {
+    return $DiscardedMutationsTable(attachedDatabase, alias);
+  }
+}
+
+class DiscardedMutation extends DataClass
+    implements Insertable<DiscardedMutation> {
+  final String mutationId;
+  final String entity;
+  final String entityId;
+  final String operation;
+  final String payload;
+  final String? localDateHint;
+  final String? lastError;
+  final int discardedAt;
+  const DiscardedMutation({
+    required this.mutationId,
+    required this.entity,
+    required this.entityId,
+    required this.operation,
+    required this.payload,
+    this.localDateHint,
+    this.lastError,
+    required this.discardedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['mutation_id'] = Variable<String>(mutationId);
+    map['entity'] = Variable<String>(entity);
+    map['entity_id'] = Variable<String>(entityId);
+    map['operation'] = Variable<String>(operation);
+    map['payload'] = Variable<String>(payload);
+    if (!nullToAbsent || localDateHint != null) {
+      map['local_date_hint'] = Variable<String>(localDateHint);
+    }
+    if (!nullToAbsent || lastError != null) {
+      map['last_error'] = Variable<String>(lastError);
+    }
+    map['discarded_at'] = Variable<int>(discardedAt);
+    return map;
+  }
+
+  DiscardedMutationsCompanion toCompanion(bool nullToAbsent) {
+    return DiscardedMutationsCompanion(
+      mutationId: Value(mutationId),
+      entity: Value(entity),
+      entityId: Value(entityId),
+      operation: Value(operation),
+      payload: Value(payload),
+      localDateHint: localDateHint == null && nullToAbsent
+          ? const Value.absent()
+          : Value(localDateHint),
+      lastError: lastError == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastError),
+      discardedAt: Value(discardedAt),
+    );
+  }
+
+  factory DiscardedMutation.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DiscardedMutation(
+      mutationId: serializer.fromJson<String>(json['mutationId']),
+      entity: serializer.fromJson<String>(json['entity']),
+      entityId: serializer.fromJson<String>(json['entityId']),
+      operation: serializer.fromJson<String>(json['operation']),
+      payload: serializer.fromJson<String>(json['payload']),
+      localDateHint: serializer.fromJson<String?>(json['localDateHint']),
+      lastError: serializer.fromJson<String?>(json['lastError']),
+      discardedAt: serializer.fromJson<int>(json['discardedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'mutationId': serializer.toJson<String>(mutationId),
+      'entity': serializer.toJson<String>(entity),
+      'entityId': serializer.toJson<String>(entityId),
+      'operation': serializer.toJson<String>(operation),
+      'payload': serializer.toJson<String>(payload),
+      'localDateHint': serializer.toJson<String?>(localDateHint),
+      'lastError': serializer.toJson<String?>(lastError),
+      'discardedAt': serializer.toJson<int>(discardedAt),
+    };
+  }
+
+  DiscardedMutation copyWith({
+    String? mutationId,
+    String? entity,
+    String? entityId,
+    String? operation,
+    String? payload,
+    Value<String?> localDateHint = const Value.absent(),
+    Value<String?> lastError = const Value.absent(),
+    int? discardedAt,
+  }) => DiscardedMutation(
+    mutationId: mutationId ?? this.mutationId,
+    entity: entity ?? this.entity,
+    entityId: entityId ?? this.entityId,
+    operation: operation ?? this.operation,
+    payload: payload ?? this.payload,
+    localDateHint: localDateHint.present
+        ? localDateHint.value
+        : this.localDateHint,
+    lastError: lastError.present ? lastError.value : this.lastError,
+    discardedAt: discardedAt ?? this.discardedAt,
+  );
+  DiscardedMutation copyWithCompanion(DiscardedMutationsCompanion data) {
+    return DiscardedMutation(
+      mutationId: data.mutationId.present
+          ? data.mutationId.value
+          : this.mutationId,
+      entity: data.entity.present ? data.entity.value : this.entity,
+      entityId: data.entityId.present ? data.entityId.value : this.entityId,
+      operation: data.operation.present ? data.operation.value : this.operation,
+      payload: data.payload.present ? data.payload.value : this.payload,
+      localDateHint: data.localDateHint.present
+          ? data.localDateHint.value
+          : this.localDateHint,
+      lastError: data.lastError.present ? data.lastError.value : this.lastError,
+      discardedAt: data.discardedAt.present
+          ? data.discardedAt.value
+          : this.discardedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DiscardedMutation(')
+          ..write('mutationId: $mutationId, ')
+          ..write('entity: $entity, ')
+          ..write('entityId: $entityId, ')
+          ..write('operation: $operation, ')
+          ..write('payload: $payload, ')
+          ..write('localDateHint: $localDateHint, ')
+          ..write('lastError: $lastError, ')
+          ..write('discardedAt: $discardedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    mutationId,
+    entity,
+    entityId,
+    operation,
+    payload,
+    localDateHint,
+    lastError,
+    discardedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DiscardedMutation &&
+          other.mutationId == this.mutationId &&
+          other.entity == this.entity &&
+          other.entityId == this.entityId &&
+          other.operation == this.operation &&
+          other.payload == this.payload &&
+          other.localDateHint == this.localDateHint &&
+          other.lastError == this.lastError &&
+          other.discardedAt == this.discardedAt);
+}
+
+class DiscardedMutationsCompanion extends UpdateCompanion<DiscardedMutation> {
+  final Value<String> mutationId;
+  final Value<String> entity;
+  final Value<String> entityId;
+  final Value<String> operation;
+  final Value<String> payload;
+  final Value<String?> localDateHint;
+  final Value<String?> lastError;
+  final Value<int> discardedAt;
+  final Value<int> rowid;
+  const DiscardedMutationsCompanion({
+    this.mutationId = const Value.absent(),
+    this.entity = const Value.absent(),
+    this.entityId = const Value.absent(),
+    this.operation = const Value.absent(),
+    this.payload = const Value.absent(),
+    this.localDateHint = const Value.absent(),
+    this.lastError = const Value.absent(),
+    this.discardedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DiscardedMutationsCompanion.insert({
+    required String mutationId,
+    required String entity,
+    required String entityId,
+    required String operation,
+    required String payload,
+    this.localDateHint = const Value.absent(),
+    this.lastError = const Value.absent(),
+    required int discardedAt,
+    this.rowid = const Value.absent(),
+  }) : mutationId = Value(mutationId),
+       entity = Value(entity),
+       entityId = Value(entityId),
+       operation = Value(operation),
+       payload = Value(payload),
+       discardedAt = Value(discardedAt);
+  static Insertable<DiscardedMutation> custom({
+    Expression<String>? mutationId,
+    Expression<String>? entity,
+    Expression<String>? entityId,
+    Expression<String>? operation,
+    Expression<String>? payload,
+    Expression<String>? localDateHint,
+    Expression<String>? lastError,
+    Expression<int>? discardedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (mutationId != null) 'mutation_id': mutationId,
+      if (entity != null) 'entity': entity,
+      if (entityId != null) 'entity_id': entityId,
+      if (operation != null) 'operation': operation,
+      if (payload != null) 'payload': payload,
+      if (localDateHint != null) 'local_date_hint': localDateHint,
+      if (lastError != null) 'last_error': lastError,
+      if (discardedAt != null) 'discarded_at': discardedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DiscardedMutationsCompanion copyWith({
+    Value<String>? mutationId,
+    Value<String>? entity,
+    Value<String>? entityId,
+    Value<String>? operation,
+    Value<String>? payload,
+    Value<String?>? localDateHint,
+    Value<String?>? lastError,
+    Value<int>? discardedAt,
+    Value<int>? rowid,
+  }) {
+    return DiscardedMutationsCompanion(
+      mutationId: mutationId ?? this.mutationId,
+      entity: entity ?? this.entity,
+      entityId: entityId ?? this.entityId,
+      operation: operation ?? this.operation,
+      payload: payload ?? this.payload,
+      localDateHint: localDateHint ?? this.localDateHint,
+      lastError: lastError ?? this.lastError,
+      discardedAt: discardedAt ?? this.discardedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (mutationId.present) {
+      map['mutation_id'] = Variable<String>(mutationId.value);
+    }
+    if (entity.present) {
+      map['entity'] = Variable<String>(entity.value);
+    }
+    if (entityId.present) {
+      map['entity_id'] = Variable<String>(entityId.value);
+    }
+    if (operation.present) {
+      map['operation'] = Variable<String>(operation.value);
+    }
+    if (payload.present) {
+      map['payload'] = Variable<String>(payload.value);
+    }
+    if (localDateHint.present) {
+      map['local_date_hint'] = Variable<String>(localDateHint.value);
+    }
+    if (lastError.present) {
+      map['last_error'] = Variable<String>(lastError.value);
+    }
+    if (discardedAt.present) {
+      map['discarded_at'] = Variable<int>(discardedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DiscardedMutationsCompanion(')
+          ..write('mutationId: $mutationId, ')
+          ..write('entity: $entity, ')
+          ..write('entityId: $entityId, ')
+          ..write('operation: $operation, ')
+          ..write('payload: $payload, ')
+          ..write('localDateHint: $localDateHint, ')
+          ..write('lastError: $lastError, ')
+          ..write('discardedAt: $discardedAt, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -3990,6 +4887,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $OpaqueEntitiesTable opaqueEntities = $OpaqueEntitiesTable(this);
   late final $OutboxTable outbox = $OutboxTable(this);
   late final $SyncStateTable syncState = $SyncStateTable(this);
+  late final $DiscardedMutationsTable discardedMutations =
+      $DiscardedMutationsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4000,6 +4899,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     opaqueEntities,
     outbox,
     syncState,
+    discardedMutations,
   ];
 }
 
@@ -5490,6 +6390,13 @@ typedef $$SyncStateTableCreateCompanionBuilder = SyncStateCompanion Function({
   Value<int?> leaseUntil,
   Value<int?> nextSyncAt,
   Value<int?> lastSyncedAt,
+  Value<int> consecutiveFailures,
+  Value<int?> backoffUntil,
+  Value<int> requestRejections,
+  Value<String> status,
+  Value<String?> statusCode,
+  Value<String?> lastError,
+  Value<int> clockSkewMs,
 });
 typedef $$SyncStateTableUpdateCompanionBuilder = SyncStateCompanion Function({
   Value<int> id,
@@ -5506,6 +6413,13 @@ typedef $$SyncStateTableUpdateCompanionBuilder = SyncStateCompanion Function({
   Value<int?> leaseUntil,
   Value<int?> nextSyncAt,
   Value<int?> lastSyncedAt,
+  Value<int> consecutiveFailures,
+  Value<int?> backoffUntil,
+  Value<int> requestRejections,
+  Value<String> status,
+  Value<String?> statusCode,
+  Value<String?> lastError,
+  Value<int> clockSkewMs,
 });
 
 class $$SyncStateTableFilterComposer
@@ -5584,6 +6498,41 @@ class $$SyncStateTableFilterComposer
 
   ColumnFilters<int> get lastSyncedAt => $composableBuilder(
     column: $table.lastSyncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get consecutiveFailures => $composableBuilder(
+    column: $table.consecutiveFailures,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get backoffUntil => $composableBuilder(
+    column: $table.backoffUntil,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get requestRejections => $composableBuilder(
+    column: $table.requestRejections,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get statusCode => $composableBuilder(
+    column: $table.statusCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get clockSkewMs => $composableBuilder(
+    column: $table.clockSkewMs,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -5666,6 +6615,41 @@ class $$SyncStateTableOrderingComposer
     column: $table.lastSyncedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get consecutiveFailures => $composableBuilder(
+    column: $table.consecutiveFailures,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get backoffUntil => $composableBuilder(
+    column: $table.backoffUntil,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get requestRejections => $composableBuilder(
+    column: $table.requestRejections,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get statusCode => $composableBuilder(
+    column: $table.statusCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get clockSkewMs => $composableBuilder(
+    column: $table.clockSkewMs,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SyncStateTableAnnotationComposer
@@ -5738,6 +6722,37 @@ class $$SyncStateTableAnnotationComposer
     column: $table.lastSyncedAt,
     builder: (column) => column,
   );
+
+  GeneratedColumn<int> get consecutiveFailures => $composableBuilder(
+    column: $table.consecutiveFailures,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get backoffUntil => $composableBuilder(
+    column: $table.backoffUntil,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get requestRejections => $composableBuilder(
+    column: $table.requestRejections,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get statusCode => $composableBuilder(
+    column: $table.statusCode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get lastError =>
+      $composableBuilder(column: $table.lastError, builder: (column) => column);
+
+  GeneratedColumn<int> get clockSkewMs => $composableBuilder(
+    column: $table.clockSkewMs,
+    builder: (column) => column,
+  );
 }
 
 class $$SyncStateTableTableManager
@@ -5785,6 +6800,13 @@ class $$SyncStateTableTableManager
                 Value<int?> leaseUntil = const Value.absent(),
                 Value<int?> nextSyncAt = const Value.absent(),
                 Value<int?> lastSyncedAt = const Value.absent(),
+                Value<int> consecutiveFailures = const Value.absent(),
+                Value<int?> backoffUntil = const Value.absent(),
+                Value<int> requestRejections = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String?> statusCode = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+                Value<int> clockSkewMs = const Value.absent(),
               }) => SyncStateCompanion(
                 id: id,
                 userId: userId,
@@ -5800,6 +6822,13 @@ class $$SyncStateTableTableManager
                 leaseUntil: leaseUntil,
                 nextSyncAt: nextSyncAt,
                 lastSyncedAt: lastSyncedAt,
+                consecutiveFailures: consecutiveFailures,
+                backoffUntil: backoffUntil,
+                requestRejections: requestRejections,
+                status: status,
+                statusCode: statusCode,
+                lastError: lastError,
+                clockSkewMs: clockSkewMs,
               ),
           createCompanionCallback:
               ({
@@ -5817,6 +6846,13 @@ class $$SyncStateTableTableManager
                 Value<int?> leaseUntil = const Value.absent(),
                 Value<int?> nextSyncAt = const Value.absent(),
                 Value<int?> lastSyncedAt = const Value.absent(),
+                Value<int> consecutiveFailures = const Value.absent(),
+                Value<int?> backoffUntil = const Value.absent(),
+                Value<int> requestRejections = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String?> statusCode = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+                Value<int> clockSkewMs = const Value.absent(),
               }) => SyncStateCompanion.insert(
                 id: id,
                 userId: userId,
@@ -5832,6 +6868,13 @@ class $$SyncStateTableTableManager
                 leaseUntil: leaseUntil,
                 nextSyncAt: nextSyncAt,
                 lastSyncedAt: lastSyncedAt,
+                consecutiveFailures: consecutiveFailures,
+                backoffUntil: backoffUntil,
+                requestRejections: requestRejections,
+                status: status,
+                statusCode: statusCode,
+                lastError: lastError,
+                clockSkewMs: clockSkewMs,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -5867,6 +6910,293 @@ typedef $$SyncStateTableProcessedTableManager =
       SyncStateRow,
       PrefetchHooks Function()
     >;
+typedef $$DiscardedMutationsTableCreateCompanionBuilder =
+    DiscardedMutationsCompanion Function({
+      required String mutationId,
+      required String entity,
+      required String entityId,
+      required String operation,
+      required String payload,
+      Value<String?> localDateHint,
+      Value<String?> lastError,
+      required int discardedAt,
+      Value<int> rowid,
+    });
+typedef $$DiscardedMutationsTableUpdateCompanionBuilder =
+    DiscardedMutationsCompanion Function({
+      Value<String> mutationId,
+      Value<String> entity,
+      Value<String> entityId,
+      Value<String> operation,
+      Value<String> payload,
+      Value<String?> localDateHint,
+      Value<String?> lastError,
+      Value<int> discardedAt,
+      Value<int> rowid,
+    });
+
+class $$DiscardedMutationsTableFilterComposer
+    extends Composer<_$AppDatabase, $DiscardedMutationsTable> {
+  $$DiscardedMutationsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get mutationId => $composableBuilder(
+    column: $table.mutationId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get entity => $composableBuilder(
+    column: $table.entity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get entityId => $composableBuilder(
+    column: $table.entityId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get operation => $composableBuilder(
+    column: $table.operation,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payload => $composableBuilder(
+    column: $table.payload,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get localDateHint => $composableBuilder(
+    column: $table.localDateHint,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get discardedAt => $composableBuilder(
+    column: $table.discardedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$DiscardedMutationsTableOrderingComposer
+    extends Composer<_$AppDatabase, $DiscardedMutationsTable> {
+  $$DiscardedMutationsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get mutationId => $composableBuilder(
+    column: $table.mutationId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get entity => $composableBuilder(
+    column: $table.entity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get entityId => $composableBuilder(
+    column: $table.entityId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get operation => $composableBuilder(
+    column: $table.operation,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payload => $composableBuilder(
+    column: $table.payload,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get localDateHint => $composableBuilder(
+    column: $table.localDateHint,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get discardedAt => $composableBuilder(
+    column: $table.discardedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$DiscardedMutationsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DiscardedMutationsTable> {
+  $$DiscardedMutationsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get mutationId => $composableBuilder(
+    column: $table.mutationId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get entity =>
+      $composableBuilder(column: $table.entity, builder: (column) => column);
+
+  GeneratedColumn<String> get entityId =>
+      $composableBuilder(column: $table.entityId, builder: (column) => column);
+
+  GeneratedColumn<String> get operation =>
+      $composableBuilder(column: $table.operation, builder: (column) => column);
+
+  GeneratedColumn<String> get payload =>
+      $composableBuilder(column: $table.payload, builder: (column) => column);
+
+  GeneratedColumn<String> get localDateHint => $composableBuilder(
+    column: $table.localDateHint,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get lastError =>
+      $composableBuilder(column: $table.lastError, builder: (column) => column);
+
+  GeneratedColumn<int> get discardedAt => $composableBuilder(
+    column: $table.discardedAt,
+    builder: (column) => column,
+  );
+}
+
+class $$DiscardedMutationsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $DiscardedMutationsTable,
+          DiscardedMutation,
+          $$DiscardedMutationsTableFilterComposer,
+          $$DiscardedMutationsTableOrderingComposer,
+          $$DiscardedMutationsTableAnnotationComposer,
+          $$DiscardedMutationsTableCreateCompanionBuilder,
+          $$DiscardedMutationsTableUpdateCompanionBuilder,
+          (
+            DiscardedMutation,
+            BaseReferences<
+              _$AppDatabase,
+              $DiscardedMutationsTable,
+              DiscardedMutation
+            >,
+          ),
+          DiscardedMutation,
+          PrefetchHooks Function()
+        > {
+  $$DiscardedMutationsTableTableManager(
+    _$AppDatabase db,
+    $DiscardedMutationsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DiscardedMutationsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DiscardedMutationsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$DiscardedMutationsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> mutationId = const Value.absent(),
+                Value<String> entity = const Value.absent(),
+                Value<String> entityId = const Value.absent(),
+                Value<String> operation = const Value.absent(),
+                Value<String> payload = const Value.absent(),
+                Value<String?> localDateHint = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+                Value<int> discardedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DiscardedMutationsCompanion(
+                mutationId: mutationId,
+                entity: entity,
+                entityId: entityId,
+                operation: operation,
+                payload: payload,
+                localDateHint: localDateHint,
+                lastError: lastError,
+                discardedAt: discardedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String mutationId,
+                required String entity,
+                required String entityId,
+                required String operation,
+                required String payload,
+                Value<String?> localDateHint = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+                required int discardedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => DiscardedMutationsCompanion.insert(
+                mutationId: mutationId,
+                entity: entity,
+                entityId: entityId,
+                operation: operation,
+                payload: payload,
+                localDateHint: localDateHint,
+                lastError: lastError,
+                discardedAt: discardedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$DiscardedMutationsTable, DiscardedMutation>(
+                    table,
+                  ),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $DiscardedMutationsTable,
+                    DiscardedMutation
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$DiscardedMutationsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $DiscardedMutationsTable,
+      DiscardedMutation,
+      $$DiscardedMutationsTableFilterComposer,
+      $$DiscardedMutationsTableOrderingComposer,
+      $$DiscardedMutationsTableAnnotationComposer,
+      $$DiscardedMutationsTableCreateCompanionBuilder,
+      $$DiscardedMutationsTableUpdateCompanionBuilder,
+      (
+        DiscardedMutation,
+        BaseReferences<
+          _$AppDatabase,
+          $DiscardedMutationsTable,
+          DiscardedMutation
+        >,
+      ),
+      DiscardedMutation,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -5881,4 +7211,6 @@ class $AppDatabaseManager {
       $$OutboxTableTableManager(_db, _db.outbox);
   $$SyncStateTableTableManager get syncState =>
       $$SyncStateTableTableManager(_db, _db.syncState);
+  $$DiscardedMutationsTableTableManager get discardedMutations =>
+      $$DiscardedMutationsTableTableManager(_db, _db.discardedMutations);
 }

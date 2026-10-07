@@ -110,20 +110,54 @@ class SyncState extends Table {
   TextColumn get userPayload => text().nullable()();
   TextColumn get leaseOwner => text().nullable()();
   IntColumn get leaseUntil => integer().nullable()();
+
+  /// 429: no request before this instant (Retry-After). Nothing bypasses it.
   IntColumn get nextSyncAt => integer().nullable()();
   IntColumn get lastSyncedAt => integer().nullable()();
+
+  /// 5xx, network and whole-request 4xx failures in a row, and the backoff they earned (F6).
+  IntColumn get consecutiveFailures => integer().withDefault(const Constant(0))();
+  IntColumn get backoffUntil => integer().nullable()();
+
+  /// Whole-request 403/404/422 on /sync in a row; at 3 the status becomes paused (F7).
+  IntColumn get requestRejections => integer().withDefault(const Constant(0))();
+
+  /// `active` or `paused`; [statusCode] is the server's error code while paused.
+  TextColumn get status => text().withDefault(const Constant('active'))();
+  TextColumn get statusCode => text().nullable()();
+
+  /// The last failure of a run, as JSON `{code, message}` (F2). Cleared by a completed run.
+  TextColumn get lastError => text().nullable()();
+
+  /// Server time minus device time, from `meta.server_time` (F10).
+  IntColumn get clockSkewMs => integer().withDefault(const Constant(0))();
 
   @override
   Set<Column> get primaryKey => {id};
 }
 
+/// Unacknowledged mutations the user chose to discard (screen 18). Kept as a record; never sent.
+class DiscardedMutations extends Table {
+  TextColumn get mutationId => text()();
+  TextColumn get entity => text()();
+  TextColumn get entityId => text()();
+  TextColumn get operation => text()();
+  TextColumn get payload => text()();
+  TextColumn get localDateHint => text().nullable()();
+  TextColumn get lastError => text().nullable()();
+  IntColumn get discardedAt => integer()();
+
+  @override
+  Set<Column> get primaryKey => {mutationId};
+}
+
 /// The per-account local working copy (one file per user id, see database_opener.dart).
-@DriftDatabase(tables: [Habits, HabitLogs, OpaqueEntities, Outbox, SyncState])
+@DriftDatabase(tables: [Habits, HabitLogs, OpaqueEntities, Outbox, SyncState, DiscardedMutations])
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -136,6 +170,22 @@ class AppDatabase extends _$AppDatabase {
       if (from < 2) {
         await m.createAll();
         await _createIndexes();
+        return;
+      }
+      if (from < 3) {
+        // Phase 2b.1 review: sync health, pause, clock skew and the discard record.
+        for (final column in [
+          syncState.consecutiveFailures,
+          syncState.backoffUntil,
+          syncState.requestRejections,
+          syncState.status,
+          syncState.statusCode,
+          syncState.lastError,
+          syncState.clockSkewMs,
+        ]) {
+          await m.addColumn(syncState, column);
+        }
+        await m.createTable(discardedMutations);
       }
     },
     beforeOpen: (details) async {
