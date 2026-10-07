@@ -80,6 +80,45 @@ flutter run --dart-define=API_BASE_URL=https://api.example.com/api/v1
 Plain HTTP is allowed only in debug builds and only to `10.0.2.2` / `localhost`
 (`android/app/src/debug/res/xml/network_security_config.xml`).
 
+## Demo: two emulators converge (Phase 2b.2 gate)
+
+Two Android emulators, one account. A creates a habit; B checks it in while A is offline; A
+catches up when it reconnects.
+
+```powershell
+scripts\db-up.ps1
+scripts\api-serve.ps1                    # leave running; emulators reach it at 10.0.2.2:8000
+flutter emulators                        # needs two AVDs; create a second in Android Studio
+flutter emulators --launch <avd-a>
+flutter emulators --launch <avd-b>
+flutter devices                          # note the ids, e.g. emulator-5554 and emulator-5556
+cd app
+flutter run -d emulator-5554             # terminal 1: device A
+flutter run -d emulator-5556             # terminal 2: device B
+```
+
+1. **A**: Create account (12+ character password, tick the Terms line), then Continue on "Your
+   day, your time". Today shows "Your first step". Tap **Create your first habit**, name it,
+   then **Create habit**. Today lists it as "New · waiting to sync"; the chip moves from
+   "1 waiting" to "Synced".
+2. **B**: Sign in with the same email and password. A first sign-in on this device shows the
+   timezone screen; Continue. Today shows the habit once the first sync finishes.
+3. Take **A** offline:
+   `adb -s emulator-5554 shell cmd connectivity airplane-mode enable`.
+   A keeps working: check in and undo freely; the chip says "Offline" and the sync screen
+   (tap the chip) lists the queued changes. Leave the habit unchecked on A.
+4. **B**: tap the habit. It shows "Done · waiting to sync", then "Done" with the chip at
+   "Synced".
+5. Bring **A** back:
+   `adb -s emulator-5554 shell cmd connectivity airplane-mode disable`.
+   Regaining a connection triggers a sync at once: A shows "Done" and "Synced". Both devices
+   now hold the same confirmed state.
+
+If A had checked in offline too, both changes would land on the same habit-day: the server
+keeps one log and A's change is remapped to it (the e2e "merged" scenario). Pull-to-refresh is
+not needed: start, resume, every local write and connectivity changes all trigger a sync, and
+the sync screen has **Sync now**.
+
 ## Checks
 
 - `scripts\check.ps1` — everything CI runs: Pint, Larastan, Pest (real PostgreSQL), dart format,
