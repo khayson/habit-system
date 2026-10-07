@@ -74,25 +74,35 @@ void main() {
   });
 
   group('contract fixtures', () {
+    // fixture (folder/name) -> the Dart test that consumes it.
     const dartConsumers = {
-      'progress': 'test/domain/provisional_progress_test.dart',
-      'weekly': 'test/domain/provisional_progress_test.dart',
+      'domain/progress': 'test/domain/provisional_progress_test.dart',
+      'domain/weekly': 'test/domain/provisional_progress_test.dart',
+      'domain/day_resolution': 'test/domain/day_resolution_test.dart',
+      'sync/ack_server_error': 'test/sync/sync_fixtures_test.dart',
+      'sync/ack_restored': 'test/sync/sync_fixtures_test.dart',
+      'sync/ack_merged_entity_id': 'test/sync/sync_fixtures_test.dart',
+      'sync/ack_delete_natural_key': 'test/sync/sync_fixtures_test.dart',
     };
 
-    test('every domain fixture that names the dart suite has a consumer', () {
-      final named = <String>[];
-      for (final file in Directory(
-        p.join('..', 'contract-fixtures', 'domain'),
-      ).listSync().whereType<File>()) {
-        final json = jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
-        if ((json['suites'] as List<dynamic>).contains('dart')) {
-          named.add(p.basenameWithoutExtension(file.path));
+    test('every domain and sync fixture that names the dart suite has a consumer', () {
+      final named = <String>{};
+      for (final folder in ['domain', 'sync']) {
+        for (final file in Directory(
+          p.join('..', 'contract-fixtures', folder),
+        ).listSync().whereType<File>()) {
+          final json = jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
+          if ((json['suites'] as List<dynamic>).contains('dart')) {
+            named.add('$folder/${p.basenameWithoutExtension(file.path)}');
+          }
         }
       }
 
-      expect(named.toSet(), dartConsumers.keys.toSet());
+      expect(named, dartConsumers.keys.toSet());
       dartConsumers.forEach((fixture, test) {
-        expect(File(test).readAsStringSync(), contains("'domain/$fixture.json'"), reason: test);
+        final file = File(test);
+        expect(file.existsSync(), isTrue, reason: '$test is missing');
+        expect(file.readAsStringSync(), contains(fixture.split('/').last), reason: test);
       });
     });
   });
