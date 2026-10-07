@@ -11,7 +11,12 @@ class FakeSyncServer implements SyncTransport {
   FakeSyncServer({
     this.timezone = 'America/Los_Angeles',
     this.knownTypes = const {'binary', 'quantity', 'duration'},
+    this.clock,
   });
+
+  /// When set, answers carry `server_time` and events more than 5 minutes ahead of it are
+  /// refused as `future_event`, like the real API.
+  final DateTime Function()? clock;
 
   final String timezone;
   final Set<String> knownTypes;
@@ -65,7 +70,7 @@ class FakeSyncServer implements SyncTransport {
     final after = _seqOf(cursor);
     sentMutationIds.add([for (final m in mutations) m['mutation_id'] as String]);
 
-    final acks = [for (final m in mutations) apply(_deepCopy(m))];
+    final acks = [for (final m in mutations) _future(m) ?? apply(_deepCopy(m))];
     if (crashAfterCommit) {
       crashAfterCommit = false;
       throw const SyncTransportException(SyncFailure.network);
@@ -79,6 +84,7 @@ class FakeSyncServer implements SyncTransport {
     if (failNextBootstrap.isNotEmpty) throw failNextBootstrap.removeAt(0);
     if (cursor == null) {
       return BootstrapPage(
+        serverTime: clock?.call(),
         user: user,
         habits: [...habits.values, ...extraBootstrapHabits],
         hasMore: true,
@@ -87,7 +93,22 @@ class FakeSyncServer implements SyncTransport {
       );
     }
     final snapshot = int.parse(cursor.substring(2));
-    return BootstrapPage(logs: logs.values.toList(), hasMore: false, syncCursor: 'c:$snapshot');
+    return BootstrapPage(
+      serverTime: clock?.call(),
+      logs: logs.values.toList(),
+      hasMore: false,
+      syncCursor: 'c:$snapshot',
+    );
+  }
+
+  /// The real API refuses events more than 5 minutes ahead of its clock (DayResolver).
+  Map<String, dynamic>? _future(Map<String, Object?> m) {
+    final now = clock?.call();
+    final at = DateTime.tryParse(m['occurred_at'] as String? ?? '');
+    if (now == null || at == null || !at.isAfter(now.add(const Duration(minutes: 5)))) {
+      return null;
+    }
+    return _failed(_deepCopy(m), 'rejected', {'code': 'future_event', 'message': 'x'});
   }
 
   /// Applies one mutation exactly as the server would (also used to act as another device).
@@ -321,6 +342,7 @@ class FakeSyncServer implements SyncTransport {
       changes: page,
       nextCursor: 'c:$last',
       hasMore: pending.length > limit,
+      serverTime: clock?.call(),
     );
   }
 

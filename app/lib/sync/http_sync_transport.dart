@@ -21,7 +21,7 @@ class HttpSyncTransport implements SyncTransport {
     required List<Map<String, Object?>> mutations,
     required List<String> capabilities,
   }) async {
-    final data = await _send(
+    final (data, time) = await _send(
       () => _dio.post<Object?>(
         '/sync',
         data: {
@@ -33,25 +33,27 @@ class HttpSyncTransport implements SyncTransport {
         options: Options(headers: {'X-Capabilities': capabilityHeader(capabilities)}),
       ),
     );
-    return SyncPage.fromJson(data);
+    return SyncPage.fromJson(data, serverTime: time);
   }
 
   @override
   Future<BootstrapPage> bootstrap({required String? cursor, required int limit}) async {
-    final data = await _send(
+    final (data, time) = await _send(
       () => _dio.get<Object?>(
         '/sync/bootstrap',
         queryParameters: {'limit': limit, 'cursor': ?cursor},
       ),
     );
-    return BootstrapPage.fromJson(data);
+    return BootstrapPage.fromJson(data, serverTime: time);
   }
 
   /// The habit types this app can render, as the server's `type.<key>` tokens (A21).
   static String capabilityHeader(Iterable<String> typeKeys) =>
       typeKeys.map((k) => 'type.$k').join(',');
 
-  Future<Map<String, dynamic>> _send(Future<Response<Object?>> Function() request) async {
+  Future<(Map<String, dynamic>, DateTime?)> _send(
+    Future<Response<Object?>> Function() request,
+  ) async {
     final Response<Object?> response;
     try {
       response = await request();
@@ -64,25 +66,28 @@ class HttpSyncTransport implements SyncTransport {
       // A 2xx that is not the envelope: a proxy or captive portal, not the API.
       throw const SyncTransportException(SyncFailure.network);
     }
-    return data.cast<String, dynamic>();
+    return (data.cast<String, dynamic>(), serverTimeOf(body));
   }
 
   static SyncTransportException _failure(DioException e) {
     final response = e.response;
     if (response == null) return const SyncTransportException(SyncFailure.network);
+    final time = serverTimeOf(response.data);
     return switch (response.statusCode ?? 0) {
-      401 => const SyncTransportException(SyncFailure.unauthorized),
-      410 => const SyncTransportException(SyncFailure.cursorExpired),
-      413 => const SyncTransportException(SyncFailure.payloadTooLarge),
+      401 => SyncTransportException(SyncFailure.unauthorized, serverTime: time),
+      410 => SyncTransportException(SyncFailure.cursorExpired, serverTime: time),
+      413 => SyncTransportException(SyncFailure.payloadTooLarge, serverTime: time),
       429 => SyncTransportException(
         SyncFailure.rateLimited,
         retryAfter: _retryAfter(response.headers.value('retry-after')),
+        serverTime: time,
       ),
       final status when status >= 400 && status < 500 => SyncTransportException(
         SyncFailure.requestRejected,
         code: _code(response.data) ?? 'http_$status',
+        serverTime: time,
       ),
-      _ => const SyncTransportException(SyncFailure.server),
+      _ => SyncTransportException(SyncFailure.server, serverTime: time),
     };
   }
 

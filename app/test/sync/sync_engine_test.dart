@@ -483,6 +483,41 @@ void main() {
     });
   });
 
+  test('F10: a device clock 10 minutes fast still produces accepted mutations', () async {
+    final serverNow = DateTime.utc(2026, 5, 28, 17, 22);
+    final skewed = FakeSyncServer(clock: () => serverNow);
+    final fast = await Device(skewed).init();
+    fast.now = serverNow.add(const Duration(minutes: 10));
+
+    expect(await fast.sync(), SyncOutcome.completed); // learns the skew from the answers
+    expect((await fast.state()).clockSkewMs, -600000);
+    final habit = await fast.habit();
+    await fast.writer.setLogValue(habitId: habit, value: 1);
+    expect((await fast.outbox()).map((r) => r.occurredAt).toSet(), {'2026-05-28T17:22:00Z'});
+
+    expect(await fast.sync(), SyncOutcome.completed);
+    expect(skewed.logs.values.single['value'], 1);
+    expect(await fast.outbox(), isEmpty);
+    await fast.db.close();
+  });
+
+  test('F10: without the correction the fast clock is refused as future_event', () async {
+    final serverNow = DateTime.utc(2026, 5, 28, 17, 22);
+    final skewed = FakeSyncServer(clock: () => serverNow);
+    final fast = await Device(skewed).init();
+    fast.now = serverNow.add(const Duration(minutes: 10));
+    final habit = await fast.habit();
+    await fast.writer.setLogValue(habitId: habit, value: 1); // before any answer: no skew yet
+
+    await fast.sync();
+    final row = (await fast.outbox()).first;
+    expect(
+      (row.state, jsonDecode(row.lastError!)['code']),
+      (OutboxState.needsAttention, 'future_event'),
+    );
+    await fast.db.close();
+  });
+
   test('HTTP 413 sends smaller chunks until everything is through', () async {
     await phone.sync();
     for (var i = 0; i < 70; i++) {

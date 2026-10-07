@@ -126,6 +126,15 @@ class SyncEngine {
     return outcome;
   }
 
+  /// Server time minus device time, from every answer that carries `meta.server_time` (F10).
+  /// The writer stamps events and shows "today" on the corrected clock.
+  Future<void> _noteServerTime(DateTime? serverTime) async {
+    if (serverTime == null) return;
+    await _updateState(
+      SyncStateCompanion(clockSkewMs: Value(serverTime.millisecondsSinceEpoch - _now)),
+    );
+  }
+
   /// Whole-request 4xx: keep every row and back off; after [pauseAfterRejections] in a row the
   /// status becomes paused with the server's code, for screen 18 (F7).
   Future<SyncOutcome> _countRejection(String code) async {
@@ -197,6 +206,7 @@ class SyncEngine {
           mutations: rows.map(_wire).toList(),
           capabilities: capabilities,
         );
+        await _noteServerTime(page.serverTime);
         await _apply(page, rows);
         if (!page.hasMore && (await _eligible(1)).isEmpty) {
           await _updateState(
@@ -209,6 +219,7 @@ class SyncEngine {
           return SyncOutcome.completed;
         }
       } on SyncTransportException catch (e) {
+        await _noteServerTime(e.serverTime);
         await _recoverInFlight();
         switch (e.kind) {
           case SyncFailure.cursorExpired:
@@ -267,6 +278,7 @@ class SyncEngine {
     var cursor = resumeFrom;
     while (true) {
       final page = await transport.bootstrap(cursor: cursor, limit: pullLimit);
+      await _noteServerTime(page.serverTime);
       await db.transaction(() async {
         await _renewLease();
         final user = page.user;

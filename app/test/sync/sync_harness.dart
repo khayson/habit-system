@@ -47,7 +47,11 @@ class Device {
   late final writer = LocalMutationService(db, clock: () => now);
   late final view = LocalView(db);
 
-  static void loadZones() => ensureTimeZonesLoaded(tzdata.initializeTimeZones);
+  static void loadZones() {
+    ensureTimeZonesLoaded(tzdata.initializeTimeZones);
+    // Tests open several devices, each with its own in-memory database.
+    driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
+  }
 
   Future<Device> init() async {
     await initAccountState(db, userId: 'user-1', deviceId: deviceId, user: server.user);

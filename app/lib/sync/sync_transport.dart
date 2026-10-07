@@ -76,7 +76,10 @@ class SyncTransportException implements Exception {
   /// The server's error code, when it sent the error envelope.
   final String? code;
 
-  const SyncTransportException(this.kind, {this.retryAfter, this.code});
+  /// `meta.server_time` of the error response, when there was one (F10).
+  final DateTime? serverTime;
+
+  const SyncTransportException(this.kind, {this.retryAfter, this.code, this.serverTime});
 
   @override
   String toString() => 'SyncTransportException($kind${code == null ? '' : ', $code'})';
@@ -90,18 +93,23 @@ class SyncPage {
   final String? nextCursor;
   final bool hasMore;
 
+  /// `meta.server_time` of the response (F10).
+  final DateTime? serverTime;
+
   const SyncPage({
     required this.acks,
     required this.changes,
     required this.nextCursor,
     required this.hasMore,
+    this.serverTime,
   });
 
-  factory SyncPage.fromJson(Map<String, dynamic> data) => SyncPage(
+  factory SyncPage.fromJson(Map<String, dynamic> data, {DateTime? serverTime}) => SyncPage(
     acks: _maps(data['acks']),
     changes: _maps(data['changes']),
     nextCursor: _string(data['next_cursor']),
     hasMore: data['has_more'] == true,
+    serverTime: serverTime,
   );
 }
 
@@ -117,7 +125,11 @@ class BootstrapPage {
   /// kept so they can be stored opaquely instead of dropped (invariant 13).
   final Map<String, List<Map<String, dynamic>>> unknownCollections;
 
+  /// `meta.server_time` of the response (F10).
+  final DateTime? serverTime;
+
   const BootstrapPage({
+    this.serverTime,
     this.user,
     this.habits = const [],
     this.logs = const [],
@@ -137,18 +149,20 @@ class BootstrapPage {
     'snapshot_seq',
   };
 
-  factory BootstrapPage.fromJson(Map<String, dynamic> data) => BootstrapPage(
-    user: data['user'] is Map ? (data['user'] as Map).cast<String, dynamic>() : null,
-    habits: _maps(data['habits']),
-    logs: _maps(data['logs']),
-    hasMore: data['has_more'] == true,
-    nextCursor: _string(data['next_cursor']),
-    syncCursor: _string(data['sync_cursor']),
-    unknownCollections: {
-      for (final e in data.entries)
-        if (!_known.contains(e.key) && e.value is List) e.key: _maps(e.value),
-    },
-  );
+  factory BootstrapPage.fromJson(Map<String, dynamic> data, {DateTime? serverTime}) =>
+      BootstrapPage(
+        serverTime: serverTime,
+        user: data['user'] is Map ? (data['user'] as Map).cast<String, dynamic>() : null,
+        habits: _maps(data['habits']),
+        logs: _maps(data['logs']),
+        hasMore: data['has_more'] == true,
+        nextCursor: _string(data['next_cursor']),
+        syncCursor: _string(data['sync_cursor']),
+        unknownCollections: {
+          for (final e in data.entries)
+            if (!_known.contains(e.key) && e.value is List) e.key: _maps(e.value),
+        },
+      );
 }
 
 /// Items that are not objects are wrapped as `{"_raw": item}` so the engine stores them as
@@ -160,3 +174,10 @@ List<Map<String, dynamic>> _maps(Object? list) => [
 ];
 
 String? _string(Object? value) => value is String ? value : null;
+
+/// `meta.server_time` of an envelope, or null.
+DateTime? serverTimeOf(Object? body) {
+  final meta = body is Map ? body['meta'] : null;
+  final time = meta is Map ? meta['server_time'] : null;
+  return time is String ? DateTime.tryParse(time)?.toUtc() : null;
+}

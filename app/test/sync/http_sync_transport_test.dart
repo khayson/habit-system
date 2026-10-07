@@ -57,6 +57,7 @@ void main() {
       ],
     });
     expect((page.acks.single['status'], page.nextCursor, page.hasMore), ('accepted', 'c:2', true));
+    expect(page.serverTime, DateTime.utc(2026, 5, 28, 10), reason: 'meta.server_time (F10)');
   });
 
   test('GET /sync/bootstrap omits a null cursor and keeps unknown collections', () async {

@@ -5,8 +5,8 @@ import 'package:uuid/uuid.dart';
 
 import '../domain/calendar/day_resolver.dart';
 import '../domain/calendar/local_date.dart';
-import '../domain/calendar/timezone_timeline.dart';
 import '../sync/outbox_states.dart';
+import 'account_calendar.dart';
 import 'app_database.dart';
 
 /// The only way the app writes domain data locally (A23, invariant 16). Pure Dart: no Flutter
@@ -64,11 +64,12 @@ class LocalMutationService {
     });
   }
 
-  /// log.set_value for the habit-day of [at] (default now) in the server's calendar.
+  /// log.set_value for the habit-day of [at] (default: now on the server's clock, F10) in the
+  /// server's calendar.
   Future<LocalWrite> setLogValue({required String habitId, required Object value, DateTime? at}) {
     return db.transaction(() async {
       final calendar = await _calendar();
-      final occurredAt = (at ?? clock()).toUtc();
+      final occurredAt = (at ?? calendar.now(clock())).toUtc();
       final date = calendar.timeline.localDateAt(occurredAt);
       final rows = await _rowsFor(habitId, date);
 
@@ -162,7 +163,7 @@ class LocalMutationService {
     required String entityId,
     required String operation,
     required int? baseVersion,
-    required _Calendar calendar,
+    required AccountCalendar calendar,
     required LocalDate? localDate,
     required String habitId,
     required Map<String, Object?> payload,
@@ -170,6 +171,7 @@ class LocalMutationService {
   }) async {
     final mutationId = _uuid.v7();
     final now = clock().toUtc();
+    final serverNow = calendar.now(now);
     await db
         .into(db.outbox)
         .insert(
@@ -179,7 +181,7 @@ class LocalMutationService {
             entityId: entityId,
             operation: operation,
             baseVersion: Value(baseVersion),
-            occurredAt: _iso(occurredAt ?? now),
+            occurredAt: _iso(occurredAt ?? serverNow),
             // A5: the habit-calendar zone the server holds, never the device zone.
             capturedTimezone: Value(calendar.timezone),
             localDateHint: Value(localDate?.toString()),
@@ -192,18 +194,12 @@ class LocalMutationService {
     return mutationId;
   }
 
-  Future<_Calendar> _calendar() async {
-    final state = await (db.select(db.syncState)..where((s) => s.id.equals(1))).getSingleOrNull();
-    final zone = state?.calendarTimezone;
-    if (state == null || zone == null) {
+  Future<AccountCalendar> _calendar() async {
+    final calendar = await AccountCalendar.load(db);
+    if (calendar == null) {
       throw StateError('The server calendar is not known yet: sign in or sync first.');
     }
-    final entry = CalendarEntry(
-      DateTime.tryParse(state.calendarEffectiveAt ?? '') ?? DateTime.utc(1970),
-      zone,
-      state.calendarDayStartOffset,
-    );
-    return _Calendar(zone, TimezoneTimeline([entry]));
+    return calendar;
   }
 
   static String _iso(DateTime t) {
@@ -220,11 +216,4 @@ class LocalWrite {
   final bool coalesced;
 
   const LocalWrite(this.mutationId, this.date, {required this.coalesced});
-}
-
-class _Calendar {
-  final String timezone;
-  final TimezoneTimeline timeline;
-
-  const _Calendar(this.timezone, this.timeline);
 }
