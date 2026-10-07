@@ -51,6 +51,12 @@ class SyncEngine {
   static const Duration surfaceAfter = Duration(hours: 24);
   static const int pauseAfterRejections = 3;
 
+  /// A sent row the server did not answer is retried; from this many attempts it backs off (F8).
+  static const int blockAfterMissingAcks = 3;
+
+  /// 410s answered by a fresh bootstrap within one run (F8).
+  static const int maxRebootstrapsPerRun = 2;
+
   final AppDatabase db;
   final SyncTransport transport;
   final AuthSession auth;
@@ -171,6 +177,7 @@ class SyncEngine {
   Future<SyncOutcome> _runLocked() async {
     await _recoverInFlight();
     var refreshed = false;
+    var rebootstraps = 0;
     var chunk = maxChunk;
 
     for (var round = 0; round < 1000; round++) {
@@ -205,7 +212,9 @@ class SyncEngine {
         await _recoverInFlight();
         switch (e.kind) {
           case SyncFailure.cursorExpired:
-            // 410: bootstrap again; the outbox is untouched and re-sends idempotently.
+            // 410: bootstrap again; the outbox is untouched and re-sends idempotently. A server
+            // that keeps answering 410 is not chased in a loop (F8).
+            if (rebootstraps++ >= maxRebootstrapsPerRun) return SyncOutcome.backoff;
             await _updateState(
               const SyncStateCompanion(cursor: Value(null), bootstrapCursor: Value(null)),
             );
@@ -386,7 +395,7 @@ class SyncEngine {
       for (final row in sent) {
         final ack = acks[row.mutationId];
         if (ack == null) {
-          await _setState([row], OutboxState.pending);
+          await _noAck(row);
           continue;
         }
         try {
@@ -395,7 +404,7 @@ class SyncEngine {
           if (!_isDecodeError(e)) rethrow;
           // An ack this version cannot read counts as no ack: the row is sent again and the
           // server's receipt answers it.
-          await _setState([row], OutboxState.pending);
+          await _noAck(row);
         }
       }
       for (final change in page.changes) {
@@ -485,6 +494,25 @@ class SyncEngine {
         ),
       );
     }
+  }
+
+  /// A sent row without a (readable) ack is an attempt (F8): resent at once twice, then blocked
+  /// with the usual backoff so it cannot spin.
+  Future<void> _noAck(OutboxRow row) async {
+    final attempts = row.attempts + 1;
+    final block = attempts >= blockAfterMissingAcks;
+    await _update(
+      row,
+      OutboxCompanion(
+        state: Value(block ? OutboxState.blocked : OutboxState.pending),
+        attempts: Value(attempts),
+        firstFailedAt: Value(row.firstFailedAt ?? _now),
+        nextAttemptAt: block
+            ? Value(_now + _backoff(attempts).inMilliseconds)
+            : const Value.absent(),
+        lastError: Value(_error('missing_ack', 'The server did not answer this change.')),
+      ),
+    );
   }
 
   /// The client never predicts versions (F4): once a row is acked, the entity's later unsent

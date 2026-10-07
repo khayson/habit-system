@@ -455,6 +455,34 @@ void main() {
     expect(server.logs, hasLength(1));
   });
 
+  group('F8: no hot loops', () {
+    test('a mutation that is never acked is retried, then blocked with backoff', () async {
+      final habit = await phone.habit();
+      await phone.sync();
+      await phone.writer.setLogValue(habitId: habit, value: 1);
+      final silent = _NoAcks(server);
+
+      expect(await phone.engine(transport: silent).run(), SyncOutcome.completed);
+
+      expect(silent.sentWithMutations, 3, reason: 'sent three times, then held');
+      final row = (await phone.outbox()).single;
+      expect((row.state, row.attempts), (OutboxState.blocked, 3));
+      expect(row.nextAttemptAt, greaterThan(phone.now.millisecondsSinceEpoch));
+      expect(jsonDecode(row.lastError!)['code'], 'missing_ack');
+    });
+
+    test('a server that keeps answering 410 gets at most two re-bootstraps per run', () async {
+      await phone.sync();
+      final before = server.bootstrapCalls;
+      server.failNextSync.addAll([
+        for (var i = 0; i < 10; i++) const SyncTransportException(SyncFailure.cursorExpired),
+      ]);
+
+      expect(await phone.sync(), SyncOutcome.backoff);
+      expect(server.bootstrapCalls - before, 4, reason: 'two bootstraps of two pages');
+    });
+  });
+
   test('HTTP 413 sends smaller chunks until everything is through', () async {
     await phone.sync();
     for (var i = 0; i < 70; i++) {
@@ -860,4 +888,33 @@ class _BootstrapWithoutCursor implements SyncTransport {
     calls++;
     return BootstrapPage.fromJson({'habits': <Object>[], 'has_more': false});
   }
+}
+
+/// Applies nothing and answers no mutation; pulls work.
+class _NoAcks implements SyncTransport {
+  _NoAcks(this.server);
+  final FakeSyncServer server;
+  int sentWithMutations = 0;
+
+  @override
+  Future<SyncPage> sync({
+    required String deviceId,
+    required String? cursor,
+    required int pullLimit,
+    required List<Map<String, Object?>> mutations,
+    required List<String> capabilities,
+  }) async {
+    if (mutations.isNotEmpty) sentWithMutations++;
+    return server.sync(
+      deviceId: deviceId,
+      cursor: cursor,
+      pullLimit: pullLimit,
+      mutations: const [],
+      capabilities: capabilities,
+    );
+  }
+
+  @override
+  Future<BootstrapPage> bootstrap({required String? cursor, required int limit}) =>
+      server.bootstrap(cursor: cursor, limit: limit);
 }
