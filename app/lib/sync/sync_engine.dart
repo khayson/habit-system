@@ -78,10 +78,20 @@ class SyncEngine {
        random = random ?? Random(),
        ownerId = ownerId ?? const Uuid().v4();
 
-  Future<SyncOutcome> run() async {
+  Future<SyncOutcome>? _running;
+
+  /// Runs one sync. Concurrent callers on this engine share the run in progress (F3): a
+  /// connectivity event, a resume and "Sync now" together make one request sequence.
+  Future<SyncOutcome> run() => _running ??= _run().whenComplete(() => _running = null);
+
+  Future<SyncOutcome> _run() async {
     if (!await _acquireLease()) return SyncOutcome.busy;
     try {
       return await _runLocked();
+    } on _LeaseLost {
+      // Another engine took over after our lease expired; it owns the outbox now.
+      await _recoverInFlight();
+      return SyncOutcome.busy;
     } on Object catch (e) {
       // Never let one bad answer wedge the device (F2): unsent rows go back to pending, the
       // cursor stays where the last committed page left it, and the failure is recorded.
@@ -177,6 +187,7 @@ class SyncEngine {
     while (true) {
       final page = await transport.bootstrap(cursor: cursor, limit: pullLimit);
       await db.transaction(() async {
+        await _renewLease();
         final user = page.user;
         if (user != null) await _guarded('user', user, () => _applyUser(user));
         for (final habit in page.habits) {
@@ -288,6 +299,8 @@ class SyncEngine {
 
   Future<void> _apply(SyncPage page, List<OutboxRow> sent) {
     return db.transaction(() async {
+      // Commit only while this engine still owns the lease (F3); otherwise roll back.
+      await _renewLease();
       final acks = {for (final ack in page.acks) ack['mutation_id']: ack};
       for (final row in sent) {
         final ack = acks[row.mutationId];
@@ -599,26 +612,26 @@ class SyncEngine {
     updates: {db.outbox},
   );
 
+  /// Free or expired leases only: a crashed owner is recovered by expiry, never by its id (F3).
   Future<bool> _acquireLease() async {
     final taken = await db.customUpdate(
       'UPDATE sync_state SET lease_owner = ?, lease_until = ? '
-      'WHERE id = 1 AND (lease_owner IS NULL OR lease_until < ? OR lease_owner = ?)',
-      variables: [
-        Variable(ownerId),
-        Variable(_now + leaseDuration.inMilliseconds),
-        Variable(_now),
-        Variable(ownerId),
-      ],
+      'WHERE id = 1 AND (lease_owner IS NULL OR lease_until < ?)',
+      variables: [Variable(ownerId), Variable(_now + leaseDuration.inMilliseconds), Variable(_now)],
       updates: {db.syncState},
     );
     return taken == 1;
   }
 
-  Future<void> _renewLease() => db.customUpdate(
-    'UPDATE sync_state SET lease_until = ? WHERE id = 1 AND lease_owner = ?',
-    variables: [Variable(_now + leaseDuration.inMilliseconds), Variable(ownerId)],
-    updates: {db.syncState},
-  );
+  /// Extends the lease, or stops the run if another engine has taken it over.
+  Future<void> _renewLease() async {
+    final renewed = await db.customUpdate(
+      'UPDATE sync_state SET lease_until = ? WHERE id = 1 AND lease_owner = ?',
+      variables: [Variable(_now + leaseDuration.inMilliseconds), Variable(ownerId)],
+      updates: {db.syncState},
+    );
+    if (renewed != 1) throw const _LeaseLost();
+  }
 
   Future<void> _releaseLease() => db.customUpdate(
     'UPDATE sync_state SET lease_owner = NULL, lease_until = NULL WHERE id = 1 AND lease_owner = ?',
@@ -648,4 +661,8 @@ Future<void> initAccountState(
         ),
         mode: InsertMode.insertOrIgnore,
       );
+}
+
+class _LeaseLost implements Exception {
+  const _LeaseLost();
 }

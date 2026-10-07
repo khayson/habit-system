@@ -507,6 +507,39 @@ void main() {
     });
   });
 
+  test('F3: concurrent run() calls on one engine share one request sequence', () async {
+    final habit = await phone.habit();
+    await phone.writer.setLogValue(habitId: habit, value: 1);
+    final engine = phone.engine();
+
+    final outcomes = await Future.wait([engine.run(), engine.run(), engine.run()]);
+
+    expect(outcomes, everyElement(SyncOutcome.completed));
+    expect(server.bootstrapCalls, 2, reason: 'one bootstrap of two pages');
+    expect(server.sentMutationIds.where((ids) => ids.isNotEmpty), hasLength(1));
+  });
+
+  test('F3: a run whose lease was taken over stops instead of racing', () async {
+    final habit = await phone.habit();
+    await phone.sync();
+    await phone.writer.setLogValue(habitId: habit, value: 1);
+    server.gate = Completer<void>();
+    final slow = phone.engine(owner: 'slow');
+    final first = slow.run();
+    while (server.syncCalls < 2) {
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+    }
+    // The slow engine's lease expires; another takes over.
+    phone.now = phone.now.add(const Duration(minutes: 5));
+    await phone.db.customStatement(
+      "UPDATE sync_state SET lease_owner = 'other', lease_until = 9999999999999",
+    );
+    server.gate!.complete();
+
+    expect(await first, SyncOutcome.busy);
+    expect((await phone.state()).leaseOwner, 'other', reason: 'the new owner keeps its lease');
+  });
+
   test('unknown habit types, unknown fields and unknown entities survive a round trip', () async {
     final unknownHabit = {
       'id': 'future-habit',
