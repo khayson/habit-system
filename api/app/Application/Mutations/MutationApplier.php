@@ -18,6 +18,7 @@ use App\Support\WireTime;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 /**
  * The only code that changes domain state (invariant 4). /sync and any REST adapter call
@@ -30,6 +31,11 @@ use Illuminate\Validation\ValidationException;
  */
 final readonly class MutationApplier
 {
+    /** A29: one mutation is at most 16 KB of JSON and 8 levels deep. */
+    public const int MAX_MUTATION_BYTES = 16 * 1024;
+
+    public const int MAX_MUTATION_DEPTH = 8;
+
     private const string OCCURRED_AT = '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?(Z|[+-]\d{2}:\d{2})$/';
 
     public function __construct(
@@ -50,13 +56,44 @@ final readonly class MutationApplier
     {
         $mutationId = is_string($raw['mutation_id'] ?? null) ? $raw['mutation_id'] : null;
 
+        // A29 caps: checked before anything else touches the mutation.
+        $size = strlen((string) json_encode($raw, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PARTIAL_OUTPUT_ON_ERROR));
+        if ($size > self::MAX_MUTATION_BYTES) {
+            return new MutationAck($mutationId, MutationAck::REJECTED, error: ['code' => 'payload_too_large', 'message' => 'This change is too large.']);
+        }
+        if (self::depth($raw) > self::MAX_MUTATION_DEPTH) {
+            return new MutationAck($mutationId, MutationAck::REJECTED, error: self::validationError(
+                ValidationException::withMessages(['payload' => ['This change is nested too deeply.']]),
+            ));
+        }
+
         try {
             $mutation = $this->parse($raw);
         } catch (ValidationException $e) {
             return new MutationAck($mutationId, MutationAck::REJECTED, error: self::validationError($e));
         }
-        $hash = PayloadHash::of($raw);
 
+        try {
+            return $this->applyParsed($userId, $deviceId, $mutation, PayloadHash::of($raw), $capabilities);
+        } catch (Throwable $e) {
+            // B1: one unexpected failure must never fail the batch or wedge an ordered outbox.
+            // Everything in its transaction rolled back and no receipt exists, so a retry (or a
+            // later deploy) can still accept it.
+            report($e);
+
+            return new MutationAck($mutation->mutationId, MutationAck::REJECTED, false, $mutation->entity, $mutation->entityId, error: [
+                'code' => 'server_error',
+                'message' => 'Something went wrong. Try again.',
+                'retryable' => true,
+            ]);
+        }
+    }
+
+    /**
+     * @param  list<string>|null  $capabilities
+     */
+    private function applyParsed(string $userId, ?string $deviceId, Mutation $mutation, string $hash, ?array $capabilities): MutationAck
+    {
         return DB::transaction(function () use ($userId, $deviceId, $mutation, $hash, $capabilities): MutationAck {
             $this->journal->lockUser($userId);
 
@@ -131,6 +168,15 @@ final readonly class MutationApplier
         }
 
         throw new UnsupportedOperation($m->entity, $m->operation);
+    }
+
+    private static function depth(mixed $value): int
+    {
+        if (! is_array($value) || $value === []) {
+            return 0;
+        }
+
+        return 1 + max(array_map(self::depth(...), $value));
     }
 
     /** @param array<mixed> $raw */
