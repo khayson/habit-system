@@ -296,3 +296,14 @@ Decisions from the architect's Phase 2a review (`docs/reviews/PHASE_2A_REVIEW.md
 
 - **Zero-length dates.** A local date with no instants (eastward travel across the date line, e.g. Pago_Pago → Auckland on 2026-03-11; Pacific/Apia 2011-12-30) is not part of the period grid: not due, not evaluated, and it neither breaks nor extends a streak.
 - **`nextEffectiveDate`** is the next Monday when either the old or the new frequency is `weekly_count`, so a frequency change never leaves days outside every period.
+
+## 10. Added after the Phase 2b.1 review (2026-10-07)
+
+Decisions from the architect's Phase 2b.1 review (`docs/reviews/PHASE_2B1_REVIEW.md`).
+
+### A31 — New entity types in bootstrap · ADOPT
+
+- **One array.** `GET /sync/bootstrap` carries entity types added after v1 in one top-level array, `entities: [{entity, id, version, payload}]`, using the same singular entity names as `/sync` changes (`habit_log`, not `logs`). The three v1 collections (`user`, `habits`, `logs`) are unchanged.
+- **Client.** An app that does not know an `entity` stores the item in `opaque_entities` under that name, so a bootstrap and a later pull keep one entity under one name. Any other unknown top-level list is still kept, under type `bootstrap:<key>`; nothing is dropped (invariant 13).
+- **Undecodable items.** A change, bootstrap item or ack this app version cannot decode is stored raw as `undecodable:<entity>` and the cursor still advances (review F2).
+- **Server.** No server work until the first new entity type exists.

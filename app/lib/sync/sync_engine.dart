@@ -297,13 +297,26 @@ class SyncEngine {
             () => _upsertLog(log['id'] as String, log['version'] as int, log),
           );
         }
-        // ASSUMPTION(A2b-opaque-bootstrap): an unknown bootstrap collection is stored opaquely
-        // with its key as the entity type, so a newer server's entities are never dropped.
-        for (final MapEntry(key: type, value: items) in page.unknownCollections.entries) {
+        // A31: new entity types arrive as {entity, id, version, payload} and are stored under
+        // the same name a pull would use; they go through _applyChange like any change.
+        for (final item in page.entities) {
+          await _guarded(
+            item['entity'],
+            item,
+            () => _applyChange({...item, 'operation': item['operation'] ?? 'upsert'}),
+          );
+        }
+        // Any other unknown list is kept under `bootstrap:<key>`; nothing is dropped.
+        for (final MapEntry(key: key, value: items) in page.unknownCollections.entries) {
           for (final item in items) {
             final id = item['id'];
-            if (id is! String) continue;
-            await _storeOpaque(type, id, item['version'] as int? ?? 0, 'upsert', item);
+            await _storeOpaque(
+              'bootstrap:$key',
+              id is String ? id : const Uuid().v4(),
+              item['version'] is int ? item['version'] as int : 0,
+              'upsert',
+              item,
+            );
           }
         }
         if (!page.hasMore && page.syncCursor == null) {

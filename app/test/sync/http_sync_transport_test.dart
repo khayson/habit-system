@@ -71,6 +71,9 @@ void main() {
           'routines': [
             {'id': 'r1'},
           ],
+          'entities': [
+            {'entity': 'routine', 'id': 'r2', 'version': 1, 'payload': <String, Object>{}},
+          ],
           'has_more': false,
           'sync_cursor': 'c:9',
         }),
@@ -82,6 +85,7 @@ void main() {
     expect(http.requests.single.queryParameters, {'limit': 100});
     expect(page.syncCursor, 'c:9');
     expect(page.unknownCollections.keys, ['routines']);
+    expect(page.entities.single['entity'], 'routine', reason: 'A31');
   });
 
   test('a whole-request 4xx carries the server code (F7)', () async {

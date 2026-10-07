@@ -779,9 +779,16 @@ void main() {
       },
     };
     server.extraBootstrapHabits.add(unknownHabit);
-    // A newer server's collection inside a bootstrap page, and a later change of an unknown type.
+    // A newer server's entity type in bootstrap (A31), a stray unknown list, and a later change
+    // of that type.
+    server.extraBootstrapEntities.add({
+      'entity': 'weekly_review',
+      'id': 'wr-0',
+      'version': 1,
+      'payload': {'id': 'wr-0', 'week_start': '2026-05-18'},
+    });
     server.extraBootstrapCollections['weekly_reviews'] = [
-      {'id': 'wr-0', 'version': 1, 'week_start': '2026-05-18'},
+      {'id': 'wr-x', 'version': 1, 'week_start': '2026-05-11'},
     ];
     await phone.sync();
     server.journalOpaque('weekly_review', 'wr-1', {
@@ -805,7 +812,12 @@ void main() {
       for (final o in await phone.db.select(phone.db.opaqueEntities).get())
         '${o.entityType}/${o.entityId}': jsonDecode(o.payload),
     };
-    expect(opaque.keys.toSet(), {'weekly_reviews/wr-0', 'weekly_review/wr-1'});
+    expect(opaque.keys.toSet(), {
+      'weekly_review/wr-0',
+      'weekly_review/wr-1',
+      'bootstrap:weekly_reviews/wr-x',
+    }, reason: 'one entity, one name, in bootstrap and in pulls (A31)');
+    expect((opaque['weekly_review/wr-0'] as Map)['week_start'], '2026-05-18');
     expect((opaque['weekly_review/wr-1'] as Map)['reflection'], 'ok');
   });
 }

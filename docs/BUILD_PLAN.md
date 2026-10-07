@@ -60,9 +60,9 @@ Requirements in `docs/reviews/PHASE_2A_REVIEW.md` §5 and `docs/reviews/PHASE_2A
 
 ## Phase 2b.2 — Walking skeleton screens · M
 
-Screens 02, 03, 04 (minimal), 05 (binary only) and 18 (queue) on top of the 2b.1 engine.
+First the engine fixes F1–F8 and F10 from `docs/reviews/PHASE_2B1_REVIEW.md` §3, one commit and test each, and A31 on the client. Then screens 02, 03, 04 (minimal: confirm the zone; the reminder-permission block arrives with screen 11), 05 (binary only) and 18 (queue), **plus a minimal Create-habit flow** (the editor screen; binary type and daily frequency only; no schedule or reminder sub-screens), pulled forward by the Phase 2b.1 review (§6) so the two-emulator demo can create a habit. Sync triggers: start, resume, after a local write (debounced), connectivity regained, and "Sync now"; `refreshIfStale()` on start and resume while online, foreground only. F9: a CI job `e2e` boots the real API and runs an extended smoke through the real engine (merged id, delete and restore across devices, a stale-edit conflict, a simulated database restore with 410, refresh within the grace window).
 
-**Gate**: app-side tests for the screens; manual demo: two emulators converge.
+**Gate**: F1–F10 fixed with tests; the `e2e` job green; widget tests for the screens' key states (loading, error, offline, queued, needs-attention, paused); manual demo in DEV_SETUP: two emulators converge (create a habit on A, tick on B while A is offline, reconnect A).
 
 ## Phase 3 — MVP complete · L
 
@@ -84,7 +84,7 @@ Screens 02, 03, 04 (minimal), 05 (binary only) and 18 (queue) on top of the 2b.1
 
 - Quantity and duration; amount entry (34) and timers (33/36); weekdays / weekly_count / interval; versioned edits (09/10); archive / restore (22); conflict review (19).
 
-- Before any `profile.*` mutation: `users.version` and journaling the user entity on every profile change (review 2a, section 6).
+- Before any `profile.*` mutation: `users.version` and journaling the user entity on every profile change (review 2a, section 6). The user entity carries the calendar entry (timezone, offset, `effective_at`) so clients pick up calendar changes (review 2b.1, §5).
 - The server enforces "next eligible period" for new definition versions via `HabitSchedule::nextEffectiveDate(LocalDate $today)` (daily/weekdays → tomorrow; weekly → next Monday; interval → start of the next period under the current definition). Never accept a client-chosen effective date.
 
 **Gate**: spec acceptance rows for concurrent increments, stale absolute edit and weekly distinct days.
@@ -112,6 +112,7 @@ Screens 02, 03, 04 (minimal), 05 (binary only) and 18 (queue) on top of the 2b.1
 ## Phase 7 — Hardening and release · M
 
 - OWASP API Top 10 pass; `/sync` load test; accessibility audit (TalkBack, font scale, contrast tool); store listing; hosted Terms of Service and Privacy Policy (screen 03 links them and both stores need a privacy-policy URL); a web page for account-deletion requests (Google Play expects one; check current store requirements); iOS verification when a Mac route exists. Production PHP has a current timezone database; log `timezone_version_get()` at boot. A database-restore runbook, and a **journal epoch inside the signed sync cursor** that the runbook changes, so every pre-restore cursor gets a 410 even after the restored journal passes the client's old seq (Phase 2a.1 review §5). Alerting on the `server_error` ack rate. The journal and receipt pruning job (180-day retention) with indexes on `server_changes.created_at` and `mutation_receipts.committed_at`.
+- From the Phase 2b.1 review §5: an **authoritative bootstrap** after a restore (epoch change) overwrites confirmed rows even when the local version is higher, because the `version >=` rule would otherwise keep rows the restored server lost (lands with the cursor epoch); **decide local database encryption** (SQLCipher) before notes, photos and location land; the app's **timezone database** is frozen until an app update, so log its version at start.
 
 ## Phase 8 — Retention pack · L
 

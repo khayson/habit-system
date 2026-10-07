@@ -36,6 +36,7 @@ class FakeSyncServer implements SyncTransport {
   Completer<void>? gate;
   final List<Map<String, dynamic>> extraBootstrapHabits = [];
   final Map<String, List<Map<String, dynamic>>> extraBootstrapCollections = {};
+  final List<Map<String, dynamic>> extraBootstrapEntities = [];
   final List<Map<String, dynamic>> extraChanges = [];
 
   // Observation.
@@ -89,6 +90,7 @@ class FakeSyncServer implements SyncTransport {
         habits: [...habits.values, ...extraBootstrapHabits],
         hasMore: true,
         nextCursor: 'b:$seq',
+        entities: extraBootstrapEntities,
         unknownCollections: extraBootstrapCollections,
       );
     }

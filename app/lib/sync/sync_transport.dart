@@ -121,8 +121,11 @@ class BootstrapPage {
   final String? nextCursor;
   final String? syncCursor;
 
-  /// List-valued keys this app version does not know (a newer server's entity collections),
-  /// kept so they can be stored opaquely instead of dropped (invariant 13).
+  /// Entity types added after v1, as `{entity, id, version, payload}` (A31).
+  final List<Map<String, dynamic>> entities;
+
+  /// Other list-valued keys this app version does not know, kept so they are stored opaquely
+  /// as `bootstrap:<key>` instead of dropped (A31, invariant 13).
   final Map<String, List<Map<String, dynamic>>> unknownCollections;
 
   /// `meta.server_time` of the response (F10).
@@ -133,6 +136,7 @@ class BootstrapPage {
     this.user,
     this.habits = const [],
     this.logs = const [],
+    this.entities = const [],
     required this.hasMore,
     this.nextCursor,
     this.syncCursor,
@@ -143,6 +147,7 @@ class BootstrapPage {
     'user',
     'habits',
     'logs',
+    'entities',
     'has_more',
     'next_cursor',
     'sync_cursor',
@@ -155,6 +160,7 @@ class BootstrapPage {
         user: data['user'] is Map ? (data['user'] as Map).cast<String, dynamic>() : null,
         habits: _maps(data['habits']),
         logs: _maps(data['logs']),
+        entities: _maps(data['entities']),
         hasMore: data['has_more'] == true,
         nextCursor: _string(data['next_cursor']),
         syncCursor: _string(data['sync_cursor']),
