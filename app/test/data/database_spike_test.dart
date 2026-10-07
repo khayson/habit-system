@@ -51,7 +51,7 @@ void main() {
     }
   });
 
-  test('boots schema v1 empty: WAL, synchronous FULL, foreign keys on', () async {
+  test('boots schema v2: WAL, synchronous FULL, foreign keys on', () async {
     final db = AppDatabase(NativeDatabase(file, setup: configureConnection));
 
     final userVersion = await db.customSelect('PRAGMA user_version').getSingle();
@@ -60,16 +60,23 @@ void main() {
     final synchronous = await db.customSelect('PRAGMA synchronous').getSingle();
     final tables = await db
         .customSelect(
-          "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'",
+          "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' "
+          'ORDER BY name',
         )
         .get();
 
-    expect(db.schemaVersion, 1);
-    expect(userVersion.data.values.single, 1);
+    expect(db.schemaVersion, 2);
+    expect(userVersion.data.values.single, 2);
     expect(journal.data.values.single, 'wal');
     expect(fk.data.values.single, 1);
     expect(synchronous.data.values.single, 2, reason: 'synchronous = FULL (2)');
-    expect(tables, isEmpty);
+    expect(tables.map((t) => t.read<String>('name')), [
+      'habit_logs',
+      'habits',
+      'opaque_entities',
+      'outbox',
+      'sync_state',
+    ]);
     await db.close();
   });
 
