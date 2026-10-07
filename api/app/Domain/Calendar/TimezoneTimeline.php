@@ -14,7 +14,8 @@ use InvalidArgumentException;
  * - Day start: the first instant whose wall clock shows 00:00 + offset. If that wall time falls
  *   in a DST gap, the transition instant (the first valid instant after the gap).
  * - Event date: the latest local date whose start is at or before the instant, under the entry
- *   effective at that instant. Dates never go backwards, even inside a repeated hour.
+ *   effective at that instant (the first entry governs earlier instants). Dates never go
+ *   backwards, even inside a repeated hour or across a zone change (A26).
  * - Period boundaries: a date's start uses the latest entry effective at or before that start,
  *   so a zone change never rewrites days that began earlier.
  */
@@ -28,9 +29,6 @@ final readonly class TimezoneTimeline
      */
     public function __construct(array $entries)
     {
-        if ($entries === []) {
-            throw new InvalidArgumentException('A calendar history needs at least one entry.');
-        }
         for ($i = 1, $n = count($entries); $i < $n; $i++) {
             if ($entries[$i]->effectiveAt <= $entries[$i - 1]->effectiveAt) {
                 throw new InvalidArgumentException('Calendar entries must have strictly increasing effective_at.');
@@ -39,17 +37,21 @@ final readonly class TimezoneTimeline
         $this->entries = $entries;
     }
 
-    /** The entry in force at an instant. */
+    /**
+     * The entry in force at an instant. The first entry also governs earlier instants, so a
+     * phone clock running slightly behind at signup still resolves (A26). Only an empty history
+     * has no calendar.
+     */
     public function entryAt(DateTimeInterface $instant): CalendarEntry
     {
-        $found = null;
+        $found = $this->entries[0] ?? throw new DayResolutionException('no_calendar');
         foreach ($this->entries as $entry) {
             if ($entry->effectiveAt <= $instant) {
                 $found = $entry;
             }
         }
 
-        return $found ?? throw new DayResolutionException('no_calendar');
+        return $found;
     }
 
     /** The business date an instant belongs to. */
@@ -82,7 +84,7 @@ final readonly class TimezoneTimeline
             }
         }
 
-        return self::startFor($date, $this->entries[0]);
+        return self::startFor($date, $this->entries[0] ?? throw new DayResolutionException('no_calendar'));
     }
 
     /** First instant after a business date (UTC). */

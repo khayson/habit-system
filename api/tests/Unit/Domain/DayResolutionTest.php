@@ -88,4 +88,10 @@ it('event dates never go backwards across a whole DST year (property)', function
     }
     $d = LocalDate::fromString('2026-10-25');
     expect($timeline->localDateAt($timeline->startOfLocalDay($d))->toString())->toBe('2026-10-25');
-})->with(['la', 'paris', 'la_offset_120', 'paris_offset_150']);
+    foreach (dayFixture()['start_of_day'] as $case) {
+        if ($case['calendar'] === $calendar) {
+            $start = $timeline->startOfLocalDay(LocalDate::fromString($case['date']));
+            expect($timeline->localDateAt($start)->toString())->toBe($case['date']);
+        }
+    }
+})->with(['la', 'paris', 'la_offset_120', 'paris_offset_150', 'la_then_paris', 'paris_then_la']);

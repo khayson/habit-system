@@ -5,7 +5,7 @@
   ],
   "description": "PeriodEngine: schedules, active ranges, definition versions, boundaries, evaluation. Period keys per A3: d:YYYY-MM-DD and w:<Monday>. Expect rows: [period_key, start_date, end_date, definition_version].",
   "rules": {
-    "weekly_partial_week": "ASSUMPTION(A1-week-partial): a week is due only if the habit is active on at least `count` of its days"
+    "weekly_partial_week": "A28: a week is due only if the habit is active on at least `count` of its days"
   },
   "periods": [
     {
@@ -185,6 +185,117 @@
         "active_ranges": [
           {
             "starts_on": "2026-05-09",
+            "ends_before": null
+          }
+        ],
+        "logs": {}
+      },
+      "from": "2026-05-04",
+      "to": "2026-05-17",
+      "expect": [
+        [
+          "w:2026-05-11",
+          "2026-05-11",
+          "2026-05-17",
+          1
+        ]
+      ]
+    },
+    {
+      "name": "A28: start on Thursday with count 4 is due (Thu-Sun)",
+      "habit": {
+        "id": "01970000-0000-7000-8000-000000000006",
+        "name": "Pilates",
+        "category": "health",
+        "definitions": [
+          {
+            "version": 1,
+            "effective_date": "2026-05-07",
+            "type": "duration",
+            "target": 1200,
+            "unit": null,
+            "frequency_type": "weekly_count",
+            "frequency_config": {
+              "count": 4
+            }
+          }
+        ],
+        "active_ranges": [
+          {
+            "starts_on": "2026-05-07",
+            "ends_before": null
+          }
+        ],
+        "logs": {}
+      },
+      "from": "2026-05-04",
+      "to": "2026-05-10",
+      "expect": [
+        [
+          "w:2026-05-04",
+          "2026-05-04",
+          "2026-05-10",
+          1
+        ]
+      ]
+    },
+    {
+      "name": "A28: pause mid-week leaves 2 active days, so the week is not due",
+      "habit": {
+        "id": "01970000-0000-7000-8000-000000000006",
+        "name": "Pilates",
+        "category": "health",
+        "definitions": [
+          {
+            "version": 1,
+            "effective_date": "2026-05-04",
+            "type": "duration",
+            "target": 1200,
+            "unit": null,
+            "frequency_type": "weekly_count",
+            "frequency_config": {
+              "count": 3
+            }
+          }
+        ],
+        "active_ranges": [
+          {
+            "starts_on": "2026-05-04",
+            "ends_before": "2026-05-06"
+          }
+        ],
+        "logs": {}
+      },
+      "from": "2026-05-04",
+      "to": "2026-05-17",
+      "expect": []
+    },
+    {
+      "name": "A28: restore mid-week with 4 active days makes that week due",
+      "habit": {
+        "id": "01970000-0000-7000-8000-000000000006",
+        "name": "Pilates",
+        "category": "health",
+        "definitions": [
+          {
+            "version": 1,
+            "effective_date": "2026-05-04",
+            "type": "duration",
+            "target": 1200,
+            "unit": null,
+            "frequency_type": "weekly_count",
+            "frequency_config": {
+              "count": 3
+            }
+          }
+        ],
+        "active_ranges": [
+          {
+            "starts_on": "2026-05-04",
+            "ends_before": "2026-05-06"
+          },
+          {
+            "starts_on": "2026-05-14",
             "ends_before": null
           }
         ],

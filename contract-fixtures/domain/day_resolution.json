@@ -9,7 +9,7 @@
     "max_offline_age_seconds": 7776000,
     "max_backdate_days": 30,
     "day_start": "first instant whose wall clock shows 00:00 + day_start_offset; inside a DST gap, the transition instant",
-    "event_date": "latest local date whose start is at or before the event, using the calendar entry effective at occurred_at",
+    "event_date": "latest local date whose start is at or before the event, using the calendar entry effective at occurred_at (the first entry governs earlier instants, A26/R1)",
     "period_boundaries": "a date's start uses the latest calendar entry effective at or before that start"
   },
   "calendars": {
@@ -66,7 +66,20 @@
         "timezone": "Europe/Paris",
         "day_start_offset_minutes": 150
       }
-    ]
+    ],
+    "paris_then_la": [
+      {
+        "effective_at": "2026-01-01T00:00:00Z",
+        "timezone": "Europe/Paris",
+        "day_start_offset_minutes": 0
+      },
+      {
+        "effective_at": "2026-06-14T22:00:00Z",
+        "timezone": "America/Los_Angeles",
+        "day_start_offset_minutes": 0
+      }
+    ],
+    "empty": []
   },
   "resolve": [
     {
@@ -339,12 +352,48 @@
       }
     },
     {
-      "name": "event before any calendar entry is rejected",
+      "name": "R1: an event before the first entry uses the first entry (slow phone clock at signup)",
       "calendar": "la",
       "now": "2026-01-01T01:00:00Z",
       "occurred_at": "2025-12-31T23:00:00Z",
       "expect": {
+        "local_date": "2025-12-31"
+      }
+    },
+    {
+      "name": "R1: no_calendar only for an empty history",
+      "calendar": "empty",
+      "now": "2026-05-28T17:22:00Z",
+      "occurred_at": "2026-05-28T17:15:00Z",
+      "expect": {
         "error": "no_calendar"
+      }
+    },
+    {
+      "name": "A26 westward change: last Paris minute of 14 Jun",
+      "calendar": "paris_then_la",
+      "now": "2026-06-16T00:00:00Z",
+      "occurred_at": "2026-06-14T21:59:59Z",
+      "expect": {
+        "local_date": "2026-06-14"
+      }
+    },
+    {
+      "name": "A26 westward change: first LA instant is still 14 Jun (long day, never backwards)",
+      "calendar": "paris_then_la",
+      "now": "2026-06-16T00:00:00Z",
+      "occurred_at": "2026-06-14T22:00:00Z",
+      "expect": {
+        "local_date": "2026-06-14"
+      }
+    },
+    {
+      "name": "A26 westward change: LA midnight starts 15 Jun",
+      "calendar": "paris_then_la",
+      "now": "2026-06-16T00:00:00Z",
+      "occurred_at": "2026-06-15T07:00:00Z",
+      "expect": {
+        "local_date": "2026-06-15"
       }
     },
     {
@@ -514,6 +563,19 @@
       "date": "2026-05-31",
       "starts_at": "2026-05-30T22:00:00Z",
       "ends_at": "2026-05-31T22:00:00Z"
+    },
+    {
+      "calendar": "paris_then_la",
+      "date": "2026-06-14",
+      "starts_at": "2026-06-13T22:00:00Z",
+      "ends_at": "2026-06-15T07:00:00Z",
+      "note": "A26: westward travel day runs 33 hours"
+    },
+    {
+      "calendar": "paris_then_la",
+      "date": "2026-06-15",
+      "starts_at": "2026-06-15T07:00:00Z",
+      "ends_at": "2026-06-16T07:00:00Z"
     }
   ],
   "backdate": [
