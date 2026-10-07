@@ -1,0 +1,37 @@
+name: Nightly
+
+# Randomised property seeds and the mutation check (Phase 1 review, R5). The normal CI run keeps
+# fixed seeds; this job widens the search. A failing seed appears in the test name
+# ("seed N"); replay it locally with PROPERTY_SEEDS=N.
+
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  domain:
+    name: domain properties (random seeds) + mutants
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v7
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, intl
+          ini-values: date.timezone=UTC, memory_limit=1G
+          coverage: none
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Property tests with 50 random seeds
+        env:
+          PROPERTY_RANDOM_SEEDS: '50'
+        run: vendor/bin/pest tests/Unit/Domain/PropertiesTest.php
+      - name: Mutation check (every mutant must be killed)
+        run: php tests/Mutation/run.php

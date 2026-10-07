@@ -12,11 +12,28 @@ use App\Domain\Reward\XpRules;
 use Tests\Support\DomainFixtures as F;
 
 /*
- * Property tests with fixed seeds: deterministic in CI, broad in coverage. A failure message
- * names the seed and step so it can be replayed.
+ * Property tests. The normal run uses fixed seeds (deterministic in CI). The nightly job sets
+ * PROPERTY_RANDOM_SEEDS=N to add N random seeds. Every seed is in the dataset name and in the
+ * failure message, so a failure can be replayed with PROPERTY_SEEDS=<seed>.
  */
 
-const PROPERTY_SEEDS = [1, 7, 42, 2026, 31337];
+/** @return array<string, array{int}> */
+function propertySeeds(): array
+{
+    $fixed = getenv('PROPERTY_SEEDS');
+    $seeds = is_string($fixed) && $fixed !== ''
+        ? array_map('intval', explode(',', $fixed))
+        : [1, 7, 42, 2026, 31337];
+    for ($i = 0, $n = (int) getenv('PROPERTY_RANDOM_SEEDS'); $i < $n; $i++) {
+        $seeds[] = random_int(1, PHP_INT_MAX);
+    }
+    $out = [];
+    foreach ($seeds as $seed) {
+        $out["seed {$seed}"] = [$seed];
+    }
+
+    return $out;
+}
 
 /** @return list<FreezeCandidate> */
 function randomCandidates(int $n): array
@@ -82,7 +99,7 @@ it('keeps the freeze balance within [0, 2] under any sequence of grants, spends 
         expect($balance)->toBeGreaterThanOrEqual(0, "seed {$seed} step {$step}")
             ->toBeLessThanOrEqual(FreezeEvaluator::CAP, "seed {$seed} step {$step}");
     }
-})->with(PROPERTY_SEEDS);
+})->with(fn () => propertySeeds());
 
 it('is idempotent: re-running a closure with its own results spends nothing more', function (int $seed) {
     mt_srand($seed);
@@ -104,7 +121,7 @@ it('is idempotent: re-running a closure with its own results spends nothing more
         // At most one spend per (habit, period) even when a batch repeats a period.
         expect(count($used))->toBe(count(array_unique($used)));
     }
-})->with(PROPERTY_SEEDS);
+})->with(fn () => propertySeeds());
 
 it('nets zero XP for any toggle sequence that ends incomplete, and +10 when it ends complete', function (int $seed) {
     mt_srand($seed);
@@ -131,4 +148,4 @@ it('nets zero XP for any toggle sequence that ends incomplete, and +10 when it e
             // Ledger rows carry unique, increasing entitlement revisions.
             ->and($revisions)->toBe(array_values(array_unique($revisions)));
     }
-})->with(PROPERTY_SEEDS);
+})->with(fn () => propertySeeds());
