@@ -59,6 +59,24 @@ final readonly class AccountService
         });
     }
 
+    /** A29: how long a refreshed (old) token keeps working, for a refresh whose response was lost. */
+    public const int REFRESH_GRACE_SECONDS = 600;
+
+    /**
+     * A6 rotation with a grace window (A29): issue a new token for the same device and shorten
+     * the old one to 10 minutes instead of deleting it, so a lost response never logs a user out.
+     */
+    public function refresh(User $user, PersonalAccessToken $current): string
+    {
+        $token = $this->issueToken($user, $current->name, $current->device_id);
+        $grace = $this->clock->now()->addSeconds(self::REFRESH_GRACE_SECONDS);
+        if ($current->expires_at === null || $current->expires_at->greaterThan($grace)) {
+            $current->forceFill(['expires_at' => $grace])->save();
+        }
+
+        return $token;
+    }
+
     /** Issues a token bound to one device (A6). Plain text is returned once. */
     public function issueToken(User $user, string $deviceName, ?string $deviceId): string
     {

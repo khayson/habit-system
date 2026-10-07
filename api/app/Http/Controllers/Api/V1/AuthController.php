@@ -45,17 +45,15 @@ final class AuthController
         return ApiResponse::success($this->session($user, $this->accounts->issueToken($user, $data['device_name'], $data['device_id'] ?? null)));
     }
 
-    /** A6: rotate. Issue a new token for the same device and revoke the one used for this call. */
+    /** A6 rotation; the old token keeps a 10-minute grace window (A29). */
     public function refresh(Request $request): JsonResponse
     {
         /** @var User $user */
         $user = $request->user();
         /** @var PersonalAccessToken $current */
         $current = $user->currentAccessToken();
-        $token = $this->accounts->issueToken($user, $current->name, $current->device_id);
-        $current->delete();
 
-        return ApiResponse::success(['token' => $token, 'token_type' => 'Bearer']);
+        return ApiResponse::success(['token' => $this->accounts->refresh($user, $current), 'token_type' => 'Bearer']);
     }
 
     /** Revokes this device's token. Local data and outboxes on the device are the app's business. */

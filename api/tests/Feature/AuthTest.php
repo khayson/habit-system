@@ -124,17 +124,39 @@ it('logout revokes only this device; logout-all revokes every device', function 
     expect(PersonalAccessToken::query()->count())->toBe(0);
 });
 
-it('refresh rotates the token for the same device (A6)', function () {
+it('refresh rotates the token for the same device; the old one keeps a 10-minute grace (A6, A29)', function () {
     $user = $this->registerUser();
     $device = PersonalAccessToken::query()->sole()->device_id;
 
     $new = $this->withToken($user['token'])->postJson('/api/v1/auth/refresh')->assertOk()->json('data.token');
 
     $this->app['auth']->forgetGuards();
+    $this->withToken($new)->getJson('/api/v1/me')->assertOk();
+    expect(PersonalAccessToken::query()->pluck('device_id')->unique()->all())->toBe([$device]);
+
+    $this->travelTo(CarbonImmutable::parse('2026-05-28T17:31:00Z'));
+    $this->app['auth']->forgetGuards();
+    $this->withToken($user['token'])->getJson('/api/v1/me')->assertOk();
+
+    $this->travelTo(CarbonImmutable::parse('2026-05-28T17:33:00Z'));
+    $this->app['auth']->forgetGuards();
     $this->withToken($user['token'])->getJson('/api/v1/me')->assertUnauthorized();
     $this->app['auth']->forgetGuards();
     $this->withToken($new)->getJson('/api/v1/me')->assertOk();
-    expect(PersonalAccessToken::query()->sole()->device_id)->toBe($device)->not->toBeNull();
+});
+
+it('survives a refresh whose response was lost (S5)', function () {
+    $user = $this->registerUser();
+
+    // The first refresh succeeds on the server but the response never reaches the phone.
+    $this->withToken($user['token'])->postJson('/api/v1/auth/refresh')->assertOk();
+
+    // The phone still holds the old token and simply retries.
+    $this->app['auth']->forgetGuards();
+    $retry = $this->withToken($user['token'])->postJson('/api/v1/auth/refresh')->assertOk()->json('data.token');
+
+    $this->app['auth']->forgetGuards();
+    $this->withToken($retry)->getJson('/api/v1/me')->assertOk();
 });
 
 it('expires tokens after 120 days (A6)', function () {
