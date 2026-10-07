@@ -180,3 +180,13 @@ it('serialises frequencies canonically and round-trips them (S3)', function (str
     'weekly count' => ['weekly_count', ['count' => 3, 'pad' => [1, 2]], ['count' => 3]],
     'interval' => ['interval', ['anchor_date' => '2026-05-01', 'every_n_days' => 2], ['every_n_days' => 2, 'anchor_date' => '2026-05-01']],
 ]);
+
+it('compares log states exactly: units, and detail as canonical JSON (S7)', function () {
+    $a = new LogState(1500, ['items' => ['b' => true, 'a' => false], 'order' => [1, 2]]);
+
+    expect($a->equals(new LogState(1500, ['order' => [1, 2], 'items' => ['a' => false, 'b' => true]])))->toBeTrue()
+        ->and($a->equals(new LogState(1501, $a->detail)))->toBeFalse()
+        ->and($a->equals(new LogState(1500, ['items' => ['a' => false, 'b' => true], 'order' => [2, 1]])))->toBeFalse()
+        ->and($a->equals(new LogState(1500, ['items' => ['a' => 0, 'b' => true], 'order' => [1, 2]])))->toBeFalse()
+        ->and(LogState::empty()->equals(new LogState(0)))->toBeTrue();
+});

@@ -73,7 +73,7 @@ final readonly class LogSetValue
             : new LogState($type->fromStorage((string) $existing->value), HabitRepository::json($existing->detail));
         $next = $type->apply('log.set_value', $current, $m->payload['value'], $definition);
 
-        if ($existing !== null && ! $restoring && $next == $current) {
+        if ($existing !== null && ! $restoring && $next->equals($current)) {
             // Identical desired state: acknowledge without a new version (spec 07).
             return new HandlerResult('habit_log', (string) $existing->id, (int) $existing->version, $date->toString());
         }
