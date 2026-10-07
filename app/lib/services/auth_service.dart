@@ -95,11 +95,19 @@ class AuthService implements AuthSession {
     return _open(userId, await _deviceId());
   }
 
-  /// One rotation (A6). The server keeps the old token valid for a 10-minute grace window
+  Future<RefreshResult>? _refreshing;
+
+  /// One rotation (A6), single-flight (F5): with one token per device, two overlapping
+  /// refreshes would mint two tokens and the server deletes the first, so concurrent callers
+  /// share one request. The server keeps the old token valid for a 10-minute grace window
   /// (A29), so a lost response or a network failure keeps the stored token and is retried
   /// later. Only a 401 means the session is over; the [ApiClient] has then cleared the token.
+  /// Foreground only: background isolates use [BackgroundAuthSession].
   @override
-  Future<RefreshResult> refresh() async {
+  Future<RefreshResult> refresh() =>
+      _refreshing ??= _refresh().whenComplete(() => _refreshing = null);
+
+  Future<RefreshResult> _refresh() async {
     if (await _tokens.read() == null) return RefreshResult.rejected;
     try {
       final response = await _api.post('/auth/refresh', (d) => (d as Map)['token'] as String);

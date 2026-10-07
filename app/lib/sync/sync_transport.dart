@@ -21,6 +21,19 @@ abstract interface class AuthSession {
   Future<void> logout();
 }
 
+/// The [AuthSession] for background isolates (F5). They never refresh: two isolates rotating
+/// one device token would leave one of them holding a deleted token. On 401 the run stops as
+/// offline with `sync_state.last_error = reauth_needed`, and the foreground app refreshes.
+class BackgroundAuthSession implements AuthSession {
+  const BackgroundAuthSession();
+
+  @override
+  Future<RefreshResult> refresh() async => RefreshResult.unavailable;
+
+  @override
+  Future<void> logout() async {}
+}
+
 enum RefreshResult {
   /// A new token is stored; retry the request.
   refreshed,

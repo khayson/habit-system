@@ -342,6 +342,23 @@ void main() {
     expect((await phone.outbox()).map((r) => r.state).toSet(), {OutboxState.pending});
   });
 
+  test('F5: a background engine never refreshes; it reports and keeps the session', () async {
+    final habit = await phone.habit();
+    await phone.writer.setLogValue(habitId: habit, value: 1);
+    server.failNextBootstrap.add(const SyncTransportException(SyncFailure.unauthorized));
+    final background = SyncEngine(
+      db: phone.db,
+      transport: server,
+      auth: const BackgroundAuthSession(),
+      capabilities: const ['binary'],
+      clock: () => phone.now,
+    );
+
+    expect(await background.run(), SyncOutcome.offline);
+    expect(jsonDecode((await phone.state()).lastError!)['code'], 'reauth_needed');
+    expect((await phone.outbox()).map((r) => r.state).toSet(), {OutboxState.pending});
+  });
+
   test('429 honours Retry-After and leaves rows pending', () async {
     await phone.sync();
     final habit = await phone.habit();

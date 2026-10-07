@@ -116,6 +116,20 @@ void main() {
     expect(tokens.token, isNull);
   });
 
+  test('F5: concurrent refreshes share one request', () async {
+    tokens.token = 'old';
+    http.on('POST /auth/refresh', Reply(200, envelope({'token': 'new'})));
+
+    final results = await Future.wait([for (var i = 0; i < 10; i++) auth.refresh()]);
+
+    expect(results, everyElement(RefreshResult.refreshed));
+    expect(http.sent('POST /auth/refresh'), hasLength(1));
+    expect(tokens.token, 'new');
+
+    await auth.refresh();
+    expect(http.sent('POST /auth/refresh'), hasLength(2), reason: 'a later call refreshes again');
+  });
+
   test('refreshIfStale waits until the token is 30 days old (A6)', () async {
     tokens.token = 'old';
     accounts.issuedAt = now.subtract(const Duration(days: 29));

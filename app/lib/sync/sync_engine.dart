@@ -152,6 +152,11 @@ class SyncEngine {
                 case RefreshResult.refreshed:
                   continue;
                 case RefreshResult.unavailable:
+                  await _updateState(
+                    SyncStateCompanion(
+                      lastError: Value(_error('reauth_needed', 'Sign-in needs refreshing.')),
+                    ),
+                  );
                   return SyncOutcome.offline;
                 case RefreshResult.rejected:
                   break;
