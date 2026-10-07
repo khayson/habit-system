@@ -125,6 +125,44 @@ class LocalMutationService {
     });
   }
 
+  /// Screen 18 "Discard": the user gives up a change the server would not take. Only rows in
+  /// needs_attention qualify (they are never resubmitted automatically); the row moves to
+  /// discarded_mutations in the same transaction, so the decision is recorded, not lost.
+  /// Returns false when the row is gone or not in needs_attention.
+  Future<bool> discard(String mutationId) {
+    return db.transaction(() async {
+      final row = await (db.select(
+        db.outbox,
+      )..where((o) => o.mutationId.equals(mutationId))).getSingleOrNull();
+      if (row == null || row.state != OutboxState.needsAttention) return false;
+      await db
+          .into(db.discardedMutations)
+          .insert(
+            DiscardedMutationsCompanion.insert(
+              mutationId: row.mutationId,
+              entity: row.entity,
+              entityId: row.entityId,
+              operation: row.operation,
+              payload: row.payload,
+              localDateHint: Value(row.localDateHint),
+              lastError: Value(row.lastError),
+              discardedAt: clock().toUtc().millisecondsSinceEpoch,
+            ),
+          );
+      await (db.delete(db.outbox)..where((o) => o.seq.equals(row.seq))).go();
+      return true;
+    });
+  }
+
+  /// Screen 18 "Try again": a blocked row becomes due now instead of after its backoff.
+  Future<bool> retryNow(String mutationId) async {
+    final updated =
+        await (db.update(db.outbox)
+              ..where((o) => o.mutationId.equals(mutationId) & o.state.equals(OutboxState.blocked)))
+            .write(const OutboxCompanion(nextAttemptAt: Value(0)));
+    return updated == 1;
+  }
+
   /// The newest version this device has seen for the habit-day (confirmed or acked). Rows queued
   /// behind an unacknowledged one carry it only as a placeholder: the engine sends one row per
   /// habit-day at a time and rebases the next from the server's ack (F4). The client never

@@ -106,6 +106,46 @@ void main() {
     await fresh.db.close();
   });
 
+  test('discard records a needs-attention row and removes it from the queue', () async {
+    final habit = await phone.habit();
+    final write = await phone.writer.setLogValue(habitId: habit, value: 1);
+    await phone.db.customStatement(
+      "UPDATE outbox SET state = 'needs_attention', last_error = '{\"code\":\"version_conflict\"}' "
+      "WHERE entity = 'habit_log'",
+    );
+
+    expect(await phone.writer.discard(write.mutationId), isTrue);
+
+    expect((await phone.outbox()).map((r) => r.entity), ['habit']);
+    final record = await phone.db.select(phone.db.discardedMutations).getSingle();
+    expect(
+      (record.mutationId, record.operation, record.localDateHint),
+      (write.mutationId, 'log.set_value', '2026-05-28'),
+    );
+    expect(record.lastError, contains('version_conflict'));
+  });
+
+  test('discard refuses rows that may still reach the server', () async {
+    final habit = await phone.habit();
+    final write = await phone.writer.setLogValue(habitId: habit, value: 1);
+
+    expect(await phone.writer.discard(write.mutationId), isFalse, reason: 'pending');
+    expect(await phone.outbox(), hasLength(2));
+    expect(await phone.db.select(phone.db.discardedMutations).get(), isEmpty);
+  });
+
+  test('retryNow makes a blocked row due at once', () async {
+    final habit = await phone.habit();
+    final write = await phone.writer.setLogValue(habitId: habit, value: 1);
+    await phone.db.customStatement(
+      "UPDATE outbox SET state = 'blocked', next_attempt_at = 99999999999999 WHERE entity = 'habit_log'",
+    );
+
+    expect(await phone.writer.retryNow(write.mutationId), isTrue);
+    expect((await phone.outbox()).last.nextAttemptAt, 0);
+    expect(await phone.writer.retryNow((await phone.outbox()).first.mutationId), isFalse);
+  });
+
   test('the writer, view, codec and engine are pure Dart (no Flutter imports)', () {
     final files = [
       'lib/data/local_mutation_service.dart',
