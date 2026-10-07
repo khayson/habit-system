@@ -32,18 +32,20 @@ final class SyncRequest extends FormRequest
         ];
     }
 
+    /** A29: what a client that sends no X-Capabilities header (a legacy build) declares. */
+    public const array BASELINE_TYPES = ['binary', 'quantity'];
+
     /**
      * Habit types the client declared (A21), from `X-Capabilities: type.binary, type.quantity`.
-     * Null when the header is absent: a legacy client, limited to the built-in types.
-     * ASSUMPTION(A2a-capabilities): header format.
+     * An absent or empty header means the baseline set, never "no restriction" (A29).
      *
-     * @return list<string>|null
+     * @return list<string>
      */
-    public function capabilities(): ?array
+    public function capabilities(): array
     {
         $header = $this->header('X-Capabilities');
         if (! is_string($header) || trim($header) === '') {
-            return null;
+            return self::BASELINE_TYPES;
         }
         $types = [];
         foreach (explode(',', $header) as $token) {

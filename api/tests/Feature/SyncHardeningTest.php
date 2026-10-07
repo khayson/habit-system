@@ -231,3 +231,20 @@ it('stores and journals the canonical frequency_config, not the client object (S
         ->and(json_decode((string) DB::table('habit_definition_versions')->value('frequency_config'), true))->toBe(['days' => [1, 3, 5]])
         ->and($response->json('data.changes.1.payload.frequency_config'))->toBe(['days' => [1, 3, 5]]);
 });
+
+// S4 ------------------------------------------------------------------------------------------
+
+it('treats a missing X-Capabilities header as the baseline set (S4, legacy clients)', function () {
+    $acks = $this->sync($this->user['token'], [
+        M::habitCreate((string) Str::uuid7(), 'binary', 1),
+        M::habitCreate((string) Str::uuid7(), 'quantity', '20.000', ['unit' => 'pages']),
+        M::habitCreate((string) Str::uuid7(), 'duration', 600),
+    ])->json('data.acks');
+
+    expect(array_column($acks, 'status'))->toBe(['accepted', 'accepted', 'rejected'])
+        ->and($acks[2]['error']['code'])->toBe('unsupported_type');
+
+    // A client that declares duration may create it; pulling is never restricted (invariant 13).
+    $this->sync($this->user['token'], [M::habitCreate((string) Str::uuid7(), 'duration', 600)], headers: ['X-Capabilities' => 'type.binary, type.quantity, type.duration'])
+        ->assertJsonPath('data.acks.0.status', 'accepted');
+});
