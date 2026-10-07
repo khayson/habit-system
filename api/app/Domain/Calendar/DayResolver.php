@@ -39,11 +39,14 @@ final readonly class DayResolver
         if ($occurredAt < $now->sub(new DateInterval('PT'.self::MAX_OFFLINE_AGE_SECONDS.'S'))) {
             throw new DayResolutionException('event_too_old');
         }
-        if ($capturedTimezone !== null && $capturedTimezone !== $entry->timezone) {
-            throw new DayResolutionException('timezone_context_mismatch');
-        }
-
         $date = $this->timeline->localDateAt($occurredAt);
+
+        // A29: a different captured zone is fine when the client's date already agrees with
+        // the server's; the server still resolves the date (invariant 3). Otherwise review.
+        if ($capturedTimezone !== null && $capturedTimezone !== $entry->timezone
+            && ($localDateHint === null || ! $localDateHint->equals($date))) {
+            throw new DayResolutionException('timezone_context_mismatch', $entry);
+        }
 
         return new DayResolution($date, $entry, $localDateHint?->equals($date));
     }

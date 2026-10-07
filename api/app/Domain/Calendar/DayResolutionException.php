@@ -11,8 +11,11 @@ use DomainException;
  */
 final class DayResolutionException extends DomainException
 {
-    public function __construct(public readonly string $reason)
-    {
+    public function __construct(
+        public readonly string $reason,
+        /** For timezone_context_mismatch: the server's calendar entry at the event (A29). */
+        public readonly ?CalendarEntry $entry = null,
+    ) {
         parent::__construct($reason);
     }
 }

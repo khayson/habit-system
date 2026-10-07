@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Calendar\CalendarEntry;
 use App\Domain\Calendar\DayResolutionException;
 use App\Domain\Habit\InvalidHabitValue;
 use App\Domain\Habit\UnknownHabitType;
@@ -32,7 +33,10 @@ beforeEach(function () {
         Route::post('/media-type', fn () => abort(415));
         Route::get('/unavailable', fn () => abort(503));
         Route::get('/teapot', fn () => abort(418));
-        Route::get('/domain/{reason}', fn (string $reason) => throw new DayResolutionException($reason));
+        Route::get('/domain/{reason}', fn (string $reason) => throw new DayResolutionException(
+            $reason,
+            $reason === 'timezone_context_mismatch' ? new CalendarEntry(new DateTimeImmutable('2026-01-01T00:00:00Z'), 'America/Los_Angeles') : null,
+        ));
         Route::get('/domain-type', fn () => throw new UnknownHabitType('checklist'));
         Route::get('/domain-operation', fn () => throw new UnsupportedOperation('binary', 'log.increment'));
         Route::get('/domain-value', fn () => throw new InvalidHabitValue('internal detail 250.0005'));

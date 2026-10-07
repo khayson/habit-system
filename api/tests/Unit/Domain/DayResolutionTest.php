@@ -26,6 +26,10 @@ it('resolves the business date', function (array $case) {
     } catch (DayResolutionException $e) {
         expect($case['expect'])->toHaveKey('error')
             ->and($e->reason)->toBe($case['expect']['error']);
+        if (isset($case['expect']['calendar'])) {
+            expect([$e->entry?->timezone, $e->entry?->dayStartOffsetMinutes, $e->entry?->effectiveAt->format('Y-m-d\TH:i:s\Z')])
+                ->toBe(array_values($case['expect']['calendar']));
+        }
 
         return;
     }

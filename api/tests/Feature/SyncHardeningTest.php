@@ -200,3 +200,20 @@ it('answers 410 for cursors signed with a rotated app key (S1)', function () {
 
     $this->sync($this->user['token'], cursor: $cursor)->assertStatus(410);
 });
+
+// S2 ------------------------------------------------------------------------------------------
+
+it('accepts a different captured zone when the hint matches; otherwise returns the server calendar (S2)', function () {
+    $this->sync($this->user['token'], [M::habitCreate($this->habit)]);
+    $agreeing = [...M::setValue($this->habit, 1, 0, capturedTimezone: 'Europe/Paris'), 'local_date_hint' => '2026-05-28'];
+    $disagreeing = [...M::setValue($this->habit, 1, 0, capturedTimezone: 'Europe/Paris'), 'local_date_hint' => '2026-05-29'];
+
+    $acks = $this->sync($this->user['token'], [$disagreeing, $agreeing])->json('data.acks');
+
+    expect($acks[0]['error']['code'])->toBe('timezone_context_mismatch')
+        ->and($acks[0]['error']['calendar']['timezone'])->toBe('America/Los_Angeles')
+        ->and($acks[0]['error']['calendar']['day_start_offset_minutes'])->toBe(0)
+        ->and($acks[1]['status'])->toBe('accepted')
+        ->and($acks[1]['resolved_date'])->toBe('2026-05-28')
+        ->and(DB::table('habit_logs')->value('resolved_timezone'))->toBe('America/Los_Angeles');
+});

@@ -6,6 +6,7 @@ use App\Domain\Calendar\DayResolutionException;
 use App\Domain\Habit\InvalidHabitValue;
 use App\Domain\Habit\UnknownHabitType;
 use App\Domain\Habit\UnsupportedOperation;
+use App\Support\UtcTime;
 use Throwable;
 
 /**
@@ -45,6 +46,16 @@ final class DomainErrorMapper
             return null;
         }
 
-        return new ApiException(422, $code, self::CODES[$code]);
+        $extra = [];
+        if ($e instanceof DayResolutionException && $e->entry !== null) {
+            // A29: let the client correct its cached calendar.
+            $extra['calendar'] = [
+                'timezone' => $e->entry->timezone,
+                'day_start_offset_minutes' => $e->entry->dayStartOffsetMinutes,
+                'effective_at' => UtcTime::format($e->entry->effectiveAt),
+            ];
+        }
+
+        return new ApiException(422, $code, self::CODES[$code], $extra);
     }
 }
