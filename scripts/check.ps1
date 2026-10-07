@@ -13,7 +13,10 @@ try {
 Push-Location $AppDir
 try {
     flutter pub get
-    dart format --output=none --set-exit-if-changed lib test integration_test tool
+    # Generated *.g.dart is build_runner's output (80 columns); CI checks it is up to date instead.
+    $sources = Get-ChildItem lib, test, integration_test, tool -Recurse -Filter *.dart |
+        Where-Object { $_.Name -notlike '*.g.dart' } | ForEach-Object { $_.FullName }
+    dart format --output=none --set-exit-if-changed @sources
     if ($LASTEXITCODE -ne 0) { throw 'dart format found changes' }
     flutter analyze
     if ($LASTEXITCODE -ne 0) { throw 'flutter analyze failed' }
