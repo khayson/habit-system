@@ -71,7 +71,7 @@ class Device {
     betweenSelectAndMark: betweenSelectAndMark,
   );
 
-  Future<SyncOutcome> sync() => engine().run();
+  Future<SyncOutcome> sync({bool force = false}) => engine().run(force: force);
 
   Future<String> habit({String type = 'binary', Object target = 1}) => writer.createHabit(
     name: 'Stretch',

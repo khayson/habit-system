@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -86,6 +87,7 @@ void main() {
     expect(await phone.sync(), SyncOutcome.offline);
     expect((await phone.outbox()).single.state, OutboxState.pending);
 
+    phone.now = phone.now.add(const Duration(minutes: 1)); // past the backoff
     expect(await phone.sync(), SyncOutcome.completed);
     expect(server.logs.length, 1);
     expect(server.logs.values.single['value'], 0);
@@ -113,6 +115,7 @@ void main() {
     expect(jsonDecode((await phone.state()).lastError!)['code'], 'sync_failed');
     expect(server.logs.length, 1, reason: 'the server did commit');
 
+    phone.now = phone.now.add(const Duration(minutes: 1));
     expect(await phone.sync(), SyncOutcome.completed);
     expect(server.logs.length, 1);
     expect((await phone.logs()).single.version, 1);
@@ -140,6 +143,7 @@ void main() {
     expect((await phone.state()).cursor, cursorBefore);
     expect(await phone.logs(), isEmpty);
 
+    phone.now = phone.now.add(const Duration(minutes: 1));
     await phone.sync();
     expect((await phone.logs()).single.id, 'other-log');
     expect((await phone.state()).cursor, 'c:${server.seq}');
@@ -370,6 +374,58 @@ void main() {
     expect((await phone.state()).nextSyncAt, phone.now.millisecondsSinceEpoch + 30000);
     expect((await phone.outbox()).single.entityId, habit);
     expect((await phone.outbox()).single.state, OutboxState.pending);
+  });
+
+  group('F6: backoff is enforced', () {
+    test('no request before Retry-After, then normal service', () async {
+      await phone.sync();
+      server.failNextSync.add(
+        const SyncTransportException(SyncFailure.rateLimited, retryAfter: Duration(seconds: 30)),
+      );
+      expect(await phone.sync(), SyncOutcome.rateLimited);
+      final calls = server.syncCalls;
+
+      expect(await phone.sync(), SyncOutcome.rateLimited);
+      expect(await phone.sync(force: true), SyncOutcome.rateLimited, reason: 'never bypassed');
+      expect(server.syncCalls, calls);
+
+      phone.now = phone.now.add(const Duration(seconds: 31));
+      expect(await phone.sync(), SyncOutcome.completed);
+      expect((await phone.state()).nextSyncAt, isNull);
+    });
+
+    test('5xx and offline back off 30 s doubling to 15 min; success clears it', () async {
+      await phone.sync();
+      final waits = <int>[];
+      for (var i = 0; i < 8; i++) {
+        server.failNextSync.add(const SyncTransportException(SyncFailure.server));
+        expect(await phone.sync(force: true), SyncOutcome.backoff);
+        final state = await phone.state();
+        waits.add(((state.backoffUntil! - phone.now.millisecondsSinceEpoch) / 1000).round());
+        expect(state.consecutiveFailures, i + 1);
+      }
+      for (final (i, wait) in waits.indexed) {
+        final base = [30, 60, 120, 240, 480, 900, 900, 900][i];
+        expect(wait, inInclusiveRange(base * 0.8 - 1, min(900, base * 1.2) + 1), reason: 'try $i');
+      }
+
+      final calls = server.syncCalls;
+      expect(await phone.sync(), SyncOutcome.backoff);
+      expect(server.syncCalls, calls, reason: 'nothing sent inside the backoff');
+
+      phone.now = phone.now.add(const Duration(minutes: 16));
+      expect(await phone.sync(), SyncOutcome.completed);
+      final state = await phone.state();
+      expect((state.consecutiveFailures, state.backoffUntil), (0, null));
+    });
+
+    test('force (connectivity regained, Sync now) skips the failure backoff', () async {
+      await phone.sync();
+      server.failNextSync.add(const SyncTransportException(SyncFailure.network));
+      expect(await phone.sync(), SyncOutcome.offline);
+      expect(await phone.sync(), SyncOutcome.backoff);
+      expect(await phone.sync(force: true), SyncOutcome.completed);
+    });
   });
 
   test('HTTP 413 sends smaller chunks until everything is through', () async {

@@ -82,9 +82,50 @@ class SyncEngine {
 
   /// Runs one sync. Concurrent callers on this engine share the run in progress (F3): a
   /// connectivity event, a resume and "Sync now" together make one request sequence.
-  Future<SyncOutcome> run() => _running ??= _run().whenComplete(() => _running = null);
+  ///
+  /// Backoff is enforced here (F6): nothing is sent before a 429's Retry-After, or before the
+  /// backoff earned by consecutive 5xx, network or unexpected failures.
+  /// ASSUMPTION(A2b-backoff-bypass): [force] skips the failure backoff (never Retry-After); only
+  /// "connectivity regained" and the user's "Sync now" pass it.
+  Future<SyncOutcome> run({bool force = false}) =>
+      _running ??= _run(force).whenComplete(() => _running = null);
 
-  Future<SyncOutcome> _run() async {
+  Future<SyncOutcome> _run(bool force) async {
+    final state = await _state();
+    if ((state.nextSyncAt ?? 0) > _now) return SyncOutcome.rateLimited;
+    if (!force && (state.backoffUntil ?? 0) > _now) return SyncOutcome.backoff;
+    final outcome = await _leased();
+    switch (outcome) {
+      case SyncOutcome.completed:
+        await _updateState(
+          const SyncStateCompanion(
+            consecutiveFailures: Value(0),
+            backoffUntil: Value(null),
+            nextSyncAt: Value(null),
+          ),
+        );
+      case SyncOutcome.backoff || SyncOutcome.offline || SyncOutcome.failed:
+        await _recordFailure();
+      case SyncOutcome.busy || SyncOutcome.rateLimited || SyncOutcome.loggedOut:
+        break;
+    }
+    return outcome;
+  }
+
+  /// 30 s doubling to 15 min, with jitter; persisted so every trigger honours it (F6).
+  Future<void> _recordFailure() async {
+    final failures = (await _state()).consecutiveFailures + 1;
+    final base = min(900, 30 * pow(2, min(failures - 1, 10)).toInt());
+    final wait = min(900, (base * (0.8 + random.nextDouble() * 0.4)).round());
+    await _updateState(
+      SyncStateCompanion(
+        consecutiveFailures: Value(failures),
+        backoffUntil: Value(_now + wait * 1000),
+      ),
+    );
+  }
+
+  Future<SyncOutcome> _leased() async {
     if (!await _acquireLease()) return SyncOutcome.busy;
     try {
       return await _runLocked();
