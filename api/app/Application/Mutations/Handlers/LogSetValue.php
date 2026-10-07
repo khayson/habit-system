@@ -24,7 +24,8 @@ use stdClass;
 
 /**
  * log.set_value (A27 canonical; alias log.set_binary): absolute, version-checked edit of one
- * habit-day (spec 07). base_version is required; 0 means the log is absent. The date comes from
+ * habit-day (spec 07). base_version is required; 0 means the log is absent; the tombstone's
+ * version restores a deleted day (A29). The date comes from
  * occurred_at and the user's calendar history, never from receipt time (invariant 3).
  */
 final readonly class LogSetValue
@@ -56,17 +57,23 @@ final readonly class LogSetValue
         }
 
         $existing = DB::table('habit_logs')->where('habit_id', $habit->id)->where('log_date', $date->toString())->lockForUpdate()->first();
+        // A29 restore: a tombstone is restored only by a client that has seen the delete, i.e. that
+        // sends the tombstone's version. An edit queued before the delete still conflicts, so
+        // nothing is silently resurrected (spec 07).
+        $restoring = false;
         if ($existing !== null && $existing->deleted_at !== null) {
-            // Delete vs queued edit: no silent resurrection (spec 07). Restore is explicit.
-            throw ApiException::resourceDeleted('habit_log', (string) $existing->id, (int) $existing->version);
+            if ($m->baseVersion !== (int) $existing->version) {
+                throw ApiException::resourceDeleted('habit_log', (string) $existing->id, (int) $existing->version);
+            }
+            $restoring = true;
         }
 
-        $current = $existing === null
+        $current = $existing === null || $restoring
             ? LogState::empty()
             : new LogState($type->fromStorage((string) $existing->value), HabitRepository::json($existing->detail));
         $next = $type->apply('log.set_value', $current, $m->payload['value'], $definition);
 
-        if ($existing !== null && $next == $current) {
+        if ($existing !== null && ! $restoring && $next == $current) {
             // Identical desired state: acknowledge without a new version (spec 07).
             return new HandlerResult('habit_log', (string) $existing->id, (int) $existing->version, $date->toString());
         }
@@ -81,13 +88,13 @@ final readonly class LogSetValue
         }
 
         $complete = $type->isComplete($next, $definition);
-        $previousCompletedAt = $existing?->completed_at;
+        $previousCompletedAt = $restoring ? null : $existing?->completed_at;
         $completedAt = match (true) {
             ! $complete => null,
             $previousCompletedAt !== null => (string) $previousCompletedAt,
             default => WireTime::forDatabase($m->occurredAt),
         };
-        $occurredAt = $existing !== null && WireTime::parse((string) $existing->occurred_at) > $m->occurredAt
+        $occurredAt = $existing !== null && ! $restoring && WireTime::parse((string) $existing->occurred_at) > $m->occurredAt
             ? (string) $existing->occurred_at
             : WireTime::forDatabase($m->occurredAt);
         $now = UtcTime::format($this->clock->now());
@@ -100,6 +107,7 @@ final readonly class LogSetValue
             'day_start_offset_minutes' => $resolution->entry->dayStartOffsetMinutes,
             'definition_version' => $definition->version,
             'version' => $currentVersion + 1,
+            'deleted_at' => null,
             'updated_at' => $now,
         ];
 

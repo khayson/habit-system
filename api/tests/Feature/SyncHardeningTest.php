@@ -100,3 +100,33 @@ it('rejects over-long strings in the ack (B1)', function () {
     expect($acks[0]['error']['fields'])->toHaveKey('name')
         ->and($acks[1]['error']['fields'])->toHaveKey('unit');
 });
+
+// B2 ------------------------------------------------------------------------------------------
+
+it('restores a deleted day with the tombstone version; a stale edit still conflicts (B2)', function () {
+    $this->sync($this->user['token'], [M::habitCreate($this->habit)]);
+    $log = $this->sync($this->user['token'], [M::setValue($this->habit, 1, 0)])->json('data.acks.0.entity_id');
+    $this->sync($this->user['token'], [M::delete($log, 1, $this->habit)])->assertJsonPath('data.acks.0.version', 2);
+
+    // An edit queued before the delete (based on version 1) must not resurrect the day.
+    $this->sync($this->user['token'], [M::setValue($this->habit, 1, 1)])
+        ->assertJsonPath('data.acks.0.status', 'conflict')
+        ->assertJsonPath('data.acks.0.error.code', 'resource_deleted')
+        ->assertJsonPath('data.acks.0.error.current_version', 2);
+
+    // The user saw the delete and logs the day again: base_version = tombstone version.
+    $restore = $this->sync($this->user['token'], [M::setValue($this->habit, 1, 2, '2026-05-28T17:21:00Z')], deviceId: '01970000-0000-7000-8000-00000000d001');
+    $ack = $restore->json('data.acks.0');
+    assertMatchesContract(syncFixture('ack_restored')['expect'], $ack);
+    expect($ack['entity_id'])->toBe($log);
+
+    $row = DB::table('habit_logs')->where('id', $log)->first();
+    expect($row->deleted_at)->toBeNull()->and((int) $row->version)->toBe(3)->and($row->completed_at)->not->toBeNull();
+
+    // A second device pulling from the start sees create, delete, then the restore as an upsert.
+    $logChanges = collect($this->sync($this->user['token'], deviceId: '01970000-0000-7000-8000-00000000d002')->json('data.changes'))
+        ->where('entity', 'habit_log')->values();
+    expect($logChanges->pluck('operation')->all())->toBe(['upsert', 'delete', 'upsert'])
+        ->and($logChanges->last()['version'])->toBe(3)
+        ->and($logChanges->last()['payload']['deleted_at'])->toBeNull();
+});
