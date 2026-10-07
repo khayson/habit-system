@@ -1,0 +1,19 @@
+{
+  "description": "A29/B3: log.delete with an entity id the server never saw falls back to payload.habit_id + payload.log_date and deletes the canonical row.",
+  "suites": [
+    "php"
+  ],
+  "expect": {
+    "mutation_id": "{{uuid}}",
+    "status": "accepted",
+    "duplicate": false,
+    "entity": "habit_log",
+    "entity_id": "{{uuid}}",
+    "version": 2,
+    "resolved_date": "2026-05-28"
+  },
+  "rules": [
+    "entity_id is the canonical log id, not the mutation's",
+    "the canonical row is tombstoned"
+  ]
+}

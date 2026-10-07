@@ -19,6 +19,8 @@ the format and then treat them as equal.
 - `envelope/` — response envelope and error shapes (Phase 0). Each file has
   `description`, `status`, optional `headers`, and `body`. One file per error code
   (`docs/api-error-codes.md`).
+- `sync/` — `/sync` ack shapes for the A29 contract (Phase 2a.1). Each has `expect` (the ack,
+  with placeholders) and `rules` the test checks in code.
 - `domain/` — business rules (Phase 1). Each file has `kind`, `suites` (which test suites must
   consume it: `php`, `dart`) and `description`. Cases inside may narrow `suites` further.
 

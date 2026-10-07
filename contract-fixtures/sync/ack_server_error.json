@@ -1,0 +1,22 @@
+{
+  "description": "A29/B1: an unexpected failure inside one mutation. Reported server-side; the batch continues; no receipt is stored, so the client retries this mutation later (backoff) without blocking unrelated work.",
+  "suites": [
+    "php"
+  ],
+  "expect": {
+    "mutation_id": "{{uuid}}",
+    "status": "rejected",
+    "duplicate": false,
+    "entity": "habit",
+    "entity_id": "{{uuid}}",
+    "error": {
+      "code": "server_error",
+      "message": "Something went wrong. Try again.",
+      "retryable": true
+    }
+  },
+  "rules": [
+    "no mutation_receipts row exists for mutation_id",
+    "other mutations in the same batch get their own acks"
+  ]
+}

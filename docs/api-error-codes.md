@@ -47,7 +47,7 @@ Every error response uses one envelope (CLAUDE.md, A25):
 | `invalid_value` | 422 | Value, target or increment breaks the type's rules. | — | `error_422_invalid_value.json` |
 | `rate_limited` | 429 | Rate limit hit. | `Retry-After` header (seconds) | `error_429_rate_limited.json` |
 | `http_error` | other 4xx (e.g. 418) | Fallback for a 4xx with no dedicated code. | — | `error_4xx_http_error.json` |
-| `server_error` | 500 (and 5xx without a code) | Unhandled failure. Retriable. | — | `error_500_server_error.json` |
+| `server_error` | 500 (and 5xx without a code) | Unhandled failure. Retriable. In a `/sync` ack it is per mutation (status `rejected`, no receipt). | `retryable: true` in a sync ack (`sync/ack_server_error.json`) | `error_500_server_error.json` |
 | `unavailable` | 503 | Maintenance or a dependency briefly down. Retriable. | — | `error_503_unavailable.json` |
 
 ## Reserved codes (later phases)

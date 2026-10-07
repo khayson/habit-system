@@ -1,0 +1,19 @@
+{
+  "description": "A29/B2: log.set_value with base_version equal to the tombstone version restores the deleted row (same id, version + 1, deleted_at cleared, journaled as an upsert).",
+  "suites": [
+    "php"
+  ],
+  "expect": {
+    "mutation_id": "{{uuid}}",
+    "status": "accepted",
+    "duplicate": false,
+    "entity": "habit_log",
+    "entity_id": "{{uuid}}",
+    "version": 3,
+    "resolved_date": "2026-05-28"
+  },
+  "rules": [
+    "entity_id equals the tombstoned log id",
+    "base_version below the tombstone version still returns conflict resource_deleted"
+  ]
+}

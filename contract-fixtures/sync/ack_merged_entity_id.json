@@ -1,0 +1,19 @@
+{
+  "description": "A29/B3: two devices create the same habit-day offline with different client log ids. The server keeps the first row; the second ack carries the canonical entity_id, which differs from the mutation's entity_id. The client remaps its local row and outbox rows in one transaction.",
+  "suites": [
+    "php"
+  ],
+  "expect": {
+    "mutation_id": "{{uuid}}",
+    "status": "accepted",
+    "duplicate": false,
+    "entity": "habit_log",
+    "entity_id": "{{uuid}}",
+    "version": 2,
+    "resolved_date": "2026-05-28"
+  },
+  "rules": [
+    "entity_id differs from the mutation's entity_id",
+    "entity_id equals the first device's log id"
+  ]
+}
