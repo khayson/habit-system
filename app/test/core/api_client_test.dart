@@ -52,6 +52,28 @@ class CannedAdapter implements HttpClientAdapter {
   void close({bool force = false}) {}
 }
 
+/// Replaces the stored token while the request is "in flight", then answers.
+class _SwapTokenThenAdapter implements HttpClientAdapter {
+  final MemoryTokenStore tokens;
+  final String replacement;
+  final HttpClientAdapter inner;
+
+  _SwapTokenThenAdapter(this.tokens, this.replacement, this.inner);
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    tokens.token = replacement;
+    return inner.fetch(options, requestStream, cancelFuture);
+  }
+
+  @override
+  void close({bool force = false}) {}
+}
+
 Map<String, dynamic> fixtureBody(String name) =>
     materialize(contractFixture('envelope/$name.json')['body']) as Map<String, dynamic>;
 
@@ -93,6 +115,37 @@ void main() {
     );
     expect(tokens.token, isNull);
     expect(notified, isTrue);
+  });
+
+  test('a late 401 from an old session does not clear the new session token', () async {
+    final tokens = MemoryTokenStore('old-session');
+    // The 401 arrives after the user logged out and back in while the request was in flight.
+    dio.httpClientAdapter = _SwapTokenThenAdapter(
+      tokens,
+      'new-session',
+      CannedAdapter(401, fixtureBody('error_401_unauthenticated')),
+    );
+    var notified = false;
+    final api = ApiClient.withDio(dio, tokens)..onUnauthenticated = () => notified = true;
+
+    await expectLater(HealthService(api).check(), throwsA(isA<AppException>()));
+    expect(tokens.token, 'new-session');
+    expect(notified, isFalse);
+  });
+
+  test('a 401 on a request sent without a token ends no session', () async {
+    final tokens = MemoryTokenStore();
+    dio.httpClientAdapter = _SwapTokenThenAdapter(
+      tokens,
+      'fresh-login',
+      CannedAdapter(401, fixtureBody('error_401_unauthenticated')),
+    );
+    var notified = false;
+    final api = ApiClient.withDio(dio, tokens)..onUnauthenticated = () => notified = true;
+
+    await expectLater(HealthService(api).check(), throwsA(isA<AppException>()));
+    expect(tokens.token, 'fresh-login');
+    expect(notified, isFalse);
   });
 
   test('429 surfaces Retry-After', () async {

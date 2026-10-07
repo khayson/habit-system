@@ -42,14 +42,12 @@ class ApiClient {
           final token = await _tokens.read();
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
+            options.extra[_sentTokenKey] = token;
           }
           handler.next(options);
         },
         onError: (error, handler) async {
-          if (error.response?.statusCode == 401) {
-            await _tokens.clear();
-            onUnauthenticated?.call();
-          }
+          await _handleUnauthorized(error);
           handler.next(error);
         },
       ),
@@ -57,6 +55,21 @@ class ApiClient {
     if (kDebugMode) {
       _dio.interceptors.add(_RedactedLogInterceptor());
     }
+  }
+
+  /// Key in `RequestOptions.extra` holding the token a request was sent with.
+  static const _sentTokenKey = 'habit.sent_token';
+
+  /// A 401 ends the session only if the request carried a token and that token is still the
+  /// stored one. A late 401 from a previous session (logout, then login while it was in flight)
+  /// must not clear the new session's token.
+  Future<void> _handleUnauthorized(DioException error) async {
+    if (error.response?.statusCode != 401) return;
+    final sent = error.requestOptions.extra[_sentTokenKey];
+    if (sent is! String) return;
+    if (await _tokens.read() != sent) return;
+    await _tokens.clear();
+    onUnauthenticated?.call();
   }
 
   Future<ApiResponse<T>> get<T>(
