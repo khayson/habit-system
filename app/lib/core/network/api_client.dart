@@ -57,6 +57,10 @@ class ApiClient {
     }
   }
 
+  /// The configured Dio (base URL, bearer token, 401 handling) for adapters that map raw
+  /// statuses themselves, i.e. `HttpSyncTransport`. Everything else goes through [get]/[post].
+  Dio get dio => _dio;
+
   /// Key in `RequestOptions.extra` holding the token a request was sent with.
   static const _sentTokenKey = 'habit.sent_token';
 
