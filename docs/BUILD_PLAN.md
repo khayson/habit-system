@@ -36,12 +36,23 @@ No HTTP, no DB, no UI.
 
 **Gate**: all fixtures pass in PHP and Dart; public method signatures of every domain class included in the review packet (reviewed before any DB work).
 
-## Phase 2 — Walking skeleton: binary habits end-to-end · L
+## Phase 1.1 — Domain fixes before Phase 2 · S
 
-- Migrations 1–4 (A18). Auth: register / login / logout / `me` / refresh. `MutationApplier` with `habit.create` and `log.set_binary`. Receipts. Journal with A1 sequencing. `/sync` and `/sync/bootstrap`.
-- **app**: drift tables (habits, logs, outbox, sync_state) in a per-account DB; unknown habit types and fields preserved opaquely (A21); `LocalMutationService` as the single local write path (A23); foreground sync engine; screens 02, 03, 04 (minimal), 05 (binary only) and 18 (queue).
+R1–R5 of `docs/reviews/PHASE_1_REVIEW.md`: first calendar entry governs earlier instants; `HabitType` takes `LogState` + `DefinitionVersion` (with `config`) so non-scalar types fit (A21); domain errors map to API codes in one place; only `TimezoneTimeline` and `PeriodEngine::bounds()` compute day/period instants; nightly random-seed property run and at least eight mutants.
 
-**Gate (automated unless noted)**: duplicate retry → one log; interrupted pull replays safely; delete vs queued mutation → `resource_deleted`; three days offline → three original dates; **A1 concurrency test**; cross-owner 404 on every route and sync entity; manual demo: two emulators converge.
+## Phase 2a — Walking skeleton, backend · L
+
+- Migrations 1–4 (A18). Sanctum with UUID users (`uuidMorphs('tokenable')`, token tied to a device, A6). Auth: register / login / logout / `me` / refresh.
+- `MutationApplier` with `habit.create` and `log.set_value` (aliases normalised in one place, A27), receipts, journal with A1 sequencing, `/sync` (per-mutation acks; conflicts embed the error object under `ack.error`) and `/sync/bootstrap` (A2). Domain errors mapped through the single mapper.
+- Transaction shape: begin → lock the user row → receipt lookup (same hash → stored result; different hash → 409) → apply → receipt + journal rows with `seq = ++users.change_seq` → commit.
+
+**Gate (automated)**: duplicate retry → one log; interrupted pull replays safely; delete vs queued mutation → `resource_deleted`; three days offline → three original dates; **A1 concurrency test on real PostgreSQL**; cross-owner 404 on every route and sync entity; two users behind one IP get independent `api` and `sync` limiter buckets. Then a review checkpoint before 2b.
+
+## Phase 2b — Walking skeleton, app · L
+
+- drift tables (habits, logs, outbox, sync_state) in a per-account DB; unknown habit types and fields preserved opaquely (A21); `LocalMutationService` as the single local write path (A23); foreground sync engine; screens 02, 03, 04 (minimal), 05 (binary only) and 18 (queue).
+
+**Gate**: app-side replay and outbox tests; manual demo: two emulators converge.
 
 ## Phase 3 — MVP complete · L
 
@@ -58,6 +69,8 @@ No HTTP, no DB, no UI.
 ## Phase 4 — Habit types and schedules · L
 
 - Quantity and duration; amount entry (34) and timers (33/36); weekdays / weekly_count / interval; versioned edits (09/10); archive / restore (22); conflict review (19).
+
+- The server enforces "next eligible period" for new definition versions via `HabitSchedule::nextEffectiveDate(LocalDate $today)` (daily/weekdays → tomorrow; weekly → next Monday; interval → start of the next period under the current definition). Never accept a client-chosen effective date.
 
 **Gate**: spec acceptance rows for concurrent increments, stale absolute edit and weekly distinct days.
 
@@ -82,7 +95,7 @@ No HTTP, no DB, no UI.
 
 ## Phase 7 — Hardening and release · M
 
-- OWASP API Top 10 pass; `/sync` load test; accessibility audit (TalkBack, font scale, contrast tool); store listing; hosted Terms of Service and Privacy Policy (screen 03 links them and both stores need a privacy-policy URL); a web page for account-deletion requests (Google Play expects one; check current store requirements); iOS verification when a Mac route exists.
+- OWASP API Top 10 pass; `/sync` load test; accessibility audit (TalkBack, font scale, contrast tool); store listing; hosted Terms of Service and Privacy Policy (screen 03 links them and both stores need a privacy-policy URL); a web page for account-deletion requests (Google Play expects one; check current store requirements); iOS verification when a Mac route exists. Production PHP has a current timezone database; log `timezone_version_get()` at boot.
 
 ## Phase 8 — Retention pack · L
 

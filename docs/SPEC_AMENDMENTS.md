@@ -244,3 +244,32 @@ Decisions from the architect's Phase 0 review (`docs/reviews/PHASE_0_REVIEW.md`)
 - `resource_deleted` carries `entity`, `resource_id` and `current_version` (the tombstone version).
 - In `/sync`, per-mutation failures are not HTTP statuses: the ack's `error` object reuses exactly these shapes.
 - Rate limits: defaults are environment-configurable; keyed by user id when authenticated, IP otherwise.
+
+---
+
+## 8. Added after the Phase 1 review (2026-10-07)
+
+Decisions from the architect's Phase 1 review (`docs/reviews/PHASE_1_REVIEW.md`).
+
+### A26 — Calendar changes and day boundaries · ADOPT
+
+- Invariant: **an event's date never goes backwards.** An event's date uses the calendar entry in force at `occurred_at`; a date's start uses the latest entry effective at or before that start. A day that began under the old zone ends at the next local midnight in the zone then in force, so a travel day can run long (westward) or short (eastward).
+- `profile.set_timezone` (and any calendar change, including `day_start_offset`) creates its entry **effective at the user's next local day start in the old calendar**, never at an arbitrary instant.
+- The first calendar entry governs instants before it (still bounded by the 90-day offline rule). `no_calendar` is only for an empty history.
+- Day start: the first instant whose wall clock shows `00:00 + day_start_offset`; inside a DST gap, the transition instant. Only `TimezoneTimeline` and `PeriodEngine::bounds()` compute day and period instants.
+
+### A27 — Wire operation names · ADOPT
+
+- Canonical log operations are A21's: `log.set_value`, `log.increment`, `log.set_item`, `log.set_note`. `HabitType::operations()` lists canonical names only; receipts store the canonical name; the app sends canonical names only.
+- The spec's names are accepted as aliases for the built-in types only, normalised in one place before validation: `log.set_binary` → `log.set_value` (binary), `log.increment_quantity` → `log.increment` (quantity), `log.increment_duration` → `log.increment` (duration, seconds). An alias on the wrong type is 422 `unsupported_operation`. Remove the aliases before the first public release if nothing uses them.
+
+### A28 — Phase 1 domain rules · ADOPT
+
+- **Partial weeks:** a `weekly_count` week is due only if the habit is active on at least `count` of its days; the definition in force on the week's first active day governs it.
+- A habit-day holds at most 25 hours (the fall-back day).
+- An insights window owns the periods whose start date falls inside it.
+- Freeze opt-in is decided by the policy in force at the period's `ends_at`.
+- A monthly grant at the cap writes a zero-delta `cap_reached` row so the month is marked done.
+- Increments are greater than zero. Percentages round half up with integer arithmetic only.
+- `HabitType` operates on a `LogState` (`value` + `detail`) and the effective `DefinitionVersion` (with `config`), so non-scalar types (checklist) need no engine change (A21).
+- Domain errors map to API codes in one place: `future_event`, `event_too_old`, `timezone_context_mismatch`, `backdate_future`, `backdate_too_old`, `unsupported_type`, `unsupported_operation`, `invalid_value` (`docs/api-error-codes.md`).
