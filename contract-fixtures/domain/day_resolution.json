@@ -329,14 +329,46 @@
       }
     },
     {
-      "name": "captured zone disagrees with the server timeline: review, never re-dated",
+      "name": "A29: captured zone differs but the hint equals the server date: accepted, server still resolves",
       "calendar": "la",
       "now": "2026-05-28T17:22:00Z",
       "occurred_at": "2026-05-28T17:15:00Z",
       "captured_timezone": "Europe/Paris",
       "local_date_hint": "2026-05-28",
       "expect": {
-        "error": "timezone_context_mismatch"
+        "local_date": "2026-05-28",
+        "hint_matches": true
+      }
+    },
+    {
+      "name": "A29: captured zone differs and no hint: review, never re-dated",
+      "calendar": "la",
+      "now": "2026-05-28T17:22:00Z",
+      "occurred_at": "2026-05-28T17:15:00Z",
+      "captured_timezone": "Europe/Paris",
+      "expect": {
+        "error": "timezone_context_mismatch",
+        "calendar": {
+          "timezone": "America/Los_Angeles",
+          "day_start_offset_minutes": 0,
+          "effective_at": "2026-01-01T00:00:00Z"
+        }
+      }
+    },
+    {
+      "name": "A29: captured zone differs and the hint disagrees: review, with the server's calendar entry",
+      "calendar": "la",
+      "now": "2026-05-29T02:00:00Z",
+      "occurred_at": "2026-05-29T01:00:00Z",
+      "captured_timezone": "Europe/Paris",
+      "local_date_hint": "2026-05-29",
+      "expect": {
+        "error": "timezone_context_mismatch",
+        "calendar": {
+          "timezone": "America/Los_Angeles",
+          "day_start_offset_minutes": 0,
+          "effective_at": "2026-01-01T00:00:00Z"
+        }
       }
     },
     {

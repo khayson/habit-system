@@ -39,7 +39,7 @@ Every error response uses one envelope (CLAUDE.md, A25):
 | `validation_failed` | 422 | Field validation. | `fields: { name: [messages] }` | `error_422_validation_failed.json` |
 | `future_event` | 422 | Event dated more than 5 minutes ahead of server time. | — | `error_422_future_event.json` |
 | `event_too_old` | 422 | Event more than 90 days old. | — | `error_422_event_too_old.json` |
-| `timezone_context_mismatch` | 422 | Client's `captured_timezone` disagrees with the server calendar at `occurred_at` (A5). Sent for review, never silently re-dated. | — | `error_422_timezone_context_mismatch.json` |
+| `timezone_context_mismatch` | 422 | Client's `captured_timezone` disagrees with the server calendar at `occurred_at` and `local_date_hint` does not equal the server date (A5, A29). Sent for review, never silently re-dated. | `calendar` {timezone, day_start_offset_minutes, effective_at} | `error_422_timezone_context_mismatch.json` |
 | `backdate_future` | 422 | Explicit backdate after the user's local today. | — | `error_422_backdate_future.json` |
 | `backdate_too_old` | 422 | Explicit backdate more than 30 days back. | — | `error_422_backdate_too_old.json` |
 | `unsupported_type` | 422 | Habit type unknown or not declared in `X-Capabilities` (A21). | — | `error_422_unsupported_type.json` |

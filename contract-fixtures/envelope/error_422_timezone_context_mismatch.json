@@ -1,10 +1,15 @@
 {
-  "description": "DayResolutionException: captured_timezone disagrees with the server calendar at occurred_at (A5). Sent for review; never silently re-dated.",
+  "description": "DayResolutionException: captured_timezone disagrees with the server calendar at occurred_at and local_date_hint does not equal the server-resolved date (A5, A29). Sent for review, never silently re-dated; `calendar` is the server's entry for that instant so the client can correct itself.",
   "status": 422,
   "body": {
     "error": {
       "code": "timezone_context_mismatch",
-      "message": "This check-in used a different time zone. Review it before it is saved."
+      "message": "This check-in used a different time zone. Review it before it is saved.",
+      "calendar": {
+        "timezone": "America/Los_Angeles",
+        "day_start_offset_minutes": 0,
+        "effective_at": "{{timestamp}}"
+      }
     },
     "meta": {
       "request_id": "{{uuid}}",
