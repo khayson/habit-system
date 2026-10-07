@@ -1,0 +1,25 @@
+# PostgreSQL only. PHP and Flutter run natively (see docs/DEV_SETUP.md).
+# Dev-only credentials; never reuse them anywhere else.
+services:
+  postgres:
+    image: postgres:17
+    container_name: habit-postgres
+    environment:
+      POSTGRES_USER: habit
+      POSTGRES_PASSWORD: habit
+      POSTGRES_DB: habit
+      TZ: UTC
+      PGTZ: UTC
+    ports:
+      - "5432:5432"
+    volumes:
+      - habit-pgdata:/var/lib/postgresql/data
+      - ./scripts/postgres-init.sql:/docker-entrypoint-initdb.d/10-test-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U habit -d habit"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  habit-pgdata:
