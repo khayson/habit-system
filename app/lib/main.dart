@@ -7,9 +7,13 @@ import 'app/app.dart';
 import 'app/router.dart';
 import 'config/api_config.dart';
 import 'core/network/api_client.dart';
+import 'core/storage/account_store.dart';
 import 'core/storage/token_store.dart';
+import 'core/time_zones.dart';
+import 'providers/account_context.dart';
 import 'providers/health_provider.dart';
 import 'providers/session_provider.dart';
+import 'services/auth_service.dart';
 import 'services/health_service.dart';
 
 Future<void> main() async {
@@ -19,8 +23,13 @@ Future<void> main() async {
 
   const tokens = SecureTokenStore();
   final api = ApiClient(tokens: tokens);
-  final session = SessionProvider(tokens);
+  final auth = AuthService(api, tokens, const SecureAccountStore());
+  final session = SessionProvider(
+    auth,
+    buildAccount: (account) => AccountContext.live(account, api, auth),
+  );
   api.onUnauthenticated = session.handleUnauthenticated;
+  // Reads the keystore and opens the account database lazily: no network, no artificial delay.
   await session.load();
 
   runApp(
@@ -32,6 +41,19 @@ Future<void> main() async {
       child: HabitApp(router: buildRouter(session)),
     ),
   );
+
+  // After the first frame: the tz database, then the start-up sync (foreground only).
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    TimeZones.load();
+    session.account?.sync.onForeground();
+  });
+  session.addListener(() {
+    // A fresh sign-in starts its first sync at once.
+    final account = session.account;
+    if (account != null && account.sync.lastOutcome == null && !account.sync.syncing) {
+      account.sync.onForeground();
+    }
+  });
 }
 
 /// Inter is bundled under the SIL Open Font License; its notice ships with the app.

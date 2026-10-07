@@ -1,29 +1,84 @@
 import 'package:flutter/foundation.dart';
 
-import '../core/storage/token_store.dart';
+import '../services/auth_service.dart';
+import 'account_context.dart';
 
-/// Whether a bearer token is present. Login, logout and per-account databases arrive in
-/// Phase 2; this only drives the router's auth redirect.
+/// The signed-in account (if any) and where the onboarding flow stands. Drives the router.
+///
+/// Signing out, or the server rejecting the token, only ends the session: the account's
+/// database and its outbox stay on disk for when the same owner signs in again.
 class SessionProvider extends ChangeNotifier {
-  final TokenStore _tokens;
+  final AuthService _auth;
+  final AccountContext Function(AccountSession session) _buildAccount;
 
-  SessionProvider(this._tokens);
+  SessionProvider(this._auth, {required this._buildAccount});
 
-  bool _isAuthenticated = false;
+  AccountContext? _account;
+  bool _needsSetup = false;
 
-  bool get isAuthenticated => _isAuthenticated;
+  AccountContext? get account => _account;
+  bool get isAuthenticated => _account != null;
 
-  /// Reads the stored token once at start-up. No artificial delay.
+  /// Screen 04 comes next (after registering, or a first sign-in on this device).
+  bool get needsSetup => _needsSetup;
+
+  /// Reopens the stored account at start-up. No network, no artificial delay.
   Future<void> load() async {
-    _isAuthenticated = await _tokens.read() != null;
+    final session = await _auth.restore();
+    if (session != null) _open(session);
+  }
+
+  Future<void> signIn({required String email, required String password}) async {
+    final session = await _auth.login(email: email, password: password);
+    _needsSetup = session.firstOnDevice;
+    _open(session);
+  }
+
+  Future<void> register({
+    required String name,
+    required String email,
+    required String password,
+    required String timezone,
+  }) async {
+    final session = await _auth.register(
+      name: name,
+      email: email,
+      password: password,
+      timezone: timezone,
+    );
+    _needsSetup = true;
+    _open(session);
+  }
+
+  void completeSetup() {
+    _needsSetup = false;
     notifyListeners();
   }
 
-  /// The server rejected the token. Only the token is gone: the account database and its
-  /// outbox are kept for when the same owner signs in again.
+  Future<void> signOut() async {
+    _close();
+    await _auth.signOut();
+  }
+
+  /// The server rejected the stored token (the ApiClient has cleared it).
   void handleUnauthenticated() {
-    if (!_isAuthenticated) return;
-    _isAuthenticated = false;
+    if (_account == null) return;
+    _close();
+    _auth.logout();
+  }
+
+  void _open(AccountSession session) {
+    if (_account?.session.userId != session.userId) {
+      _account?.dispose();
+      _account = _buildAccount(session);
+    }
+    notifyListeners();
+  }
+
+  void _close() {
+    _account?.dispose();
+    _account = null;
+    _needsSetup = false;
     notifyListeners();
   }
 }
