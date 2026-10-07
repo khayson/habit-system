@@ -18,6 +18,13 @@ use Illuminate\Validation\ValidationException;
 
 final class AuthController
 {
+    /**
+     * S6: bcrypt hash of a random secret nobody knows, at the production cost (12, BCRYPT_ROUNDS).
+     * A constant, not computed per request: hashing on demand would make unknown emails slower.
+     * Regenerate if the production cost changes.
+     */
+    public const string DUMMY_HASH = '$2y$12$.OwH5ayKmA/Umj4Lurl1TO0Av612WocU96/wb8.DyPWHPS2dnAUn6';
+
     public function __construct(
         private readonly AccountService $accounts,
         private readonly EntityPresenter $presenter,
@@ -37,8 +44,10 @@ final class AuthController
         $data = $request->validated();
         $user = User::query()->where('email', $data['email'])->first();
 
-        // Same answer for an unknown email and a wrong password (no account enumeration).
-        if ($user === null || ! Hash::check($data['password'], $user->password)) {
+        // Same answer, and the same bcrypt work, for an unknown email and a wrong password: no
+        // account enumeration by content or by timing (S6).
+        $passwordOk = Hash::check($data['password'], $user->password ?? self::DUMMY_HASH);
+        if ($user === null || ! $passwordOk) {
             throw ValidationException::withMessages(['email' => ['Email or password is incorrect.']]);
         }
 

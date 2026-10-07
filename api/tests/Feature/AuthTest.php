@@ -1,9 +1,11 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AuthController;
 use App\Models\PersonalAccessToken;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
@@ -182,3 +184,19 @@ it('answers malformed or forged tokens with 401, never a server error', function
     'unknown UUID' => ['01970000-0000-7000-8000-000000000000|secret'],
     'empty secret' => ['01970000-0000-7000-8000-000000000000|'],
 ]);
+
+it('runs a bcrypt check even for an unknown email, so timing reveals nothing (S6)', function () {
+    Hash::shouldReceive('check')
+        ->once()
+        ->with('some password here', AuthController::DUMMY_HASH)
+        ->andReturnFalse();
+
+    $this->postJson('/api/v1/auth/login', ['email' => 'nobody@example.com', 'password' => 'some password here', 'device_name' => 'x'])
+        ->assertStatus(422)
+        ->assertJsonPath('error.fields.email.0', 'Email or password is incorrect.');
+});
+
+it('keeps the dummy hash at the production bcrypt cost (S6)', function () {
+    expect(password_get_info(AuthController::DUMMY_HASH))
+        ->toMatchArray(['algoName' => 'bcrypt', 'options' => ['cost' => 12]]);
+});
