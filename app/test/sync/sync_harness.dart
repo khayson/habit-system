@@ -14,16 +14,16 @@ import 'package:timezone/data/latest_all.dart' as tzdata;
 import '../support/fake_sync_server.dart';
 
 class FakeAuth implements AuthSession {
-  bool refreshSucceeds;
+  RefreshResult refreshResult;
   int refreshCalls = 0;
   bool loggedOut = false;
 
-  FakeAuth({this.refreshSucceeds = false});
+  FakeAuth({this.refreshResult = RefreshResult.rejected});
 
   @override
-  Future<bool> refresh() async {
+  Future<RefreshResult> refresh() async {
     refreshCalls++;
-    return refreshSucceeds;
+    return refreshResult;
   }
 
   @override

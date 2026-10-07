@@ -117,9 +117,16 @@ class SyncEngine {
             );
             continue;
           case SyncFailure.unauthorized:
-            if (!refreshed && await auth.refresh()) {
+            if (!refreshed) {
               refreshed = true;
-              continue;
+              switch (await auth.refresh()) {
+                case RefreshResult.refreshed:
+                  continue;
+                case RefreshResult.unavailable:
+                  return SyncOutcome.offline;
+                case RefreshResult.rejected:
+                  break;
+              }
             }
             await auth.logout();
             return SyncOutcome.loggedOut;

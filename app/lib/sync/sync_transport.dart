@@ -14,11 +14,22 @@ abstract interface class SyncTransport {
 
 /// Re-authentication hooks the engine uses on 401 (A6).
 abstract interface class AuthSession {
-  /// One refresh attempt; true when a new token is stored.
-  Future<bool> refresh();
+  /// One refresh attempt.
+  Future<RefreshResult> refresh();
 
   /// Ends the session but keeps the per-account database and its outbox.
   Future<void> logout();
+}
+
+enum RefreshResult {
+  /// A new token is stored; retry the request.
+  refreshed,
+
+  /// The server refused (401): the session is over.
+  rejected,
+
+  /// No answer. The old token stays usable for the grace window (A29); try again later.
+  unavailable,
 }
 
 enum SyncFailure {

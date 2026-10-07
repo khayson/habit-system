@@ -288,7 +288,7 @@ void main() {
   });
 
   test('401: one refresh, then success', () async {
-    phone.auth.refreshSucceeds = true;
+    phone.auth.refreshResult = RefreshResult.refreshed;
     server.failNextBootstrap.add(const SyncTransportException(SyncFailure.unauthorized));
 
     expect(await phone.sync(), SyncOutcome.completed);
@@ -299,11 +299,22 @@ void main() {
   test('401 twice: logs out but keeps the database and its outbox', () async {
     final habit = await phone.habit();
     await phone.writer.setLogValue(habitId: habit, value: 1);
-    phone.auth.refreshSucceeds = false;
+    phone.auth.refreshResult = RefreshResult.rejected;
     server.failNextBootstrap.add(const SyncTransportException(SyncFailure.unauthorized));
 
     expect(await phone.sync(), SyncOutcome.loggedOut);
     expect(phone.auth.loggedOut, isTrue);
+    expect((await phone.outbox()).map((r) => r.state).toSet(), {OutboxState.pending});
+  });
+
+  test('401 with the refresh unanswered: offline, still signed in, outbox kept', () async {
+    final habit = await phone.habit();
+    await phone.writer.setLogValue(habitId: habit, value: 1);
+    phone.auth.refreshResult = RefreshResult.unavailable;
+    server.failNextBootstrap.add(const SyncTransportException(SyncFailure.unauthorized));
+
+    expect(await phone.sync(), SyncOutcome.offline);
+    expect(phone.auth.loggedOut, isFalse);
     expect((await phone.outbox()).map((r) => r.state).toSet(), {OutboxState.pending});
   });
 
