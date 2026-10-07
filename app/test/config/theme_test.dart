@@ -55,6 +55,15 @@ void main() {
     ('errorInk', 'surface'),
   ];
 
+  // Documented exceptions to the 3:1 non-text rule, with their measured ratio. Valid only
+  // because a progress mark is always accompanied by a number or text (A13d, Phase 0 review
+  // F11). See HabitTokens.progress.
+  const nonTextExceptions = {
+    'light/progress/surface': 2.79,
+    'light/progress/background': 2.67,
+    'light/progress/canvas': 2.52,
+  };
+
   for (final (name, tokens) in [('light', HabitTokens.light), ('dark', HabitTokens.dark)]) {
     for (final (fg, bg) in textPairs) {
       test('$name: $fg on $bg meets 4.5:1', () {
@@ -62,9 +71,27 @@ void main() {
         expect(ratio, greaterThanOrEqualTo(4.5), reason: '${ratio.toStringAsFixed(2)}:1');
       });
     }
-    test('$name: focus ring meets 3:1 non-text contrast on surface', () {
-      expect(contrast(tokens.focus, tokens.surface), greaterThanOrEqualTo(3));
-    });
+    // Non-text contrast (WCAG 1.4.11): 3:1 against every surface a mark can sit on.
+    for (final mark in ['progress', 'focus']) {
+      for (final bg in ['surface', 'background', 'canvas']) {
+        final exception = nonTextExceptions['$name/$mark/$bg'];
+        test(
+          exception == null
+              ? '$name: $mark on $bg meets 3:1 non-text contrast'
+              : '$name: $mark on $bg is a documented exception below 3:1',
+          () {
+            final ratio = contrast(tokens.roles[mark]!, tokens.roles[bg]!);
+            if (exception == null) {
+              expect(ratio, greaterThanOrEqualTo(3), reason: '${ratio.toStringAsFixed(2)}:1');
+            } else {
+              // Keep the exception list honest: drop an entry once the token passes.
+              expect(ratio, lessThan(3), reason: 'now passes; remove the exception');
+              expect(ratio, closeTo(exception, 0.05));
+            }
+          },
+        );
+      }
+    }
   }
 
   test('themes carry HabitTokens and map the ColorScheme from them', () {

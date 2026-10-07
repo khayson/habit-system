@@ -25,6 +25,9 @@ class HabitTokens extends ThemeExtension<HabitTokens> {
   final Color disabledInk;
 
   /// Never the only indicator: values are always also printed as text (A13d).
+  /// Light `progress` is below the 3:1 non-text contrast rule (about 2.8:1 on white). That is a
+  /// documented exception, valid only because a number or text always accompanies it; the
+  /// theme test pins the measured ratios.
   final Color progress;
   final Color focus;
 
