@@ -51,7 +51,7 @@ final class AuthController
             throw ValidationException::withMessages(['email' => ['Email or password is incorrect.']]);
         }
 
-        return ApiResponse::success($this->session($user, $this->accounts->issueToken($user, $data['device_name'], $data['device_id'] ?? null)));
+        return ApiResponse::success($this->session($user, $this->accounts->login($user, $data['device_name'], $data['device_id'] ?? null)));
     }
 
     /** A6 rotation; the old token keeps a 10-minute grace window (A29). */

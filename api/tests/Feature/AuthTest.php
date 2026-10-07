@@ -200,3 +200,36 @@ it('keeps the dummy hash at the production bcrypt cost (S6)', function () {
     expect(password_get_info(AuthController::DUMMY_HASH))
         ->toMatchArray(['algoName' => 'bcrypt', 'options' => ['cost' => 12]]);
 });
+
+it('keeps one full-lifetime token per device across refresh retries (Q2)', function () {
+    $user = $this->registerUser();
+
+    // Three refreshes inside the grace window, all with the original token (lost responses).
+    foreach (range(1, 3) as $attempt) {
+        $this->app['auth']->forgetGuards();
+        $latest = $this->withToken($user['token'])->postJson('/api/v1/auth/refresh')->assertOk()->json('data.token');
+    }
+
+    $tokens = PersonalAccessToken::query()->get();
+    expect($tokens)->toHaveCount(2);
+    $grace = CarbonImmutable::parse('2026-05-28T17:32:00Z');
+    expect($tokens->filter(fn ($t) => $t->expires_at->lessThanOrEqualTo($grace))->count())->toBe(1);
+    $this->app['auth']->forgetGuards();
+    $this->withToken($latest)->getJson('/api/v1/me')->assertOk();
+});
+
+it('replaces a device session on re-login and leaves other devices alone (Q2)', function () {
+    $user = $this->registerUser(email: 'one@example.com');
+    $device = PersonalAccessToken::query()->sole()->device_id;
+    $login = fn (?string $deviceId) => $this->postJson('/api/v1/auth/login', array_filter([
+        'email' => 'one@example.com', 'password' => 'correct horse battery staple', 'device_name' => 'phone', 'device_id' => $deviceId,
+    ]))->assertOk()->json('data.token');
+
+    $login($device);
+    $login($device);
+    expect(PersonalAccessToken::query()->where('device_id', $device)->count())->toBe(1);
+
+    $login('01970000-0000-7000-8000-00000000d0ff');
+    $login(null);
+    expect(PersonalAccessToken::query()->count())->toBe(3);
+});

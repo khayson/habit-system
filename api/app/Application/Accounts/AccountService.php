@@ -8,6 +8,7 @@ use App\Domain\Clock;
 use App\Models\PersonalAccessToken;
 use App\Models\User;
 use App\Support\UtcTime;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -68,13 +69,43 @@ final readonly class AccountService
      */
     public function refresh(User $user, PersonalAccessToken $current): string
     {
-        $token = $this->issueToken($user, $current->name, $current->device_id);
-        $grace = $this->clock->now()->addSeconds(self::REFRESH_GRACE_SECONDS);
-        if ($current->expires_at === null || $current->expires_at->greaterThan($grace)) {
-            $current->forceFill(['expires_at' => $grace])->save();
-        }
+        return DB::transaction(function () use ($user, $current): string {
+            $token = $this->issueToken($user, $current->name, $current->device_id);
+            $grace = $this->clock->now()->addSeconds(self::REFRESH_GRACE_SECONDS);
+            if ($current->expires_at === null || $current->expires_at->greaterThan($grace)) {
+                $current->forceFill(['expires_at' => $grace])->save();
+            }
+            // One full-lifetime token per user and device: a retry loop replaces tokens but
+            // never accumulates them (Phase 2a.1 review, Q2).
+            if ($current->device_id !== null) {
+                $this->deviceTokens($user, $current->device_id)
+                    ->whereKeyNot([$current->getKey(), strtok($token, '|')])
+                    ->delete();
+            }
 
-        return $token;
+            return $token;
+        });
+    }
+
+    /** Login: a new session for a known device replaces that device's older tokens. */
+    public function login(User $user, string $deviceName, ?string $deviceId): string
+    {
+        return DB::transaction(function () use ($user, $deviceName, $deviceId): string {
+            if ($deviceId !== null) {
+                $this->deviceTokens($user, $deviceId)->delete();
+            }
+
+            return $this->issueToken($user, $deviceName, $deviceId);
+        });
+    }
+
+    /** @return Builder<PersonalAccessToken> */
+    private function deviceTokens(User $user, string $deviceId): Builder
+    {
+        return PersonalAccessToken::query()
+            ->where('tokenable_type', $user->getMorphClass())
+            ->where('tokenable_id', $user->getKey())
+            ->where('device_id', $deviceId);
     }
 
     /** Issues a token bound to one device (A6). Plain text is returned once. */
