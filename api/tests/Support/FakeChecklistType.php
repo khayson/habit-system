@@ -37,6 +37,15 @@ final class FakeChecklistType implements HabitType
         return $units;
     }
 
+    public function normalizeUnit(?string $unit): ?string
+    {
+        if ($unit !== null && trim($unit) !== '') {
+            throw new InvalidHabitValue('A checklist has no unit.');
+        }
+
+        return null;
+    }
+
     public function toStorage(int $units): string
     {
         return StoredDecimal::fromUnits($units, 0);

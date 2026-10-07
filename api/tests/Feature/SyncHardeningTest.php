@@ -248,3 +248,18 @@ it('treats a missing X-Capabilities header as the baseline set (S4, legacy clien
     $this->sync($this->user['token'], [M::habitCreate((string) Str::uuid7(), 'duration', 600)], headers: ['X-Capabilities' => 'type.binary, type.quantity, type.duration'])
         ->assertJsonPath('data.acks.0.status', 'accepted');
 });
+
+// S8 ------------------------------------------------------------------------------------------
+
+it('validates the unit per type on habit.create (S8)', function () {
+    $acks = $this->sync($this->user['token'], [
+        M::habitCreate((string) Str::uuid7(), 'binary', 1, ['unit' => 'times']),
+        M::habitCreate((string) Str::uuid7(), 'quantity', '2.000', ['unit' => null]),
+        M::habitCreate((string) Str::uuid7(), 'quantity', '2.000', ['unit' => ' L ']),
+    ])->json('data.acks');
+
+    expect($acks[0]['error']['fields'])->toHaveKey('unit')
+        ->and($acks[1]['error']['fields'])->toHaveKey('unit')
+        ->and($acks[2]['status'])->toBe('accepted')
+        ->and(DB::table('habits')->value('unit'))->toBe('L');
+});

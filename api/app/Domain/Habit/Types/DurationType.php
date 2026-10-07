@@ -36,6 +36,15 @@ final class DurationType implements HabitType
         return $units;
     }
 
+    public function normalizeUnit(?string $unit): ?string
+    {
+        if ($unit !== null && trim($unit) !== '') {
+            throw new InvalidHabitValue('Duration habits have no unit; time is always in seconds.');
+        }
+
+        return null;
+    }
+
     public function toStorage(int $units): string
     {
         return StoredDecimal::fromUnits($units, 0);

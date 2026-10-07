@@ -39,6 +39,18 @@ final class QuantityType implements HabitType
         return intdiv($units, 1000).'.'.str_pad((string) ($units % 1000), 3, '0', STR_PAD_LEFT);
     }
 
+    public const int MAX_UNIT_LENGTH = 24;
+
+    public function normalizeUnit(?string $unit): string
+    {
+        $unit = $unit === null ? '' : trim($unit);
+        if ($unit === '' || mb_strlen($unit) > self::MAX_UNIT_LENGTH) {
+            throw new InvalidHabitValue('A quantity needs a unit of up to 24 characters, e.g. "mL" or "pages".');
+        }
+
+        return $unit;
+    }
+
     public function toStorage(int $units): string
     {
         return StoredDecimal::fromUnits($units, 3);

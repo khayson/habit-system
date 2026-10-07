@@ -139,7 +139,7 @@ it('delete vs queued edit: 409-shaped resource_deleted with the tombstone versio
 
 it('stale absolute edit conflicts with the canonical current value; identical intent is a no-op', function () {
     $water = (string) Str::uuid7();
-    $this->sync($this->user['token'], [M::habitCreate($water, 'quantity', '2000.000', ['category' => 'health'])]);
+    $this->sync($this->user['token'], [M::habitCreate($water, 'quantity', '2000.000', ['category' => 'health', 'unit' => 'mL'])]);
     $log = $this->sync($this->user['token'], [M::setValue($water, '1500.000', 0)])->json('data.acks.0');
     $this->sync($this->user['token'], [M::setValue($water, '1750.000', 1)])->assertJsonPath('data.acks.0.version', 2);
 

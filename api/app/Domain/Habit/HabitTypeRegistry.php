@@ -62,6 +62,17 @@ final class HabitTypeRegistry
         return $type->operationAliases()[$operation] ?? throw new UnsupportedOperation($typeKey, $operation);
     }
 
+    /**
+     * S8: the unit a habit of this type may carry, normalised by the type.
+     *
+     * @throws UnknownHabitType
+     * @throws InvalidHabitValue
+     */
+    public function normalizeUnit(string $typeKey, ?string $unit): ?string
+    {
+        return $this->get($typeKey)->normalizeUnit($unit);
+    }
+
     /** @return list<string> */
     public function keys(): array
     {

@@ -67,6 +67,11 @@ final readonly class HabitCreate
             throw ValidationException::withMessages(['target_value' => [$e->getMessage()]]);
         }
         try {
+            $unit = $this->types->normalizeUnit($typeKey, isset($p['unit']) ? (string) $p['unit'] : null);
+        } catch (InvalidHabitValue $e) {
+            throw ValidationException::withMessages(['unit' => [$e->getMessage()]]);
+        }
+        try {
             $frequency = Frequency::fromArray((string) $p['frequency_type'], (array) $p['frequency_config']);
         } catch (InvalidArgumentException $e) {
             throw ValidationException::withMessages(['frequency_config' => [$e->getMessage()]]);
@@ -91,7 +96,7 @@ final readonly class HabitCreate
             throw ApiException::versionConflict($id, 0, (int) $existing->version, $this->presenter->habit($existing));
         }
 
-        $definition = new DefinitionVersion(1, $start, $typeKey, $target, $p['unit'] ?? null, (string) $p['category'], $frequency);
+        $definition = new DefinitionVersion(1, $start, $typeKey, $target, $unit, (string) $p['category'], $frequency);
         $now = UtcTime::format($this->clock->now());
         // S3: store the canonical form, never the raw client object.
         $frequencyConfig = json_encode((object) $frequency->toArray(), JSON_THROW_ON_ERROR);

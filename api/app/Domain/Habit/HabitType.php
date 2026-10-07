@@ -26,6 +26,14 @@ interface HabitType
     /** Units to wire value (int for binary/duration, decimal string for quantity). */
     public function formatValue(int $units): int|string;
 
+    /**
+     * The unit this type allows, normalised (S8): e.g. null for yes/no, a short label for a
+     * quantity.
+     *
+     * @throws InvalidHabitValue
+     */
+    public function normalizeUnit(?string $unit): ?string;
+
     /** Units to the stored numeric(12,3) decimal string (habit_logs.value, target_value). */
     public function toStorage(int $units): string;
 

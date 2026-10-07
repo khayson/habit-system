@@ -190,3 +190,21 @@ it('compares log states exactly: units, and detail as canonical JSON (S7)', func
         ->and($a->equals(new LogState(1500, ['items' => ['a' => 0, 'b' => true], 'order' => [1, 2]])))->toBeFalse()
         ->and(LogState::empty()->equals(new LogState(0)))->toBeTrue();
 });
+
+it('validates units per type through the registry (S8)', function (string $type, ?string $unit, string|false|null $expected) {
+    if ($expected === false) {
+        expect(fn () => types()->normalizeUnit($type, $unit))->toThrow(InvalidHabitValue::class);
+
+        return;
+    }
+    expect(types()->normalizeUnit($type, $unit))->toBe($expected);
+})->with([
+    'binary has no unit' => ['binary', null, null],
+    'binary blank is no unit' => ['binary', '  ', null],
+    'binary rejects a unit' => ['binary', 'times', false],
+    'duration rejects a unit' => ['duration', 'min', false],
+    'quantity trims' => ['quantity', '  mL ', 'mL'],
+    'quantity needs a unit' => ['quantity', null, false],
+    'quantity blank' => ['quantity', '   ', false],
+    'quantity too long' => ['quantity', str_repeat('u', 25), false],
+]);
