@@ -85,6 +85,9 @@ Plain HTTP is allowed only in debug builds and only to `10.0.2.2` / `localhost`
 - `scripts\check.ps1` — everything CI runs: Pint, Larastan, Pest (real PostgreSQL), dart format,
   flutter analyze, flutter test.
 - `scripts\app-gate.ps1` — device tests on a running emulator (Phase 0 gate + A23 spike).
+- `scripts\mutation-check.ps1 [-RandomSeeds N]` — domain mutation check (every mutant must be
+  killed) and an optional random-seed property run; both also run nightly in CI. Replay a
+  failing seed with `$env:PROPERTY_SEEDS='N'`.
 
 After changing drift tables: `dart run build_runner build` in `app\` (CI fails if generated code
 is stale).
