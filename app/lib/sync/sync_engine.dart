@@ -28,6 +28,10 @@ enum SyncOutcome {
 
   /// 401 and the single refresh failed; the session ended, the database was kept.
   loggedOut,
+
+  /// Something unexpected (not a transport failure) stopped the run. Rows went back to pending
+  /// and `sync_state.last_error` says what happened (F2).
+  failed,
 }
 
 /// Foreground sync engine (spec 07, PHASE_2A_REVIEW §5, PHASE_2A1_REVIEW §5). Pure Dart.
@@ -78,6 +82,12 @@ class SyncEngine {
     if (!await _acquireLease()) return SyncOutcome.busy;
     try {
       return await _runLocked();
+    } on Object catch (e) {
+      // Never let one bad answer wedge the device (F2): unsent rows go back to pending, the
+      // cursor stays where the last committed page left it, and the failure is recorded.
+      await _recoverInFlight();
+      await _updateState(SyncStateCompanion(lastError: Value(_error('sync_failed', '$e'))));
+      return SyncOutcome.failed;
     } finally {
       await _releaseLease();
     }
@@ -107,7 +117,13 @@ class SyncEngine {
         );
         await _apply(page, rows);
         if (!page.hasMore && (await _eligible(1)).isEmpty) {
-          await _updateState(SyncStateCompanion(lastSyncedAt: Value(_now)));
+          await _updateState(
+            SyncStateCompanion(
+              lastSyncedAt: Value(_now),
+              // A missing cursor stays reported until a page carries one again.
+              lastError: page.nextCursor == null ? const Value.absent() : const Value(null),
+            ),
+          );
           return SyncOutcome.completed;
         }
       } on SyncTransportException catch (e) {
@@ -161,12 +177,21 @@ class SyncEngine {
     while (true) {
       final page = await transport.bootstrap(cursor: cursor, limit: pullLimit);
       await db.transaction(() async {
-        if (page.user != null) await _applyUser(page.user!);
+        final user = page.user;
+        if (user != null) await _guarded('user', user, () => _applyUser(user));
         for (final habit in page.habits) {
-          await _upsertHabit(habit['id'] as String, habit['version'] as int, habit);
+          await _guarded(
+            'habit',
+            habit,
+            () => _upsertHabit(habit['id'] as String, habit['version'] as int, habit),
+          );
         }
         for (final log in page.logs) {
-          await _upsertLog(log['id'] as String, log['version'] as int, log);
+          await _guarded(
+            'habit_log',
+            log,
+            () => _upsertLog(log['id'] as String, log['version'] as int, log),
+          );
         }
         // ASSUMPTION(A2b-opaque-bootstrap): an unknown bootstrap collection is stored opaquely
         // with its key as the entity type, so a newer server's entities are never dropped.
@@ -176,6 +201,11 @@ class SyncEngine {
             if (id is! String) continue;
             await _storeOpaque(type, id, item['version'] as int? ?? 0, 'upsert', item);
           }
+        }
+        if (!page.hasMore && page.syncCursor == null) {
+          // Without a sync cursor the snapshot cannot be followed: fail this run rather than
+          // bootstrap in a loop.
+          throw const FormatException('bootstrap: the last page has no sync_cursor');
         }
         // Progress and the final sync cursor are saved with the page they belong to.
         await _updateState(
@@ -263,15 +293,29 @@ class SyncEngine {
         final ack = acks[row.mutationId];
         if (ack == null) {
           await _setState([row], OutboxState.pending);
-        } else {
+          continue;
+        }
+        try {
           await _applyAck(row, ack);
+        } on Object catch (e) {
+          if (!_isDecodeError(e)) rethrow;
+          // An ack this version cannot read counts as no ack: the row is sent again and the
+          // server's receipt answers it.
+          await _setState([row], OutboxState.pending);
         }
       }
       for (final change in page.changes) {
-        await _applyChange(change);
+        await _guarded(change['entity'], change, () => _applyChange(change));
       }
-      // The cursor moves only together with the changes it covers (invariant 8).
-      await _updateState(SyncStateCompanion(cursor: Value(page.nextCursor)));
+      // The cursor moves only together with the changes it covers (invariant 8). A page without
+      // one is a server fault: keep the old cursor (its changes re-apply harmlessly) and record it.
+      await _updateState(
+        page.nextCursor != null
+            ? SyncStateCompanion(cursor: Value(page.nextCursor))
+            : SyncStateCompanion(
+                lastError: Value(_error('missing_next_cursor', 'The server sent no cursor.')),
+              ),
+      );
       await _prune();
       await _resumeWaiting();
       // After every ack: a child's own dependency_pending ack must not outlive its parent's
@@ -430,6 +474,34 @@ class SyncEngine {
     }
   }
 
+  /// Applies one server item. If this app version cannot decode it, keeps it raw as
+  /// `undecodable:<entity>` so nothing is dropped and the cursor can still advance (F2).
+  Future<void> _guarded(
+    Object? entity,
+    Map<String, dynamic> raw,
+    Future<void> Function() apply,
+  ) async {
+    try {
+      await apply();
+    } on Object catch (e) {
+      if (!_isDecodeError(e)) rethrow;
+      final id = raw['id'];
+      await _storeOpaque(
+        'undecodable:${entity is String ? entity : 'unknown'}',
+        id is String ? id : const Uuid().v4(),
+        0,
+        'undecodable',
+        raw,
+      );
+    }
+  }
+
+  static bool _isDecodeError(Object e) =>
+      e is TypeError || e is FormatException || e is ArgumentError;
+
+  static String _error(String code, String message) =>
+      jsonEncode({'code': code, 'message': message});
+
   Future<void> _storeOpaque(
     String type,
     String id,
@@ -449,7 +521,7 @@ class SyncEngine {
             entityId: id,
             version: version,
             operation: operation,
-            payload: jsonEncode(payload),
+            payload: jsonEncode(payload, toEncodable: (o) => '$o'),
           ),
         );
   }

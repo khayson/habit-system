@@ -65,7 +65,9 @@ class SyncTransportException implements Exception {
 class SyncPage {
   final List<Map<String, dynamic>> acks;
   final List<Map<String, dynamic>> changes;
-  final String nextCursor;
+
+  /// Null when the server omitted it (a protocol fault): the engine keeps its cursor.
+  final String? nextCursor;
   final bool hasMore;
 
   const SyncPage({
@@ -78,8 +80,8 @@ class SyncPage {
   factory SyncPage.fromJson(Map<String, dynamic> data) => SyncPage(
     acks: _maps(data['acks']),
     changes: _maps(data['changes']),
-    nextCursor: data['next_cursor'] as String,
-    hasMore: data['has_more'] as bool? ?? false,
+    nextCursor: _string(data['next_cursor']),
+    hasMore: data['has_more'] == true,
   );
 }
 
@@ -116,12 +118,12 @@ class BootstrapPage {
   };
 
   factory BootstrapPage.fromJson(Map<String, dynamic> data) => BootstrapPage(
-    user: (data['user'] as Map?)?.cast<String, dynamic>(),
+    user: data['user'] is Map ? (data['user'] as Map).cast<String, dynamic>() : null,
     habits: _maps(data['habits']),
     logs: _maps(data['logs']),
-    hasMore: data['has_more'] as bool? ?? false,
-    nextCursor: data['next_cursor'] as String?,
-    syncCursor: data['sync_cursor'] as String?,
+    hasMore: data['has_more'] == true,
+    nextCursor: _string(data['next_cursor']),
+    syncCursor: _string(data['sync_cursor']),
     unknownCollections: {
       for (final e in data.entries)
         if (!_known.contains(e.key) && e.value is List) e.key: _maps(e.value),
@@ -129,6 +131,12 @@ class BootstrapPage {
   );
 }
 
+/// Items that are not objects are wrapped as `{"_raw": item}` so the engine stores them as
+/// undecodable instead of failing the whole page (F2).
 List<Map<String, dynamic>> _maps(Object? list) => [
-  for (final item in (list as List<dynamic>? ?? const [])) (item as Map).cast<String, dynamic>(),
+  if (list is List)
+    for (final item in list)
+      item is Map ? item.cast<String, dynamic>() : <String, dynamic>{'_raw': item},
 ];
+
+String? _string(Object? value) => value is String ? value : null;

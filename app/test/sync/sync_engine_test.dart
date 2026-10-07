@@ -105,10 +105,12 @@ void main() {
       },
     );
 
-    await expectLater(crashing.run(), throwsStateError);
-    expect((await phone.outbox()).map((r) => r.state).toSet(), {
-      OutboxState.inFlight,
-    }, reason: 'nothing applied');
+    expect(await crashing.run(), SyncOutcome.failed);
+    final rows = await phone.outbox();
+    expect(rows.map((r) => (r.state, r.ackVersion)).toSet(), {
+      (OutboxState.pending, null),
+    }, reason: 'nothing applied; ready to resend');
+    expect(jsonDecode((await phone.state()).lastError!)['code'], 'sync_failed');
     expect(server.logs.length, 1, reason: 'the server did commit');
 
     expect(await phone.sync(), SyncOutcome.completed);
@@ -124,19 +126,17 @@ void main() {
     // Another device ticks; the pull of that change is interrupted mid-apply.
     server.apply(_tick(habit, 'other-log', 1, base: 0));
     var crash = true;
-    await expectLater(
-      phone
-          .engine(
-            beforeApplyCommit: () async {
-              if (crash) {
-                crash = false;
-                throw StateError('crash');
-              }
-            },
-          )
-          .run(),
-      throwsStateError,
-    );
+    final outcome = await phone
+        .engine(
+          beforeApplyCommit: () async {
+            if (crash) {
+              crash = false;
+              throw StateError('crash');
+            }
+          },
+        )
+        .run();
+    expect(outcome, SyncOutcome.failed);
     expect((await phone.state()).cursor, cursorBefore);
     expect(await phone.logs(), isEmpty);
 
@@ -424,6 +424,89 @@ void main() {
     await b.db.close();
   });
 
+  group('F2: undecodable server data never wedges the device', () {
+    Map<String, dynamic> habitChange(String id, Object? version) => {
+      'seq': 9,
+      'entity': 'habit',
+      'id': id,
+      'operation': 'upsert',
+      'version': version,
+      'payload': {'id': id, 'name': 'Read', 'type': 'binary', 'version': version},
+    };
+
+    test('a null payload and a string version are kept raw; the rest applies', () async {
+      await phone.sync();
+      final page = SyncPage.fromJson({
+        'acks': <Object>[],
+        'changes': [
+          {'seq': 7, 'entity': 'habit_log', 'id': 'log-null', 'version': 1, 'payload': null},
+          habitChange('h-string', '2'),
+          habitChange('h-ok', 1),
+          'not even an object',
+        ],
+        'next_cursor': 'c:9',
+        'has_more': false,
+      });
+
+      expect(await phone.engine(transport: _PageOnce(server, page)).run(), SyncOutcome.completed);
+
+      expect((await phone.db.select(phone.db.habits).get()).map((h) => h.id), ['h-ok']);
+      final opaque = await phone.db.select(phone.db.opaqueEntities).get();
+      expect(opaque.map((o) => o.entityType).toSet(), {
+        'undecodable:habit_log',
+        'undecodable:habit',
+        'undecodable:unknown',
+      });
+      expect(opaque.firstWhere((o) => o.entityId == 'h-string').payload, contains('"version":"2"'));
+      expect((await phone.state()).cursor, 'c:9', reason: 'the cursor still advances');
+    });
+
+    test('a page without next_cursor applies its changes and keeps the cursor', () async {
+      await phone.sync();
+      final before = (await phone.state()).cursor;
+      final page = SyncPage.fromJson({
+        'acks': <Object>[],
+        'changes': [habitChange('h-ok', 1)],
+        'has_more': false,
+      });
+
+      expect(await phone.engine(transport: _PageOnce(server, page)).run(), SyncOutcome.completed);
+
+      expect((await phone.db.select(phone.db.habits).get()).map((h) => h.id), ['h-ok']);
+      final state = await phone.state();
+      expect(state.cursor, before);
+      expect(jsonDecode(state.lastError!)['code'], 'missing_next_cursor');
+
+      expect(await phone.sync(), SyncOutcome.completed);
+      expect((await phone.state()).lastError, isNull, reason: 'a good page clears it');
+    });
+
+    test('an unreadable ack counts as no ack; the row is resent and answered', () async {
+      final habit = await phone.habit();
+      await phone.sync();
+      await phone.writer.setLogValue(habitId: habit, value: 1);
+      final scripted = _ScriptedOnce(
+        server,
+        (m) => {'mutation_id': m['mutation_id'], 'status': 'accepted', 'version': 'one'},
+      );
+
+      expect(await phone.engine(transport: scripted).run(), SyncOutcome.completed);
+      expect(server.logs.values.single['value'], 1);
+      expect(await phone.outbox(), isEmpty);
+    });
+
+    test('a bootstrap whose last page has no sync_cursor fails the run, not loops', () async {
+      final fresh = Device(server);
+      await initAccountState(fresh.db, userId: 'u', deviceId: fresh.deviceId, user: server.user);
+      final broken = _BootstrapWithoutCursor(server);
+
+      expect(await fresh.engine(transport: broken).run(), SyncOutcome.failed);
+      expect(broken.calls, 1);
+      expect((await fresh.state()).cursor, isNull);
+      await fresh.db.close();
+    });
+  });
+
   test('unknown habit types, unknown fields and unknown entities survive a round trip', () async {
     final unknownHabit = {
       'id': 'future-habit',
@@ -536,4 +619,59 @@ class _ScriptedOnce implements SyncTransport {
   @override
   Future<BootstrapPage> bootstrap({required String? cursor, required int limit}) =>
       server.bootstrap(cursor: cursor, limit: limit);
+}
+
+/// Answers the next /sync with [page], then defers to the fake server.
+class _PageOnce implements SyncTransport {
+  _PageOnce(this.server, this.page);
+  final FakeSyncServer server;
+  final SyncPage page;
+  bool used = false;
+
+  @override
+  Future<SyncPage> sync({
+    required String deviceId,
+    required String? cursor,
+    required int pullLimit,
+    required List<Map<String, Object?>> mutations,
+    required List<String> capabilities,
+  }) async {
+    if (used) {
+      return server.sync(
+        deviceId: deviceId,
+        cursor: cursor,
+        pullLimit: pullLimit,
+        mutations: mutations,
+        capabilities: capabilities,
+      );
+    }
+    used = true;
+    return page;
+  }
+
+  @override
+  Future<BootstrapPage> bootstrap({required String? cursor, required int limit}) =>
+      server.bootstrap(cursor: cursor, limit: limit);
+}
+
+/// A server whose single bootstrap page ends without a sync cursor.
+class _BootstrapWithoutCursor implements SyncTransport {
+  _BootstrapWithoutCursor(this.server);
+  final FakeSyncServer server;
+  int calls = 0;
+
+  @override
+  Future<SyncPage> sync({
+    required String deviceId,
+    required String? cursor,
+    required int pullLimit,
+    required List<Map<String, Object?>> mutations,
+    required List<String> capabilities,
+  }) => throw StateError('not reached');
+
+  @override
+  Future<BootstrapPage> bootstrap({required String? cursor, required int limit}) async {
+    calls++;
+    return BootstrapPage.fromJson({'habits': <Object>[], 'has_more': false});
+  }
 }
