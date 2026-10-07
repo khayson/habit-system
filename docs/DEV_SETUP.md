@@ -92,22 +92,28 @@ Plain HTTP is allowed only in debug builds and only to `10.0.2.2` / `localhost`
 After changing drift tables: `dart run build_runner build` in `app\` (CI fails if generated code
 is stale).
 
-## Sync smoke run (not in CI)
+## Sync end-to-end run (CI job `e2e`)
 
-Runs the real `SyncEngine`, `LocalMutationService` and `HttpSyncTransport` against the local API,
-with two device databases (temp files) and two device tokens for one fresh account. Device A
-creates a habit and ticks today; B bootstraps, sees both and unticks; A pulls. It prints each
-sync outcome and outbox state, then `CONVERGED` (exit 0) or `DIVERGED` (exit 1).
+Runs the real `SyncEngine`, `LocalMutationService` and `HttpSyncTransport` against a running API,
+with two device databases (temp files) and two device tokens for one fresh account. Scenarios:
+setup (create a habit on A, bootstrap B), merged (both tick the same day offline; B is remapped
+to A's log id), conflict (a stale edit is kept as needs-attention, then discarded), restore (A
+deletes, B logs again on the tombstone version), db-restore (the server journal rolls back: 410,
+re-bootstrap, the queued edit survives) and refresh (the old token works inside the 10-minute
+grace window). It prints PASS/FAIL per scenario, then `CONVERGED` (exit 0) or stops non-zero.
 
 ```powershell
 scripts\db-up.ps1
-scripts\api-serve.ps1                     # in another terminal
+scriptspi-serve.ps1                     # in another terminal
 cd app
-dart run tool/sync_smoke.dart             # default http://127.0.0.1:8000/api/v1
-dart run tool/sync_smoke.dart http://127.0.0.1:8000/api/v1
+$env:E2E_DATABASE_URL = 'postgresql://habit:habit@127.0.0.1:5432/habit'
+$env:E2E_PSQL = "$env:USERPROFILE	ools\pgsql-17in\psql.exe"   # if psql is not on PATH
+dart run tool/sync_e2e.dart               # default http://127.0.0.1:8000/api/v1
 ```
 
-Each run registers a new `smoke+<ms>@example.test` account in the dev database.
+The db-restore scenario edits the dev database directly (it rolls back that test account's
+journal), so point `E2E_DATABASE_URL` at a development database only. Each run registers a new
+`e2e+<ms>@example.test` account.
 
 ## Known toolchain pins
 

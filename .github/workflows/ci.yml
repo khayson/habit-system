@@ -102,3 +102,69 @@ jobs:
              grep -v '\.g\.dart$' | xargs dart format --output=none --set-exit-if-changed
       - run: flutter analyze
       - run: flutter test
+
+  e2e:
+    name: e2e (real API + real sync engine)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: habit
+          POSTGRES_PASSWORD: habit
+          POSTGRES_DB: habit_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U habit -d habit_e2e"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_DATABASE: habit_e2e
+      DB_USERNAME: habit
+      DB_PASSWORD: habit
+      E2E_DATABASE_URL: postgresql://habit:habit@127.0.0.1:5432/habit_e2e
+    steps:
+      - uses: actions/checkout@v7
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_pgsql, pgsql, mbstring, intl, sodium, fileinfo, zip
+          ini-values: date.timezone=UTC, memory_limit=1G
+          coverage: none
+      - name: Cache Composer
+        uses: actions/cache@v6
+        with:
+          path: ~/.composer/cache/files
+          key: composer-${{ hashFiles('api/composer.lock') }}
+      - name: Boot the API
+        working-directory: api
+        run: |
+          composer install --no-interaction --prefer-dist --no-progress
+          cp .env.example .env && php artisan key:generate
+          php artisan migrate --force
+          php artisan serve --host=127.0.0.1 --port=8000 > ../api-serve.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -sf http://127.0.0.1:8000/api/v1/health && exit 0
+            sleep 1
+          done
+          cat ../api-serve.log
+          exit 1
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.5'
+          channel: stable
+          cache: true
+      - name: Sync end-to-end
+        working-directory: app
+        run: |
+          flutter pub get
+          dart run tool/sync_e2e.dart http://127.0.0.1:8000/api/v1
+      - name: API log on failure
+        if: failure()
+        run: cat api-serve.log || true
