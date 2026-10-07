@@ -1,5 +1,9 @@
 <?php
 
+use App\Domain\Calendar\DayResolutionException;
+use App\Domain\Habit\InvalidHabitValue;
+use App\Domain\Habit\UnknownHabitType;
+use App\Domain\Habit\UnsupportedOperation;
 use App\Exceptions\ApiException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -28,6 +32,10 @@ beforeEach(function () {
         Route::post('/media-type', fn () => abort(415));
         Route::get('/unavailable', fn () => abort(503));
         Route::get('/teapot', fn () => abort(418));
+        Route::get('/domain/{reason}', fn (string $reason) => throw new DayResolutionException($reason));
+        Route::get('/domain-type', fn () => throw new UnknownHabitType('checklist'));
+        Route::get('/domain-operation', fn () => throw new UnsupportedOperation('binary', 'log.increment'));
+        Route::get('/domain-value', fn () => throw new InvalidHabitValue('internal detail 250.0005'));
         Route::post('/too-large', fn () => throw new PostTooLargeException);
         Route::post('/validate', function (Request $request) {
             $request->validate(
@@ -154,4 +162,23 @@ it('500 never leaks exception text, even with debug on', function () {
         ->not->toContain('SQLSTATE')
         ->not->toContain('hunter2')
         ->not->toContain('trace');
+});
+
+it('maps day-resolution errors through the domain mapper', function (string $reason) {
+    expectFixture("error_422_{$reason}", $this->getJson("/api/v1/__test/domain/{$reason}"));
+})->with(['future_event', 'event_too_old', 'timezone_context_mismatch', 'backdate_future', 'backdate_too_old']);
+
+it('maps habit-type errors through the domain mapper without leaking detail', function (string $route, string $code) {
+    $response = $this->getJson("/api/v1/__test/{$route}");
+
+    expectFixture("error_422_{$code}", $response);
+    expect($response->getContent())->not->toContain('internal detail')->not->toContain('checklist');
+})->with([
+    ['domain-type', 'unsupported_type'],
+    ['domain-operation', 'unsupported_operation'],
+    ['domain-value', 'invalid_value'],
+]);
+
+it('treats an unmapped domain reason as a server error, not a silent 422', function () {
+    expectFixture('error_500_server_error', $this->getJson('/api/v1/__test/domain/not_a_reason'));
 });

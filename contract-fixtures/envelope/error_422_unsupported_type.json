@@ -1,0 +1,14 @@
+{
+  "description": "UnknownHabitType: the habit type is not known or not declared by this client (A21).",
+  "status": 422,
+  "body": {
+    "error": {
+      "code": "unsupported_type",
+      "message": "This app version cannot use that kind of habit. Update the app to continue."
+    },
+    "meta": {
+      "request_id": "{{uuid}}",
+      "server_time": "{{timestamp}}"
+    }
+  }
+}

@@ -39,6 +39,8 @@ final class ApiExceptionRenderer
 
     public function __invoke(Throwable $e): ?JsonResponse
     {
+        $e = DomainErrorMapper::toApiException($e) ?? $e;
+
         return match (true) {
             $e instanceof HttpResponseException => null,
             $e instanceof ApiException => ApiResponse::error($e->status, $e->errorCode, $e->getMessage(), $e->extra, $e->headers),

@@ -1,0 +1,14 @@
+{
+  "description": "DayResolutionException: occurred_at is more than 90 days before server time.",
+  "status": 422,
+  "body": {
+    "error": {
+      "code": "event_too_old",
+      "message": "This check-in is more than 90 days old, so it can no longer be synced."
+    },
+    "meta": {
+      "request_id": "{{uuid}}",
+      "server_time": "{{timestamp}}"
+    }
+  }
+}

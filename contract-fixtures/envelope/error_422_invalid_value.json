@@ -1,0 +1,14 @@
+{
+  "description": "InvalidHabitValue: the value, target or increment breaks the type's rules (exact decimals, whole seconds, 0/1, > 0).",
+  "status": 422,
+  "body": {
+    "error": {
+      "code": "invalid_value",
+      "message": "Check the value and try again."
+    },
+    "meta": {
+      "request_id": "{{uuid}}",
+      "server_time": "{{timestamp}}"
+    }
+  }
+}

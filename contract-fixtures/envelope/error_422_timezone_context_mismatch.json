@@ -1,0 +1,14 @@
+{
+  "description": "DayResolutionException: captured_timezone disagrees with the server calendar at occurred_at (A5). Sent for review; never silently re-dated.",
+  "status": 422,
+  "body": {
+    "error": {
+      "code": "timezone_context_mismatch",
+      "message": "This check-in used a different time zone. Review it before it is saved."
+    },
+    "meta": {
+      "request_id": "{{uuid}}",
+      "server_time": "{{timestamp}}"
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "description": "DayResolutionException: explicit backdate is more than 30 days before local today.",
+  "status": 422,
+  "body": {
+    "error": {
+      "code": "backdate_too_old",
+      "message": "Past check-ins can go back up to 30 days."
+    },
+    "meta": {
+      "request_id": "{{uuid}}",
+      "server_time": "{{timestamp}}"
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "description": "DayResolutionException: occurred_at is more than 5 minutes after server time.",
+  "status": 422,
+  "body": {
+    "error": {
+      "code": "future_event",
+      "message": "This check-in is dated in the future. Check the device clock and try again."
+    },
+    "meta": {
+      "request_id": "{{uuid}}",
+      "server_time": "{{timestamp}}"
+    }
+  }
+}

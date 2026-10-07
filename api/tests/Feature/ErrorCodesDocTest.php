@@ -1,6 +1,7 @@
 <?php
 
 use App\Exceptions\ApiExceptionRenderer;
+use App\Exceptions\DomainErrorMapper;
 
 /*
  * docs/api-error-codes.md is contract. Its "Active codes" table, the golden fixtures and the
@@ -61,6 +62,7 @@ it('documents every code the renderer can emit', function () {
     $renderer = new ReflectionClassConstant(ApiExceptionRenderer::class, 'HTTP_CODES');
     $emitted = array_merge(
         array_column($renderer->getValue(), 0),
+        array_keys(DomainErrorMapper::CODES),
         ['validation_failed', 'server_error', 'http_error', 'version_conflict', 'idempotency_mismatch', 'resource_deleted', 'cursor_expired'],
     );
 

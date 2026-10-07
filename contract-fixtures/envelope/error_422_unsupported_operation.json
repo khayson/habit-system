@@ -1,0 +1,14 @@
+{
+  "description": "UnsupportedOperation: the operation (or alias) is not supported by the habit's type (A21, A27).",
+  "status": 422,
+  "body": {
+    "error": {
+      "code": "unsupported_operation",
+      "message": "This change is not supported for this habit."
+    },
+    "meta": {
+      "request_id": "{{uuid}}",
+      "server_time": "{{timestamp}}"
+    }
+  }
+}
