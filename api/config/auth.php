@@ -114,4 +114,10 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    | A16: reject known-breached passwords (Have I Been Pwned range API, k-anonymity).
+    | Disabled in the test suite; one test enables it with a faked HTTP client.
+    */
+    'password_breach_check' => (bool) env('PASSWORD_BREACH_CHECK', true),
+
 ];

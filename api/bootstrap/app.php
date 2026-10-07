@@ -14,7 +14,6 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->prepend(AssignRequestId::class);
-        $middleware->throttleApi();
         // API only: never redirect guests to a login page.
         $middleware->redirectGuestsTo(fn () => null);
     })

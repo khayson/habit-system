@@ -28,7 +28,7 @@ return new class extends Migration
         });
         // Emails are stored normalised (trimmed, lower-case); uniqueness is enforced on that form.
         DB::statement('CREATE UNIQUE INDEX users_email_unique ON users (lower(email))');
-        DB::statement("ALTER TABLE users ADD CONSTRAINT users_email_normalised CHECK (email = lower(btrim(email)))");
+        DB::statement('ALTER TABLE users ADD CONSTRAINT users_email_normalised CHECK (email = lower(btrim(email)))');
         DB::statement('ALTER TABLE users ADD CONSTRAINT users_xp_non_negative CHECK (xp >= 0)');
         DB::statement('ALTER TABLE users ADD CONSTRAINT users_freeze_balance_range CHECK (freeze_balance BETWEEN 0 AND 2)');
         DB::statement("ALTER TABLE users ADD CONSTRAINT users_timezone_mode CHECK (timezone_mode IN ('fixed', 'ask_on_device_change'))");

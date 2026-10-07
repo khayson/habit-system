@@ -18,13 +18,8 @@ return [
     |
     */
 
-    'stateful' => explode(',', env('SANCTUM_STATEFUL_DOMAINS', sprintf(
-        '%s%s',
-        'localhost,localhost:3000,127.0.0.1,127.0.0.1:8000,::1',
-        Sanctum::currentApplicationUrlWithPort(),
-        // Sanctum::currentRequestHost(),
-    ))),
-
+    // API-only: no first-party SPA cookie authentication.
+    'stateful' => [],
     /*
     |--------------------------------------------------------------------------
     | Sanctum Guards
@@ -37,7 +32,8 @@ return [
     |
     */
 
-    'guard' => ['web'],
+    // API tokens only: no session guard (this app is API-only).
+    'guard' => [],
 
     /*
     |--------------------------------------------------------------------------
@@ -50,7 +46,8 @@ return [
     |
     */
 
-    'expiration' => null,
+    // A6: 120 days, longer than the 90-day offline window. Refresh rotates tokens before then.
+    'expiration' => (int) env('SANCTUM_EXPIRATION_MINUTES', 120 * 24 * 60),
 
     /*
     |--------------------------------------------------------------------------

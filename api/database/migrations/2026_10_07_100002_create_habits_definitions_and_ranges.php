@@ -79,6 +79,6 @@ return new class extends Migration
         Schema::dropIfExists('habit_active_ranges');
         Schema::dropIfExists('habit_definition_versions');
         Schema::dropIfExists('habits');
-        DB::statement('DROP EXTENSION IF EXISTS btree_gist');
+        // btree_gist stays: it is database-level infrastructure that other objects may use.
     }
 };

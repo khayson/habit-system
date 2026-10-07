@@ -3,8 +3,10 @@
 namespace App\Providers;
 
 use App\Domain\Clock;
+use App\Domain\Habit\HabitTypeRegistry;
 use App\Http\RequestContext;
 use App\Infrastructure\SystemClock;
+use App\Models\PersonalAccessToken;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
@@ -12,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Sanctum\Sanctum;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,12 +22,14 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(Clock::class, SystemClock::class);
         $this->app->scoped(RequestContext::class);
+        $this->app->singleton(HabitTypeRegistry::class, fn () => HabitTypeRegistry::withBuiltins());
     }
 
     public function boot(): void
     {
         Date::use(CarbonImmutable::class);
         Model::shouldBeStrict(! $this->app->isProduction());
+        Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
 
         $this->configureRateLimiting();
     }

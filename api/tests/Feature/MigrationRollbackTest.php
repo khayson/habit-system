@@ -22,7 +22,8 @@ function schemaSnapshot(): array
         'indexes' => $pluck("select indexname as v from pg_indexes where schemaname = 'public' and tablename <> 'migrations' order by 1"),
         'constraints' => $pluck("select c.conname as v from pg_constraint c join pg_namespace n on n.oid = c.connamespace join pg_class t on t.oid = c.conrelid where n.nspname = 'public' and t.relname <> 'migrations' order by 1"),
         'types' => $pluck("select t.typname as v from pg_type t join pg_namespace n on n.oid = t.typnamespace where n.nspname = 'public' and t.typtype in ('e', 'd') order by 1"),
-        'functions' => $pluck("select p.proname as v from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' order by 1"),
+        // Objects owned by an extension (e.g. btree_gist) belong to the extension, not a migration.
+        'functions' => $pluck("select p.proname as v from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and not exists (select 1 from pg_depend d where d.objid = p.oid and d.deptype = 'e') order by 1"),
     ];
 }
 
