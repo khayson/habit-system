@@ -146,6 +146,27 @@ abstract final class AppTheme {
           ),
         ),
       ),
+      // Design file 08: a muted track; the selected segment is surface-white with primary text.
+      segmentedButtonTheme: SegmentedButtonThemeData(
+        style: ButtonStyle(
+          minimumSize: const WidgetStatePropertyAll(Size(HabitSize.minTarget, HabitSize.control)),
+          textStyle: WidgetStatePropertyAll(text.titleSmall),
+          backgroundColor: WidgetStateProperty.resolveWith(
+            (states) => states.contains(WidgetState.selected) ? t.surface : t.border,
+          ),
+          foregroundColor: WidgetStateProperty.resolveWith(
+            // Not `muted`: muted on the border colour is about 4.2:1, under the 4.5:1 text rule.
+            (states) => states.contains(WidgetState.selected) ? t.primary : t.ink,
+          ),
+          side: WidgetStateProperty.resolveWith(
+            (states) => BorderSide(
+              color: states.contains(WidgetState.focused) ? t.focus : t.border,
+              width: states.contains(WidgetState.focused) ? 2 : 1,
+            ),
+          ),
+          shape: WidgetStatePropertyAll(controlShape),
+        ),
+      ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: t.surface,
