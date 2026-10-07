@@ -224,3 +224,23 @@ Supports `docs/EXPANSION_PLAN.md` sections 6 and 6b. Laying these now avoids ret
 - **`habit.pause {until_date}`**: ends the current active range today and inserts a range starting on `until_date`. The half-open, non-overlapping model supports a future `starts_on`; add a test. No history rewrite; no eligibility before the new `starts_on`.
 - **`weekly_reviews`** entity + `review.set_reflection` mutation (Phase 8): `id uuid, user_id, week_start DATE (Monday), reflection text (app-layer encrypted), version`; unique `(user_id, week_start)`.
 - **Widget snapshot**: the app writes a small JSON snapshot for widgets; widgets never read the database directly.
+
+---
+
+## 7. Added after the Phase 0 review (2026-10-07)
+
+Decisions from the architect's Phase 0 review (`docs/reviews/PHASE_0_REVIEW.md`).
+
+### A24 — Toolchain versions · ADOPT
+
+- **Flutter 3.47.x stable** replaces the spec's 3.44.x (the spec asked to confirm versions during implementation). Pinned in `app/pubspec.yaml` (`environment: flutter`) and in CI.
+- **PHP 8.4**: Composer's `config.platform.php` is `8.4.1` so dependency resolution never drifts to a newer local PHP. (`8.4.1`, not `8.4.0`, because `symfony/http-foundation` 8.1 requires ≥ 8.4.1.)
+- PostgreSQL 17 in CI and Docker (spec floor stays 16).
+
+### A25 — Error envelope and codes · ADOPT
+
+- Error `meta` carries **both** `request_id` and `server_time` (spec 06: "all responses carry request_id and server_time"). Success `meta` also carries `api_version`.
+- Error codes are contract, listed in `docs/api-error-codes.md` with one golden fixture each. Approved set: `bad_request`, `unauthenticated`, `forbidden`, `not_found`, `method_not_allowed`, `version_conflict`, `idempotency_mismatch`, `resource_deleted`, `cursor_expired`, `payload_too_large`, `unsupported_media_type`, `validation_failed`, `rate_limited`, `http_error`, `server_error`, `unavailable`. Reserved for later phases: `timezone_context_mismatch`, `dependency_pending`, `unsupported_operation`, `unsupported_type`.
+- `resource_deleted` carries `entity`, `resource_id` and `current_version` (the tombstone version).
+- In `/sync`, per-mutation failures are not HTTP statuses: the ack's `error` object reuses exactly these shapes.
+- Rate limits: defaults are environment-configurable; keyed by user id when authenticated, IP otherwise.

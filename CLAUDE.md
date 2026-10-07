@@ -27,8 +27,8 @@ habit-system/
 
 ## Stack
 
-- **api**: PHP 8.4, Laravel 13 (A19), Sanctum, PostgreSQL 16+, Pest, Pint, Larastan. Queue driver = `database` for v1.
-- **app**: Flutter 3.44.x stable, Dart 3, drift (SQLite), Provider, go_router, dio, flutter_secure_storage, flutter_local_notifications + timezone + flutter_timezone, connectivity_plus (a sync *trigger* only, never proof of connectivity), uuid (v7), workmanager (Android background sync).
+- **api**: PHP 8.4 (Composer platform pinned to 8.4.1, A24), Laravel 13 (A19), Sanctum, PostgreSQL 16+, Pest, Pint, Larastan. Queue driver = `database` for v1.
+- **app**: Flutter 3.47.x stable (A24), Dart 3, drift (SQLite), Provider, go_router, dio, flutter_secure_storage, flutter_local_notifications + timezone + flutter_timezone, connectivity_plus (a sync *trigger* only, never proof of connectivity), uuid (v7), workmanager (Android background sync).
 - **Dev machine**: Windows + PowerShell, Android first. Emulator reaches the host API at `http://10.0.2.2:8000/api/v1`. iOS cannot be built locally.
 
 ## Invariants — violating any of these is a bug, whatever the feature
@@ -52,7 +52,7 @@ habit-system/
 
 ## API conventions (restated from spec)
 
-- Base `/api/v1`. Success: `{ data, meta:{ api_version, server_time, request_id } }`. Error: `{ error:{ code, message, fields? }, meta:{ request_id } }`.
+- Base `/api/v1`. Success: `{ data, meta:{ api_version, server_time, request_id } }`. Error: `{ error:{ code, message, fields?, … }, meta:{ request_id, server_time } }` (A25). Codes are contract: `docs/api-error-codes.md`, one fixture each.
 - Statuses: 401, 403, 404, 409 (`version_conflict` | `idempotency_mismatch` | `resource_deleted`), 410 `cursor_expired`, 413, 422, 429 + `Retry-After`.
 - `/sync` returns a per-mutation ack (`accepted` | `conflict` | `rejected` | `dependency_pending`). HTTP 200 never implies everything was accepted.
 - `Idempotency-Key` header == `mutation_id`.

@@ -5,6 +5,8 @@ version: 0.1.0+1
 
 environment:
   sdk: ^3.13.4
+  # A24: Flutter 3.47.x. CI pins the same version.
+  flutter: ">=3.47.0 <3.48.0"
 
 dependencies:
   dio: ^5.11.1

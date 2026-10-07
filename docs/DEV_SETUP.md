@@ -7,7 +7,7 @@
 | PHP | 8.4 (NTS x64) | Native. `pdo_pgsql` **must** be enabled. |
 | Composer | 2.x | |
 | PostgreSQL | 16+ (CI uses 17) | Docker (preferred) or a portable install. |
-| Flutter | stable (CI pins 3.47.5) | Android SDK + an emulator AVD. |
+| Flutter | 3.47.x stable (A24; CI pins 3.47.5) | Android SDK + an emulator AVD. |
 
 iOS cannot be built on Windows (A17).
 
@@ -41,6 +41,9 @@ The scripts use `php` from `PATH`; or set `$env:HABIT_PHP` to the full path of `
 
 **Docker (preferred):** `scripts\db-up.ps1` runs `docker compose up -d --wait postgres`. The
 container creates `habit` and `habit_test` (user/password `habit`/`habit`, dev only).
+
+> **Not yet run locally.** The dev machine has no Docker, so `docker-compose.yml` has only been
+> checked with `docker compose config -q` (in CI). Treat the first real `up` as untested.
 
 **Without Docker** (this dev machine has no Docker or WSL): use the EDB portable binaries.
 
@@ -89,4 +92,8 @@ is stale).
 ## Known toolchain pins
 
 - `analyzer` is pinned below 14.5 in `app/pubspec.yaml` (dev): `build_runner` 2.16.1 declares
-  `analyzer <15` but does not compile against 14.5.0. Remove the pin once build_runner is fixed.
+  `analyzer <15` but does not compile against 14.5.0 (`contextFeatures` setter missing).
+  **Remove the pin when** a `build_runner` release newer than 2.16.1 is out: delete the
+  `analyzer` line, run `flutter pub upgrade build_runner` and `dart run build_runner build`.
+  If generation succeeds, keep it removed; Dependabot will surface the release.
+- Composer resolves as PHP 8.4.1 (`config.platform.php`, A24) even if your local PHP is newer.
