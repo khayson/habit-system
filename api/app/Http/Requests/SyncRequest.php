@@ -32,8 +32,11 @@ final class SyncRequest extends FormRequest
         ];
     }
 
-    /** A29: what a client that sends no X-Capabilities header (a legacy build) declares. */
-    public const array BASELINE_TYPES = ['binary', 'quantity'];
+    /**
+     * A29: what a client that sends no X-Capabilities header declares. Such a client predates
+     * the registry, i.e. it is a spec-v1 client, and spec v1 has exactly these three types.
+     */
+    public const array BASELINE_TYPES = ['binary', 'quantity', 'duration'];
 
     /**
      * Habit types the client declared (A21), from `X-Capabilities: type.binary, type.quantity`.

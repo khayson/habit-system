@@ -5,6 +5,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Str;
+use Tests\Support\FakeChecklistType;
 use Tests\Support\M;
 
 uses(RefreshDatabase::class);
@@ -234,19 +235,21 @@ it('stores and journals the canonical frequency_config, not the client object (S
 
 // S4 ------------------------------------------------------------------------------------------
 
-it('treats a missing X-Capabilities header as the baseline set (S4, legacy clients)', function () {
+it('treats a missing X-Capabilities header as the spec-v1 baseline: all three types (S4)', function () {
     $acks = $this->sync($this->user['token'], [
         M::habitCreate((string) Str::uuid7(), 'binary', 1),
         M::habitCreate((string) Str::uuid7(), 'quantity', '20.000', ['unit' => 'pages']),
         M::habitCreate((string) Str::uuid7(), 'duration', 600),
+        // A key the registry lacks is unsupported whatever the client declares.
+        M::habitCreate((string) Str::uuid7(), (new FakeChecklistType)->key(), 3),
     ])->json('data.acks');
 
-    expect(array_column($acks, 'status'))->toBe(['accepted', 'accepted', 'rejected'])
-        ->and($acks[2]['error']['code'])->toBe('unsupported_type');
+    expect(array_column($acks, 'status'))->toBe(['accepted', 'accepted', 'accepted', 'rejected'])
+        ->and($acks[3]['error']['code'])->toBe('unsupported_type');
 
-    // A client that declares duration may create it; pulling is never restricted (invariant 13).
-    $this->sync($this->user['token'], [M::habitCreate((string) Str::uuid7(), 'duration', 600)], headers: ['X-Capabilities' => 'type.binary, type.quantity, type.duration'])
-        ->assertJsonPath('data.acks.0.status', 'accepted');
+    // A client that declares fewer types is held to its declaration.
+    $this->sync($this->user['token'], [M::habitCreate((string) Str::uuid7(), 'duration', 600)], headers: ['X-Capabilities' => 'type.binary'])
+        ->assertJsonPath('data.acks.0.error.code', 'unsupported_type');
 });
 
 // S8 ------------------------------------------------------------------------------------------
