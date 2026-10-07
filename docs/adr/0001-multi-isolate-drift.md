@@ -23,7 +23,7 @@ account database, from any isolate.
    server shuts down after its last client disconnects; if it vanished without unregistering,
    drift pings it and replaces it.
 2. **Safe connection settings as a second line.** `configureConnection` runs on every raw
-   connection: `busy_timeout = 5000` **first**, then `journal_mode = WAL`, `synchronous = FULL`,
+   connection: `busy_timeout = 15000` **first**, then `journal_mode = WAL`, `synchronous = FULL`,
    `foreign_keys = ON`. If two independent connections ever exist (another process, such as a
    future home-screen widget process, or a lost name-server race), SQLite's file locking plus the
    busy timeout serialises them instead of failing.
@@ -47,6 +47,11 @@ account database, from any isolate.
 - `integration_test/multi_isolate_db_test.dart` (Android emulator): the production opener, with
   the real `IsolateNameServer`, used from the UI isolate and a background isolate at the same
   time (200 + 200 writes, cross-isolate notification, WAL and `synchronous = FULL` confirmed).
+
+**Found on CI (Phase 2a):** with two independent connections committing back-to-back and
+`synchronous = FULL` on a slow disk, a waiter's `BEGIN IMMEDIATE` was starved past a 5 s busy
+timeout. The timeout is now 15 s. This only concerns layer 2; the shared-server path has one
+connection and no contention.
 
 **Bug found by the spike:** setting `journal_mode = WAL` before `busy_timeout` made a second
 connection opening during the first one's WAL switch fail immediately with "database is locked".

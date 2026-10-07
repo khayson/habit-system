@@ -43,7 +43,9 @@ String databaseNameFor(String accountKey) {
 /// connection opening while another isolate holds that lock fails at once with SQLITE_BUSY
 /// (found by the spike test).
 void configureConnection(CommonDatabase db) {
-  db.execute('PRAGMA busy_timeout = 5000');
+  // 15 s: a waiter can be starved for a while by back-to-back commits from another connection
+  // (seen on CI with synchronous = FULL). Local writes are tiny, so a long wait is still short.
+  db.execute('PRAGMA busy_timeout = 15000');
   db.execute('PRAGMA journal_mode = WAL');
   // FULL, not NORMAL: in WAL mode NORMAL can drop the latest commits on an OS crash or power
   // loss, which would break "saved on this device" (invariant 8). Write volume is tiny.
