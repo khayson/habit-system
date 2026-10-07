@@ -62,4 +62,13 @@ abstract class TestCase extends BaseTestCase
             'mutations' => $mutations,
         ], fn ($v) => $v !== null), $headers);
     }
+
+    public function bootstrapPage(string $token, ?string $cursor, int $limit): TestResponse
+    {
+        $this->app['auth']->forgetGuards();
+
+        return $this->withToken($token)
+            ->getJson('/api/v1/sync/bootstrap?limit='.$limit.($cursor === null ? '' : '&cursor='.urlencode($cursor)))
+            ->assertOk();
+    }
 }
