@@ -38,7 +38,7 @@ class HabitActions {
   /// The minimal editor (2b.2): a one-tap habit, daily, starting today in the account calendar.
   Future<String> createOneTapHabit({required String name, required String category}) async {
     final rules = types.all.firstWhere((r) => r.oneTap);
-    final calendar = await AccountCalendar.load(writer.db);
+    final calendar = await AccountCalendar.load(writer.db, deviceNow: _clock());
     if (calendar == null) throw StateError('The account calendar is not known yet.');
     final id = await writer.createHabit(
       name: name.trim(),

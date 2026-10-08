@@ -49,37 +49,37 @@ void main() {
     expect((error['code'], error['retryable']), ('server_error', true));
   });
 
-  test(
-    'bootstrap_entities: a client without tables for them keeps them opaque and syncs (A31, A32)',
-    () async {
-      final fixture = contractFixture('sync/bootstrap_entities.json');
-      expect(fixture['suites'], contains('dart'));
-      final server = FakeSyncServer();
-      final phone = await Device(server).init();
-      final pages = [
-        BootstrapPage.fromJson({
-          'user': server.user,
-          'habits': <Object>[],
-          'logs': <Object>[],
-          'has_more': true,
-          'next_cursor': 'first',
-        }),
-        BootstrapPage.fromJson(materialize(fixture['progress_page']) as Map<String, dynamic>),
-        BootstrapPage.fromJson(materialize(fixture['evaluation_page']) as Map<String, dynamic>),
-      ];
+  test('bootstrap_entities: the derived entities land in their typed tables (A31, A32)', () async {
+    final fixture = contractFixture('sync/bootstrap_entities.json');
+    expect(fixture['suites'], contains('dart'));
+    final server = FakeSyncServer();
+    final phone = await Device(server).init();
+    final pages = [
+      BootstrapPage.fromJson({
+        'user': server.user,
+        'habits': <Object>[],
+        'logs': <Object>[],
+        'has_more': true,
+        'next_cursor': 'first',
+      }),
+      BootstrapPage.fromJson(materialize(fixture['progress_page']) as Map<String, dynamic>),
+      BootstrapPage.fromJson(materialize(fixture['evaluation_page']) as Map<String, dynamic>),
+    ];
 
-      final outcome = await phone.engine(transport: _BootstrapPages(server, pages)).run();
+    final outcome = await phone.engine(transport: _BootstrapPages(server, pages)).run();
 
-      expect(outcome, SyncOutcome.completed);
-      final stored = await phone.db.select(phone.db.opaqueEntities).get();
-      expect(stored.map((o) => (o.entityType, o.version)).toSet(), {
-        ('habit_progress', 2),
-        ('period_evaluation', 1),
-      });
-      expect((await phone.state()).cursor, isNotNull, reason: 'the snapshot cursor was saved');
-      await phone.db.close();
-    },
-  );
+    expect(outcome, SyncOutcome.completed);
+    expect(await phone.db.select(phone.db.opaqueEntities).get(), isEmpty);
+    final progress = await phone.db.select(phone.db.habitProgress).getSingle();
+    expect((progress.current, progress.longest, progress.version), (1, 1, 2));
+    final evaluation = await phone.db.select(phone.db.periodEvaluations).getSingle();
+    expect(
+      (evaluation.periodKey, evaluation.completed, evaluation.revision),
+      ('d:2026-05-27', true, 1),
+    );
+    expect((await phone.state()).cursor, isNotNull, reason: 'the snapshot cursor was saved');
+    await phone.db.close();
+  });
 
   for (final name in ['ack_restored', 'ack_merged_entity_id', 'ack_delete_natural_key']) {
     test('$name: accepted and remapped to the canonical entity_id', () async {

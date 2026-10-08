@@ -141,7 +141,7 @@ class LocalView {
   /// The account's habit-day on the server's clock (F10) and each active habit's provisional
   /// state for it. Null until the account's calendar is known.
   Future<TodayView?> today(DateTime deviceNow) async {
-    final calendar = await AccountCalendar.load(db);
+    final calendar = await AccountCalendar.load(db, deviceNow: deviceNow);
     if (calendar == null) return null;
     final date = calendar.today(deviceNow);
     final day = date.toString();

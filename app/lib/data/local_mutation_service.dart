@@ -220,8 +220,8 @@ class LocalMutationService {
             operation: operation,
             baseVersion: Value(baseVersion),
             occurredAt: _iso(occurredAt ?? serverNow),
-            // A5: the habit-calendar zone the server holds, never the device zone.
-            capturedTimezone: Value(calendar.timezone),
+            // A5: the habit-calendar zone in force at the event, never the device zone.
+            capturedTimezone: Value(calendar.zoneAt(occurredAt ?? serverNow)),
             localDateHint: Value(localDate?.toString()),
             payload: jsonEncode(payload),
             habitId: Value(habitId),
@@ -233,7 +233,7 @@ class LocalMutationService {
   }
 
   Future<AccountCalendar> _calendar() async {
-    final calendar = await AccountCalendar.load(db);
+    final calendar = await AccountCalendar.load(db, deviceNow: clock());
     if (calendar == null) {
       throw StateError('The server calendar is not known yet: sign in or sync first.');
     }

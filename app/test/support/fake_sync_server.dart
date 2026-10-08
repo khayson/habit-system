@@ -335,6 +335,15 @@ class FakeSyncServer implements SyncTransport {
   void journalUser(Map<String, dynamic> payload) =>
       _journal('user', payload['id'] as String, 'upsert', seq + 1, payload);
 
+  /// Journals any entity at a chosen version (A32 derived entities, deletes).
+  void journalEntity(
+    String entity,
+    String id,
+    int version,
+    Map<String, dynamic> payload, {
+    String operation = 'upsert',
+  }) => _journal(entity, id, operation, version, payload);
+
   /// Journals a change for an entity type the app does not know.
   void journalOpaque(String entity, String id, Map<String, dynamic> payload) =>
       _journal(entity, id, 'upsert', 1, payload);

@@ -5,6 +5,7 @@ import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
 import '../data/app_database.dart';
+import '../data/calendar_store.dart';
 import '../data/entity_codec.dart';
 import '../domain/calendar/day_resolver.dart';
 import 'outbox_states.dart';
@@ -647,6 +648,10 @@ class SyncEngine {
         await _upsertLog(id, version, payload);
       case 'user':
         await _applyUser(payload);
+      case 'habit_progress':
+        await _upsertProgress(id, version, change['operation'] == 'delete', payload);
+      case 'period_evaluation':
+        await _upsertEvaluation(id, version, payload);
       default:
         // Unknown entity type: keep it opaque, never drop it (invariant 13).
         await _storeOpaque(entity, id, version, change['operation'] as String, payload);
@@ -771,6 +776,40 @@ class SyncEngine {
         .insertOnConflictUpdate(EntityCodec.logRow(payload, id: id, version: version));
   }
 
+  /// A32 habit_progress: server-confirmed only, version >= rule. A delete (habit deleted)
+  /// removes the row.
+  Future<void> _upsertProgress(
+    String habitId,
+    int version,
+    bool deleted,
+    Map<String, dynamic> payload,
+  ) async {
+    final existing = await (db.select(
+      db.habitProgress,
+    )..where((p) => p.habitId.equals(habitId))).getSingleOrNull();
+    if (existing != null && version < existing.version) return;
+    if (deleted) {
+      await (db.delete(db.habitProgress)..where((p) => p.habitId.equals(habitId))).go();
+      return;
+    }
+    await db
+        .into(db.habitProgress)
+        .insertOnConflictUpdate(
+          EntityCodec.progressRow(payload, habitId: habitId, version: version),
+        );
+  }
+
+  /// A32 period_evaluation: version = revision; a late log's new revision replaces the old one.
+  Future<void> _upsertEvaluation(String id, int version, Map<String, dynamic> payload) async {
+    final existing = await (db.select(
+      db.periodEvaluations,
+    )..where((e) => e.id.equals(id))).getSingleOrNull();
+    if (existing != null && version < existing.revision) return;
+    await db
+        .into(db.periodEvaluations)
+        .insertOnConflictUpdate(EntityCodec.evaluationRow(payload, id: id, version: version));
+  }
+
   /// G3: a user payload may be partial (later phases journal XP or level alone). Only the
   /// calendar fields it carries are written, and it is merged into the stored payload, so a
   /// partial update never clears the calendar (which would stop every local write) or the name.
@@ -786,7 +825,13 @@ class SyncEngine {
         calendarDayStartOffset: offset is int ? Value(offset) : const Value.absent(),
       ),
     );
+    // D1: the recent calendar entries, merged by effective_at (pending ones included).
+    await mergeCalendarHistory(db, user, now: await _serverNow());
   }
+
+  /// The device clock corrected by the measured skew (F10).
+  Future<DateTime> _serverNow() async =>
+      DateTime.fromMillisecondsSinceEpoch(_now + (await _state()).clockSkewMs, isUtc: true);
 
   /// Acked rows can go once the confirmed row reflects them; unacknowledged rows never do.
   Future<void> _prune() async {
@@ -882,6 +927,7 @@ Future<void> initAccountState(
         ),
         mode: InsertMode.insertOrIgnore,
       );
+  await mergeCalendarHistory(db, user, now: DateTime.now().toUtc());
 }
 
 class _LeaseLost implements Exception {
