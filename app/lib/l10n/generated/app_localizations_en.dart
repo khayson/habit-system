@@ -683,6 +683,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get olderLoading => 'Loading older history…';
 
   @override
+  String get heatmapProvisional =>
+      'Some days are counted on this device and are confirmed after syncing.';
+
+  @override
   String get historyTitle => 'Your history';
 
   @override

@@ -1238,6 +1238,12 @@ abstract class AppLocalizations {
   /// **'Loading older history…'**
   String get olderLoading;
 
+  /// No description provided for @heatmapProvisional.
+  ///
+  /// In en, this message translates to:
+  /// **'Some days are counted on this device and are confirmed after syncing.'**
+  String get heatmapProvisional;
+
   /// No description provided for @historyTitle.
   ///
   /// In en, this message translates to:

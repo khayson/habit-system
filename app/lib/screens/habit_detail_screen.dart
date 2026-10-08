@@ -133,6 +133,10 @@ class _DetailState extends State<_Detail> {
               ),
             ),
           ),
+          if (_hasProvisional(detail, monthStart)) ...[
+            const SizedBox(height: HabitSpace.s16),
+            Text(l10n.heatmapProvisional, style: text.bodyMedium?.copyWith(color: tokens.muted)),
+          ],
           const SizedBox(height: HabitSpace.s32),
           const _Legend(),
           const SizedBox(height: HabitSpace.s32),
@@ -146,6 +150,16 @@ class _DetailState extends State<_Detail> {
         ],
       ),
     );
+  }
+
+  /// Any day of the shown month whose status the device worked out itself (local months only).
+  static bool _hasProvisional(HabitDetail detail, LocalDate monthStart) {
+    if (monthStart.isBefore(detail.today.addDays(-localHeatmapDays))) return false;
+    final end = _monthEnd(monthStart);
+    for (var d = monthStart; !d.isAfter(end); d = d.addDays(1)) {
+      if (detail.isProvisional(d)) return true;
+    }
+    return false;
   }
 
   static LocalDate _monthStart(LocalDate today, int back) {

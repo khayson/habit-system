@@ -237,6 +237,7 @@
   "streakPause": "A missed day is a pause, not a failure.",
   "olderNeedsConnection": "Older history needs a connection",
   "olderLoading": "Loading older history…",
+  "heatmapProvisional": "Some days are counted on this device and are confirmed after syncing.",
 
   "historyTitle": "Your history",
   "historySubtitle": "Check-ins stay editable and traceable.",

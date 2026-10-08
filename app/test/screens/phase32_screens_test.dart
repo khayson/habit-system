@@ -269,6 +269,11 @@ void main() {
       expect(find.bySemanticsLabel('May 24, 2026, Missed'), findsOneWidget);
       expect(find.bySemanticsLabel('May 28, 2026, Pending, saved on this device'), findsOneWidget);
       expect(find.bySemanticsLabel('May 29, 2026, Upcoming'), findsOneWidget);
+      expect(
+        find.text('Some days are counted on this device and are confirmed after syncing.'),
+        findsOneWidget,
+        reason: 'today is worked out on this device',
+      );
       expect(find.text('✱'), findsOneWidget, reason: 'protected has a symbol');
       expect(find.text('–'), findsOneWidget, reason: 'missed has a symbol');
       expect(
@@ -334,7 +339,13 @@ void main() {
         ),
       );
       await settle(tester);
-      expect(find.text('Not due (outline)'), findsOneWidget);
+      for (final line in [
+        'Some days are counted on this device and are confirmed after syncing.',
+        'Not due (outline)',
+      ]) {
+        await tester.scrollUntilVisible(find.text(line), 200);
+        expect(find.text(line), findsOneWidget);
+      }
       expect(tester.takeException(), isNull);
       await tearDownApp(tester, account);
     });
