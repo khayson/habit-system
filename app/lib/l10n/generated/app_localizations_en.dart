@@ -831,4 +831,128 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get newHabitCreate => 'Create habit';
+
+  @override
+  String get reminderBody => 'A gentle reminder for today.';
+
+  @override
+  String get remindersTitle => 'Local reminders';
+
+  @override
+  String get remindersNotAllowed => 'Not allowed yet';
+
+  @override
+  String get remindersAllowed => 'Allowed';
+
+  @override
+  String get remindersOff => 'Off in device settings';
+
+  @override
+  String get remindersAllow => 'Allow';
+
+  @override
+  String get remindersOpenSettings => 'Open settings';
+
+  @override
+  String get remindersOfflineTitle => 'Reminders work offline';
+
+  @override
+  String get remindersOfflineBody =>
+      'Delivery also depends on device permissions and battery settings. You can skip this for now.';
+
+  @override
+  String get remindersLater => 'Set up reminders later';
+
+  @override
+  String get reminderEditorTitle => 'Gentle reminders';
+
+  @override
+  String reminderEditorSubtitle(String habit) {
+    return '$habit · notifications stay on your device.';
+  }
+
+  @override
+  String get reminderNewHabit => 'Your new habit';
+
+  @override
+  String get reminderDeniedTitle => 'Notifications are off';
+
+  @override
+  String get reminderDeniedBody =>
+      'Enable notifications in device settings before these reminders can appear.';
+
+  @override
+  String get reminderOpenDeviceSettings => 'Open device settings';
+
+  @override
+  String get reminderAskTitle => 'Notifications are not allowed yet';
+
+  @override
+  String get reminderAskBody =>
+      'These reminders appear once notifications are allowed on this device.';
+
+  @override
+  String reminderNext(String when) {
+    return 'Next reminder: $when';
+  }
+
+  @override
+  String get reminderEveryDay => 'Repeat every day';
+
+  @override
+  String get reminderWeekdays => 'Repeat on weekdays';
+
+  @override
+  String reminderOnDays(String days) {
+    return 'Repeat on $days';
+  }
+
+  @override
+  String reminderChooseTime(String time) {
+    return 'Choose the reminder time, now $time';
+  }
+
+  @override
+  String reminderDayLabel(String day, String state) {
+    return '$day, $state';
+  }
+
+  @override
+  String get reminderDayOn => 'on';
+
+  @override
+  String get reminderDayOff => 'off';
+
+  @override
+  String get reminderEnabled => 'Reminder enabled';
+
+  @override
+  String get reminderReadyWhenAllowed => 'Ready when permission is allowed';
+
+  @override
+  String get reminderOnThisDevice => 'Arrives on this device';
+
+  @override
+  String get reminderOther => 'Other reminders';
+
+  @override
+  String get reminderNote =>
+      'Local reminders do not depend on a network connection. Battery settings may delay delivery.';
+
+  @override
+  String get reminderSave => 'Save reminder';
+
+  @override
+  String get reminderNeedsDay => 'Choose at least one day.';
+
+  @override
+  String get reminderRow => 'Reminder';
+
+  @override
+  String get reminderRowNone => 'Not set';
+
+  @override
+  String reminderRowSet(String time) {
+    return '$time · local device time';
+  }
 }

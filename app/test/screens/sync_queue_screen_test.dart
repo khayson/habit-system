@@ -4,6 +4,7 @@ import 'package:habit/sync/outbox_states.dart';
 
 import '../support/app_harness.dart';
 import '../support/fake_sync_server.dart';
+import '../support/fake_notification_scheduler.dart';
 
 /// Screen 18: counts, the queued changes, offline and paused states, discard and try again.
 void main() {
@@ -16,6 +17,7 @@ void main() {
         session: (await testAccount(FakeSyncServer())).session,
         transport: OfflineTransport(),
         refreshIfStale: () async {},
+        notifications: FakeNotificationScheduler(),
         connectivity: online.stream,
         clock: () => testNow,
       ),

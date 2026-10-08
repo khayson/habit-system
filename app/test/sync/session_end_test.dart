@@ -14,6 +14,7 @@ import '../core/api_client_test.dart' show MemoryTokenStore;
 import '../services/auth_service_test.dart' show MemoryAccountStore;
 import '../support/app_harness.dart';
 import '../support/route_adapter.dart';
+import '../support/fake_notification_scheduler.dart';
 
 /// G1: one owner for "what a 401 means", proven with the real ApiClient, HttpSyncTransport,
 /// AuthService and SessionProvider over a scripted HTTP adapter.
@@ -47,6 +48,7 @@ void main() {
         session: s,
         transport: HttpSyncTransport(api.dio, currentToken: api.currentToken),
         refreshIfStale: () async {},
+        notifications: FakeNotificationScheduler(),
         clock: () => testNow,
       ),
     );

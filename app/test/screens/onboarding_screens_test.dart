@@ -15,6 +15,7 @@ import '../services/auth_service_test.dart' show MemoryAccountStore;
 import '../support/app_harness.dart';
 import '../support/fake_sync_server.dart';
 import '../support/route_adapter.dart';
+import '../support/fake_notification_scheduler.dart';
 
 /// Screens 02, 03, 04 and 08 through the real session, router redirect and auth service, with
 /// HTTP answered by a scripted adapter.
@@ -23,6 +24,7 @@ void main() {
 
   late RouteAdapter http;
   late SessionProvider session;
+  late FakeNotificationScheduler os;
   late List<AppDatabase> opened;
   late FakeSyncServer server;
 
@@ -45,12 +47,14 @@ void main() {
       },
       clock: () => testNow,
     );
+    os = FakeNotificationScheduler();
     session = SessionProvider(
       auth,
       buildAccount: (s) => AccountContext(
         session: s,
         transport: server,
         refreshIfStale: () async {},
+        notifications: os,
         clock: () => testNow,
       ),
     );
@@ -125,6 +129,30 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Welcome back'), findsOneWidget);
+    await finish(tester);
+  });
+
+  testWidgets('04: "Set up reminders later" continues, is remembered and never prompts', (
+    tester,
+  ) async {
+    http.on('POST /auth/register', Reply(201, sessionBody()));
+    await tester.pumpWidget(app(tester, Routes.createAccount));
+    await settle(tester);
+    final fields = find.byType(TextFormField);
+    await tester.enterText(fields.at(0), 'Maya Chen');
+    await tester.enterText(fields.at(1), 'maya@example.com');
+    await tester.enterText(fields.at(2), 'twelve-chars-or-more');
+    await tester.tap(find.byType(Checkbox));
+    await tester.tap(find.text('Create account').last);
+    await settle(tester);
+    expect(find.text('Not allowed yet'), findsOneWidget);
+
+    await tester.tap(find.text('Set up reminders later'));
+    await settle(tester);
+
+    expect(find.text('Your first step'), findsOneWidget, reason: 'continued to 23');
+    expect(os.requests, 0, reason: 'no prompt');
+    expect(await tester.runAsync(() => session.account!.permission.later), isTrue);
     await finish(tester);
   });
 

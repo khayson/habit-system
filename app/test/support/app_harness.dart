@@ -17,6 +17,7 @@ import 'package:habit/sync/sync_engine.dart';
 import 'package:habit/sync/sync_transport.dart';
 import 'package:provider/provider.dart';
 
+import 'fake_notification_scheduler.dart';
 import 'fake_sync_server.dart';
 
 /// 17:22 UTC on 28 May 2026 is 10:22 in Los Angeles (the design file's clock).
@@ -33,6 +34,7 @@ Future<AccountContext> testAccount(
   FakeSyncServer server, {
   Stream<bool>? connectivity,
   DateTime Function()? clock,
+  FakeNotificationScheduler? notifications,
 }) async {
   // Widget tests: streams must close synchronously or closing the database waits forever on a
   // query parked in fake async (drift docs, "Testing").
@@ -51,6 +53,7 @@ Future<AccountContext> testAccount(
     refreshIfStale: () async {},
     connectivity: connectivity,
     clock: clock ?? () => testNow,
+    notifications: notifications ?? FakeNotificationScheduler(),
   );
 }
 

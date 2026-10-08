@@ -7,6 +7,7 @@ import '../screens/create_habit_screen.dart';
 import '../screens/habit_detail_screen.dart';
 import '../screens/habit_library_screen.dart';
 import '../screens/history_screen.dart';
+import '../screens/reminder_editor_screen.dart';
 import '../screens/server_status_screen.dart';
 import '../screens/sign_in_screen.dart';
 import '../screens/sync_queue_screen.dart';
@@ -28,6 +29,9 @@ abstract final class Routes {
     queryParameters: date == null ? null : {'date': date},
   ).toString();
   static const queue = '/sync';
+
+  /// Screen 11 for 08's reminder draft (extra: (ReminderDraft?, habit name)).
+  static const reminderEditor = '/reminders/edit';
 
   /// The Phase 0 connection check, kept for diagnostics.
   static const status = '/status';
@@ -101,6 +105,15 @@ List<RouteBase> appRoutes({
             HabitDetailScreen(habitId: state.pathParameters['id']!, clock: clock),
       ),
     ],
+  ),
+  GoRoute(
+    path: Routes.reminderEditor,
+    builder: (context, state) {
+      final (draft, name) = state.extra is (ReminderDraft?, String)
+          ? state.extra! as (ReminderDraft?, String)
+          : (null, '');
+      return ReminderEditorScreen(draft: draft, habitName: name, clock: clock);
+    },
   ),
   GoRoute(path: Routes.queue, builder: (context, state) => const SyncQueueScreen()),
   GoRoute(path: Routes.status, builder: (context, state) => const ServerStatusScreen()),

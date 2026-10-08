@@ -1501,6 +1501,222 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Create habit'**
   String get newHabitCreate;
+
+  /// No description provided for @reminderBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A gentle reminder for today.'**
+  String get reminderBody;
+
+  /// No description provided for @remindersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Local reminders'**
+  String get remindersTitle;
+
+  /// No description provided for @remindersNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Not allowed yet'**
+  String get remindersNotAllowed;
+
+  /// No description provided for @remindersAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed'**
+  String get remindersAllowed;
+
+  /// No description provided for @remindersOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off in device settings'**
+  String get remindersOff;
+
+  /// No description provided for @remindersAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get remindersAllow;
+
+  /// No description provided for @remindersOpenSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get remindersOpenSettings;
+
+  /// No description provided for @remindersOfflineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders work offline'**
+  String get remindersOfflineTitle;
+
+  /// No description provided for @remindersOfflineBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery also depends on device permissions and battery settings. You can skip this for now.'**
+  String get remindersOfflineBody;
+
+  /// No description provided for @remindersLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up reminders later'**
+  String get remindersLater;
+
+  /// No description provided for @reminderEditorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Gentle reminders'**
+  String get reminderEditorTitle;
+
+  /// No description provided for @reminderEditorSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{habit} · notifications stay on your device.'**
+  String reminderEditorSubtitle(String habit);
+
+  /// No description provided for @reminderNewHabit.
+  ///
+  /// In en, this message translates to:
+  /// **'Your new habit'**
+  String get reminderNewHabit;
+
+  /// No description provided for @reminderDeniedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are off'**
+  String get reminderDeniedTitle;
+
+  /// No description provided for @reminderDeniedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable notifications in device settings before these reminders can appear.'**
+  String get reminderDeniedBody;
+
+  /// No description provided for @reminderOpenDeviceSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open device settings'**
+  String get reminderOpenDeviceSettings;
+
+  /// No description provided for @reminderAskTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are not allowed yet'**
+  String get reminderAskTitle;
+
+  /// No description provided for @reminderAskBody.
+  ///
+  /// In en, this message translates to:
+  /// **'These reminders appear once notifications are allowed on this device.'**
+  String get reminderAskBody;
+
+  /// No description provided for @reminderNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next reminder: {when}'**
+  String reminderNext(String when);
+
+  /// No description provided for @reminderEveryDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat every day'**
+  String get reminderEveryDay;
+
+  /// No description provided for @reminderWeekdays.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat on weekdays'**
+  String get reminderWeekdays;
+
+  /// No description provided for @reminderOnDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat on {days}'**
+  String reminderOnDays(String days);
+
+  /// No description provided for @reminderChooseTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the reminder time, now {time}'**
+  String reminderChooseTime(String time);
+
+  /// No description provided for @reminderDayLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{day}, {state}'**
+  String reminderDayLabel(String day, String state);
+
+  /// No description provided for @reminderDayOn.
+  ///
+  /// In en, this message translates to:
+  /// **'on'**
+  String get reminderDayOn;
+
+  /// No description provided for @reminderDayOff.
+  ///
+  /// In en, this message translates to:
+  /// **'off'**
+  String get reminderDayOff;
+
+  /// No description provided for @reminderEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder enabled'**
+  String get reminderEnabled;
+
+  /// No description provided for @reminderReadyWhenAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready when permission is allowed'**
+  String get reminderReadyWhenAllowed;
+
+  /// No description provided for @reminderOnThisDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrives on this device'**
+  String get reminderOnThisDevice;
+
+  /// No description provided for @reminderOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other reminders'**
+  String get reminderOther;
+
+  /// No description provided for @reminderNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Local reminders do not depend on a network connection. Battery settings may delay delivery.'**
+  String get reminderNote;
+
+  /// No description provided for @reminderSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save reminder'**
+  String get reminderSave;
+
+  /// No description provided for @reminderNeedsDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose at least one day.'**
+  String get reminderNeedsDay;
+
+  /// No description provided for @reminderRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder'**
+  String get reminderRow;
+
+  /// No description provided for @reminderRowNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get reminderRowNone;
+
+  /// No description provided for @reminderRowSet.
+  ///
+  /// In en, this message translates to:
+  /// **'{time} · local device time'**
+  String reminderRowSet(String time);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

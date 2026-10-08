@@ -57,7 +57,11 @@ class SessionProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> signOut() => _auth.signOut();
+  /// Logout ends this account's reminders first (Phase 3.2b); the database stays on the device.
+  Future<void> signOut() async {
+    await _account?.endForLogout();
+    await _auth.signOut();
+  }
 
   /// The ApiClient saw the server reject the stored token (it owns that decision, G1).
   Future<void> handleUnauthenticated() => _auth.logout();

@@ -9,6 +9,7 @@ import '../core/time_zones.dart';
 import '../data/account_calendar.dart';
 import '../data/timezone_view.dart';
 import '../l10n/generated/app_localizations.dart';
+import '../notifications/notification_scheduler.dart';
 import '../providers/account_context.dart';
 import '../providers/session_provider.dart';
 import '../providers/stream_model.dart';
@@ -146,19 +147,33 @@ class _Timezone extends StatelessWidget {
                 ),
               ),
             ),
+            const SizedBox(height: HabitSpace.s24),
+            const _ReminderBlock(),
             const SizedBox(height: HabitSpace.s48),
-            PrimaryButton(
-              label: l10n.setupContinue,
-              onPressed: () {
-                final session = context.read<SessionProvider>();
-                if (session.needsSetup) session.completeSetup();
-                context.canPop() ? context.pop() : context.go(Routes.today);
-              },
+            PrimaryButton(label: l10n.setupContinue, onPressed: () => _continue(context)),
+            const SizedBox(height: HabitSpace.s16),
+            Center(
+              child: TextButton(
+                onPressed: () async {
+                  await account.permission.setUpLater();
+                  if (context.mounted) _continue(context);
+                },
+                style: TextButton.styleFrom(
+                  minimumSize: const Size(HabitSize.minTarget, HabitSize.minTarget),
+                ),
+                child: Text(l10n.remindersLater),
+              ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  static void _continue(BuildContext context) {
+    final session = context.read<SessionProvider>();
+    if (session.needsSetup) session.completeSetup();
+    context.canPop() ? context.pop() : context.go(Routes.today);
   }
 
   Future<void> _edit(BuildContext context, AccountContext account, TimezoneStatus status) async {
@@ -170,6 +185,102 @@ class _Timezone extends StatelessWidget {
     );
     if (chosen == null || chosen == status.target) return;
     await account.actions.setTimezone(chosen);
+  }
+}
+
+/// 04's reminder block (Phase 3.2b): the device's notification state, Allow only on a tap (one
+/// OS prompt per device), Settings after a refusal, and why reminders still work offline.
+class _ReminderBlock extends StatefulWidget {
+  const _ReminderBlock();
+
+  @override
+  State<_ReminderBlock> createState() => _ReminderBlockState();
+}
+
+class _ReminderBlockState extends State<_ReminderBlock> with WidgetsBindingObserver {
+  NotificationPermission? _state;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _refresh());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _refresh();
+  }
+
+  Future<void> _refresh() async {
+    final account = context.read<AccountContext?>();
+    if (account == null) return;
+    final state = await account.permission.state();
+    if (mounted) setState(() => _state = state);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final text = Theme.of(context).textTheme;
+    final tokens = HabitTokens.of(context);
+    final account = context.read<AccountContext?>()!;
+    final state = _state;
+    final allowed =
+        state == NotificationPermission.authorized || state == NotificationPermission.provisional;
+    final (status, action) = switch (state) {
+      _ when allowed => (l10n.remindersAllowed, null),
+      NotificationPermission.denied => (l10n.remindersOff, l10n.remindersOpenSettings),
+      _ => (l10n.remindersNotAllowed, l10n.remindersAllow),
+    };
+    return Column(
+      children: [
+        SurfaceCard(
+          child: Row(
+            children: [
+              const ExcludeSemantics(
+                child: IconTile(icon: Icons.notifications_none, tone: Tone.warning),
+              ),
+              const SizedBox(width: HabitSpace.s16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(l10n.remindersTitle, style: text.titleMedium),
+                    const SizedBox(height: HabitSpace.s4),
+                    Text(status, style: text.bodySmall?.copyWith(color: tokens.muted)),
+                  ],
+                ),
+              ),
+              if (action != null)
+                TextButton(
+                  onPressed: () async {
+                    final next = await account.permission.allow();
+                    if (mounted) setState(() => _state = next);
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: tokens.warningInk,
+                    minimumSize: const Size(HabitSize.minTarget, HabitSize.minTarget),
+                  ),
+                  child: Text(action),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: HabitSpace.s24),
+        InfoCard(
+          title: l10n.remindersOfflineTitle,
+          body: l10n.remindersOfflineBody,
+          tone: Tone.info,
+        ),
+      ],
+    );
   }
 }
 

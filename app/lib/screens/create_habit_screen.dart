@@ -10,6 +10,10 @@ import '../l10n/generated/app_localizations.dart';
 import '../providers/account_context.dart';
 import '../widgets/habit_ui.dart';
 
+import 'package:intl/intl.dart';
+
+import 'reminder_editor_screen.dart';
+
 /// Screen 08, minimal (Phase 2b.1 review §6): name, category, and a yes/no habit every day. Type,
 /// target, schedule and reminder editing arrive with Phase 4 and screens 10/11. Creating writes
 /// locally first (works offline) and returns to Today.
@@ -25,6 +29,7 @@ class _CreateHabitScreenState extends State<CreateHabitScreen> {
   final _name = TextEditingController();
   String _category = 'health';
   bool _busy = false;
+  ReminderDraft? _reminder;
 
   /// The design's three categories, mapped to the API's values.
   static const _categories = ['health', 'mindfulness', 'learning'];
@@ -40,7 +45,14 @@ class _CreateHabitScreenState extends State<CreateHabitScreen> {
     setState(() => _busy = true);
     try {
       await TimeZones.ready;
-      await account.actions.createOneTapHabit(name: _name.text, category: _category);
+      final reminder = _reminder;
+      await account.actions.createOneTapHabit(
+        name: _name.text,
+        category: _category,
+        reminderTime: reminder?.localTime,
+        reminderDays: reminder?.days ?? const [1, 2, 3, 4, 5, 6, 7],
+        reminderEnabled: reminder?.enabled ?? true,
+      );
       if (!mounted) return;
       if (context.canPop()) {
         context.pop();
@@ -134,6 +146,53 @@ class _CreateHabitScreenState extends State<CreateHabitScreen> {
                           ),
                         ],
                       ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: HabitSpace.s16),
+              SurfaceCard(
+                child: Row(
+                  children: [
+                    const ExcludeSemantics(child: IconTile(icon: Icons.notifications_none)),
+                    const SizedBox(width: HabitSpace.s16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(l10n.reminderRow, style: text.titleMedium ?? text.bodyLarge),
+                          Text(
+                            _reminder == null
+                                ? l10n.reminderRowNone
+                                : l10n.reminderRowSet(
+                                    DateFormat.jm(Localizations.localeOf(context).toLanguageTag())
+                                        .format(
+                                          DateTime(
+                                            2026,
+                                            1,
+                                            1,
+                                            _reminder!.minuteOfDay ~/ 60,
+                                            _reminder!.minuteOfDay % 60,
+                                          ),
+                                        ),
+                                  ),
+                            style: text.bodySmall?.copyWith(color: tokens.muted),
+                          ),
+                        ],
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        final draft = await context.push<ReminderDraft>(
+                          Routes.reminderEditor,
+                          extra: (_reminder, _name.text),
+                        );
+                        if (draft != null && mounted) setState(() => _reminder = draft);
+                      },
+                      style: TextButton.styleFrom(
+                        minimumSize: const Size(HabitSize.minTarget, HabitSize.minTarget),
+                      ),
+                      child: Text(l10n.setupEdit),
                     ),
                   ],
                 ),

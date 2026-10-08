@@ -37,17 +37,37 @@ class HabitActions {
   }
 
   /// The minimal editor (2b.2): a one-tap habit, daily, starting today in the account calendar.
-  Future<String> createOneTapHabit({required String name, required String category}) async {
+  /// With a reminder (08's Reminder row, 3.2b) both are written in one transaction; the
+  /// reminder follows the device's local time, as the design's row says.
+  Future<String> createOneTapHabit({
+    required String name,
+    required String category,
+    String? reminderTime,
+    List<int> reminderDays = const [1, 2, 3, 4, 5, 6, 7],
+    bool reminderEnabled = true,
+  }) async {
     final rules = types.all.firstWhere((r) => r.oneTap);
     final calendar = await AccountCalendar.load(writer.db, deviceNow: _clock());
     if (calendar == null) throw StateError('The account calendar is not known yet.');
-    final id = await writer.createHabit(
-      name: name.trim(),
-      type: rules.key,
-      target: rules.formatValue(1),
-      category: category,
-      startLocalDate: calendar.today(_clock()),
-    );
+    final id = await writer.db.transaction(() async {
+      final habit = await writer.createHabit(
+        name: name.trim(),
+        type: rules.key,
+        target: rules.formatValue(1),
+        category: category,
+        startLocalDate: calendar.today(_clock()),
+      );
+      if (reminderTime != null) {
+        await writer.createReminder(
+          habitId: habit,
+          localTime: reminderTime,
+          daysOfWeek: reminderDays,
+          timezoneMode: 'device_zone',
+          enabled: reminderEnabled,
+        );
+      }
+      return habit;
+    });
     onLocalWrite();
     return id;
   }
