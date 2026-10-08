@@ -11,7 +11,9 @@ class SessionProvider extends ChangeNotifier {
   final AuthService _auth;
   final AccountContext Function(AccountSession session) _buildAccount;
 
-  SessionProvider(this._auth, {required this._buildAccount});
+  SessionProvider(this._auth, {required this._buildAccount}) {
+    _auth.onSessionEnded = _ended;
+  }
 
   AccountContext? _account;
   bool _needsSetup = false;
@@ -55,17 +57,13 @@ class SessionProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> signOut() async {
-    _close();
-    await _auth.signOut();
-  }
+  Future<void> signOut() => _auth.signOut();
 
-  /// The server rejected the stored token (the ApiClient has cleared it).
-  void handleUnauthenticated() {
-    if (_account == null) return;
-    _close();
-    _auth.logout();
-  }
+  /// The ApiClient saw the server reject the stored token (it owns that decision, G1).
+  Future<void> handleUnauthenticated() => _auth.logout();
+
+  /// The single place a session ends in the UI: user sign-out and a rejected token alike.
+  void _ended() => _close();
 
   void _open(AccountSession session) {
     if (_account?.session.userId != session.userId) {

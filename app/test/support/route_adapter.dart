@@ -22,6 +22,9 @@ class RouteAdapter implements HttpClientAdapter {
   final Map<String, List<Reply>> _routes = {};
   final List<RequestOptions> requests = [];
 
+  /// Runs before each reply is produced (e.g. another caller rotating the token meanwhile).
+  void Function(RequestOptions request)? beforeReply;
+
   void on(String route, Reply reply) => _routes.putIfAbsent(route, () => []).add(reply);
 
   List<RequestOptions> sent(String route) =>
@@ -38,6 +41,7 @@ class RouteAdapter implements HttpClientAdapter {
     final queue = _routes[route];
     if (queue == null || queue.isEmpty) throw StateError('No reply scripted for $route');
     final reply = queue.length == 1 ? queue.first : queue.removeAt(0);
+    beforeReply?.call(options);
     if (reply.isOffline) {
       throw DioException.connectionError(requestOptions: options, reason: 'offline');
     }

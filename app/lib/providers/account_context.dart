@@ -25,7 +25,6 @@ class AccountContext {
   AccountContext({
     required this.session,
     required SyncTransport transport,
-    required AuthSession auth,
     required Future<void> Function() refreshIfStale,
     Stream<bool>? connectivity,
     DateTime Function()? clock,
@@ -36,7 +35,6 @@ class AccountContext {
          engine: SyncEngine(
            db: session.db,
            transport: transport,
-           auth: auth,
            capabilities: ProvisionalTypeRegistry.builtins().keys.toList(),
            clock: clock,
          ),
@@ -58,8 +56,7 @@ class AccountContext {
   factory AccountContext.live(AccountSession session, ApiClient api, AuthService auth) =>
       AccountContext(
         session: session,
-        transport: HttpSyncTransport(api.dio),
-        auth: auth,
+        transport: HttpSyncTransport(api.dio, currentToken: api.currentToken),
         refreshIfStale: auth.refreshIfStale,
         connectivity: Connectivity().onConnectivityChanged.map(
           (results) => results.any((r) => r != ConnectivityResult.none),

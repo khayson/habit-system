@@ -7,7 +7,6 @@ import '../core/storage/token_store.dart';
 import '../data/app_database.dart';
 import '../data/database_opener.dart';
 import '../sync/sync_engine.dart';
-import '../sync/sync_transport.dart';
 
 /// A signed-in account and its own database (one file per user id).
 class AccountSession {
@@ -27,11 +26,22 @@ class AccountSession {
   });
 }
 
-/// Register, log in, refresh and log out (spec 05, A6, A29). Also the engine's [AuthSession].
+enum RefreshResult {
+  /// A new token is stored.
+  refreshed,
+
+  /// The server refused (401): the session is over.
+  rejected,
+
+  /// No answer. The old token stays usable for the grace window (A29); try again later.
+  unavailable,
+}
+
+/// Register, log in, refresh and log out (spec 05, A6, A29).
 ///
 /// Logging out only forgets the token and which account is current. The account's database
 /// and its outbox stay on disk for when the same owner signs in again (invariant 8).
-class AuthService implements AuthSession {
+class AuthService {
   final ApiClient _api;
   final TokenStore _tokens;
   final AccountStore _accounts;
@@ -111,8 +121,8 @@ class AuthService implements AuthSession {
   /// share one request. The server keeps the old token valid for a 10-minute grace window
   /// (A29), so a lost response or a network failure keeps the stored token and is retried
   /// later. Only a 401 means the session is over; the [ApiClient] has then cleared the token.
-  /// Foreground only: background isolates use [BackgroundAuthSession].
-  @override
+  /// Foreground only: background isolates never refresh (two rotations would leave one of them
+  /// holding a deleted token).
   Future<RefreshResult> refresh() =>
       _refreshing ??= _refresh().whenComplete(() => _refreshing = null);
 
@@ -135,13 +145,17 @@ class AuthService implements AuthSession {
     await refresh();
   }
 
-  /// Ends the session locally (also the engine's answer to a final 401). The database file
-  /// and its outbox stay on disk.
-  @override
+  /// Told once when a session ends, whoever ended it (G1), so the UI never stays on a signed-in
+  /// screen while signed out.
+  void Function()? onSessionEnded;
+
+  /// Ends the session locally. The database file and its outbox stay on disk.
   Future<void> logout() async {
+    final wasSignedIn = _signedIn;
     _signedIn = false;
     await _tokens.clear();
     await _accounts.clearSession();
+    if (wasSignedIn) onSessionEnded?.call();
   }
 
   /// User-initiated sign-out: revoke this device's token (best effort), then [logout].

@@ -61,6 +61,10 @@ class ApiClient {
   /// statuses themselves, i.e. `HttpSyncTransport`. Everything else goes through [get]/[post].
   Dio get dio => _dio;
 
+  /// The stored token (never logged), so the sync transport can tell a rotated token from an
+  /// ended session on 401 (G1).
+  Future<String?> currentToken() => _tokens.read();
+
   /// Key in `RequestOptions.extra` holding the token a request was sent with.
   static const _sentTokenKey = 'habit.sent_token';
 

@@ -5,7 +5,6 @@ import 'package:habit/core/network/api_client.dart';
 import 'package:habit/core/storage/account_store.dart';
 import 'package:habit/data/app_database.dart';
 import 'package:habit/services/auth_service.dart';
-import 'package:habit/sync/sync_transport.dart';
 
 import '../core/api_client_test.dart' show MemoryTokenStore;
 import '../support/route_adapter.dart';

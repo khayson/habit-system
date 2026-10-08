@@ -26,7 +26,7 @@ enum SyncOutcome {
   /// 429; `sync_state.next_sync_at` holds the Retry-After instant.
   rateLimited,
 
-  /// 401 and the single refresh failed; the session ended, the database was kept.
+  /// 401: the session is over (the ApiClient ended it). Database and outbox are kept.
   loggedOut,
 
   /// Three whole-request 4xx in a row: `sync_state.status` is `paused` (F7). Nothing was
@@ -59,7 +59,6 @@ class SyncEngine {
 
   final AppDatabase db;
   final SyncTransport transport;
-  final AuthSession auth;
   final Clock clock;
   final Random random;
   final String ownerId;
@@ -76,7 +75,6 @@ class SyncEngine {
   SyncEngine({
     required this.db,
     required this.transport,
-    required this.auth,
     required this.capabilities,
     Clock? clock,
     Random? random,
@@ -185,7 +183,7 @@ class SyncEngine {
 
   Future<SyncOutcome> _runLocked() async {
     await _recoverInFlight();
-    var refreshed = false;
+    var retriedRotation = false;
     var rebootstraps = 0;
     var chunk = maxChunk;
 
@@ -231,23 +229,17 @@ class SyncEngine {
             );
             continue;
           case SyncFailure.unauthorized:
-            if (!refreshed) {
-              refreshed = true;
-              switch (await auth.refresh()) {
-                case RefreshResult.refreshed:
-                  continue;
-                case RefreshResult.unavailable:
-                  await _updateState(
-                    SyncStateCompanion(
-                      lastError: Value(_error('reauth_needed', 'Sign-in needs refreshing.')),
-                    ),
-                  );
-                  return SyncOutcome.offline;
-                case RefreshResult.rejected:
-                  break;
-              }
+            // G1: the ApiClient owns ending a session. The engine never refreshes or logs out;
+            // it only retries once when the token was rotated while the request was in flight.
+            if (e.tokenRotated && !retriedRotation) {
+              retriedRotation = true;
+              continue;
             }
-            await auth.logout();
+            await _updateState(
+              SyncStateCompanion(
+                lastError: Value(_error('unauthenticated', 'The session has ended.')),
+              ),
+            );
             return SyncOutcome.loggedOut;
           case SyncFailure.payloadTooLarge:
             // HTTP 413: too many mutations in one request. Send fewer.

@@ -229,7 +229,7 @@ class _CountingTransport implements SyncTransport {
   }
 }
 
-class _Device implements AuthSession {
+class _Device {
   _Device(this.name, this.db, this.deviceId, this.dio, this.token)
     : transport = _CountingTransport(HttpSyncTransport(dio));
 
@@ -243,7 +243,6 @@ class _Device implements AuthSession {
   late final engine = SyncEngine(
     db: db,
     transport: transport,
-    auth: this,
     capabilities: ProvisionalTypeRegistry.builtins().keys.toList(),
   );
 
@@ -306,10 +305,4 @@ class _Device implements AuthSession {
       'outbox': (await outbox()).length,
     };
   }
-
-  @override
-  Future<RefreshResult> refresh() async => RefreshResult.rejected;
-
-  @override
-  Future<void> logout() async => _say('$name was logged out');
 }

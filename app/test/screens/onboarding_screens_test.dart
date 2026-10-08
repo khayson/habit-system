@@ -50,7 +50,6 @@ void main() {
       buildAccount: (s) => AccountContext(
         session: s,
         transport: server,
-        auth: auth,
         refreshIfStale: () async {},
         clock: () => testNow,
       ),

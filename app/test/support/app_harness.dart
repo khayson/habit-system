@@ -33,14 +33,6 @@ void loadTestZones() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
 }
 
-class NoRefreshAuth implements AuthSession {
-  @override
-  Future<RefreshResult> refresh() async => RefreshResult.rejected;
-
-  @override
-  Future<void> logout() async {}
-}
-
 /// One signed-in account on an in-memory database, talking to [server].
 Future<AccountContext> testAccount(
   FakeSyncServer server, {
@@ -61,7 +53,6 @@ Future<AccountContext> testAccount(
   return AccountContext(
     session: AccountSession(userId: 'user-1', deviceId: 'd', db: db),
     transport: server,
-    auth: NoRefreshAuth(),
     refreshIfStale: () async {},
     connectivity: connectivity,
     clock: clock ?? () => testNow,

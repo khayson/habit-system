@@ -315,52 +315,31 @@ void main() {
     expect(await phone.outbox(), isEmpty);
   });
 
-  test('401: one refresh, then success', () async {
-    phone.auth.refreshResult = RefreshResult.refreshed;
-    server.failNextBootstrap.add(const SyncTransportException(SyncFailure.unauthorized));
+  test(
+    'G1: a 401 stops with loggedOut; the engine neither refreshes nor clears anything',
+    () async {
+      final habit = await phone.habit();
+      await phone.writer.setLogValue(habitId: habit, value: 1);
+      server.failNextBootstrap.add(const SyncTransportException(SyncFailure.unauthorized));
 
-    expect(await phone.sync(), SyncOutcome.completed);
-    expect(phone.auth.refreshCalls, 1);
-    expect(phone.auth.loggedOut, isFalse);
-  });
+      expect(await phone.sync(), SyncOutcome.loggedOut);
+      expect((await phone.outbox()).map((r) => r.state).toSet(), {OutboxState.pending});
+      expect(jsonDecode((await phone.state()).lastError!)['code'], 'unauthenticated');
+    },
+  );
 
-  test('401 twice: logs out but keeps the database and its outbox', () async {
-    final habit = await phone.habit();
-    await phone.writer.setLogValue(habitId: habit, value: 1);
-    phone.auth.refreshResult = RefreshResult.rejected;
-    server.failNextBootstrap.add(const SyncTransportException(SyncFailure.unauthorized));
-
-    expect(await phone.sync(), SyncOutcome.loggedOut);
-    expect(phone.auth.loggedOut, isTrue);
-    expect((await phone.outbox()).map((r) => r.state).toSet(), {OutboxState.pending});
-  });
-
-  test('401 with the refresh unanswered: offline, still signed in, outbox kept', () async {
-    final habit = await phone.habit();
-    await phone.writer.setLogValue(habitId: habit, value: 1);
-    phone.auth.refreshResult = RefreshResult.unavailable;
-    server.failNextBootstrap.add(const SyncTransportException(SyncFailure.unauthorized));
-
-    expect(await phone.sync(), SyncOutcome.offline);
-    expect(phone.auth.loggedOut, isFalse);
-    expect((await phone.outbox()).map((r) => r.state).toSet(), {OutboxState.pending});
-  });
-
-  test('F5: a background engine never refreshes; it reports and keeps the session', () async {
-    final habit = await phone.habit();
-    await phone.writer.setLogValue(habitId: habit, value: 1);
-    server.failNextBootstrap.add(const SyncTransportException(SyncFailure.unauthorized));
-    final background = SyncEngine(
-      db: phone.db,
-      transport: server,
-      auth: const BackgroundAuthSession(),
-      capabilities: const ['binary'],
-      clock: () => phone.now,
+  test('G1: a 401 after a token rotation is retried once with the stored token', () async {
+    server.failNextBootstrap.add(
+      const SyncTransportException(SyncFailure.unauthorized, tokenRotated: true),
     );
+    expect(await phone.sync(), SyncOutcome.completed);
 
-    expect(await background.run(), SyncOutcome.offline);
-    expect(jsonDecode((await phone.state()).lastError!)['code'], 'reauth_needed');
-    expect((await phone.outbox()).map((r) => r.state).toSet(), {OutboxState.pending});
+    server.failNextSync.addAll(const [
+      SyncTransportException(SyncFailure.unauthorized, tokenRotated: true),
+      SyncTransportException(SyncFailure.unauthorized, tokenRotated: true),
+    ]);
+    await phone.habit();
+    expect(await phone.sync(), SyncOutcome.loggedOut, reason: 'only one retry per run');
   });
 
   test('429 honours Retry-After and leaves rows pending', () async {

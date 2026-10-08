@@ -15,7 +15,6 @@ void main() {
       () async => AccountContext(
         session: (await testAccount(FakeSyncServer())).session,
         transport: OfflineTransport(),
-        auth: NoRefreshAuth(),
         refreshIfStale: () async {},
         connectivity: online.stream,
         clock: () => testNow,

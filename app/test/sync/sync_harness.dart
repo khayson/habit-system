@@ -13,23 +13,6 @@ import 'package:timezone/data/latest_all.dart' as tzdata;
 
 import '../support/fake_sync_server.dart';
 
-class FakeAuth implements AuthSession {
-  RefreshResult refreshResult;
-  int refreshCalls = 0;
-  bool loggedOut = false;
-
-  FakeAuth({this.refreshResult = RefreshResult.rejected});
-
-  @override
-  Future<RefreshResult> refresh() async {
-    refreshCalls++;
-    return refreshResult;
-  }
-
-  @override
-  Future<void> logout() async => loggedOut = true;
-}
-
 /// One device: its account database, writer, view and engine, talking to [server].
 class Device {
   Device(
@@ -41,7 +24,6 @@ class Device {
   final FakeSyncServer server;
   final AppDatabase db;
   final String deviceId;
-  final auth = FakeAuth();
   DateTime now = DateTime.utc(2026, 5, 28, 17, 22);
 
   late final writer = LocalMutationService(db, clock: () => now);
@@ -66,7 +48,6 @@ class Device {
   }) => SyncEngine(
     db: db,
     transport: transport ?? server,
-    auth: auth,
     capabilities: const ['binary', 'quantity', 'duration'],
     clock: () => now,
     random: Random(1),

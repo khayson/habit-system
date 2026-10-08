@@ -6,12 +6,16 @@ import 'sync_transport.dart';
 /// class serves the app, background isolates and the command-line smoke run.
 ///
 /// [dio] must already carry the base URL and the bearer token (the app passes
-/// `ApiClient.dio`). Transport failures become [SyncTransportException]; the engine decides
-/// what each one means for the outbox.
+/// `ApiClient.dio`, whose interceptor owns ending a session on 401). Transport failures become
+/// [SyncTransportException]; the engine decides what each one means for the outbox.
+///
+/// [currentToken] reads the stored token, so a 401 can tell "this request's token was rotated
+/// meanwhile" (retry once) from "the session is over" (G1).
 class HttpSyncTransport implements SyncTransport {
   final Dio _dio;
+  final Future<String?> Function()? _currentToken;
 
-  HttpSyncTransport(this._dio);
+  HttpSyncTransport(this._dio, {this._currentToken});
 
   @override
   Future<SyncPage> sync({
@@ -58,7 +62,7 @@ class HttpSyncTransport implements SyncTransport {
     try {
       response = await request();
     } on DioException catch (e) {
-      throw _failure(e);
+      throw await _failure(e);
     }
     final body = response.data;
     final data = body is Map ? body['data'] : null;
@@ -69,12 +73,16 @@ class HttpSyncTransport implements SyncTransport {
     return (data.cast<String, dynamic>(), serverTimeOf(body));
   }
 
-  static SyncTransportException _failure(DioException e) {
+  Future<SyncTransportException> _failure(DioException e) async {
     final response = e.response;
     if (response == null) return const SyncTransportException(SyncFailure.network);
     final time = serverTimeOf(response.data);
     return switch (response.statusCode ?? 0) {
-      401 => SyncTransportException(SyncFailure.unauthorized, serverTime: time),
+      401 => SyncTransportException(
+        SyncFailure.unauthorized,
+        serverTime: time,
+        tokenRotated: await _rotated(e.requestOptions),
+      ),
       410 => SyncTransportException(SyncFailure.cursorExpired, serverTime: time),
       413 => SyncTransportException(SyncFailure.payloadTooLarge, serverTime: time),
       429 => SyncTransportException(
@@ -89,6 +97,12 @@ class HttpSyncTransport implements SyncTransport {
       ),
       _ => SyncTransportException(SyncFailure.server, serverTime: time),
     };
+  }
+
+  Future<bool> _rotated(RequestOptions request) async {
+    final current = await _currentToken?.call();
+    if (current == null) return false;
+    return request.headers['Authorization'] != 'Bearer $current';
   }
 
   static String? _code(Object? body) {

@@ -12,41 +12,9 @@ abstract interface class SyncTransport {
   Future<BootstrapPage> bootstrap({required String? cursor, required int limit});
 }
 
-/// Re-authentication hooks the engine uses on 401 (A6).
-abstract interface class AuthSession {
-  /// One refresh attempt.
-  Future<RefreshResult> refresh();
-
-  /// Ends the session but keeps the per-account database and its outbox.
-  Future<void> logout();
-}
-
-/// The [AuthSession] for background isolates (F5). They never refresh: two isolates rotating
-/// one device token would leave one of them holding a deleted token. On 401 the run stops as
-/// offline with `sync_state.last_error = reauth_needed`, and the foreground app refreshes.
-class BackgroundAuthSession implements AuthSession {
-  const BackgroundAuthSession();
-
-  @override
-  Future<RefreshResult> refresh() async => RefreshResult.unavailable;
-
-  @override
-  Future<void> logout() async {}
-}
-
-enum RefreshResult {
-  /// A new token is stored; retry the request.
-  refreshed,
-
-  /// The server refused (401): the session is over.
-  rejected,
-
-  /// No answer. The old token stays usable for the grace window (A29); try again later.
-  unavailable,
-}
-
 enum SyncFailure {
-  /// 401: missing, expired or revoked token.
+  /// 401: missing, expired or revoked token. The ApiClient has already ended the session
+  /// unless [SyncTransportException.tokenRotated] (G1).
   unauthorized,
 
   /// 410: the cursor cannot be honoured; bootstrap (A29).
@@ -79,7 +47,17 @@ class SyncTransportException implements Exception {
   /// `meta.server_time` of the error response, when there was one (F10).
   final DateTime? serverTime;
 
-  const SyncTransportException(this.kind, {this.retryAfter, this.code, this.serverTime});
+  /// For a 401: the stored token is no longer the one this request carried (another caller
+  /// rotated it meanwhile), so one retry with the stored token is worth it (G1).
+  final bool tokenRotated;
+
+  const SyncTransportException(
+    this.kind, {
+    this.retryAfter,
+    this.code,
+    this.serverTime,
+    this.tokenRotated = false,
+  });
 
   @override
   String toString() => 'SyncTransportException($kind${code == null ? '' : ', $code'})';
