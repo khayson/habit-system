@@ -24,13 +24,13 @@ final readonly class HeatmapService
 {
     public const int MAX_DAYS = 366;
 
-    /** Plain, neutral wording: a missed day is a pause, not a failure (design file). */
+    /** The design file's legend words (screen 12); pending is the open status. */
     public const array LEGEND = [
-        ['status' => 'complete', 'label' => 'Completed'],
-        ['status' => 'protected', 'label' => 'Protected by a freeze'],
-        ['status' => 'missed', 'label' => 'Not completed'],
-        ['status' => 'not_due', 'label' => 'Not scheduled'],
-        ['status' => 'pending', 'label' => 'Still open'],
+        ['status' => 'complete', 'label' => 'Complete'],
+        ['status' => 'protected', 'label' => 'Protected'],
+        ['status' => 'missed', 'label' => 'Missed'],
+        ['status' => 'not_due', 'label' => 'Not due'],
+        ['status' => 'pending', 'label' => 'Pending'],
     ];
 
     public function __construct(

@@ -42,7 +42,7 @@ it('gives every date a status with a text legend', function () {
         '2026-05-29' => 'pending',   // future
     ])->and($data['today'])->toBe('2026-05-28')
         ->and(array_column($data['legend'], 'status'))->toBe(['complete', 'protected', 'missed', 'not_due', 'pending'])
-        ->and(collect($data['legend'])->every(fn ($l) => $l['label'] !== ''))->toBeTrue();
+        ->and(array_column($data['legend'], 'label'))->toBe(['Complete', 'Protected', 'Missed', 'Not due', 'Pending']);
 });
 
 it('shows today as still open until it is done', function () {
