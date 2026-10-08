@@ -805,6 +805,26 @@ void main() {
       expect((await phone.state()).appVersion, '1.1.0');
     });
 
+    test('H4: a replay the database refuses never blocks the sync', () async {
+      await phone.engine(appVersion: '1.0.0').run();
+      await storeUndecodable('undecodable:habit', 'h-boom', {
+        ...habitChange('h-boom'),
+        'payload': {'id': 'h-boom', 'name': 'BOOM', 'type': 'binary', 'version': 2},
+      });
+      await storeUndecodable('undecodable:habit', 'h-fine', habitChange('h-fine'));
+      await phone.db.customStatement(
+        "CREATE TRIGGER boom BEFORE INSERT ON habits WHEN NEW.name = 'BOOM' "
+        "BEGIN SELECT RAISE(ABORT, 'boom'); END",
+      );
+
+      expect(await phone.engine(appVersion: '1.1.0').run(), SyncOutcome.completed);
+
+      expect((await phone.state()).appVersion, '1.1.0');
+      final left = await phone.db.select(phone.db.opaqueEntities).get();
+      expect(left.map((o) => o.entityId), ['h-boom'], reason: 'kept for a later build');
+      expect((await phone.db.select(phone.db.habits).get()).map((h) => h.id), ['h-fine']);
+    });
+
     test('a replayed item older than the confirmed row changes nothing', () async {
       await phone.engine(appVersion: '1.0.0').run();
       await phone.db.customStatement(

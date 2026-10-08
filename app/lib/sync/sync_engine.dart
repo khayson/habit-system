@@ -682,39 +682,43 @@ class SyncEngine {
   Future<void> _replayAfterUpdate() async {
     final version = appVersion;
     if (version == null || (await _state()).appVersion == version) return;
-    await db.transaction(() async {
-      final stored = await (db.select(
-        db.opaqueEntities,
-      )..where((o) => o.entityType.like('undecodable:%'))).get();
-      for (final row in stored) {
-        final entity = row.entityType.substring('undecodable:'.length);
-        final raw = EntityCodec.decodeJson(row.payload);
-        if (raw is! Map || entity == 'unknown') continue;
-        final item = raw.cast<String, dynamic>();
-        // A pulled change carries entity/version/payload; a bootstrap item is the payload.
-        final change = item.containsKey('payload') && item.containsKey('entity')
-            ? item
-            : {
-                'entity': entity,
-                'id': item['id'],
-                'version': item['version'],
-                'operation': 'upsert',
-                'payload': item,
-              };
-        try {
+    final stored = await (db.select(
+      db.opaqueEntities,
+    )..where((o) => o.entityType.like('undecodable:%'))).get();
+    for (final row in stored) {
+      final entity = row.entityType.substring('undecodable:'.length);
+      final raw = EntityCodec.decodeJson(row.payload);
+      if (raw is! Map || entity == 'unknown') continue;
+      final item = raw.cast<String, dynamic>();
+      // A pulled change carries entity/version/payload; a bootstrap item is the payload.
+      final change = item.containsKey('payload') && item.containsKey('entity')
+          ? item
+          : {
+              'entity': entity,
+              'id': item['id'],
+              'version': item['version'],
+              'operation': 'upsert',
+              'payload': item,
+            };
+      try {
+        // One transaction per item: a failure rolls back only that item.
+        await db.transaction(() async {
           await (entity == 'user'
               ? _applyUser((change['payload'] as Map).cast<String, dynamic>())
               : _applyChange(change));
-        } on Object catch (e) {
-          if (!_isDecodeError(e)) rethrow;
-          continue; // still unreadable: keep it for a later build
-        }
-        await (db.delete(db.opaqueEntities)
-              ..where((o) => o.entityType.equals(row.entityType) & o.entityId.equals(row.entityId)))
-            .go();
+          await (db.delete(db.opaqueEntities)..where(
+                (o) => o.entityType.equals(row.entityType) & o.entityId.equals(row.entityId),
+              ))
+              .go();
+        });
+      } on Object {
+        // H4: still unreadable, or the database refused it. Keep it for a later build; a
+        // replay problem never blocks a sync.
+        continue;
       }
-      await _updateState(SyncStateCompanion(appVersion: Value(version)));
-    });
+    }
+    // Stored whatever happened above, so a stubborn item is not retried on every run.
+    await _updateState(SyncStateCompanion(appVersion: Value(version)));
   }
 
   static bool _isDecodeError(Object e) =>
