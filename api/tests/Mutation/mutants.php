@@ -97,7 +97,7 @@ return [
     [
         'name' => 'A26: a calendar change takes effect at the request instant',
         'file' => 'app/Domain/Calendar/CalendarHistory.php',
-        'search' => '$effectiveAt = $current->startOfLocalDay($current->localDateAt($now)->addDays(1));',
+        'search' => '$effectiveAt = $current->nextDayStartAfter($now);',
         'replace' => '$effectiveAt = $now;',
     ],
     [

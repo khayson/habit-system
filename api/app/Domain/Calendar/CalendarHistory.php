@@ -34,7 +34,7 @@ final readonly class CalendarHistory
             return new CalendarChange($current, null, $pending !== []);
         }
 
-        $effectiveAt = $current->startOfLocalDay($current->localDateAt($now)->addDays(1));
+        $effectiveAt = $current->nextDayStartAfter($now);
         $entry = new CalendarEntry($effectiveAt, $timezone, $dayStartOffsetMinutes);
         $same = count($pending) === 1
             && $pending[0]->timezone === $timezone

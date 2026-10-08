@@ -114,6 +114,21 @@ final readonly class TimezoneTimeline
         return self::startFor($date, $this->entries[0] ?? throw new DayResolutionException('no_calendar'));
     }
 
+    /**
+     * The start of the day after the one an instant falls in: where a calendar change made at
+     * that instant takes effect (A26).
+     */
+    public function nextDayStartAfter(DateTimeInterface $instant): DateTimeImmutable
+    {
+        return $this->startOfLocalDay($this->localDateAt($instant)->addDays(1));
+    }
+
+    /** The entry that governs a business date (the one in force at its start). */
+    public function entryForDate(LocalDate $date): CalendarEntry
+    {
+        return $this->entryAt($this->startOfLocalDay($date));
+    }
+
     /** First instant after a business date (UTC). */
     public function endOfLocalDay(LocalDate $date): DateTimeImmutable
     {

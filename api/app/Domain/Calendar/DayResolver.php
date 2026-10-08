@@ -57,7 +57,7 @@ final readonly class DayResolver
         $this->assertWithinBounds($occurredAt);
         $this->validateBackdate($date, $occurredAt);
 
-        return new DayResolution($date, $this->timeline->entryAt($this->timeline->startOfLocalDay($date)), null);
+        return new DayResolution($date, $this->timeline->entryForDate($date), null);
     }
 
     /**
