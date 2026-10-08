@@ -3,11 +3,13 @@
 use App\Application\Calendar\UserCalendar;
 use App\Application\Periods\PeriodCloser;
 use App\Jobs\ClosePeriodsJob;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
 use Tests\Support\M;
@@ -228,4 +230,20 @@ it('refreshes a habit in a fixed number of queries, however long its history (H2
 
     expect($longCount)->toBe($shortCount)
         ->and($shortCount)->toBeLessThanOrEqual(5);
+});
+
+it('never blocks a user for long when a worker dies (H3)', function () {
+    expect((new ClosePeriodsJob($this->maya['id']))->uniqueFor)->toBe(600);
+
+    $event = collect(app(Schedule::class)->events())
+        ->first(fn ($e) => str_contains((string) $e->command, 'habits:close-periods'));
+    expect($event)->not->toBeNull()
+        ->and($event->withoutOverlapping)->toBeTrue()
+        ->and($event->expiresAt)->toBe(10)
+        ->and($event->expression)->toBe('*/5 * * * *');
+
+    Log::spy();
+    (new ClosePeriodsJob($this->maya['id']))->failed(new RuntimeException('secret detail'));
+    Log::shouldHaveReceived('warning')->once()
+        ->with('ClosePeriodsJob failed', ['user_id' => $this->maya['id']]);
 });

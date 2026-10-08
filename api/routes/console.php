@@ -9,4 +9,5 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 // A10: close finished periods every 5 minutes (one unique job per stale user).
-Schedule::command('habits:close-periods')->everyFiveMinutes()->withoutOverlapping();
+// H3: the overlap lock expires after 10 minutes, so a crashed run never blocks the next ones.
+Schedule::command('habits:close-periods')->everyFiveMinutes()->withoutOverlapping(10);
