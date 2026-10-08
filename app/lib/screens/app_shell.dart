@@ -39,12 +39,16 @@ class AppShell extends StatelessWidget {
                   onTap: () => context.go(Routes.today),
                 ),
                 _Tab(
-                  icon: Icons.calendar_month_outlined,
+                  icon: Icons.calendar_today_outlined,
                   label: l10n.navHabits,
                   selected: habits,
                   onTap: () => context.go(Routes.habits),
                 ),
-                _Tab(icon: Icons.bar_chart, label: l10n.navInsights, selected: false),
+                _Tab(
+                  icon: Icons.signal_cellular_alt_outlined,
+                  label: l10n.navInsights,
+                  selected: false,
+                ),
                 _Tab(icon: Icons.person_outline, label: l10n.navProfile, selected: false),
               ],
             ),

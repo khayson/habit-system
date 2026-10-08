@@ -112,10 +112,18 @@ class _DetailState extends State<_Detail> {
                           child: Text(format.month(monthStart), style: text.titleLarge),
                         ),
                       ),
-                      StatusChip(
-                        label: l10n.heatmapMonth,
-                        tone: Tone.positive,
-                        icon: Icons.calendar_view_month,
+                      Container(
+                        constraints: const BoxConstraints(minHeight: HabitSize.minTarget),
+                        padding: const EdgeInsets.symmetric(horizontal: HabitSpace.s24),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: tokens.positiveBg,
+                          borderRadius: BorderRadius.circular(HabitRadius.r24),
+                        ),
+                        child: Text(
+                          l10n.heatmapMonth,
+                          style: text.bodyMedium?.copyWith(color: tokens.positiveInk),
+                        ),
                       ),
                     ],
                   ),
@@ -239,7 +247,7 @@ class _StatCard extends StatelessWidget {
       label: '$value, $label',
       excludeSemantics: true,
       child: Container(
-        padding: const EdgeInsets.all(HabitSpace.s16),
+        padding: const EdgeInsets.symmetric(horizontal: HabitSpace.s12, vertical: HabitSpace.s16),
         decoration: BoxDecoration(
           color: tokens.surface,
           borderRadius: BorderRadius.circular(HabitRadius.r24),
@@ -247,9 +255,12 @@ class _StatCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(value, style: text.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
+            Text(
+              value,
+              style: text.headlineSmall?.copyWith(fontSize: 22, fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: HabitSpace.s4),
-            Text(label, style: text.bodySmall?.copyWith(color: tokens.muted)),
+            Text(label, style: text.bodySmall?.copyWith(fontSize: 12, color: tokens.muted)),
           ],
         ),
       ),

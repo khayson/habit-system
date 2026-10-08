@@ -320,8 +320,11 @@ class _CheckInRow extends StatelessWidget {
             ? l10n.historyValueDone
             : l10n.historyValueNotDone);
     final at = log.changedAt;
-    final line = log.provisional || at == null
+    final complete = detail.isComplete(date);
+    final line = log.provisional
         ? l10n.historyRowWaiting(value)
+        : (!complete || at == null)
+        ? value
         : l10n.historyRowDetail(value, format.time(detail.calendar.localTimeAt(at)));
     final title = l10n.historyRow(format.dayMonth(date), detail.name);
 
