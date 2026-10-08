@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:drift/drift.dart';
 
 import '../domain/calendar/local_date.dart';
+import '../domain/habit_schedule.dart';
+import '../domain/provisional_progress.dart';
 import '../domain/provisional_type_rules.dart';
 import '../sync/outbox_states.dart';
 import 'account_calendar.dart';
@@ -86,6 +88,7 @@ class LocalView {
     Object? value = EntityCodec.decodeJson(confirmed?.value);
     var deleted = confirmed?.deletedAt != null;
     String? state;
+    var changedAt = DateTime.tryParse(confirmed?.completedAt ?? confirmed?.occurredAt ?? '');
     for (final row in rows) {
       final reflected =
           row.state == OutboxState.acked && (row.ackVersion ?? 0) <= (confirmed?.version ?? 0);
@@ -98,6 +101,7 @@ class LocalView {
         deleted = true;
       }
       state = row.state;
+      changedAt = DateTime.tryParse(row.occurredAt);
     }
 
     return LogView(
@@ -107,6 +111,7 @@ class LocalView {
       deleted: deleted,
       confirmedVersion: confirmed?.version,
       syncState: state,
+      changedAt: changedAt,
     );
   }
 
@@ -159,18 +164,25 @@ class LocalView {
     final items = <TodayItem>[];
     for (final habit in await habits()) {
       final p = habit.payload;
-      if (p['archived_at'] != null) continue;
-      final start = p['start_local_date'];
-      if (start is String && start.compareTo(day) > 0) continue;
+      // Due today: schedule, active range, zero-length dates excluded (Phase 3.2a).
+      final schedule = HabitSchedule.fromWire(p);
+      final known = schedule.versionOn(date)?.frequency.known ?? true;
+      if (known && !schedule.isDue(date, calendar.timeline)) continue;
+      if (!known && !schedule.isActive(date)) continue;
       final log = await this.log(habit.id, day);
       final rules = types.lookup(p['type'] as String? ?? '');
+      final complete = _complete(rules, log.value, p['target_value']);
       items.add(
         TodayItem(
           habit: habit,
           log: log,
           rules: rules,
-          complete: _complete(rules, log.value, p['target_value']),
+          complete: complete,
           attention: attention[habit.id],
+          week: await _week(habit, schedule, date),
+          completedAt: complete && log.changedAt != null
+              ? calendar.localTimeAt(log.changedAt!)
+              : null,
         ),
       );
     }
@@ -184,6 +196,27 @@ class LocalView {
       localNow: calendar.localNow(deviceNow),
       userName: user is Map ? user['name'] as String? : null,
       items: items,
+    );
+  }
+
+  /// weekly_count: distinct completed local days of this Monday-Sunday week, from local logs.
+  /// Provisional: the week's result is the server's (invariant 9).
+  Future<ProvisionalWeekProgress?> _week(
+    HabitView habit,
+    HabitSchedule schedule,
+    LocalDate date,
+  ) async {
+    final count = schedule.weeklyCountOn(date);
+    if (count == null) return null;
+    final monday = date.addDays(1 - date.isoWeekday);
+    return ProvisionalProgress(types).week(
+      type: habit.payload['type'] as String? ?? '',
+      perDayTarget: habit.payload['target_value'],
+      countTarget: count,
+      logs: {
+        for (var i = 0; i < 7; i++)
+          monday.addDays(i).toString(): (await log(habit.id, monday.addDays(i).toString())).value,
+      },
     );
   }
 
@@ -248,12 +281,20 @@ class TodayItem {
   /// The row that needs the user's decision before more changes queue behind it.
   final OutboxRow? attention;
 
+  /// weekly_count habits: this week so far (provisional), else null.
+  final ProvisionalWeekProgress? week;
+
+  /// Wall-clock time of the check-in in the habit calendar, when complete.
+  final DateTime? completedAt;
+
   const TodayItem({
     required this.habit,
     required this.log,
     required this.rules,
     required this.complete,
     required this.attention,
+    this.week,
+    this.completedAt,
   });
 
   String get name => habit.payload['name'] as String? ?? '';
@@ -318,6 +359,10 @@ class LogView {
   final int? confirmedVersion;
   final String? syncState;
 
+  /// When the value was last set: the pending write's occurred_at, else the confirmed
+  /// completed_at (or occurred_at).
+  final DateTime? changedAt;
+
   const LogView({
     required this.habitId,
     required this.date,
@@ -325,6 +370,7 @@ class LogView {
     required this.deleted,
     required this.confirmedVersion,
     required this.syncState,
+    this.changedAt,
   });
 
   bool get provisional => syncState != null;

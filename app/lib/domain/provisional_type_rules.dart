@@ -22,7 +22,14 @@ abstract interface class ProvisionalTypeRules {
 
   /// Logged with one tap (check / undo) rather than an amount or a timer.
   bool get oneTap;
+
+  /// How screens present the type (icon, label, value field), so no widget names a type key.
+  TypeDisplay get display;
 }
+
+/// The design file's three presentations: "Yes / no", "Quantity" (an amount in a unit) and
+/// "Duration" (whole seconds, entered and shown in minutes).
+enum TypeDisplay { yesNo, quantity, duration }
 
 /// Registry of the types this app version understands. Unknown types return null so callers
 /// can preserve and display them as "update the app" cards (A21 tolerant reader).
@@ -66,6 +73,9 @@ class BinaryRules implements ProvisionalTypeRules {
 
   @override
   bool get oneTap => true;
+
+  @override
+  TypeDisplay get display => TypeDisplay.yesNo;
 }
 
 class QuantityRules implements ProvisionalTypeRules {
@@ -108,6 +118,9 @@ class QuantityRules implements ProvisionalTypeRules {
 
   @override
   bool get oneTap => false;
+
+  @override
+  TypeDisplay get display => TypeDisplay.quantity;
 }
 
 class DurationRules implements ProvisionalTypeRules {
@@ -143,4 +156,7 @@ class DurationRules implements ProvisionalTypeRules {
 
   @override
   bool get oneTap => false;
+
+  @override
+  TypeDisplay get display => TypeDisplay.duration;
 }

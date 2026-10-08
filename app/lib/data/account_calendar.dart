@@ -107,6 +107,10 @@ class AccountCalendar {
   /// The habit-day of the corrected [deviceNow].
   LocalDate today(DateTime deviceNow) => timeline.localDateAt(now(deviceNow));
 
+  /// Wall-clock time at [instant] in the calendar zone in force then (e.g. "Completed at 8:05").
+  DateTime localTimeAt(DateTime instant) =>
+      tz.TZDateTime.from(instant.toUtc(), tz.getLocation(zoneAt(instant.toUtc())));
+
   /// Wall-clock time in the zone in force (for display, e.g. the greeting), corrected.
   DateTime localNow(DateTime deviceNow) {
     final at = now(deviceNow);
