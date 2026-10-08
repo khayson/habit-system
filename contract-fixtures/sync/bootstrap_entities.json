@@ -1,0 +1,63 @@
+{
+  "description": "A31 + A32: the bootstrap pages that carry derived entities. New entity types travel only in `entities` as {entity, id, version, payload}; the v1 collections are present and empty on these pages. A client that does not know habit_progress or period_evaluation keeps them opaque under that name and still syncs (tolerant reader, invariant 13).",
+  "suites": [
+    "php",
+    "dart"
+  ],
+  "progress_page": {
+    "user": null,
+    "habits": [],
+    "logs": [],
+    "entities": [
+      {
+        "entity": "habit_progress",
+        "id": "{{uuid}}",
+        "version": 2,
+        "payload": {
+          "habit_id": "{{uuid}}",
+          "current": 1,
+          "longest": 1,
+          "unit": "days",
+          "computed_through": "2026-05-27"
+        }
+      }
+    ],
+    "has_more": true,
+    "next_cursor": "{{cursor}}",
+    "sync_cursor": null,
+    "snapshot_seq": "{{seq}}"
+  },
+  "evaluation_page": {
+    "user": null,
+    "habits": [],
+    "logs": [],
+    "entities": [
+      {
+        "entity": "period_evaluation",
+        "id": "{{uuid}}",
+        "version": 1,
+        "payload": {
+          "id": "{{uuid}}",
+          "habit_id": "{{uuid}}",
+          "period_key": "d:2026-05-27",
+          "start_date": "2026-05-27",
+          "end_date": "2026-05-27",
+          "completed": true,
+          "protected": false,
+          "definition_version": 1,
+          "timezone": "America/Los_Angeles",
+          "revision": 1
+        }
+      }
+    ],
+    "has_more": false,
+    "next_cursor": null,
+    "sync_cursor": "{{cursor}}",
+    "snapshot_seq": "{{seq}}"
+  },
+  "rules": [
+    "habit_progress: one per habit; id is the habit id; version is the streak cache version",
+    "period_evaluation: only start_date within the last 400 days of the user's local today; version is the revision",
+    "the client stores both under their own entity names, exactly as a pull would"
+  ]
+}

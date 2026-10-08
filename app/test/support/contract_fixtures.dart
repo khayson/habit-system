@@ -30,6 +30,8 @@ Object? materialize(Object? value) {
     '{{uuid}}' => '0199b2c4-1a2b-7c3d-8e4f-5a6b7c8d9e0f',
     '{{timestamp}}' => '2026-05-28T17:22:00Z',
     '{{int}}' => '30',
+    '{{cursor}}' => 'eyJ2IjoxfQ.c2lnbmF0dXJl',
+    '{{seq}}' => 6,
     final Map<String, dynamic> map => map.map((k, v) => MapEntry(k, materialize(v))),
     final List<dynamic> list => list.map(materialize).toList(),
     _ => value,

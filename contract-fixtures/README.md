@@ -13,14 +13,17 @@ the format and then treat them as equal.
 | `{{uuid}}`      | a lowercase RFC 9562 UUID (request ids are version 7)       |
 | `{{timestamp}}` | an ISO-8601 UTC timestamp with seconds and `Z`, e.g. `2026-05-28T17:22:00Z` |
 | `{{int}}`       | a positive integer written as a string (HTTP header values) |
+| `{{cursor}}`    | an opaque signed sync cursor: base64url payload `.` base64url signature |
+| `{{seq}}`       | a journal position: a non-negative JSON integer (not a string)         |
 
 ## Layout
 
 - `envelope/` — response envelope and error shapes (Phase 0). Each file has
   `description`, `status`, optional `headers`, and `body`. One file per error code
   (`docs/api-error-codes.md`).
-- `sync/` — `/sync` ack shapes for the A29 contract (Phase 2a.1). Each has `expect` (the ack,
-  with placeholders) and `rules` the test checks in code.
+- `sync/` — `/sync` ack shapes for the A29 contract (Phase 2a.1), and bootstrap page shapes
+  (`bootstrap_entities.json`, A31/A32). Each has the shape with placeholders and `rules` the test
+  checks in code.
 - `domain/` — business rules (Phase 1). Each file has `kind`, `suites` (which test suites must
   consume it: `php`, `dart`) and `description`. Cases inside may narrow `suites` further.
 

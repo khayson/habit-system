@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:habit/sync/outbox_states.dart';
+import 'package:habit/sync/sync_engine.dart';
 import 'package:habit/sync/sync_transport.dart';
 
 import '../support/contract_fixtures.dart';
@@ -47,6 +48,38 @@ void main() {
     final error = jsonDecode(row.lastError!) as Map<String, dynamic>;
     expect((error['code'], error['retryable']), ('server_error', true));
   });
+
+  test(
+    'bootstrap_entities: a client without tables for them keeps them opaque and syncs (A31, A32)',
+    () async {
+      final fixture = contractFixture('sync/bootstrap_entities.json');
+      expect(fixture['suites'], contains('dart'));
+      final server = FakeSyncServer();
+      final phone = await Device(server).init();
+      final pages = [
+        BootstrapPage.fromJson({
+          'user': server.user,
+          'habits': <Object>[],
+          'logs': <Object>[],
+          'has_more': true,
+          'next_cursor': 'first',
+        }),
+        BootstrapPage.fromJson(materialize(fixture['progress_page']) as Map<String, dynamic>),
+        BootstrapPage.fromJson(materialize(fixture['evaluation_page']) as Map<String, dynamic>),
+      ];
+
+      final outcome = await phone.engine(transport: _BootstrapPages(server, pages)).run();
+
+      expect(outcome, SyncOutcome.completed);
+      final stored = await phone.db.select(phone.db.opaqueEntities).get();
+      expect(stored.map((o) => (o.entityType, o.version)).toSet(), {
+        ('habit_progress', 2),
+        ('period_evaluation', 1),
+      });
+      expect((await phone.state()).cursor, isNotNull, reason: 'the snapshot cursor was saved');
+      await phone.db.close();
+    },
+  );
 
   for (final name in ['ack_restored', 'ack_merged_entity_id', 'ack_delete_natural_key']) {
     test('$name: accepted and remapped to the canonical entity_id', () async {
@@ -101,4 +134,31 @@ class _AckOnce implements SyncTransport {
   @override
   Future<BootstrapPage> bootstrap({required String? cursor, required int limit}) =>
       server.bootstrap(cursor: cursor, limit: limit);
+}
+
+/// Serves [pages] as the bootstrap, then defers /sync to the fake server from a fresh cursor.
+class _BootstrapPages implements SyncTransport {
+  _BootstrapPages(this.server, this.pages);
+  final FakeSyncServer server;
+  final List<BootstrapPage> pages;
+  var _next = 0;
+
+  @override
+  Future<SyncPage> sync({
+    required String deviceId,
+    required String? cursor,
+    required int pullLimit,
+    required List<Map<String, Object?>> mutations,
+    required List<String> capabilities,
+  }) => server.sync(
+    deviceId: deviceId,
+    cursor: 'c:0',
+    pullLimit: pullLimit,
+    mutations: mutations,
+    capabilities: capabilities,
+  );
+
+  @override
+  Future<BootstrapPage> bootstrap({required String? cursor, required int limit}) async =>
+      pages[_next++];
 }
