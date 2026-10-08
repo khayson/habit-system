@@ -122,7 +122,7 @@ void main() {
     final count = await impatient.customSelect('SELECT count(*) AS c FROM probe').getSingle();
     expect(count.read<int>('c'), 1);
     await impatient.close();
-    holder.dispose();
+    holder.close();
   });
 
   test('a second isolate writing during a sync run: no lost write, no SQLITE_BUSY', () async {
