@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\HabitController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\SyncController;
 use Illuminate\Support\Facades\Route;
@@ -21,6 +22,7 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::post('/auth/refresh', [AuthController::class, 'refresh'])->name('auth.refresh');
     Route::get('/me', [AuthController::class, 'me'])->name('me');
     Route::get('/sync/bootstrap', [SyncController::class, 'bootstrap'])->name('sync.bootstrap');
+    Route::get('/habits/{habit}/heatmap', [HabitController::class, 'heatmap'])->name('habits.heatmap');
 });
 
 Route::post('/sync', [SyncController::class, 'sync'])->middleware(['auth:sanctum', 'throttle:sync'])->name('sync');
