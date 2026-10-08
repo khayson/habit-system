@@ -69,6 +69,10 @@ class SyncEngine {
   final int pullLimit;
   final List<String> capabilities;
 
+  /// This build's version. When it differs from the one stored in sync_state, items an older
+  /// build could not decode are replayed once (G5).
+  final String? appVersion;
+
   /// Test hook: runs inside the apply transaction just before it commits.
   final Future<void> Function()? beforeApplyCommit;
 
@@ -86,6 +90,7 @@ class SyncEngine {
     this.pullLimit = 200,
     this.beforeApplyCommit,
     this.betweenSelectAndMark,
+    this.appVersion,
   }) : clock = clock ?? (() => DateTime.now().toUtc()),
        random = random ?? Random(),
        ownerId = ownerId ?? const Uuid().v4();
@@ -192,6 +197,7 @@ class SyncEngine {
 
   Future<SyncOutcome> _runLocked() async {
     await _recoverInFlight();
+    await _replayAfterUpdate();
     var retriedRotation = false;
     var rebootstraps = 0;
     var chunk = maxChunk;
@@ -667,6 +673,48 @@ class SyncEngine {
         raw,
       );
     }
+  }
+
+  /// G5: after an app update, items an older build stored as `undecodable:<entity>` go through
+  /// the normal apply path once. Those that decode now are applied and removed; the rest stay.
+  /// Applying is safe at any time: the `version >=` rule ignores anything older than what is
+  /// already confirmed.
+  Future<void> _replayAfterUpdate() async {
+    final version = appVersion;
+    if (version == null || (await _state()).appVersion == version) return;
+    await db.transaction(() async {
+      final stored = await (db.select(
+        db.opaqueEntities,
+      )..where((o) => o.entityType.like('undecodable:%'))).get();
+      for (final row in stored) {
+        final entity = row.entityType.substring('undecodable:'.length);
+        final raw = EntityCodec.decodeJson(row.payload);
+        if (raw is! Map || entity == 'unknown') continue;
+        final item = raw.cast<String, dynamic>();
+        // A pulled change carries entity/version/payload; a bootstrap item is the payload.
+        final change = item.containsKey('payload') && item.containsKey('entity')
+            ? item
+            : {
+                'entity': entity,
+                'id': item['id'],
+                'version': item['version'],
+                'operation': 'upsert',
+                'payload': item,
+              };
+        try {
+          await (entity == 'user'
+              ? _applyUser((change['payload'] as Map).cast<String, dynamic>())
+              : _applyChange(change));
+        } on Object catch (e) {
+          if (!_isDecodeError(e)) rethrow;
+          continue; // still unreadable: keep it for a later build
+        }
+        await (db.delete(db.opaqueEntities)
+              ..where((o) => o.entityType.equals(row.entityType) & o.entityId.equals(row.entityId)))
+            .go();
+      }
+      await _updateState(SyncStateCompanion(appVersion: Value(version)));
+    });
   }
 
   static bool _isDecodeError(Object e) =>

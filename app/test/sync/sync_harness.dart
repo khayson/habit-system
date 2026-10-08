@@ -45,6 +45,7 @@ class Device {
     Future<void> Function()? beforeApplyCommit,
     Future<void> Function()? betweenSelectAndMark,
     String? owner,
+    String? appVersion,
   }) => SyncEngine(
     db: db,
     transport: transport ?? server,
@@ -52,6 +53,7 @@ class Device {
     clock: () => now,
     random: Random(1),
     ownerId: owner,
+    appVersion: appVersion,
     beforeApplyCommit: beforeApplyCommit,
     betweenSelectAndMark: betweenSelectAndMark,
   );

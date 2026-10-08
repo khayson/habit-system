@@ -1,5 +1,6 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 
+import '../config/app_version.dart';
 import '../core/network/api_client.dart';
 import '../data/local_mutation_service.dart';
 import '../data/local_view.dart';
@@ -37,6 +38,7 @@ class AccountContext {
            transport: transport,
            capabilities: ProvisionalTypeRegistry.builtins().keys.toList(),
            clock: clock,
+           appVersion: AppVersion.current,
          ),
          refreshIfStale: refreshIfStale,
          connectivity: connectivity,

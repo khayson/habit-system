@@ -23,6 +23,21 @@ void main() {
     }
   });
 
+  test('v3 -> v4 adds the app version and keeps everything else', () async {
+    final v4 = AppDatabase(NativeDatabase(file));
+    await v4.customStatement(
+      "INSERT INTO sync_state (id, user_id, device_id, cursor) VALUES (1, 'u', 'd', 'c:7')",
+    );
+    await v4.customStatement('ALTER TABLE sync_state DROP COLUMN app_version');
+    await v4.customStatement('PRAGMA user_version = 3');
+    await v4.close();
+
+    final upgraded = AppDatabase(NativeDatabase(file));
+    final state = await upgraded.select(upgraded.syncState).getSingle();
+    expect((state.cursor, state.appVersion), ('c:7', null));
+    await upgraded.close();
+  });
+
   test('v2 -> v3 adds sync health columns and the discard record, keeping the outbox', () async {
     // Build a v2 file: today's schema minus what v3 added.
     final v3 = AppDatabase(NativeDatabase(file));
@@ -35,6 +50,7 @@ void main() {
       "'{}', 'pending', 0)",
     );
     for (final column in [
+      'app_version',
       'consecutive_failures',
       'backoff_until',
       'request_rejections',

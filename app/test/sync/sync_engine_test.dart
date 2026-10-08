@@ -763,6 +763,62 @@ void main() {
     await phone.writer.setLogValue(habitId: await phone.habit(), value: 1); // still writable
   });
 
+  group('G5: undecodable items are replayed once after an app update', () {
+    Future<void> storeUndecodable(String type, String id, Map<String, Object?> raw) =>
+        phone.db.customStatement(
+          'INSERT INTO opaque_entities (entity_type, entity_id, version, operation, payload) '
+          "VALUES (?, ?, 0, 'undecodable', ?)",
+          [type, id, jsonEncode(raw)],
+        );
+
+    Map<String, Object?> habitChange(String id) => {
+      'seq': 3,
+      'entity': 'habit',
+      'id': id,
+      'operation': 'upsert',
+      'version': 2,
+      'payload': {'id': id, 'name': 'Read', 'type': 'binary', 'version': 2},
+    };
+
+    test('a now-readable item is applied and removed; a still-broken one stays', () async {
+      await phone.engine(appVersion: '1.0.0').run();
+      // What an older build kept: a change it could not read, and one nobody can.
+      await storeUndecodable('undecodable:habit', 'h-now-ok', habitChange('h-now-ok'));
+      await storeUndecodable('undecodable:habit', 'h-broken', {
+        ...habitChange('h-broken'),
+        'version': 'two',
+      });
+
+      expect(await phone.engine(appVersion: '1.0.0').run(), SyncOutcome.completed);
+      expect(
+        await phone.db.select(phone.db.habits).get(),
+        isEmpty,
+        reason: 'same build: no replay',
+      );
+
+      expect(await phone.engine(appVersion: '1.1.0').run(), SyncOutcome.completed);
+
+      final habits = await phone.db.select(phone.db.habits).get();
+      expect(habits.map((h) => (h.id, h.version)), [('h-now-ok', 2)]);
+      final left = await phone.db.select(phone.db.opaqueEntities).get();
+      expect(left.map((o) => o.entityId), ['h-broken']);
+      expect((await phone.state()).appVersion, '1.1.0');
+    });
+
+    test('a replayed item older than the confirmed row changes nothing', () async {
+      await phone.engine(appVersion: '1.0.0').run();
+      await phone.db.customStatement(
+        "INSERT INTO habits (id, name, version, extra) VALUES ('h1', 'Newer', 5, '{}')",
+      );
+      await storeUndecodable('undecodable:habit', 'h1', habitChange('h1'));
+
+      await phone.engine(appVersion: '2.0.0').run();
+
+      final habit = await phone.db.select(phone.db.habits).getSingle();
+      expect((habit.name, habit.version), ('Newer', 5));
+    });
+  });
+
   test('unknown habit types, unknown fields and unknown entities survive a round trip', () async {
     final unknownHabit = {
       'id': 'future-habit',

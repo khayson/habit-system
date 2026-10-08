@@ -3361,6 +3361,17 @@ class $SyncStateTable extends SyncState
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _appVersionMeta = const VerificationMeta(
+    'appVersion',
+  );
+  @override
+  late final GeneratedColumn<String> appVersion = GeneratedColumn<String>(
+    'app_version',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3384,6 +3395,7 @@ class $SyncStateTable extends SyncState
     statusCode,
     lastError,
     clockSkewMs,
+    appVersion,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3560,6 +3572,12 @@ class $SyncStateTable extends SyncState
         ),
       );
     }
+    if (data.containsKey('app_version')) {
+      context.handle(
+        _appVersionMeta,
+        appVersion.isAcceptableOrUnknown(data['app_version']!, _appVersionMeta),
+      );
+    }
     return context;
   }
 
@@ -3653,6 +3671,10 @@ class $SyncStateTable extends SyncState
         DriftSqlType.int,
         data['${effectivePrefix}clock_skew_ms'],
       )!,
+      appVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}app_version'],
+      ),
     );
   }
 
@@ -3698,6 +3720,9 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
 
   /// Server time minus device time, from `meta.server_time` (F10).
   final int clockSkewMs;
+
+  /// The app version that last synced this database; a change replays undecodable items (G5).
+  final String? appVersion;
   const SyncStateRow({
     required this.id,
     required this.userId,
@@ -3720,6 +3745,7 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
     this.statusCode,
     this.lastError,
     required this.clockSkewMs,
+    this.appVersion,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3771,6 +3797,9 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
       map['last_error'] = Variable<String>(lastError);
     }
     map['clock_skew_ms'] = Variable<int>(clockSkewMs);
+    if (!nullToAbsent || appVersion != null) {
+      map['app_version'] = Variable<String>(appVersion);
+    }
     return map;
   }
 
@@ -3823,6 +3852,9 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
           ? const Value.absent()
           : Value(lastError),
       clockSkewMs: Value(clockSkewMs),
+      appVersion: appVersion == null && nullToAbsent
+          ? const Value.absent()
+          : Value(appVersion),
     );
   }
 
@@ -3859,6 +3891,7 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
       statusCode: serializer.fromJson<String?>(json['statusCode']),
       lastError: serializer.fromJson<String?>(json['lastError']),
       clockSkewMs: serializer.fromJson<int>(json['clockSkewMs']),
+      appVersion: serializer.fromJson<String?>(json['appVersion']),
     );
   }
   @override
@@ -3886,6 +3919,7 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
       'statusCode': serializer.toJson<String?>(statusCode),
       'lastError': serializer.toJson<String?>(lastError),
       'clockSkewMs': serializer.toJson<int>(clockSkewMs),
+      'appVersion': serializer.toJson<String?>(appVersion),
     };
   }
 
@@ -3911,6 +3945,7 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
     Value<String?> statusCode = const Value.absent(),
     Value<String?> lastError = const Value.absent(),
     int? clockSkewMs,
+    Value<String?> appVersion = const Value.absent(),
   }) => SyncStateRow(
     id: id ?? this.id,
     userId: userId ?? this.userId,
@@ -3940,6 +3975,7 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
     statusCode: statusCode.present ? statusCode.value : this.statusCode,
     lastError: lastError.present ? lastError.value : this.lastError,
     clockSkewMs: clockSkewMs ?? this.clockSkewMs,
+    appVersion: appVersion.present ? appVersion.value : this.appVersion,
   );
   SyncStateRow copyWithCompanion(SyncStateCompanion data) {
     return SyncStateRow(
@@ -3994,6 +4030,9 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
       clockSkewMs: data.clockSkewMs.present
           ? data.clockSkewMs.value
           : this.clockSkewMs,
+      appVersion: data.appVersion.present
+          ? data.appVersion.value
+          : this.appVersion,
     );
   }
 
@@ -4020,7 +4059,8 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
           ..write('status: $status, ')
           ..write('statusCode: $statusCode, ')
           ..write('lastError: $lastError, ')
-          ..write('clockSkewMs: $clockSkewMs')
+          ..write('clockSkewMs: $clockSkewMs, ')
+          ..write('appVersion: $appVersion')
           ..write(')'))
         .toString();
   }
@@ -4048,6 +4088,7 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
     statusCode,
     lastError,
     clockSkewMs,
+    appVersion,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -4073,7 +4114,8 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
           other.status == this.status &&
           other.statusCode == this.statusCode &&
           other.lastError == this.lastError &&
-          other.clockSkewMs == this.clockSkewMs);
+          other.clockSkewMs == this.clockSkewMs &&
+          other.appVersion == this.appVersion);
 }
 
 class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
@@ -4098,6 +4140,7 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
   final Value<String?> statusCode;
   final Value<String?> lastError;
   final Value<int> clockSkewMs;
+  final Value<String?> appVersion;
   const SyncStateCompanion({
     this.id = const Value.absent(),
     this.userId = const Value.absent(),
@@ -4120,6 +4163,7 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
     this.statusCode = const Value.absent(),
     this.lastError = const Value.absent(),
     this.clockSkewMs = const Value.absent(),
+    this.appVersion = const Value.absent(),
   });
   SyncStateCompanion.insert({
     this.id = const Value.absent(),
@@ -4143,6 +4187,7 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
     this.statusCode = const Value.absent(),
     this.lastError = const Value.absent(),
     this.clockSkewMs = const Value.absent(),
+    this.appVersion = const Value.absent(),
   }) : userId = Value(userId),
        deviceId = Value(deviceId);
   static Insertable<SyncStateRow> custom({
@@ -4167,6 +4212,7 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
     Expression<String>? statusCode,
     Expression<String>? lastError,
     Expression<int>? clockSkewMs,
+    Expression<String>? appVersion,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -4193,6 +4239,7 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
       if (statusCode != null) 'status_code': statusCode,
       if (lastError != null) 'last_error': lastError,
       if (clockSkewMs != null) 'clock_skew_ms': clockSkewMs,
+      if (appVersion != null) 'app_version': appVersion,
     });
   }
 
@@ -4218,6 +4265,7 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
     Value<String?>? statusCode,
     Value<String?>? lastError,
     Value<int>? clockSkewMs,
+    Value<String?>? appVersion,
   }) {
     return SyncStateCompanion(
       id: id ?? this.id,
@@ -4242,6 +4290,7 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
       statusCode: statusCode ?? this.statusCode,
       lastError: lastError ?? this.lastError,
       clockSkewMs: clockSkewMs ?? this.clockSkewMs,
+      appVersion: appVersion ?? this.appVersion,
     );
   }
 
@@ -4315,6 +4364,9 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
     if (clockSkewMs.present) {
       map['clock_skew_ms'] = Variable<int>(clockSkewMs.value);
     }
+    if (appVersion.present) {
+      map['app_version'] = Variable<String>(appVersion.value);
+    }
     return map;
   }
 
@@ -4341,7 +4393,8 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
           ..write('status: $status, ')
           ..write('statusCode: $statusCode, ')
           ..write('lastError: $lastError, ')
-          ..write('clockSkewMs: $clockSkewMs')
+          ..write('clockSkewMs: $clockSkewMs, ')
+          ..write('appVersion: $appVersion')
           ..write(')'))
         .toString();
   }
@@ -6397,6 +6450,7 @@ typedef $$SyncStateTableCreateCompanionBuilder = SyncStateCompanion Function({
   Value<String?> statusCode,
   Value<String?> lastError,
   Value<int> clockSkewMs,
+  Value<String?> appVersion,
 });
 typedef $$SyncStateTableUpdateCompanionBuilder = SyncStateCompanion Function({
   Value<int> id,
@@ -6420,6 +6474,7 @@ typedef $$SyncStateTableUpdateCompanionBuilder = SyncStateCompanion Function({
   Value<String?> statusCode,
   Value<String?> lastError,
   Value<int> clockSkewMs,
+  Value<String?> appVersion,
 });
 
 class $$SyncStateTableFilterComposer
@@ -6533,6 +6588,11 @@ class $$SyncStateTableFilterComposer
 
   ColumnFilters<int> get clockSkewMs => $composableBuilder(
     column: $table.clockSkewMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get appVersion => $composableBuilder(
+    column: $table.appVersion,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -6650,6 +6710,11 @@ class $$SyncStateTableOrderingComposer
     column: $table.clockSkewMs,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get appVersion => $composableBuilder(
+    column: $table.appVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SyncStateTableAnnotationComposer
@@ -6753,6 +6818,11 @@ class $$SyncStateTableAnnotationComposer
     column: $table.clockSkewMs,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get appVersion => $composableBuilder(
+    column: $table.appVersion,
+    builder: (column) => column,
+  );
 }
 
 class $$SyncStateTableTableManager
@@ -6807,6 +6877,7 @@ class $$SyncStateTableTableManager
                 Value<String?> statusCode = const Value.absent(),
                 Value<String?> lastError = const Value.absent(),
                 Value<int> clockSkewMs = const Value.absent(),
+                Value<String?> appVersion = const Value.absent(),
               }) => SyncStateCompanion(
                 id: id,
                 userId: userId,
@@ -6829,6 +6900,7 @@ class $$SyncStateTableTableManager
                 statusCode: statusCode,
                 lastError: lastError,
                 clockSkewMs: clockSkewMs,
+                appVersion: appVersion,
               ),
           createCompanionCallback:
               ({
@@ -6853,6 +6925,7 @@ class $$SyncStateTableTableManager
                 Value<String?> statusCode = const Value.absent(),
                 Value<String?> lastError = const Value.absent(),
                 Value<int> clockSkewMs = const Value.absent(),
+                Value<String?> appVersion = const Value.absent(),
               }) => SyncStateCompanion.insert(
                 id: id,
                 userId: userId,
@@ -6875,6 +6948,7 @@ class $$SyncStateTableTableManager
                 statusCode: statusCode,
                 lastError: lastError,
                 clockSkewMs: clockSkewMs,
+                appVersion: appVersion,
               ),
           withReferenceMapper: (p0) => p0
               .map(

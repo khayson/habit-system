@@ -77,7 +77,7 @@ void main() {
     }
   });
 
-  test('boots schema v3: WAL, synchronous FULL, foreign keys on', () async {
+  test('boots schema v4: WAL, synchronous FULL, foreign keys on', () async {
     final db = AppDatabase(NativeDatabase(file, setup: configureConnection));
 
     final userVersion = await db.customSelect('PRAGMA user_version').getSingle();
@@ -91,8 +91,8 @@ void main() {
         )
         .get();
 
-    expect(db.schemaVersion, 3);
-    expect(userVersion.data.values.single, 3);
+    expect(db.schemaVersion, 4);
+    expect(userVersion.data.values.single, 4);
     expect(journal.data.values.single, 'wal');
     expect(fk.data.values.single, 1);
     expect(synchronous.data.values.single, 2, reason: 'synchronous = FULL (2)');

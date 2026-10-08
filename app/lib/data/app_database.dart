@@ -132,6 +132,9 @@ class SyncState extends Table {
   /// Server time minus device time, from `meta.server_time` (F10).
   IntColumn get clockSkewMs => integer().withDefault(const Constant(0))();
 
+  /// The app version that last synced this database; a change replays undecodable items (G5).
+  TextColumn get appVersion => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -157,7 +160,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -186,6 +189,10 @@ class AppDatabase extends _$AppDatabase {
           await m.addColumn(syncState, column);
         }
         await m.createTable(discardedMutations);
+      }
+      if (from < 4) {
+        // Phase 2b.2 review G5.
+        await m.addColumn(syncState, syncState.appVersion);
       }
     },
     beforeOpen: (details) async {
