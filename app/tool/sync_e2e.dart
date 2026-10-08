@@ -17,6 +17,7 @@
 //   derived   a past day closes; B holds typed habit_progress and period_evaluation rows (A32).
 //   dependency_pending  A creates a habit and ticks it in one request; both land, B converges.
 //   calendar  A sets a zone; B gains the pending calendar entry; A changes back; it is gone.
+//   reminders A creates, edits and deletes a reminder; B holds the typed row each time.
 // Exits non-zero at the first failed check, or unless both databases end identical.
 import 'dart:convert';
 import 'dart:io';
@@ -242,6 +243,40 @@ Future<void> main(List<String> args) async {
     _check((await entries(a)).join(',') == (await entries(b)).join(','), 'both calendars agree');
   });
 
+  await _scenario('reminders', () async {
+    Future<ConfirmedReminder?> onB(String id) =>
+        (b.db.select(b.db.reminders)..where((r) => r.id.equals(id))).getSingleOrNull();
+    final id = await a.writer.createReminder(
+      habitId: habit,
+      localTime: '08:00',
+      daysOfWeek: [1, 2, 3, 4, 5],
+    );
+    await a.sync();
+    await b.sync();
+    final created = await onB(id);
+    _check(created != null && created.version == 1, 'B holds the typed reminder');
+    _check(created!.localTime == '08:00' && created.daysOfWeek == '[1,2,3,4,5]', 'as created');
+
+    await a.writer.updateReminder(
+      reminderId: id,
+      localTime: '07:30',
+      daysOfWeek: [1, 2, 3, 4, 5, 6, 7],
+      timezoneMode: 'device_zone',
+    );
+    await a.sync();
+    await b.sync();
+    final updated = await onB(id);
+    _check(updated!.version == 2 && updated.localTime == '07:30', 'B sees the edit');
+    _check(updated.timezoneMode == 'device_zone', 'with its mode');
+
+    await a.writer.deleteReminder(id);
+    await a.sync();
+    await b.sync();
+    final deleted = await onB(id);
+    _check(deleted!.version == 3 && deleted.deletedAt != null, 'B keeps the tombstone');
+    _check((await a.outbox()).isEmpty, 'A has nothing left to send');
+  });
+
   await a.sync();
   await b.sync();
   final stateA = await a.snapshot();
@@ -416,6 +451,12 @@ class _Device {
           db.calendarEntries,
         )..orderBy([(c) => OrderingTerm.asc(c.effectiveAt)])).get())
           '${e.effectiveAt} ${e.timezone} ${e.dayStartOffsetMinutes}',
+      ],
+      'reminders': [
+        for (final r in await (db.select(
+          db.reminders,
+        )..orderBy([(r) => OrderingTerm.asc(r.id)])).get())
+          '${r.id} ${r.localTime} ${r.daysOfWeek} v${r.version} deleted=${r.deletedAt != null}',
       ],
       'outbox': (await outbox()).length,
     };
