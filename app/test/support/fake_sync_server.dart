@@ -46,13 +46,38 @@ class FakeSyncServer implements SyncTransport {
 
   int get seq => journal.length;
 
+  /// The user entity version; profile.set_timezone bumps it (and so can a test, as another
+  /// device would).
+  int userVersion = 1;
+
+  /// A pending zone change from profile.set_timezone, effective at [pendingAt].
+  String? pendingZone;
+
+  /// The start of the next local day in the fixed test calendar (28 May 2026, Los Angeles).
+  static const pendingAt = '2026-05-29T07:00:00Z';
+
+  /// False to act as a server before 3.2 (no calendar_history on the user).
+  bool sendCalendarHistory = true;
+
   Map<String, dynamic> get user => {
     'id': 'user-1',
     'name': 'Maya',
     'timezone': timezone,
     'day_start_offset_minutes': 0,
     'xp': 0,
+    'version': userVersion,
+    if (sendCalendarHistory) 'calendar_history': [
+      {'effective_at': '2026-01-01T00:00:00Z', 'timezone': timezone, 'day_start_offset_minutes': 0},
+      if (pendingZone != null)
+        {'effective_at': pendingAt, 'timezone': pendingZone, 'day_start_offset_minutes': 0},
+    ],
   };
+
+  /// Another device changed the profile: the version this device holds is now stale.
+  void bumpUserVersion() {
+    userVersion++;
+    _journal('user', 'user-1', 'upsert', userVersion, user);
+  }
 
   @override
   Future<SyncPage> sync({
@@ -136,10 +161,38 @@ class FakeSyncServer implements SyncTransport {
       'habit.create' => _habitCreate(m),
       'log.set_value' || 'log.set_binary' => _setValue(m),
       'log.delete' => _delete(m),
+      'profile.set_timezone' => _setTimezone(m),
       _ => _failed(m, 'rejected', {'code': 'unsupported_operation', 'message': 'x'}),
     };
     if (ack['status'] != 'dependency_pending') receipts[id] = (hash: hash, ack: ack);
     return ack;
+  }
+
+  /// A26: a zone other than the one in force becomes pending from the next day start; the zone
+  /// in force cancels a pending change.
+  Map<String, dynamic> _setTimezone(Map<String, dynamic> m) {
+    if (m['base_version'] != userVersion) {
+      return _failed(m, 'conflict', {
+        'code': 'version_conflict',
+        'message': 'x',
+        'resource_id': 'user-1',
+        'expected_version': m['base_version'],
+        'current_version': userVersion,
+        'current': user,
+      });
+    }
+    final zone = (m['payload'] as Map)['timezone'] as String;
+    pendingZone = zone == timezone ? null : zone;
+    userVersion++;
+    _journal('user', 'user-1', 'upsert', userVersion, user);
+    return {
+      'mutation_id': m['mutation_id'],
+      'status': 'accepted',
+      'duplicate': false,
+      'entity': 'user',
+      'entity_id': 'user-1',
+      'version': userVersion,
+    };
   }
 
   Map<String, dynamic> _habitCreate(Map<String, dynamic> m) {

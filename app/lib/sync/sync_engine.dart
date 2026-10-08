@@ -488,7 +488,34 @@ class SyncEngine {
       return;
     }
 
-    if (status == 'rejected' && error?['retryable'] == true) {
+    // Phase 3.2a: a time zone change was made against the user version this device knew. The
+    // server's answer names the current version, so it is sent once more on that base, as a new
+    // mutation: the server keeps a receipt for the conflict, so the old id would now be an
+    // idempotency_mismatch. A second conflict is the user's to look at. Other mutations never
+    // rebase automatically.
+    if (status == 'conflict' &&
+        error?['code'] == 'version_conflict' &&
+        row.operation == 'profile.set_timezone' &&
+        !_rebasedOnce(row)) {
+      final current = error?['current_version'] ?? (error?['current'] as Map?)?['version'];
+      if (current is int) {
+        await _update(
+          row,
+          OutboxCompanion(
+            mutationId: Value(const Uuid().v7()),
+            state: const Value(OutboxState.pending),
+            baseVersion: Value(current),
+            lastError: Value(jsonEncode({'code': 'version_conflict', 'rebased_once': true})),
+          ),
+        );
+        return;
+      }
+    }
+
+    // entity_read_only (A32) is never retried, whatever the ack says.
+    if (status == 'rejected' &&
+        error?['retryable'] == true &&
+        error?['code'] != 'entity_read_only') {
       final attempts = row.attempts + 1;
       final firstFailed = row.firstFailedAt ?? _now;
       await _update(
@@ -527,6 +554,11 @@ class SyncEngine {
         ),
       );
     }
+  }
+
+  static bool _rebasedOnce(OutboxRow row) {
+    final error = EntityCodec.decodeJson(row.lastError);
+    return error is Map && error['rebased_once'] == true;
   }
 
   /// A sent row without a (readable) ack is an attempt (F8): resent at once twice, then blocked
@@ -647,7 +679,7 @@ class SyncEngine {
       case 'habit_log':
         await _upsertLog(id, version, payload);
       case 'user':
-        await _applyUser(payload);
+        await _applyUser({...payload, 'version': version});
       case 'habit_progress':
         await _upsertProgress(id, version, change['operation'] == 'delete', payload);
       case 'period_evaluation':

@@ -120,6 +120,10 @@ void main() {
     });
 
     test('without calendar_history the single entry from the user entity is used', () async {
+      await phone.db.close();
+      server = FakeSyncServer()..sendCalendarHistory = false;
+      phone = await Device(server).init();
+      await phone.sync();
       final calendar = await AccountCalendar.load(phone.db, deviceNow: phone.now);
       expect(await entries(), isEmpty);
       expect(calendar!.zoneNow(phone.now), 'America/Los_Angeles');
