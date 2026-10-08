@@ -16,6 +16,8 @@ import '../support/app_harness.dart';
 import '../support/route_adapter.dart';
 import '../support/fake_notification_scheduler.dart';
 
+import 'package:habit/sync/background_sync.dart';
+
 /// G1: one owner for "what a 401 means", proven with the real ApiClient, HttpSyncTransport,
 /// AuthService and SessionProvider over a scripted HTTP adapter.
 void main() {
@@ -28,6 +30,8 @@ void main() {
   late ApiClient api;
   late AppDatabase db;
   late int ended;
+  late FakeNotificationScheduler os;
+  late _Background background;
 
   setUp(() async {
     http = RouteAdapter();
@@ -42,13 +46,16 @@ void main() {
       openDatabase: (_) => db,
       clock: () => testNow,
     );
+    os = FakeNotificationScheduler();
+    background = _Background();
     session = SessionProvider(
       auth,
       buildAccount: (s) => AccountContext(
         session: s,
         transport: HttpSyncTransport(api.dio, currentToken: api.currentToken),
         refreshIfStale: () async {},
-        notifications: FakeNotificationScheduler(),
+        notifications: os,
+        background: background,
         clock: () => testNow,
       ),
     );
@@ -97,6 +104,44 @@ void main() {
     expect(await db.select(db.outbox).get(), hasLength(1), reason: 'outbox untouched');
   });
 
+  Future<void> withReminder() async {
+    final account = session.account!;
+    final habit = await account.actions.createOneTapHabit(name: 'Stretch', category: 'health');
+    await account.writer.createReminder(
+      habitId: habit,
+      localTime: '20:00',
+      daysOfWeek: [1, 2, 3, 4, 5, 6, 7],
+    );
+    await account.reminders.replan();
+    await account.registerBackground();
+    expect(os.pending, isNotEmpty);
+    expect(background.registered, {'0190a000-0000-7000-8000-00000000000a'});
+  }
+
+  test("logout cancels this account's reminders and background sync", () async {
+    await withReminder();
+    http.on('POST /auth/logout', Reply(204, ''));
+
+    await session.signOut();
+
+    expect(os.pending, isEmpty);
+    expect(background.registered, isEmpty);
+    expect(session.isAuthenticated, isFalse);
+  });
+
+  test('a 401 ends the session but is not a logout: reminders stay scheduled', () async {
+    await withReminder();
+    final scheduled = os.pending.length;
+    http.on('GET /sync/bootstrap', Reply(401, errorEnvelope('unauthenticated')));
+
+    await session.account!.sync.sync(force: true);
+    await Future<void>.delayed(Duration.zero);
+
+    expect(session.isAuthenticated, isFalse);
+    expect(os.pending, hasLength(scheduled));
+    expect(background.registered, isNotEmpty);
+  });
+
   test('a token rotated while the request was in flight is retried once, then works', () async {
     final account = session.account!;
     var rotated = false;
@@ -141,4 +186,14 @@ void main() {
     expect(ended, 0);
     expect(tokens.token, 'tok-2', reason: 'the rotated token was not cleared');
   });
+}
+
+class _Background implements BackgroundSyncScheduler {
+  final registered = <String>{};
+
+  @override
+  Future<void> register(String accountKey) async => registered.add(accountKey);
+
+  @override
+  Future<void> cancel(String accountKey) async => registered.remove(accountKey);
 }
