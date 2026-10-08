@@ -12,7 +12,7 @@
 $root = dirname(__DIR__, 2);
 chdir($root);
 
-/** @var list<array{name: string, file: string, search: string, replace: string}> $mutants */
+/** @var list<array{name: string, file: string, search: string, replace: string, tests?: string}> $mutants */
 $mutants = require __DIR__.'/mutants.php';
 $originals = [];
 
@@ -44,7 +44,10 @@ foreach ($mutants as $i => $mutant) {
 
     $originals[$file] = $source;
     file_put_contents($file, str_replace($mutant['search'], $mutant['replace'], $source));
-    $command = escapeshellarg(PHP_BINARY).' vendor/bin/pest tests/Unit/Domain --no-coverage';
+    // Domain mutants run the pure domain suite; application mutants name the (PostgreSQL)
+    // feature tests that must kill them.
+    $tests = $mutant['tests'] ?? 'tests/Unit/Domain';
+    $command = escapeshellarg(PHP_BINARY).' vendor/bin/pest '.$tests.' --no-coverage';
     exec($command.' 2>&1', $output, $exit);
     $restore();
 

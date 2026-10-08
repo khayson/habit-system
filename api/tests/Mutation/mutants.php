@@ -72,4 +72,38 @@ return [
         'search' => '! $candidate->closed => FreezeOutcome::PeriodOpen,',
         'replace' => 'false => FreezeOutcome::PeriodOpen,',
     ],
+    // Phase 3.1 ---------------------------------------------------------------------------
+    [
+        'name' => 'A1: the closer writes without the user lock',
+        'file' => 'app/Application/Periods/PeriodCloser.php',
+        'search' => "            \$this->journal->lockUser(\$userId);\n            \$timeline = UserCalendar::timeline(\$userId);",
+        'replace' => '            $timeline = UserCalendar::timeline($userId);',
+        'tests' => 'tests/Feature/PeriodCloserConcurrencyTest.php',
+    ],
+    [
+        'name' => 'A10: a changed evaluation keeps its revision',
+        'file' => 'app/Application/Periods/PeriodCloser.php',
+        'search' => "'revision' => (int) \$existing->revision + 1,",
+        'replace' => "'revision' => (int) \$existing->revision,",
+        'tests' => 'tests/Feature/PeriodCloserTest.php',
+    ],
+    [
+        'name' => 'invariant 6: an evaluation change is not journaled',
+        'file' => 'app/Application/Periods/PeriodCloser.php',
+        'search' => "\$this->journal->append(\$userId, 'period_evaluation',",
+        'replace' => "if (false) \$this->journal->append(\$userId, 'period_evaluation',",
+        'tests' => 'tests/Feature/PeriodCloserTest.php',
+    ],
+    [
+        'name' => 'A26: a calendar change takes effect at the request instant',
+        'file' => 'app/Domain/Calendar/CalendarHistory.php',
+        'search' => '$effectiveAt = $current->startOfLocalDay($current->localDateAt($now)->addDays(1));',
+        'replace' => '$effectiveAt = $now;',
+    ],
+    [
+        'name' => 'A30: zero-length dates count as missed days',
+        'file' => 'app/Domain/Period/PeriodEngine.php',
+        'search' => '! $schedule->isActive($date) || ! $exists($date)',
+        'replace' => '! $schedule->isActive($date)',
+    ],
 ];

@@ -20,15 +20,39 @@ jobs:
     defaults:
       run:
         working-directory: api
+    # Application mutants (closer lock, revision, journal) are killed by feature tests on
+    # real PostgreSQL, like the CI api job.
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: habit
+          POSTGRES_PASSWORD: habit
+          POSTGRES_DB: habit_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U habit -d habit_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_DATABASE: habit_test
+      DB_USERNAME: habit
+      DB_PASSWORD: habit
     steps:
       - uses: actions/checkout@v7
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: mbstring, intl
+          extensions: pdo_pgsql, pgsql, mbstring, intl, sodium, fileinfo, zip
           ini-values: date.timezone=UTC, memory_limit=1G
           coverage: none
       - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: cp .env.example .env && php artisan key:generate
       - name: Property tests with 50 random seeds
         env:
           PROPERTY_RANDOM_SEEDS: '50'
