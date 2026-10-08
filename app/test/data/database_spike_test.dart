@@ -91,8 +91,8 @@ void main() {
         )
         .get();
 
-    expect(db.schemaVersion, 5);
-    expect(userVersion.data.values.single, 5);
+    expect(db.schemaVersion, 6);
+    expect(userVersion.data.values.single, 6);
     expect(journal.data.values.single, 'wal');
     expect(fk.data.values.single, 1);
     expect(synchronous.data.values.single, 2, reason: 'synchronous = FULL (2)');
@@ -106,6 +106,8 @@ void main() {
       'opaque_entities',
       'outbox',
       'period_evaluations',
+      'reminders',
+      'scheduled_notifications',
       'sync_state',
     ]);
     await db.close();

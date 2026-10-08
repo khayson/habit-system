@@ -6561,6 +6561,998 @@ class LocalSettingsCompanion extends UpdateCompanion<LocalSetting> {
   }
 }
 
+class $RemindersTable extends Reminders
+    with TableInfo<$RemindersTable, ConfirmedReminder> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RemindersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _habitIdMeta = const VerificationMeta(
+    'habitId',
+  );
+  @override
+  late final GeneratedColumn<String> habitId = GeneratedColumn<String>(
+    'habit_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _localTimeMeta = const VerificationMeta(
+    'localTime',
+  );
+  @override
+  late final GeneratedColumn<String> localTime = GeneratedColumn<String>(
+    'local_time',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _daysOfWeekMeta = const VerificationMeta(
+    'daysOfWeek',
+  );
+  @override
+  late final GeneratedColumn<String> daysOfWeek = GeneratedColumn<String>(
+    'days_of_week',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _timezoneModeMeta = const VerificationMeta(
+    'timezoneMode',
+  );
+  @override
+  late final GeneratedColumn<String> timezoneMode = GeneratedColumn<String>(
+    'timezone_mode',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _timezoneMeta = const VerificationMeta(
+    'timezone',
+  );
+  @override
+  late final GeneratedColumn<String> timezone = GeneratedColumn<String>(
+    'timezone',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _enabledMeta = const VerificationMeta(
+    'enabled',
+  );
+  @override
+  late final GeneratedColumn<bool> enabled = GeneratedColumn<bool>(
+    'enabled',
+    aliasedName,
+    true,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("enabled" IN (0, 1))',
+    ),
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<String> deletedAt = GeneratedColumn<String>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _extraMeta = const VerificationMeta('extra');
+  @override
+  late final GeneratedColumn<String> extra = GeneratedColumn<String>(
+    'extra',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('{}'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    habitId,
+    localTime,
+    daysOfWeek,
+    timezoneMode,
+    timezone,
+    enabled,
+    version,
+    deletedAt,
+    extra,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'reminders';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ConfirmedReminder> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('habit_id')) {
+      context.handle(
+        _habitIdMeta,
+        habitId.isAcceptableOrUnknown(data['habit_id']!, _habitIdMeta),
+      );
+    }
+    if (data.containsKey('local_time')) {
+      context.handle(
+        _localTimeMeta,
+        localTime.isAcceptableOrUnknown(data['local_time']!, _localTimeMeta),
+      );
+    }
+    if (data.containsKey('days_of_week')) {
+      context.handle(
+        _daysOfWeekMeta,
+        daysOfWeek.isAcceptableOrUnknown(
+          data['days_of_week']!,
+          _daysOfWeekMeta,
+        ),
+      );
+    }
+    if (data.containsKey('timezone_mode')) {
+      context.handle(
+        _timezoneModeMeta,
+        timezoneMode.isAcceptableOrUnknown(
+          data['timezone_mode']!,
+          _timezoneModeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('timezone')) {
+      context.handle(
+        _timezoneMeta,
+        timezone.isAcceptableOrUnknown(data['timezone']!, _timezoneMeta),
+      );
+    }
+    if (data.containsKey('enabled')) {
+      context.handle(
+        _enabledMeta,
+        enabled.isAcceptableOrUnknown(data['enabled']!, _enabledMeta),
+      );
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_versionMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('extra')) {
+      context.handle(
+        _extraMeta,
+        extra.isAcceptableOrUnknown(data['extra']!, _extraMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ConfirmedReminder map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ConfirmedReminder(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      habitId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}habit_id'],
+      ),
+      localTime: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}local_time'],
+      ),
+      daysOfWeek: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}days_of_week'],
+      ),
+      timezoneMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}timezone_mode'],
+      ),
+      timezone: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}timezone'],
+      ),
+      enabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}enabled'],
+      ),
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      extra: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}extra'],
+      )!,
+    );
+  }
+
+  @override
+  $RemindersTable createAlias(String alias) {
+    return $RemindersTable(attachedDatabase, alias);
+  }
+}
+
+class ConfirmedReminder extends DataClass
+    implements Insertable<ConfirmedReminder> {
+  final String id;
+  final String? habitId;
+  final String? localTime;
+
+  /// JSON array of ISO days, 1 = Monday.
+  final String? daysOfWeek;
+  final String? timezoneMode;
+  final String? timezone;
+  final bool? enabled;
+  final int version;
+  final String? deletedAt;
+  final String extra;
+  const ConfirmedReminder({
+    required this.id,
+    this.habitId,
+    this.localTime,
+    this.daysOfWeek,
+    this.timezoneMode,
+    this.timezone,
+    this.enabled,
+    required this.version,
+    this.deletedAt,
+    required this.extra,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    if (!nullToAbsent || habitId != null) {
+      map['habit_id'] = Variable<String>(habitId);
+    }
+    if (!nullToAbsent || localTime != null) {
+      map['local_time'] = Variable<String>(localTime);
+    }
+    if (!nullToAbsent || daysOfWeek != null) {
+      map['days_of_week'] = Variable<String>(daysOfWeek);
+    }
+    if (!nullToAbsent || timezoneMode != null) {
+      map['timezone_mode'] = Variable<String>(timezoneMode);
+    }
+    if (!nullToAbsent || timezone != null) {
+      map['timezone'] = Variable<String>(timezone);
+    }
+    if (!nullToAbsent || enabled != null) {
+      map['enabled'] = Variable<bool>(enabled);
+    }
+    map['version'] = Variable<int>(version);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<String>(deletedAt);
+    }
+    map['extra'] = Variable<String>(extra);
+    return map;
+  }
+
+  RemindersCompanion toCompanion(bool nullToAbsent) {
+    return RemindersCompanion(
+      id: Value(id),
+      habitId: habitId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(habitId),
+      localTime: localTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(localTime),
+      daysOfWeek: daysOfWeek == null && nullToAbsent
+          ? const Value.absent()
+          : Value(daysOfWeek),
+      timezoneMode: timezoneMode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(timezoneMode),
+      timezone: timezone == null && nullToAbsent
+          ? const Value.absent()
+          : Value(timezone),
+      enabled: enabled == null && nullToAbsent
+          ? const Value.absent()
+          : Value(enabled),
+      version: Value(version),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      extra: Value(extra),
+    );
+  }
+
+  factory ConfirmedReminder.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ConfirmedReminder(
+      id: serializer.fromJson<String>(json['id']),
+      habitId: serializer.fromJson<String?>(json['habitId']),
+      localTime: serializer.fromJson<String?>(json['localTime']),
+      daysOfWeek: serializer.fromJson<String?>(json['daysOfWeek']),
+      timezoneMode: serializer.fromJson<String?>(json['timezoneMode']),
+      timezone: serializer.fromJson<String?>(json['timezone']),
+      enabled: serializer.fromJson<bool?>(json['enabled']),
+      version: serializer.fromJson<int>(json['version']),
+      deletedAt: serializer.fromJson<String?>(json['deletedAt']),
+      extra: serializer.fromJson<String>(json['extra']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'habitId': serializer.toJson<String?>(habitId),
+      'localTime': serializer.toJson<String?>(localTime),
+      'daysOfWeek': serializer.toJson<String?>(daysOfWeek),
+      'timezoneMode': serializer.toJson<String?>(timezoneMode),
+      'timezone': serializer.toJson<String?>(timezone),
+      'enabled': serializer.toJson<bool?>(enabled),
+      'version': serializer.toJson<int>(version),
+      'deletedAt': serializer.toJson<String?>(deletedAt),
+      'extra': serializer.toJson<String>(extra),
+    };
+  }
+
+  ConfirmedReminder copyWith({
+    String? id,
+    Value<String?> habitId = const Value.absent(),
+    Value<String?> localTime = const Value.absent(),
+    Value<String?> daysOfWeek = const Value.absent(),
+    Value<String?> timezoneMode = const Value.absent(),
+    Value<String?> timezone = const Value.absent(),
+    Value<bool?> enabled = const Value.absent(),
+    int? version,
+    Value<String?> deletedAt = const Value.absent(),
+    String? extra,
+  }) => ConfirmedReminder(
+    id: id ?? this.id,
+    habitId: habitId.present ? habitId.value : this.habitId,
+    localTime: localTime.present ? localTime.value : this.localTime,
+    daysOfWeek: daysOfWeek.present ? daysOfWeek.value : this.daysOfWeek,
+    timezoneMode: timezoneMode.present ? timezoneMode.value : this.timezoneMode,
+    timezone: timezone.present ? timezone.value : this.timezone,
+    enabled: enabled.present ? enabled.value : this.enabled,
+    version: version ?? this.version,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    extra: extra ?? this.extra,
+  );
+  ConfirmedReminder copyWithCompanion(RemindersCompanion data) {
+    return ConfirmedReminder(
+      id: data.id.present ? data.id.value : this.id,
+      habitId: data.habitId.present ? data.habitId.value : this.habitId,
+      localTime: data.localTime.present ? data.localTime.value : this.localTime,
+      daysOfWeek: data.daysOfWeek.present
+          ? data.daysOfWeek.value
+          : this.daysOfWeek,
+      timezoneMode: data.timezoneMode.present
+          ? data.timezoneMode.value
+          : this.timezoneMode,
+      timezone: data.timezone.present ? data.timezone.value : this.timezone,
+      enabled: data.enabled.present ? data.enabled.value : this.enabled,
+      version: data.version.present ? data.version.value : this.version,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      extra: data.extra.present ? data.extra.value : this.extra,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ConfirmedReminder(')
+          ..write('id: $id, ')
+          ..write('habitId: $habitId, ')
+          ..write('localTime: $localTime, ')
+          ..write('daysOfWeek: $daysOfWeek, ')
+          ..write('timezoneMode: $timezoneMode, ')
+          ..write('timezone: $timezone, ')
+          ..write('enabled: $enabled, ')
+          ..write('version: $version, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('extra: $extra')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    habitId,
+    localTime,
+    daysOfWeek,
+    timezoneMode,
+    timezone,
+    enabled,
+    version,
+    deletedAt,
+    extra,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ConfirmedReminder &&
+          other.id == this.id &&
+          other.habitId == this.habitId &&
+          other.localTime == this.localTime &&
+          other.daysOfWeek == this.daysOfWeek &&
+          other.timezoneMode == this.timezoneMode &&
+          other.timezone == this.timezone &&
+          other.enabled == this.enabled &&
+          other.version == this.version &&
+          other.deletedAt == this.deletedAt &&
+          other.extra == this.extra);
+}
+
+class RemindersCompanion extends UpdateCompanion<ConfirmedReminder> {
+  final Value<String> id;
+  final Value<String?> habitId;
+  final Value<String?> localTime;
+  final Value<String?> daysOfWeek;
+  final Value<String?> timezoneMode;
+  final Value<String?> timezone;
+  final Value<bool?> enabled;
+  final Value<int> version;
+  final Value<String?> deletedAt;
+  final Value<String> extra;
+  final Value<int> rowid;
+  const RemindersCompanion({
+    this.id = const Value.absent(),
+    this.habitId = const Value.absent(),
+    this.localTime = const Value.absent(),
+    this.daysOfWeek = const Value.absent(),
+    this.timezoneMode = const Value.absent(),
+    this.timezone = const Value.absent(),
+    this.enabled = const Value.absent(),
+    this.version = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.extra = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  RemindersCompanion.insert({
+    required String id,
+    this.habitId = const Value.absent(),
+    this.localTime = const Value.absent(),
+    this.daysOfWeek = const Value.absent(),
+    this.timezoneMode = const Value.absent(),
+    this.timezone = const Value.absent(),
+    this.enabled = const Value.absent(),
+    required int version,
+    this.deletedAt = const Value.absent(),
+    this.extra = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       version = Value(version);
+  static Insertable<ConfirmedReminder> custom({
+    Expression<String>? id,
+    Expression<String>? habitId,
+    Expression<String>? localTime,
+    Expression<String>? daysOfWeek,
+    Expression<String>? timezoneMode,
+    Expression<String>? timezone,
+    Expression<bool>? enabled,
+    Expression<int>? version,
+    Expression<String>? deletedAt,
+    Expression<String>? extra,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (habitId != null) 'habit_id': habitId,
+      if (localTime != null) 'local_time': localTime,
+      if (daysOfWeek != null) 'days_of_week': daysOfWeek,
+      if (timezoneMode != null) 'timezone_mode': timezoneMode,
+      if (timezone != null) 'timezone': timezone,
+      if (enabled != null) 'enabled': enabled,
+      if (version != null) 'version': version,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (extra != null) 'extra': extra,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  RemindersCompanion copyWith({
+    Value<String>? id,
+    Value<String?>? habitId,
+    Value<String?>? localTime,
+    Value<String?>? daysOfWeek,
+    Value<String?>? timezoneMode,
+    Value<String?>? timezone,
+    Value<bool?>? enabled,
+    Value<int>? version,
+    Value<String?>? deletedAt,
+    Value<String>? extra,
+    Value<int>? rowid,
+  }) {
+    return RemindersCompanion(
+      id: id ?? this.id,
+      habitId: habitId ?? this.habitId,
+      localTime: localTime ?? this.localTime,
+      daysOfWeek: daysOfWeek ?? this.daysOfWeek,
+      timezoneMode: timezoneMode ?? this.timezoneMode,
+      timezone: timezone ?? this.timezone,
+      enabled: enabled ?? this.enabled,
+      version: version ?? this.version,
+      deletedAt: deletedAt ?? this.deletedAt,
+      extra: extra ?? this.extra,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (habitId.present) {
+      map['habit_id'] = Variable<String>(habitId.value);
+    }
+    if (localTime.present) {
+      map['local_time'] = Variable<String>(localTime.value);
+    }
+    if (daysOfWeek.present) {
+      map['days_of_week'] = Variable<String>(daysOfWeek.value);
+    }
+    if (timezoneMode.present) {
+      map['timezone_mode'] = Variable<String>(timezoneMode.value);
+    }
+    if (timezone.present) {
+      map['timezone'] = Variable<String>(timezone.value);
+    }
+    if (enabled.present) {
+      map['enabled'] = Variable<bool>(enabled.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<String>(deletedAt.value);
+    }
+    if (extra.present) {
+      map['extra'] = Variable<String>(extra.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RemindersCompanion(')
+          ..write('id: $id, ')
+          ..write('habitId: $habitId, ')
+          ..write('localTime: $localTime, ')
+          ..write('daysOfWeek: $daysOfWeek, ')
+          ..write('timezoneMode: $timezoneMode, ')
+          ..write('timezone: $timezone, ')
+          ..write('enabled: $enabled, ')
+          ..write('version: $version, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('extra: $extra, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ScheduledNotificationsTable extends ScheduledNotifications
+    with TableInfo<$ScheduledNotificationsTable, ScheduledNotification> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ScheduledNotificationsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _platformIdMeta = const VerificationMeta(
+    'platformId',
+  );
+  @override
+  late final GeneratedColumn<int> platformId = GeneratedColumn<int>(
+    'platform_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _reminderIdMeta = const VerificationMeta(
+    'reminderId',
+  );
+  @override
+  late final GeneratedColumn<String> reminderId = GeneratedColumn<String>(
+    'reminder_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _habitIdMeta = const VerificationMeta(
+    'habitId',
+  );
+  @override
+  late final GeneratedColumn<String> habitId = GeneratedColumn<String>(
+    'habit_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _slotDateMeta = const VerificationMeta(
+    'slotDate',
+  );
+  @override
+  late final GeneratedColumn<String> slotDate = GeneratedColumn<String>(
+    'slot_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _fireAtMeta = const VerificationMeta('fireAt');
+  @override
+  late final GeneratedColumn<int> fireAt = GeneratedColumn<int>(
+    'fire_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    platformId,
+    reminderId,
+    habitId,
+    slotDate,
+    fireAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'scheduled_notifications';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ScheduledNotification> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('platform_id')) {
+      context.handle(
+        _platformIdMeta,
+        platformId.isAcceptableOrUnknown(data['platform_id']!, _platformIdMeta),
+      );
+    }
+    if (data.containsKey('reminder_id')) {
+      context.handle(
+        _reminderIdMeta,
+        reminderId.isAcceptableOrUnknown(data['reminder_id']!, _reminderIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_reminderIdMeta);
+    }
+    if (data.containsKey('habit_id')) {
+      context.handle(
+        _habitIdMeta,
+        habitId.isAcceptableOrUnknown(data['habit_id']!, _habitIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_habitIdMeta);
+    }
+    if (data.containsKey('slot_date')) {
+      context.handle(
+        _slotDateMeta,
+        slotDate.isAcceptableOrUnknown(data['slot_date']!, _slotDateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_slotDateMeta);
+    }
+    if (data.containsKey('fire_at')) {
+      context.handle(
+        _fireAtMeta,
+        fireAt.isAcceptableOrUnknown(data['fire_at']!, _fireAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_fireAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {platformId};
+  @override
+  ScheduledNotification map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ScheduledNotification(
+      platformId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}platform_id'],
+      )!,
+      reminderId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reminder_id'],
+      )!,
+      habitId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}habit_id'],
+      )!,
+      slotDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}slot_date'],
+      )!,
+      fireAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}fire_at'],
+      )!,
+    );
+  }
+
+  @override
+  $ScheduledNotificationsTable createAlias(String alias) {
+    return $ScheduledNotificationsTable(attachedDatabase, alias);
+  }
+}
+
+class ScheduledNotification extends DataClass
+    implements Insertable<ScheduledNotification> {
+  /// The platform notification id (stable per account + reminder + local date slot).
+  final int platformId;
+  final String reminderId;
+  final String habitId;
+
+  /// Local date (YYYY-MM-DD) of the slot.
+  final String slotDate;
+
+  /// UTC milliseconds.
+  final int fireAt;
+  const ScheduledNotification({
+    required this.platformId,
+    required this.reminderId,
+    required this.habitId,
+    required this.slotDate,
+    required this.fireAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['platform_id'] = Variable<int>(platformId);
+    map['reminder_id'] = Variable<String>(reminderId);
+    map['habit_id'] = Variable<String>(habitId);
+    map['slot_date'] = Variable<String>(slotDate);
+    map['fire_at'] = Variable<int>(fireAt);
+    return map;
+  }
+
+  ScheduledNotificationsCompanion toCompanion(bool nullToAbsent) {
+    return ScheduledNotificationsCompanion(
+      platformId: Value(platformId),
+      reminderId: Value(reminderId),
+      habitId: Value(habitId),
+      slotDate: Value(slotDate),
+      fireAt: Value(fireAt),
+    );
+  }
+
+  factory ScheduledNotification.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ScheduledNotification(
+      platformId: serializer.fromJson<int>(json['platformId']),
+      reminderId: serializer.fromJson<String>(json['reminderId']),
+      habitId: serializer.fromJson<String>(json['habitId']),
+      slotDate: serializer.fromJson<String>(json['slotDate']),
+      fireAt: serializer.fromJson<int>(json['fireAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'platformId': serializer.toJson<int>(platformId),
+      'reminderId': serializer.toJson<String>(reminderId),
+      'habitId': serializer.toJson<String>(habitId),
+      'slotDate': serializer.toJson<String>(slotDate),
+      'fireAt': serializer.toJson<int>(fireAt),
+    };
+  }
+
+  ScheduledNotification copyWith({
+    int? platformId,
+    String? reminderId,
+    String? habitId,
+    String? slotDate,
+    int? fireAt,
+  }) => ScheduledNotification(
+    platformId: platformId ?? this.platformId,
+    reminderId: reminderId ?? this.reminderId,
+    habitId: habitId ?? this.habitId,
+    slotDate: slotDate ?? this.slotDate,
+    fireAt: fireAt ?? this.fireAt,
+  );
+  ScheduledNotification copyWithCompanion(
+    ScheduledNotificationsCompanion data,
+  ) {
+    return ScheduledNotification(
+      platformId: data.platformId.present
+          ? data.platformId.value
+          : this.platformId,
+      reminderId: data.reminderId.present
+          ? data.reminderId.value
+          : this.reminderId,
+      habitId: data.habitId.present ? data.habitId.value : this.habitId,
+      slotDate: data.slotDate.present ? data.slotDate.value : this.slotDate,
+      fireAt: data.fireAt.present ? data.fireAt.value : this.fireAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ScheduledNotification(')
+          ..write('platformId: $platformId, ')
+          ..write('reminderId: $reminderId, ')
+          ..write('habitId: $habitId, ')
+          ..write('slotDate: $slotDate, ')
+          ..write('fireAt: $fireAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(platformId, reminderId, habitId, slotDate, fireAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ScheduledNotification &&
+          other.platformId == this.platformId &&
+          other.reminderId == this.reminderId &&
+          other.habitId == this.habitId &&
+          other.slotDate == this.slotDate &&
+          other.fireAt == this.fireAt);
+}
+
+class ScheduledNotificationsCompanion
+    extends UpdateCompanion<ScheduledNotification> {
+  final Value<int> platformId;
+  final Value<String> reminderId;
+  final Value<String> habitId;
+  final Value<String> slotDate;
+  final Value<int> fireAt;
+  const ScheduledNotificationsCompanion({
+    this.platformId = const Value.absent(),
+    this.reminderId = const Value.absent(),
+    this.habitId = const Value.absent(),
+    this.slotDate = const Value.absent(),
+    this.fireAt = const Value.absent(),
+  });
+  ScheduledNotificationsCompanion.insert({
+    this.platformId = const Value.absent(),
+    required String reminderId,
+    required String habitId,
+    required String slotDate,
+    required int fireAt,
+  }) : reminderId = Value(reminderId),
+       habitId = Value(habitId),
+       slotDate = Value(slotDate),
+       fireAt = Value(fireAt);
+  static Insertable<ScheduledNotification> custom({
+    Expression<int>? platformId,
+    Expression<String>? reminderId,
+    Expression<String>? habitId,
+    Expression<String>? slotDate,
+    Expression<int>? fireAt,
+  }) {
+    return RawValuesInsertable({
+      if (platformId != null) 'platform_id': platformId,
+      if (reminderId != null) 'reminder_id': reminderId,
+      if (habitId != null) 'habit_id': habitId,
+      if (slotDate != null) 'slot_date': slotDate,
+      if (fireAt != null) 'fire_at': fireAt,
+    });
+  }
+
+  ScheduledNotificationsCompanion copyWith({
+    Value<int>? platformId,
+    Value<String>? reminderId,
+    Value<String>? habitId,
+    Value<String>? slotDate,
+    Value<int>? fireAt,
+  }) {
+    return ScheduledNotificationsCompanion(
+      platformId: platformId ?? this.platformId,
+      reminderId: reminderId ?? this.reminderId,
+      habitId: habitId ?? this.habitId,
+      slotDate: slotDate ?? this.slotDate,
+      fireAt: fireAt ?? this.fireAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (platformId.present) {
+      map['platform_id'] = Variable<int>(platformId.value);
+    }
+    if (reminderId.present) {
+      map['reminder_id'] = Variable<String>(reminderId.value);
+    }
+    if (habitId.present) {
+      map['habit_id'] = Variable<String>(habitId.value);
+    }
+    if (slotDate.present) {
+      map['slot_date'] = Variable<String>(slotDate.value);
+    }
+    if (fireAt.present) {
+      map['fire_at'] = Variable<int>(fireAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ScheduledNotificationsCompanion(')
+          ..write('platformId: $platformId, ')
+          ..write('reminderId: $reminderId, ')
+          ..write('habitId: $habitId, ')
+          ..write('slotDate: $slotDate, ')
+          ..write('fireAt: $fireAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -6578,6 +7570,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $PeriodEvaluationsTable periodEvaluations =
       $PeriodEvaluationsTable(this);
   late final $LocalSettingsTable localSettings = $LocalSettingsTable(this);
+  late final $RemindersTable reminders = $RemindersTable(this);
+  late final $ScheduledNotificationsTable scheduledNotifications =
+      $ScheduledNotificationsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -6593,6 +7588,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     habitProgress,
     periodEvaluations,
     localSettings,
+    reminders,
+    scheduledNotifications,
   ];
 }
 
@@ -9826,6 +10823,541 @@ typedef $$LocalSettingsTableProcessedTableManager =
       LocalSetting,
       PrefetchHooks Function()
     >;
+typedef $$RemindersTableCreateCompanionBuilder = RemindersCompanion Function({
+  required String id,
+  Value<String?> habitId,
+  Value<String?> localTime,
+  Value<String?> daysOfWeek,
+  Value<String?> timezoneMode,
+  Value<String?> timezone,
+  Value<bool?> enabled,
+  required int version,
+  Value<String?> deletedAt,
+  Value<String> extra,
+  Value<int> rowid,
+});
+typedef $$RemindersTableUpdateCompanionBuilder = RemindersCompanion Function({
+  Value<String> id,
+  Value<String?> habitId,
+  Value<String?> localTime,
+  Value<String?> daysOfWeek,
+  Value<String?> timezoneMode,
+  Value<String?> timezone,
+  Value<bool?> enabled,
+  Value<int> version,
+  Value<String?> deletedAt,
+  Value<String> extra,
+  Value<int> rowid,
+});
+
+class $$RemindersTableFilterComposer
+    extends Composer<_$AppDatabase, $RemindersTable> {
+  $$RemindersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get habitId => $composableBuilder(
+    column: $table.habitId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get localTime => $composableBuilder(
+    column: $table.localTime,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get daysOfWeek => $composableBuilder(
+    column: $table.daysOfWeek,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get timezoneMode => $composableBuilder(
+    column: $table.timezoneMode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get timezone => $composableBuilder(
+    column: $table.timezone,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get enabled => $composableBuilder(
+    column: $table.enabled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get extra => $composableBuilder(
+    column: $table.extra,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$RemindersTableOrderingComposer
+    extends Composer<_$AppDatabase, $RemindersTable> {
+  $$RemindersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get habitId => $composableBuilder(
+    column: $table.habitId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get localTime => $composableBuilder(
+    column: $table.localTime,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get daysOfWeek => $composableBuilder(
+    column: $table.daysOfWeek,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get timezoneMode => $composableBuilder(
+    column: $table.timezoneMode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get timezone => $composableBuilder(
+    column: $table.timezone,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get enabled => $composableBuilder(
+    column: $table.enabled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get extra => $composableBuilder(
+    column: $table.extra,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$RemindersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $RemindersTable> {
+  $$RemindersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get habitId =>
+      $composableBuilder(column: $table.habitId, builder: (column) => column);
+
+  GeneratedColumn<String> get localTime =>
+      $composableBuilder(column: $table.localTime, builder: (column) => column);
+
+  GeneratedColumn<String> get daysOfWeek => $composableBuilder(
+    column: $table.daysOfWeek,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get timezoneMode => $composableBuilder(
+    column: $table.timezoneMode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get timezone =>
+      $composableBuilder(column: $table.timezone, builder: (column) => column);
+
+  GeneratedColumn<bool> get enabled =>
+      $composableBuilder(column: $table.enabled, builder: (column) => column);
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<String> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get extra =>
+      $composableBuilder(column: $table.extra, builder: (column) => column);
+}
+
+class $$RemindersTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $RemindersTable,
+          ConfirmedReminder,
+          $$RemindersTableFilterComposer,
+          $$RemindersTableOrderingComposer,
+          $$RemindersTableAnnotationComposer,
+          $$RemindersTableCreateCompanionBuilder,
+          $$RemindersTableUpdateCompanionBuilder,
+          (
+            ConfirmedReminder,
+            BaseReferences<_$AppDatabase, $RemindersTable, ConfirmedReminder>,
+          ),
+          ConfirmedReminder,
+          PrefetchHooks Function()
+        > {
+  $$RemindersTableTableManager(_$AppDatabase db, $RemindersTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RemindersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RemindersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RemindersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String?> habitId = const Value.absent(),
+                Value<String?> localTime = const Value.absent(),
+                Value<String?> daysOfWeek = const Value.absent(),
+                Value<String?> timezoneMode = const Value.absent(),
+                Value<String?> timezone = const Value.absent(),
+                Value<bool?> enabled = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String> extra = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RemindersCompanion(
+                id: id,
+                habitId: habitId,
+                localTime: localTime,
+                daysOfWeek: daysOfWeek,
+                timezoneMode: timezoneMode,
+                timezone: timezone,
+                enabled: enabled,
+                version: version,
+                deletedAt: deletedAt,
+                extra: extra,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<String?> habitId = const Value.absent(),
+                Value<String?> localTime = const Value.absent(),
+                Value<String?> daysOfWeek = const Value.absent(),
+                Value<String?> timezoneMode = const Value.absent(),
+                Value<String?> timezone = const Value.absent(),
+                Value<bool?> enabled = const Value.absent(),
+                required int version,
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String> extra = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RemindersCompanion.insert(
+                id: id,
+                habitId: habitId,
+                localTime: localTime,
+                daysOfWeek: daysOfWeek,
+                timezoneMode: timezoneMode,
+                timezone: timezone,
+                enabled: enabled,
+                version: version,
+                deletedAt: deletedAt,
+                extra: extra,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$RemindersTable, ConfirmedReminder>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $RemindersTable,
+                    ConfirmedReminder
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$RemindersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $RemindersTable,
+      ConfirmedReminder,
+      $$RemindersTableFilterComposer,
+      $$RemindersTableOrderingComposer,
+      $$RemindersTableAnnotationComposer,
+      $$RemindersTableCreateCompanionBuilder,
+      $$RemindersTableUpdateCompanionBuilder,
+      (
+        ConfirmedReminder,
+        BaseReferences<_$AppDatabase, $RemindersTable, ConfirmedReminder>,
+      ),
+      ConfirmedReminder,
+      PrefetchHooks Function()
+    >;
+typedef $$ScheduledNotificationsTableCreateCompanionBuilder =
+    ScheduledNotificationsCompanion Function({
+      Value<int> platformId,
+      required String reminderId,
+      required String habitId,
+      required String slotDate,
+      required int fireAt,
+    });
+typedef $$ScheduledNotificationsTableUpdateCompanionBuilder =
+    ScheduledNotificationsCompanion Function({
+      Value<int> platformId,
+      Value<String> reminderId,
+      Value<String> habitId,
+      Value<String> slotDate,
+      Value<int> fireAt,
+    });
+
+class $$ScheduledNotificationsTableFilterComposer
+    extends Composer<_$AppDatabase, $ScheduledNotificationsTable> {
+  $$ScheduledNotificationsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get platformId => $composableBuilder(
+    column: $table.platformId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reminderId => $composableBuilder(
+    column: $table.reminderId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get habitId => $composableBuilder(
+    column: $table.habitId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get slotDate => $composableBuilder(
+    column: $table.slotDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get fireAt => $composableBuilder(
+    column: $table.fireAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ScheduledNotificationsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ScheduledNotificationsTable> {
+  $$ScheduledNotificationsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get platformId => $composableBuilder(
+    column: $table.platformId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get reminderId => $composableBuilder(
+    column: $table.reminderId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get habitId => $composableBuilder(
+    column: $table.habitId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get slotDate => $composableBuilder(
+    column: $table.slotDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get fireAt => $composableBuilder(
+    column: $table.fireAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ScheduledNotificationsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ScheduledNotificationsTable> {
+  $$ScheduledNotificationsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get platformId => $composableBuilder(
+    column: $table.platformId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get reminderId => $composableBuilder(
+    column: $table.reminderId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get habitId =>
+      $composableBuilder(column: $table.habitId, builder: (column) => column);
+
+  GeneratedColumn<String> get slotDate =>
+      $composableBuilder(column: $table.slotDate, builder: (column) => column);
+
+  GeneratedColumn<int> get fireAt =>
+      $composableBuilder(column: $table.fireAt, builder: (column) => column);
+}
+
+class $$ScheduledNotificationsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ScheduledNotificationsTable,
+          ScheduledNotification,
+          $$ScheduledNotificationsTableFilterComposer,
+          $$ScheduledNotificationsTableOrderingComposer,
+          $$ScheduledNotificationsTableAnnotationComposer,
+          $$ScheduledNotificationsTableCreateCompanionBuilder,
+          $$ScheduledNotificationsTableUpdateCompanionBuilder,
+          (
+            ScheduledNotification,
+            BaseReferences<
+              _$AppDatabase,
+              $ScheduledNotificationsTable,
+              ScheduledNotification
+            >,
+          ),
+          ScheduledNotification,
+          PrefetchHooks Function()
+        > {
+  $$ScheduledNotificationsTableTableManager(
+    _$AppDatabase db,
+    $ScheduledNotificationsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ScheduledNotificationsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$ScheduledNotificationsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$ScheduledNotificationsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> platformId = const Value.absent(),
+                Value<String> reminderId = const Value.absent(),
+                Value<String> habitId = const Value.absent(),
+                Value<String> slotDate = const Value.absent(),
+                Value<int> fireAt = const Value.absent(),
+              }) => ScheduledNotificationsCompanion(
+                platformId: platformId,
+                reminderId: reminderId,
+                habitId: habitId,
+                slotDate: slotDate,
+                fireAt: fireAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> platformId = const Value.absent(),
+                required String reminderId,
+                required String habitId,
+                required String slotDate,
+                required int fireAt,
+              }) => ScheduledNotificationsCompanion.insert(
+                platformId: platformId,
+                reminderId: reminderId,
+                habitId: habitId,
+                slotDate: slotDate,
+                fireAt: fireAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<
+                    $ScheduledNotificationsTable,
+                    ScheduledNotification
+                  >(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $ScheduledNotificationsTable,
+                    ScheduledNotification
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ScheduledNotificationsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ScheduledNotificationsTable,
+      ScheduledNotification,
+      $$ScheduledNotificationsTableFilterComposer,
+      $$ScheduledNotificationsTableOrderingComposer,
+      $$ScheduledNotificationsTableAnnotationComposer,
+      $$ScheduledNotificationsTableCreateCompanionBuilder,
+      $$ScheduledNotificationsTableUpdateCompanionBuilder,
+      (
+        ScheduledNotification,
+        BaseReferences<
+          _$AppDatabase,
+          $ScheduledNotificationsTable,
+          ScheduledNotification
+        >,
+      ),
+      ScheduledNotification,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -9850,4 +11382,11 @@ class $AppDatabaseManager {
       $$PeriodEvaluationsTableTableManager(_db, _db.periodEvaluations);
   $$LocalSettingsTableTableManager get localSettings =>
       $$LocalSettingsTableTableManager(_db, _db.localSettings);
+  $$RemindersTableTableManager get reminders =>
+      $$RemindersTableTableManager(_db, _db.reminders);
+  $$ScheduledNotificationsTableTableManager get scheduledNotifications =>
+      $$ScheduledNotificationsTableTableManager(
+        _db,
+        _db.scheduledNotifications,
+      );
 }

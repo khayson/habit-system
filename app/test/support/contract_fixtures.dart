@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 
 /// Reads golden JSON from the repo-level contract-fixtures/ directory (shared with PHP).
@@ -36,4 +37,32 @@ Object? materialize(Object? value) {
     final List<dynamic> list => list.map(materialize).toList(),
     _ => value,
   };
+}
+
+/// [expected] with placeholders matched by format ({{uuid}}, {{timestamp}}), the rest exactly.
+void expectContract(Object? expected, Object? actual, [String path = r'$']) {
+  switch (expected) {
+    case '{{uuid}}':
+      expect(
+        actual,
+        matches(RegExp(r'^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$')),
+        reason: path,
+      );
+    case '{{seq}}':
+      expect(actual, isA<int>(), reason: path);
+    case '{{timestamp}}':
+      expect(
+        actual,
+        matches(RegExp(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$')),
+        reason: path,
+      );
+    case final Map<String, dynamic> map:
+      expect(actual, isA<Map<dynamic, dynamic>>(), reason: path);
+      expect((actual! as Map).keys.toSet(), map.keys.toSet(), reason: '$path keys');
+      for (final e in map.entries) {
+        expectContract(e.value, (actual as Map)[e.key], '$path.${e.key}');
+      }
+    default:
+      expect(actual, expected, reason: path);
+  }
 }

@@ -23,6 +23,7 @@ class FakeSyncServer implements SyncTransport {
 
   final Map<String, Map<String, dynamic>> habits = {};
   final Map<String, Map<String, dynamic>> logs = {};
+  final Map<String, Map<String, dynamic>> reminders = {};
   final Map<String, ({String hash, Map<String, dynamic> ack})> receipts = {};
   final List<Map<String, dynamic>> journal = [];
 
@@ -167,6 +168,7 @@ class FakeSyncServer implements SyncTransport {
       'log.set_value' || 'log.set_binary' => _setValue(m),
       'log.delete' => _delete(m),
       'profile.set_timezone' => _setTimezone(m),
+      'reminder.create' || 'reminder.update' || 'reminder.delete' => _reminder(m),
       _ => _failed(m, 'rejected', {'code': 'unsupported_operation', 'message': 'x'}),
     };
     if (ack['status'] != 'dependency_pending') receipts[id] = (hash: hash, ack: ack);
@@ -198,6 +200,84 @@ class FakeSyncServer implements SyncTransport {
       'entity_id': 'user-1',
       'version': userVersion,
     };
+  }
+
+  /// Phase 3.2b reminders, as the real ReminderWrites answers them.
+  Map<String, dynamic> _reminder(Map<String, dynamic> m) {
+    final id = m['entity_id'] as String;
+    final p = (m['payload'] as Map).cast<String, dynamic>();
+    final existing = reminders[id];
+    Map<String, dynamic> conflict(Map<String, dynamic> current) => current['deleted_at'] != null
+        ? _failed(m, 'conflict', {
+            'code': 'resource_deleted',
+            'message': 'x',
+            'entity': 'reminder',
+            'resource_id': id,
+            'current_version': current['version'],
+          })
+        : _failed(m, 'conflict', {
+            'code': 'version_conflict',
+            'message': 'x',
+            'resource_id': id,
+            'expected_version': m['base_version'],
+            'current_version': current['version'],
+            'current': current,
+          });
+    Map<String, dynamic> write(Map<String, dynamic> row, String op) {
+      reminders[id] = row;
+      _journal('reminder', id, op, row['version'] as int, row);
+      return {
+        'mutation_id': m['mutation_id'],
+        'status': 'accepted',
+        'duplicate': false,
+        'entity': 'reminder',
+        'entity_id': id,
+        'version': row['version'],
+      };
+    }
+
+    if (m['operation'] == 'reminder.create') {
+      if (!habits.containsKey(p['habit_id'])) {
+        return {
+          'mutation_id': m['mutation_id'],
+          'status': 'dependency_pending',
+          'duplicate': false,
+        };
+      }
+      if (existing != null) return conflict(existing);
+      final days = [...(p['days_of_week'] as List).cast<int>()]..sort();
+      return write({
+        'id': id,
+        'habit_id': p['habit_id'],
+        'local_time': p['local_time'],
+        'days_of_week': days,
+        'timezone_mode': p['timezone_mode'],
+        'timezone': p['timezone'],
+        'enabled': p['enabled'] ?? true,
+        'version': 1,
+        'deleted_at': null,
+      }, 'upsert');
+    }
+    if (existing == null) {
+      return _failed(m, 'rejected', {'code': 'not_found', 'message': 'Not found.'});
+    }
+    if (existing['deleted_at'] != null || m['base_version'] != existing['version']) {
+      return conflict(existing);
+    }
+    final next = (existing['version'] as int) + 1;
+    if (m['operation'] == 'reminder.delete') {
+      return write({...existing, 'version': next, 'deleted_at': '2026-05-28T17:22:00Z'}, 'delete');
+    }
+    final days = [...(p['days_of_week'] as List).cast<int>()]..sort();
+    return write({
+      ...existing,
+      'local_time': p['local_time'],
+      'days_of_week': days,
+      'timezone_mode': p['timezone_mode'],
+      'timezone': p['timezone'],
+      'enabled': p['enabled'] ?? true,
+      'version': next,
+    }, 'upsert');
   }
 
   Map<String, dynamic> _habitCreate(Map<String, dynamic> m) {

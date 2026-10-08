@@ -24,6 +24,53 @@ void main() {
     }
   });
 
+  test('v5 -> v6 adds reminders and the schedule record; opaque reminders become typed', () async {
+    final v6 = AppDatabase(NativeDatabase(file));
+    await v6.customStatement(
+      "INSERT INTO sync_state (id, user_id, device_id, cursor) VALUES (1, 'u', 'd', 'c:9')",
+    );
+    await v6.customStatement(
+      'INSERT INTO outbox (mutation_id, entity, entity_id, operation, occurred_at, payload, '
+      "state, created_at) VALUES ('m1', 'habit_log', 'l1', 'log.set_value', "
+      "'2026-05-28T00:00:00Z', '{\"value\":1}', 'pending', 0)",
+    );
+    await v6.customStatement(
+      "INSERT INTO habit_progress (habit_id, \"current\", longest, version) VALUES ('h1', 2, 5, 3)",
+    );
+    Future<void> opaque(String id, int version, String payload) => v6.customStatement(
+      'INSERT INTO opaque_entities (entity_type, entity_id, version, operation, payload) '
+      "VALUES ('reminder', '$id', $version, 'upsert', '$payload')",
+    );
+    await opaque(
+      'r1',
+      2,
+      '{"id":"r1","habit_id":"h1","local_time":"08:00","days_of_week":[1,3,5],'
+          '"timezone_mode":"habit_zone","timezone":null,"enabled":true,"version":2,'
+          '"deleted_at":null,"snooze":10}',
+    );
+    await opaque('r-bad', 1, '{"id":"r-bad","days_of_week":"weekdays"}');
+    for (final table in ['reminders', 'scheduled_notifications']) {
+      await v6.customStatement('DROP TABLE $table');
+    }
+    await v6.customStatement('PRAGMA user_version = 5');
+    await v6.close();
+
+    final upgraded = AppDatabase(NativeDatabase(file));
+    expect((await upgraded.select(upgraded.outbox).getSingle()).mutationId, 'm1');
+    expect((await upgraded.select(upgraded.syncState).getSingle()).cursor, 'c:9');
+    expect((await upgraded.select(upgraded.habitProgress).getSingle()).current, 2);
+    final reminder = await upgraded.select(upgraded.reminders).getSingle();
+    expect(
+      (reminder.id, reminder.localTime, reminder.daysOfWeek, reminder.version),
+      ('r1', '08:00', '[1,3,5]', 2),
+    );
+    expect(EntityCodec.reminderPayload(reminder)['snooze'], 10, reason: 'unknown fields kept');
+    final left = await upgraded.select(upgraded.opaqueEntities).get();
+    expect(left.map((o) => o.entityId), ['r-bad'], reason: 'what does not decode stays opaque');
+    expect(await upgraded.select(upgraded.scheduledNotifications).get(), isEmpty);
+    await upgraded.close();
+  });
+
   test(
     'v4 -> v5 adds the calendar, typed A32 tables and settings; opaque rows become typed',
     () async {
@@ -62,6 +109,8 @@ void main() {
         'habit_progress',
         'period_evaluations',
         'local_settings',
+        'reminders',
+        'scheduled_notifications',
       ]) {
         await v5.customStatement('DROP TABLE $table');
       }
@@ -106,6 +155,8 @@ void main() {
       'habit_progress',
       'period_evaluations',
       'local_settings',
+      'reminders',
+      'scheduled_notifications',
     ]) {
       await v4.customStatement('DROP TABLE $table');
     }
@@ -147,6 +198,8 @@ void main() {
       'habit_progress',
       'period_evaluations',
       'local_settings',
+      'reminders',
+      'scheduled_notifications',
     ]) {
       await v3.customStatement('DROP TABLE $table');
     }

@@ -109,6 +109,45 @@ abstract final class EntityCodec {
     );
   }
 
+  static const reminderFields = {
+    'id', 'habit_id', 'local_time', 'days_of_week', 'timezone_mode', 'timezone', 'enabled', //
+    'version', 'deleted_at',
+  };
+
+  /// Phase 3.2b reminder. Wrong-typed known fields throw (the item is then kept raw).
+  static RemindersCompanion reminderRow(
+    Map<String, dynamic> p, {
+    required String id,
+    required int version,
+  }) {
+    final days = p['days_of_week'];
+    return RemindersCompanion(
+      id: Value(id),
+      habitId: Value(_str(p['habit_id'])),
+      localTime: Value(_str(p['local_time'])),
+      daysOfWeek: Value(days == null ? null : jsonEncode([for (final d in days as List) d as int])),
+      timezoneMode: Value(_str(p['timezone_mode'])),
+      timezone: Value(_str(p['timezone'])),
+      enabled: Value(_strictBool(p['enabled'])),
+      version: Value(version),
+      deletedAt: Value(_str(p['deleted_at'])),
+      extra: Value(_extra(p, reminderFields)),
+    );
+  }
+
+  static Map<String, dynamic> reminderPayload(ConfirmedReminder r) => {
+    ..._decodeMap(r.extra),
+    'id': r.id,
+    'habit_id': r.habitId,
+    'local_time': r.localTime,
+    'days_of_week': _decode(r.daysOfWeek),
+    'timezone_mode': r.timezoneMode,
+    'timezone': r.timezone,
+    'enabled': r.enabled,
+    'version': r.version,
+    'deleted_at': r.deletedAt,
+  };
+
   static Map<String, dynamic> progressPayload(ConfirmedProgress r) => {
     ..._decodeMap(r.extra),
     'habit_id': r.habitId,

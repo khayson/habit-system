@@ -684,6 +684,8 @@ class SyncEngine {
         await _upsertProgress(id, version, change['operation'] == 'delete', payload);
       case 'period_evaluation':
         await _upsertEvaluation(id, version, payload);
+      case 'reminder':
+        await _upsertReminder(id, version, payload);
       default:
         // Unknown entity type: keep it opaque, never drop it (invariant 13).
         await _storeOpaque(entity, id, version, change['operation'] as String, payload);
@@ -810,6 +812,17 @@ class SyncEngine {
 
   /// A32 habit_progress: server-confirmed only, version >= rule. A delete (habit deleted)
   /// removes the row.
+  /// Phase 3.2b reminder: version >= rule; a delete arrives as a tombstone and is kept as one.
+  Future<void> _upsertReminder(String id, int version, Map<String, dynamic> payload) async {
+    final existing = await (db.select(
+      db.reminders,
+    )..where((r) => r.id.equals(id))).getSingleOrNull();
+    if (existing != null && version < existing.version) return;
+    await db
+        .into(db.reminders)
+        .insertOnConflictUpdate(EntityCodec.reminderRow(payload, id: id, version: version));
+  }
+
   Future<void> _upsertProgress(
     String habitId,
     int version,
@@ -871,6 +884,7 @@ class SyncEngine {
       '''DELETE FROM outbox WHERE state = ? AND (
            (entity = 'habit' AND EXISTS (SELECT 1 FROM habits h WHERE h.id = outbox.entity_id AND h.version >= COALESCE(outbox.ack_version, 0)))
         OR (entity = 'habit_log' AND EXISTS (SELECT 1 FROM habit_logs l WHERE l.id = outbox.entity_id AND l.version >= COALESCE(outbox.ack_version, 0)))
+        OR (entity = 'reminder' AND EXISTS (SELECT 1 FROM reminders r WHERE r.id = outbox.entity_id AND r.version >= COALESCE(outbox.ack_version, 0)))
         OR (entity = 'user' AND EXISTS (SELECT 1 FROM sync_state s WHERE s.id = 1 AND CAST(json_extract(s.user_payload, '\$.version') AS INTEGER) >= COALESCE(outbox.ack_version, 0))))''',
       variables: [const Variable(OutboxState.acked)],
       updates: {db.outbox},

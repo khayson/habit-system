@@ -201,6 +201,46 @@ class LocalSettings extends Table {
   Set<Column> get primaryKey => {key};
 }
 
+/// Phase 3.2b `reminder`: a clock time and ISO days (never a UTC instant), server-confirmed
+/// only (invariant 9). Tombstones stay with [deletedAt] set; unknown fields live in [extra].
+@DataClassName('ConfirmedReminder')
+class Reminders extends Table {
+  TextColumn get id => text()();
+  TextColumn get habitId => text().nullable()();
+  TextColumn get localTime => text().nullable()();
+
+  /// JSON array of ISO days, 1 = Monday.
+  TextColumn get daysOfWeek => text().nullable()();
+  TextColumn get timezoneMode => text().nullable()();
+  TextColumn get timezone => text().nullable()();
+  BoolColumn get enabled => boolean().nullable()();
+  IntColumn get version => integer()();
+  TextColumn get deletedAt => text().nullable()();
+  TextColumn get extra => text().withDefault(const Constant('{}'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Notifications this account has handed to the OS (Phase 3.2b), so a logout cancels exactly
+/// its own and a replan replaces rather than duplicates.
+@DataClassName('ScheduledNotification')
+class ScheduledNotifications extends Table {
+  /// The platform notification id (stable per account + reminder + local date slot).
+  IntColumn get platformId => integer()();
+  TextColumn get reminderId => text()();
+  TextColumn get habitId => text()();
+
+  /// Local date (YYYY-MM-DD) of the slot.
+  TextColumn get slotDate => text()();
+
+  /// UTC milliseconds.
+  IntColumn get fireAt => integer()();
+
+  @override
+  Set<Column> get primaryKey => {platformId};
+}
+
 /// Unacknowledged mutations the user chose to discard (screen 18). Kept as a record; never sent.
 class DiscardedMutations extends Table {
   TextColumn get mutationId => text()();
@@ -229,13 +269,15 @@ class DiscardedMutations extends Table {
     HabitProgress,
     PeriodEvaluations,
     LocalSettings,
+    Reminders,
+    ScheduledNotifications,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -278,6 +320,12 @@ class AppDatabase extends _$AppDatabase {
         await _createIndexes();
         await _typeOpaqueDerivedEntities();
       }
+      if (from < 6) {
+        // Phase 3.2b: reminders (typed; a 3.2a build kept them opaque) and the schedule record.
+        await m.createTable(reminders);
+        await m.createTable(scheduledNotifications);
+        await _typeOpaqueReminders();
+      }
     },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
@@ -296,6 +344,26 @@ class AppDatabase extends _$AppDatabase {
       'CREATE INDEX IF NOT EXISTS period_evaluations_habit_start '
       'ON period_evaluations (habit_id, start_date)',
     );
+  }
+
+  /// A 3.2a build kept reminders opaque. Type the ones that decode (version >= rule).
+  Future<void> _typeOpaqueReminders() async {
+    final rows = await (select(
+      opaqueEntities,
+    )..where((o) => o.entityType.equals('reminder'))).get();
+    for (final row in rows) {
+      try {
+        final payload = (jsonDecode(row.payload) as Map).cast<String, dynamic>();
+        await into(reminders).insertOnConflictUpdate(
+          EntityCodec.reminderRow(payload, id: row.entityId, version: row.version),
+        );
+      } on Object {
+        continue; // stays opaque
+      }
+      await (delete(
+        opaqueEntities,
+      )..where((o) => o.entityType.equals('reminder') & o.entityId.equals(row.entityId))).go();
+    }
   }
 
   /// A 3.1 build kept A32 entities opaque. Move the ones that decode into the typed tables (the

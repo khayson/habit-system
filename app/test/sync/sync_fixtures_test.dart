@@ -149,32 +149,6 @@ void main() {
   }
 }
 
-/// [expected] with placeholders matched by format ({{uuid}}, {{timestamp}}), the rest exactly.
-void expectContract(Object? expected, Object? actual, [String path = r'$']) {
-  switch (expected) {
-    case '{{uuid}}':
-      expect(
-        actual,
-        matches(RegExp(r'^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$')),
-        reason: path,
-      );
-    case '{{timestamp}}':
-      expect(
-        actual,
-        matches(RegExp(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$')),
-        reason: path,
-      );
-    case final Map<String, dynamic> map:
-      expect(actual, isA<Map<dynamic, dynamic>>(), reason: path);
-      expect((actual! as Map).keys.toSet(), map.keys.toSet(), reason: '$path keys');
-      for (final e in map.entries) {
-        expectContract(e.value, (actual as Map)[e.key], '$path.${e.key}');
-      }
-    default:
-      expect(actual, expected, reason: path);
-  }
-}
-
 /// Returns [ack] (bound to the first sent mutation) for one push; otherwise the fake server.
 class _AckOnce implements SyncTransport {
   _AckOnce(this.server, this.ack);

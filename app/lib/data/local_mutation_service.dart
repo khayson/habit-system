@@ -187,6 +187,148 @@ class LocalMutationService {
     });
   }
 
+  /// reminder.create (Phase 3.2b): a clock time and ISO days for one habit. Returns the id.
+  Future<String> createReminder({
+    required String habitId,
+    required String localTime,
+    required List<int> daysOfWeek,
+    String timezoneMode = 'habit_zone',
+    String? timezone,
+    bool enabled = true,
+  }) {
+    return db.transaction(() async {
+      final calendar = await _calendar();
+      final id = _uuid.v7();
+      await _append(
+        entity: 'reminder',
+        entityId: id,
+        operation: 'reminder.create',
+        baseVersion: null,
+        calendar: calendar,
+        localDate: null,
+        habitId: habitId,
+        payload: {
+          'habit_id': habitId,
+          ..._reminderFields(localTime, daysOfWeek, timezoneMode, timezone, enabled),
+        },
+      );
+      return id;
+    });
+  }
+
+  /// reminder.update: the whole desired state (absolute). Coalesces into an unsent create or
+  /// update for the same reminder, so a burst of edits sends one change.
+  Future<void> updateReminder({
+    required String reminderId,
+    required String localTime,
+    required List<int> daysOfWeek,
+    String timezoneMode = 'habit_zone',
+    String? timezone,
+    bool enabled = true,
+  }) {
+    return db.transaction(() async {
+      final calendar = await _calendar();
+      final fields = _reminderFields(localTime, daysOfWeek, timezoneMode, timezone, enabled);
+      final rows = await _reminderRows(reminderId);
+      final last = rows.isEmpty ? null : rows.last;
+      if (last != null &&
+          last.state == OutboxState.pending &&
+          (last.operation == 'reminder.create' || last.operation == 'reminder.update')) {
+        final payload = (jsonDecode(last.payload) as Map).cast<String, Object?>()..addAll(fields);
+        await (db.update(db.outbox)..where((o) => o.seq.equals(last.seq))).write(
+          OutboxCompanion(payload: Value(jsonEncode(payload))),
+        );
+        return;
+      }
+      final habitId = await _reminderHabit(reminderId, rows);
+      await _append(
+        entity: 'reminder',
+        entityId: reminderId,
+        operation: 'reminder.update',
+        baseVersion: await _reminderBase(reminderId, rows),
+        calendar: calendar,
+        localDate: null,
+        habitId: habitId,
+        payload: fields,
+      );
+    });
+  }
+
+  /// reminder.delete: a tombstone on the server. Appended even behind an unsent create (an
+  /// unacknowledged row is never deleted, invariant 8).
+  Future<void> deleteReminder(String reminderId) {
+    return db.transaction(() async {
+      final calendar = await _calendar();
+      final rows = await _reminderRows(reminderId);
+      await _append(
+        entity: 'reminder',
+        entityId: reminderId,
+        operation: 'reminder.delete',
+        baseVersion: await _reminderBase(reminderId, rows),
+        calendar: calendar,
+        localDate: null,
+        habitId: await _reminderHabit(reminderId, rows),
+        payload: const {},
+      );
+    });
+  }
+
+  static Map<String, Object?> _reminderFields(
+    String localTime,
+    List<int> days,
+    String timezoneMode,
+    String? timezone,
+    bool enabled,
+  ) {
+    if (!RegExp(r'^([01]\d|2[0-3]):[0-5]\d$').hasMatch(localTime)) {
+      throw ArgumentError.value(localTime, 'localTime', 'must be HH:MM');
+    }
+    final sorted = {...days}.toList()..sort();
+    if (sorted.isEmpty || sorted.any((d) => d < 1 || d > 7)) {
+      throw ArgumentError.value(days, 'daysOfWeek', 'must be ISO days 1..7');
+    }
+    return {
+      'local_time': localTime,
+      'days_of_week': sorted,
+      'timezone_mode': timezoneMode,
+      'timezone': timezone,
+      'enabled': enabled,
+    };
+  }
+
+  Future<List<OutboxRow>> _reminderRows(String reminderId) =>
+      (db.select(db.outbox)
+            ..where(
+              (o) =>
+                  o.entity.equals('reminder') &
+                  o.entityId.equals(reminderId) &
+                  o.state.isIn([...OutboxState.unacked, OutboxState.acked]),
+            )
+            ..orderBy([(o) => OrderingTerm.asc(o.seq)]))
+          .get();
+
+  /// The newest version this device has seen (confirmed or acked); a placeholder behind an
+  /// unacknowledged row, rebased by the engine from that row's ack (F4).
+  Future<int> _reminderBase(String reminderId, List<OutboxRow> rows) async {
+    final confirmed = await (db.select(
+      db.reminders,
+    )..where((r) => r.id.equals(reminderId))).getSingleOrNull();
+    var version = confirmed?.version ?? 0;
+    for (final row in rows) {
+      if (row.state == OutboxState.acked && (row.ackVersion ?? 0) > version) {
+        version = row.ackVersion!;
+      }
+    }
+    return version;
+  }
+
+  Future<String?> _reminderHabit(String reminderId, List<OutboxRow> rows) async {
+    final confirmed = await (db.select(
+      db.reminders,
+    )..where((r) => r.id.equals(reminderId))).getSingleOrNull();
+    return confirmed?.habitId ?? rows.firstOrNull?.habitId;
+  }
+
   /// Screen 18 "Discard": the user gives up a change the server would not take. Only rows in
   /// needs_attention qualify (they are never resubmitted automatically); the row moves to
   /// discarded_mutations in the same transaction, so the decision is recorded, not lost.
