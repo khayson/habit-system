@@ -1,4 +1,8 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
+
+import 'entity_codec.dart';
 
 part 'app_database.g.dart';
 
@@ -139,6 +143,64 @@ class SyncState extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// The account's calendar history from the user entity's `calendar_history` (A26, D1): settled
+/// entries and at most one pending change. Merged by effective_at; never a provisional value.
+@DataClassName('CalendarEntryRow')
+class CalendarEntries extends Table {
+  /// UTC milliseconds.
+  IntColumn get effectiveAt => integer()();
+  TextColumn get timezone => text()();
+  IntColumn get dayStartOffsetMinutes => integer().withDefault(const Constant(0))();
+
+  @override
+  Set<Column> get primaryKey => {effectiveAt};
+}
+
+/// A32 `habit_progress`: the server's streak for a habit (id = habit id). Server-confirmed only
+/// (invariant 9); unknown fields live in [extra].
+@DataClassName('ConfirmedProgress')
+class HabitProgress extends Table {
+  TextColumn get habitId => text()();
+  IntColumn get current => integer().nullable()();
+  IntColumn get longest => integer().nullable()();
+  TextColumn get unit => text().nullable()();
+  TextColumn get computedThrough => text().nullable()();
+  IntColumn get version => integer()();
+  TextColumn get extra => text().withDefault(const Constant('{}'))();
+
+  @override
+  Set<Column> get primaryKey => {habitId};
+}
+
+/// A32 `period_evaluation`: one closed period's result. Version = revision. Server-confirmed only.
+@DataClassName('ConfirmedEvaluation')
+class PeriodEvaluations extends Table {
+  TextColumn get id => text()();
+  TextColumn get habitId => text().nullable()();
+  TextColumn get periodKey => text().nullable()();
+  TextColumn get startDate => text().nullable()();
+  TextColumn get endDate => text().nullable()();
+  BoolColumn get completed => boolean().nullable()();
+  BoolColumn get protected => boolean().nullable()();
+  IntColumn get definitionVersion => integer().nullable()();
+  TextColumn get timezone => text().nullable()();
+  IntColumn get revision => integer()();
+  TextColumn get extra => text().withDefault(const Constant('{}'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Per-device settings that are not account data on the server (yet).
+@DataClassName('LocalSetting')
+class LocalSettings extends Table {
+  TextColumn get key => text()();
+  TextColumn get value => text()();
+
+  @override
+  Set<Column> get primaryKey => {key};
+}
+
 /// Unacknowledged mutations the user chose to discard (screen 18). Kept as a record; never sent.
 class DiscardedMutations extends Table {
   TextColumn get mutationId => text()();
@@ -155,12 +217,25 @@ class DiscardedMutations extends Table {
 }
 
 /// The per-account local working copy (one file per user id, see database_opener.dart).
-@DriftDatabase(tables: [Habits, HabitLogs, OpaqueEntities, Outbox, SyncState, DiscardedMutations])
+@DriftDatabase(
+  tables: [
+    Habits,
+    HabitLogs,
+    OpaqueEntities,
+    Outbox,
+    SyncState,
+    DiscardedMutations,
+    CalendarEntries,
+    HabitProgress,
+    PeriodEvaluations,
+    LocalSettings,
+  ],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -194,6 +269,15 @@ class AppDatabase extends _$AppDatabase {
         // Phase 2b.2 review G5.
         await m.addColumn(syncState, syncState.appVersion);
       }
+      if (from < 5) {
+        // Phase 3.2a: the calendar history, the A32 entities, device settings.
+        await m.createTable(calendarEntries);
+        await m.createTable(habitProgress);
+        await m.createTable(periodEvaluations);
+        await m.createTable(localSettings);
+        await _createIndexes();
+        await _typeOpaqueDerivedEntities();
+      }
     },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
@@ -208,5 +292,36 @@ class AppDatabase extends _$AppDatabase {
     await customStatement(
       'CREATE INDEX IF NOT EXISTS outbox_habit_date ON outbox (habit_id, local_date_hint)',
     );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS period_evaluations_habit_start '
+      'ON period_evaluations (habit_id, start_date)',
+    );
+  }
+
+  /// A 3.1 build kept A32 entities opaque. Move the ones that decode into the typed tables (the
+  /// same version >= rule as a pull); anything that does not decode stays opaque.
+  Future<void> _typeOpaqueDerivedEntities() async {
+    final rows = await (select(
+      opaqueEntities,
+    )..where((o) => o.entityType.isIn(['habit_progress', 'period_evaluation']))).get();
+    for (final row in rows) {
+      try {
+        final payload = (jsonDecode(row.payload) as Map).cast<String, dynamic>();
+        if (row.entityType == 'habit_progress') {
+          await into(habitProgress).insertOnConflictUpdate(
+            EntityCodec.progressRow(payload, habitId: row.entityId, version: row.version),
+          );
+        } else {
+          await into(periodEvaluations).insertOnConflictUpdate(
+            EntityCodec.evaluationRow(payload, id: row.entityId, version: row.version),
+          );
+        }
+      } on Object {
+        continue; // stays opaque
+      }
+      await (delete(
+        opaqueEntities,
+      )..where((o) => o.entityType.equals(row.entityType) & o.entityId.equals(row.entityId))).go();
+    }
   }
 }

@@ -4932,6 +4932,1635 @@ class DiscardedMutationsCompanion extends UpdateCompanion<DiscardedMutation> {
   }
 }
 
+class $CalendarEntriesTable extends CalendarEntries
+    with TableInfo<$CalendarEntriesTable, CalendarEntryRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CalendarEntriesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _effectiveAtMeta = const VerificationMeta(
+    'effectiveAt',
+  );
+  @override
+  late final GeneratedColumn<int> effectiveAt = GeneratedColumn<int>(
+    'effective_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _timezoneMeta = const VerificationMeta(
+    'timezone',
+  );
+  @override
+  late final GeneratedColumn<String> timezone = GeneratedColumn<String>(
+    'timezone',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dayStartOffsetMinutesMeta =
+      const VerificationMeta('dayStartOffsetMinutes');
+  @override
+  late final GeneratedColumn<int> dayStartOffsetMinutes = GeneratedColumn<int>(
+    'day_start_offset_minutes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    effectiveAt,
+    timezone,
+    dayStartOffsetMinutes,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'calendar_entries';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CalendarEntryRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('effective_at')) {
+      context.handle(
+        _effectiveAtMeta,
+        effectiveAt.isAcceptableOrUnknown(
+          data['effective_at']!,
+          _effectiveAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('timezone')) {
+      context.handle(
+        _timezoneMeta,
+        timezone.isAcceptableOrUnknown(data['timezone']!, _timezoneMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_timezoneMeta);
+    }
+    if (data.containsKey('day_start_offset_minutes')) {
+      context.handle(
+        _dayStartOffsetMinutesMeta,
+        dayStartOffsetMinutes.isAcceptableOrUnknown(
+          data['day_start_offset_minutes']!,
+          _dayStartOffsetMinutesMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {effectiveAt};
+  @override
+  CalendarEntryRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CalendarEntryRow(
+      effectiveAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}effective_at'],
+      )!,
+      timezone: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}timezone'],
+      )!,
+      dayStartOffsetMinutes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}day_start_offset_minutes'],
+      )!,
+    );
+  }
+
+  @override
+  $CalendarEntriesTable createAlias(String alias) {
+    return $CalendarEntriesTable(attachedDatabase, alias);
+  }
+}
+
+class CalendarEntryRow extends DataClass
+    implements Insertable<CalendarEntryRow> {
+  /// UTC milliseconds.
+  final int effectiveAt;
+  final String timezone;
+  final int dayStartOffsetMinutes;
+  const CalendarEntryRow({
+    required this.effectiveAt,
+    required this.timezone,
+    required this.dayStartOffsetMinutes,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['effective_at'] = Variable<int>(effectiveAt);
+    map['timezone'] = Variable<String>(timezone);
+    map['day_start_offset_minutes'] = Variable<int>(dayStartOffsetMinutes);
+    return map;
+  }
+
+  CalendarEntriesCompanion toCompanion(bool nullToAbsent) {
+    return CalendarEntriesCompanion(
+      effectiveAt: Value(effectiveAt),
+      timezone: Value(timezone),
+      dayStartOffsetMinutes: Value(dayStartOffsetMinutes),
+    );
+  }
+
+  factory CalendarEntryRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CalendarEntryRow(
+      effectiveAt: serializer.fromJson<int>(json['effectiveAt']),
+      timezone: serializer.fromJson<String>(json['timezone']),
+      dayStartOffsetMinutes: serializer.fromJson<int>(
+        json['dayStartOffsetMinutes'],
+      ),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'effectiveAt': serializer.toJson<int>(effectiveAt),
+      'timezone': serializer.toJson<String>(timezone),
+      'dayStartOffsetMinutes': serializer.toJson<int>(dayStartOffsetMinutes),
+    };
+  }
+
+  CalendarEntryRow copyWith({
+    int? effectiveAt,
+    String? timezone,
+    int? dayStartOffsetMinutes,
+  }) => CalendarEntryRow(
+    effectiveAt: effectiveAt ?? this.effectiveAt,
+    timezone: timezone ?? this.timezone,
+    dayStartOffsetMinutes: dayStartOffsetMinutes ?? this.dayStartOffsetMinutes,
+  );
+  CalendarEntryRow copyWithCompanion(CalendarEntriesCompanion data) {
+    return CalendarEntryRow(
+      effectiveAt: data.effectiveAt.present
+          ? data.effectiveAt.value
+          : this.effectiveAt,
+      timezone: data.timezone.present ? data.timezone.value : this.timezone,
+      dayStartOffsetMinutes: data.dayStartOffsetMinutes.present
+          ? data.dayStartOffsetMinutes.value
+          : this.dayStartOffsetMinutes,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CalendarEntryRow(')
+          ..write('effectiveAt: $effectiveAt, ')
+          ..write('timezone: $timezone, ')
+          ..write('dayStartOffsetMinutes: $dayStartOffsetMinutes')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(effectiveAt, timezone, dayStartOffsetMinutes);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CalendarEntryRow &&
+          other.effectiveAt == this.effectiveAt &&
+          other.timezone == this.timezone &&
+          other.dayStartOffsetMinutes == this.dayStartOffsetMinutes);
+}
+
+class CalendarEntriesCompanion extends UpdateCompanion<CalendarEntryRow> {
+  final Value<int> effectiveAt;
+  final Value<String> timezone;
+  final Value<int> dayStartOffsetMinutes;
+  const CalendarEntriesCompanion({
+    this.effectiveAt = const Value.absent(),
+    this.timezone = const Value.absent(),
+    this.dayStartOffsetMinutes = const Value.absent(),
+  });
+  CalendarEntriesCompanion.insert({
+    this.effectiveAt = const Value.absent(),
+    required String timezone,
+    this.dayStartOffsetMinutes = const Value.absent(),
+  }) : timezone = Value(timezone);
+  static Insertable<CalendarEntryRow> custom({
+    Expression<int>? effectiveAt,
+    Expression<String>? timezone,
+    Expression<int>? dayStartOffsetMinutes,
+  }) {
+    return RawValuesInsertable({
+      if (effectiveAt != null) 'effective_at': effectiveAt,
+      if (timezone != null) 'timezone': timezone,
+      if (dayStartOffsetMinutes != null)
+        'day_start_offset_minutes': dayStartOffsetMinutes,
+    });
+  }
+
+  CalendarEntriesCompanion copyWith({
+    Value<int>? effectiveAt,
+    Value<String>? timezone,
+    Value<int>? dayStartOffsetMinutes,
+  }) {
+    return CalendarEntriesCompanion(
+      effectiveAt: effectiveAt ?? this.effectiveAt,
+      timezone: timezone ?? this.timezone,
+      dayStartOffsetMinutes:
+          dayStartOffsetMinutes ?? this.dayStartOffsetMinutes,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (effectiveAt.present) {
+      map['effective_at'] = Variable<int>(effectiveAt.value);
+    }
+    if (timezone.present) {
+      map['timezone'] = Variable<String>(timezone.value);
+    }
+    if (dayStartOffsetMinutes.present) {
+      map['day_start_offset_minutes'] = Variable<int>(
+        dayStartOffsetMinutes.value,
+      );
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CalendarEntriesCompanion(')
+          ..write('effectiveAt: $effectiveAt, ')
+          ..write('timezone: $timezone, ')
+          ..write('dayStartOffsetMinutes: $dayStartOffsetMinutes')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $HabitProgressTable extends HabitProgress
+    with TableInfo<$HabitProgressTable, ConfirmedProgress> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $HabitProgressTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _habitIdMeta = const VerificationMeta(
+    'habitId',
+  );
+  @override
+  late final GeneratedColumn<String> habitId = GeneratedColumn<String>(
+    'habit_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _currentMeta = const VerificationMeta(
+    'current',
+  );
+  @override
+  late final GeneratedColumn<int> current = GeneratedColumn<int>(
+    'current',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _longestMeta = const VerificationMeta(
+    'longest',
+  );
+  @override
+  late final GeneratedColumn<int> longest = GeneratedColumn<int>(
+    'longest',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _unitMeta = const VerificationMeta('unit');
+  @override
+  late final GeneratedColumn<String> unit = GeneratedColumn<String>(
+    'unit',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _computedThroughMeta = const VerificationMeta(
+    'computedThrough',
+  );
+  @override
+  late final GeneratedColumn<String> computedThrough = GeneratedColumn<String>(
+    'computed_through',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _extraMeta = const VerificationMeta('extra');
+  @override
+  late final GeneratedColumn<String> extra = GeneratedColumn<String>(
+    'extra',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('{}'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    habitId,
+    current,
+    longest,
+    unit,
+    computedThrough,
+    version,
+    extra,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'habit_progress';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ConfirmedProgress> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('habit_id')) {
+      context.handle(
+        _habitIdMeta,
+        habitId.isAcceptableOrUnknown(data['habit_id']!, _habitIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_habitIdMeta);
+    }
+    if (data.containsKey('current')) {
+      context.handle(
+        _currentMeta,
+        current.isAcceptableOrUnknown(data['current']!, _currentMeta),
+      );
+    }
+    if (data.containsKey('longest')) {
+      context.handle(
+        _longestMeta,
+        longest.isAcceptableOrUnknown(data['longest']!, _longestMeta),
+      );
+    }
+    if (data.containsKey('unit')) {
+      context.handle(
+        _unitMeta,
+        unit.isAcceptableOrUnknown(data['unit']!, _unitMeta),
+      );
+    }
+    if (data.containsKey('computed_through')) {
+      context.handle(
+        _computedThroughMeta,
+        computedThrough.isAcceptableOrUnknown(
+          data['computed_through']!,
+          _computedThroughMeta,
+        ),
+      );
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_versionMeta);
+    }
+    if (data.containsKey('extra')) {
+      context.handle(
+        _extraMeta,
+        extra.isAcceptableOrUnknown(data['extra']!, _extraMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {habitId};
+  @override
+  ConfirmedProgress map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ConfirmedProgress(
+      habitId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}habit_id'],
+      )!,
+      current: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}current'],
+      ),
+      longest: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}longest'],
+      ),
+      unit: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}unit'],
+      ),
+      computedThrough: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}computed_through'],
+      ),
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+      extra: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}extra'],
+      )!,
+    );
+  }
+
+  @override
+  $HabitProgressTable createAlias(String alias) {
+    return $HabitProgressTable(attachedDatabase, alias);
+  }
+}
+
+class ConfirmedProgress extends DataClass
+    implements Insertable<ConfirmedProgress> {
+  final String habitId;
+  final int? current;
+  final int? longest;
+  final String? unit;
+  final String? computedThrough;
+  final int version;
+  final String extra;
+  const ConfirmedProgress({
+    required this.habitId,
+    this.current,
+    this.longest,
+    this.unit,
+    this.computedThrough,
+    required this.version,
+    required this.extra,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['habit_id'] = Variable<String>(habitId);
+    if (!nullToAbsent || current != null) {
+      map['current'] = Variable<int>(current);
+    }
+    if (!nullToAbsent || longest != null) {
+      map['longest'] = Variable<int>(longest);
+    }
+    if (!nullToAbsent || unit != null) {
+      map['unit'] = Variable<String>(unit);
+    }
+    if (!nullToAbsent || computedThrough != null) {
+      map['computed_through'] = Variable<String>(computedThrough);
+    }
+    map['version'] = Variable<int>(version);
+    map['extra'] = Variable<String>(extra);
+    return map;
+  }
+
+  HabitProgressCompanion toCompanion(bool nullToAbsent) {
+    return HabitProgressCompanion(
+      habitId: Value(habitId),
+      current: current == null && nullToAbsent
+          ? const Value.absent()
+          : Value(current),
+      longest: longest == null && nullToAbsent
+          ? const Value.absent()
+          : Value(longest),
+      unit: unit == null && nullToAbsent ? const Value.absent() : Value(unit),
+      computedThrough: computedThrough == null && nullToAbsent
+          ? const Value.absent()
+          : Value(computedThrough),
+      version: Value(version),
+      extra: Value(extra),
+    );
+  }
+
+  factory ConfirmedProgress.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ConfirmedProgress(
+      habitId: serializer.fromJson<String>(json['habitId']),
+      current: serializer.fromJson<int?>(json['current']),
+      longest: serializer.fromJson<int?>(json['longest']),
+      unit: serializer.fromJson<String?>(json['unit']),
+      computedThrough: serializer.fromJson<String?>(json['computedThrough']),
+      version: serializer.fromJson<int>(json['version']),
+      extra: serializer.fromJson<String>(json['extra']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'habitId': serializer.toJson<String>(habitId),
+      'current': serializer.toJson<int?>(current),
+      'longest': serializer.toJson<int?>(longest),
+      'unit': serializer.toJson<String?>(unit),
+      'computedThrough': serializer.toJson<String?>(computedThrough),
+      'version': serializer.toJson<int>(version),
+      'extra': serializer.toJson<String>(extra),
+    };
+  }
+
+  ConfirmedProgress copyWith({
+    String? habitId,
+    Value<int?> current = const Value.absent(),
+    Value<int?> longest = const Value.absent(),
+    Value<String?> unit = const Value.absent(),
+    Value<String?> computedThrough = const Value.absent(),
+    int? version,
+    String? extra,
+  }) => ConfirmedProgress(
+    habitId: habitId ?? this.habitId,
+    current: current.present ? current.value : this.current,
+    longest: longest.present ? longest.value : this.longest,
+    unit: unit.present ? unit.value : this.unit,
+    computedThrough: computedThrough.present
+        ? computedThrough.value
+        : this.computedThrough,
+    version: version ?? this.version,
+    extra: extra ?? this.extra,
+  );
+  ConfirmedProgress copyWithCompanion(HabitProgressCompanion data) {
+    return ConfirmedProgress(
+      habitId: data.habitId.present ? data.habitId.value : this.habitId,
+      current: data.current.present ? data.current.value : this.current,
+      longest: data.longest.present ? data.longest.value : this.longest,
+      unit: data.unit.present ? data.unit.value : this.unit,
+      computedThrough: data.computedThrough.present
+          ? data.computedThrough.value
+          : this.computedThrough,
+      version: data.version.present ? data.version.value : this.version,
+      extra: data.extra.present ? data.extra.value : this.extra,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ConfirmedProgress(')
+          ..write('habitId: $habitId, ')
+          ..write('current: $current, ')
+          ..write('longest: $longest, ')
+          ..write('unit: $unit, ')
+          ..write('computedThrough: $computedThrough, ')
+          ..write('version: $version, ')
+          ..write('extra: $extra')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    habitId,
+    current,
+    longest,
+    unit,
+    computedThrough,
+    version,
+    extra,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ConfirmedProgress &&
+          other.habitId == this.habitId &&
+          other.current == this.current &&
+          other.longest == this.longest &&
+          other.unit == this.unit &&
+          other.computedThrough == this.computedThrough &&
+          other.version == this.version &&
+          other.extra == this.extra);
+}
+
+class HabitProgressCompanion extends UpdateCompanion<ConfirmedProgress> {
+  final Value<String> habitId;
+  final Value<int?> current;
+  final Value<int?> longest;
+  final Value<String?> unit;
+  final Value<String?> computedThrough;
+  final Value<int> version;
+  final Value<String> extra;
+  final Value<int> rowid;
+  const HabitProgressCompanion({
+    this.habitId = const Value.absent(),
+    this.current = const Value.absent(),
+    this.longest = const Value.absent(),
+    this.unit = const Value.absent(),
+    this.computedThrough = const Value.absent(),
+    this.version = const Value.absent(),
+    this.extra = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  HabitProgressCompanion.insert({
+    required String habitId,
+    this.current = const Value.absent(),
+    this.longest = const Value.absent(),
+    this.unit = const Value.absent(),
+    this.computedThrough = const Value.absent(),
+    required int version,
+    this.extra = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : habitId = Value(habitId),
+       version = Value(version);
+  static Insertable<ConfirmedProgress> custom({
+    Expression<String>? habitId,
+    Expression<int>? current,
+    Expression<int>? longest,
+    Expression<String>? unit,
+    Expression<String>? computedThrough,
+    Expression<int>? version,
+    Expression<String>? extra,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (habitId != null) 'habit_id': habitId,
+      if (current != null) 'current': current,
+      if (longest != null) 'longest': longest,
+      if (unit != null) 'unit': unit,
+      if (computedThrough != null) 'computed_through': computedThrough,
+      if (version != null) 'version': version,
+      if (extra != null) 'extra': extra,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  HabitProgressCompanion copyWith({
+    Value<String>? habitId,
+    Value<int?>? current,
+    Value<int?>? longest,
+    Value<String?>? unit,
+    Value<String?>? computedThrough,
+    Value<int>? version,
+    Value<String>? extra,
+    Value<int>? rowid,
+  }) {
+    return HabitProgressCompanion(
+      habitId: habitId ?? this.habitId,
+      current: current ?? this.current,
+      longest: longest ?? this.longest,
+      unit: unit ?? this.unit,
+      computedThrough: computedThrough ?? this.computedThrough,
+      version: version ?? this.version,
+      extra: extra ?? this.extra,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (habitId.present) {
+      map['habit_id'] = Variable<String>(habitId.value);
+    }
+    if (current.present) {
+      map['current'] = Variable<int>(current.value);
+    }
+    if (longest.present) {
+      map['longest'] = Variable<int>(longest.value);
+    }
+    if (unit.present) {
+      map['unit'] = Variable<String>(unit.value);
+    }
+    if (computedThrough.present) {
+      map['computed_through'] = Variable<String>(computedThrough.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (extra.present) {
+      map['extra'] = Variable<String>(extra.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HabitProgressCompanion(')
+          ..write('habitId: $habitId, ')
+          ..write('current: $current, ')
+          ..write('longest: $longest, ')
+          ..write('unit: $unit, ')
+          ..write('computedThrough: $computedThrough, ')
+          ..write('version: $version, ')
+          ..write('extra: $extra, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PeriodEvaluationsTable extends PeriodEvaluations
+    with TableInfo<$PeriodEvaluationsTable, ConfirmedEvaluation> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PeriodEvaluationsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _habitIdMeta = const VerificationMeta(
+    'habitId',
+  );
+  @override
+  late final GeneratedColumn<String> habitId = GeneratedColumn<String>(
+    'habit_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _periodKeyMeta = const VerificationMeta(
+    'periodKey',
+  );
+  @override
+  late final GeneratedColumn<String> periodKey = GeneratedColumn<String>(
+    'period_key',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _startDateMeta = const VerificationMeta(
+    'startDate',
+  );
+  @override
+  late final GeneratedColumn<String> startDate = GeneratedColumn<String>(
+    'start_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _endDateMeta = const VerificationMeta(
+    'endDate',
+  );
+  @override
+  late final GeneratedColumn<String> endDate = GeneratedColumn<String>(
+    'end_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _completedMeta = const VerificationMeta(
+    'completed',
+  );
+  @override
+  late final GeneratedColumn<bool> completed = GeneratedColumn<bool>(
+    'completed',
+    aliasedName,
+    true,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("completed" IN (0, 1))',
+    ),
+  );
+  static const VerificationMeta _protectedMeta = const VerificationMeta(
+    'protected',
+  );
+  @override
+  late final GeneratedColumn<bool> protected = GeneratedColumn<bool>(
+    'protected',
+    aliasedName,
+    true,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("protected" IN (0, 1))',
+    ),
+  );
+  static const VerificationMeta _definitionVersionMeta = const VerificationMeta(
+    'definitionVersion',
+  );
+  @override
+  late final GeneratedColumn<int> definitionVersion = GeneratedColumn<int>(
+    'definition_version',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _timezoneMeta = const VerificationMeta(
+    'timezone',
+  );
+  @override
+  late final GeneratedColumn<String> timezone = GeneratedColumn<String>(
+    'timezone',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _revisionMeta = const VerificationMeta(
+    'revision',
+  );
+  @override
+  late final GeneratedColumn<int> revision = GeneratedColumn<int>(
+    'revision',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _extraMeta = const VerificationMeta('extra');
+  @override
+  late final GeneratedColumn<String> extra = GeneratedColumn<String>(
+    'extra',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('{}'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    habitId,
+    periodKey,
+    startDate,
+    endDate,
+    completed,
+    protected,
+    definitionVersion,
+    timezone,
+    revision,
+    extra,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'period_evaluations';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ConfirmedEvaluation> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('habit_id')) {
+      context.handle(
+        _habitIdMeta,
+        habitId.isAcceptableOrUnknown(data['habit_id']!, _habitIdMeta),
+      );
+    }
+    if (data.containsKey('period_key')) {
+      context.handle(
+        _periodKeyMeta,
+        periodKey.isAcceptableOrUnknown(data['period_key']!, _periodKeyMeta),
+      );
+    }
+    if (data.containsKey('start_date')) {
+      context.handle(
+        _startDateMeta,
+        startDate.isAcceptableOrUnknown(data['start_date']!, _startDateMeta),
+      );
+    }
+    if (data.containsKey('end_date')) {
+      context.handle(
+        _endDateMeta,
+        endDate.isAcceptableOrUnknown(data['end_date']!, _endDateMeta),
+      );
+    }
+    if (data.containsKey('completed')) {
+      context.handle(
+        _completedMeta,
+        completed.isAcceptableOrUnknown(data['completed']!, _completedMeta),
+      );
+    }
+    if (data.containsKey('protected')) {
+      context.handle(
+        _protectedMeta,
+        protected.isAcceptableOrUnknown(data['protected']!, _protectedMeta),
+      );
+    }
+    if (data.containsKey('definition_version')) {
+      context.handle(
+        _definitionVersionMeta,
+        definitionVersion.isAcceptableOrUnknown(
+          data['definition_version']!,
+          _definitionVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('timezone')) {
+      context.handle(
+        _timezoneMeta,
+        timezone.isAcceptableOrUnknown(data['timezone']!, _timezoneMeta),
+      );
+    }
+    if (data.containsKey('revision')) {
+      context.handle(
+        _revisionMeta,
+        revision.isAcceptableOrUnknown(data['revision']!, _revisionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_revisionMeta);
+    }
+    if (data.containsKey('extra')) {
+      context.handle(
+        _extraMeta,
+        extra.isAcceptableOrUnknown(data['extra']!, _extraMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ConfirmedEvaluation map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ConfirmedEvaluation(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      habitId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}habit_id'],
+      ),
+      periodKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}period_key'],
+      ),
+      startDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}start_date'],
+      ),
+      endDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}end_date'],
+      ),
+      completed: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}completed'],
+      ),
+      protected: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}protected'],
+      ),
+      definitionVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}definition_version'],
+      ),
+      timezone: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}timezone'],
+      ),
+      revision: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}revision'],
+      )!,
+      extra: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}extra'],
+      )!,
+    );
+  }
+
+  @override
+  $PeriodEvaluationsTable createAlias(String alias) {
+    return $PeriodEvaluationsTable(attachedDatabase, alias);
+  }
+}
+
+class ConfirmedEvaluation extends DataClass
+    implements Insertable<ConfirmedEvaluation> {
+  final String id;
+  final String? habitId;
+  final String? periodKey;
+  final String? startDate;
+  final String? endDate;
+  final bool? completed;
+  final bool? protected;
+  final int? definitionVersion;
+  final String? timezone;
+  final int revision;
+  final String extra;
+  const ConfirmedEvaluation({
+    required this.id,
+    this.habitId,
+    this.periodKey,
+    this.startDate,
+    this.endDate,
+    this.completed,
+    this.protected,
+    this.definitionVersion,
+    this.timezone,
+    required this.revision,
+    required this.extra,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    if (!nullToAbsent || habitId != null) {
+      map['habit_id'] = Variable<String>(habitId);
+    }
+    if (!nullToAbsent || periodKey != null) {
+      map['period_key'] = Variable<String>(periodKey);
+    }
+    if (!nullToAbsent || startDate != null) {
+      map['start_date'] = Variable<String>(startDate);
+    }
+    if (!nullToAbsent || endDate != null) {
+      map['end_date'] = Variable<String>(endDate);
+    }
+    if (!nullToAbsent || completed != null) {
+      map['completed'] = Variable<bool>(completed);
+    }
+    if (!nullToAbsent || protected != null) {
+      map['protected'] = Variable<bool>(protected);
+    }
+    if (!nullToAbsent || definitionVersion != null) {
+      map['definition_version'] = Variable<int>(definitionVersion);
+    }
+    if (!nullToAbsent || timezone != null) {
+      map['timezone'] = Variable<String>(timezone);
+    }
+    map['revision'] = Variable<int>(revision);
+    map['extra'] = Variable<String>(extra);
+    return map;
+  }
+
+  PeriodEvaluationsCompanion toCompanion(bool nullToAbsent) {
+    return PeriodEvaluationsCompanion(
+      id: Value(id),
+      habitId: habitId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(habitId),
+      periodKey: periodKey == null && nullToAbsent
+          ? const Value.absent()
+          : Value(periodKey),
+      startDate: startDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(startDate),
+      endDate: endDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(endDate),
+      completed: completed == null && nullToAbsent
+          ? const Value.absent()
+          : Value(completed),
+      protected: protected == null && nullToAbsent
+          ? const Value.absent()
+          : Value(protected),
+      definitionVersion: definitionVersion == null && nullToAbsent
+          ? const Value.absent()
+          : Value(definitionVersion),
+      timezone: timezone == null && nullToAbsent
+          ? const Value.absent()
+          : Value(timezone),
+      revision: Value(revision),
+      extra: Value(extra),
+    );
+  }
+
+  factory ConfirmedEvaluation.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ConfirmedEvaluation(
+      id: serializer.fromJson<String>(json['id']),
+      habitId: serializer.fromJson<String?>(json['habitId']),
+      periodKey: serializer.fromJson<String?>(json['periodKey']),
+      startDate: serializer.fromJson<String?>(json['startDate']),
+      endDate: serializer.fromJson<String?>(json['endDate']),
+      completed: serializer.fromJson<bool?>(json['completed']),
+      protected: serializer.fromJson<bool?>(json['protected']),
+      definitionVersion: serializer.fromJson<int?>(json['definitionVersion']),
+      timezone: serializer.fromJson<String?>(json['timezone']),
+      revision: serializer.fromJson<int>(json['revision']),
+      extra: serializer.fromJson<String>(json['extra']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'habitId': serializer.toJson<String?>(habitId),
+      'periodKey': serializer.toJson<String?>(periodKey),
+      'startDate': serializer.toJson<String?>(startDate),
+      'endDate': serializer.toJson<String?>(endDate),
+      'completed': serializer.toJson<bool?>(completed),
+      'protected': serializer.toJson<bool?>(protected),
+      'definitionVersion': serializer.toJson<int?>(definitionVersion),
+      'timezone': serializer.toJson<String?>(timezone),
+      'revision': serializer.toJson<int>(revision),
+      'extra': serializer.toJson<String>(extra),
+    };
+  }
+
+  ConfirmedEvaluation copyWith({
+    String? id,
+    Value<String?> habitId = const Value.absent(),
+    Value<String?> periodKey = const Value.absent(),
+    Value<String?> startDate = const Value.absent(),
+    Value<String?> endDate = const Value.absent(),
+    Value<bool?> completed = const Value.absent(),
+    Value<bool?> protected = const Value.absent(),
+    Value<int?> definitionVersion = const Value.absent(),
+    Value<String?> timezone = const Value.absent(),
+    int? revision,
+    String? extra,
+  }) => ConfirmedEvaluation(
+    id: id ?? this.id,
+    habitId: habitId.present ? habitId.value : this.habitId,
+    periodKey: periodKey.present ? periodKey.value : this.periodKey,
+    startDate: startDate.present ? startDate.value : this.startDate,
+    endDate: endDate.present ? endDate.value : this.endDate,
+    completed: completed.present ? completed.value : this.completed,
+    protected: protected.present ? protected.value : this.protected,
+    definitionVersion: definitionVersion.present
+        ? definitionVersion.value
+        : this.definitionVersion,
+    timezone: timezone.present ? timezone.value : this.timezone,
+    revision: revision ?? this.revision,
+    extra: extra ?? this.extra,
+  );
+  ConfirmedEvaluation copyWithCompanion(PeriodEvaluationsCompanion data) {
+    return ConfirmedEvaluation(
+      id: data.id.present ? data.id.value : this.id,
+      habitId: data.habitId.present ? data.habitId.value : this.habitId,
+      periodKey: data.periodKey.present ? data.periodKey.value : this.periodKey,
+      startDate: data.startDate.present ? data.startDate.value : this.startDate,
+      endDate: data.endDate.present ? data.endDate.value : this.endDate,
+      completed: data.completed.present ? data.completed.value : this.completed,
+      protected: data.protected.present ? data.protected.value : this.protected,
+      definitionVersion: data.definitionVersion.present
+          ? data.definitionVersion.value
+          : this.definitionVersion,
+      timezone: data.timezone.present ? data.timezone.value : this.timezone,
+      revision: data.revision.present ? data.revision.value : this.revision,
+      extra: data.extra.present ? data.extra.value : this.extra,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ConfirmedEvaluation(')
+          ..write('id: $id, ')
+          ..write('habitId: $habitId, ')
+          ..write('periodKey: $periodKey, ')
+          ..write('startDate: $startDate, ')
+          ..write('endDate: $endDate, ')
+          ..write('completed: $completed, ')
+          ..write('protected: $protected, ')
+          ..write('definitionVersion: $definitionVersion, ')
+          ..write('timezone: $timezone, ')
+          ..write('revision: $revision, ')
+          ..write('extra: $extra')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    habitId,
+    periodKey,
+    startDate,
+    endDate,
+    completed,
+    protected,
+    definitionVersion,
+    timezone,
+    revision,
+    extra,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ConfirmedEvaluation &&
+          other.id == this.id &&
+          other.habitId == this.habitId &&
+          other.periodKey == this.periodKey &&
+          other.startDate == this.startDate &&
+          other.endDate == this.endDate &&
+          other.completed == this.completed &&
+          other.protected == this.protected &&
+          other.definitionVersion == this.definitionVersion &&
+          other.timezone == this.timezone &&
+          other.revision == this.revision &&
+          other.extra == this.extra);
+}
+
+class PeriodEvaluationsCompanion extends UpdateCompanion<ConfirmedEvaluation> {
+  final Value<String> id;
+  final Value<String?> habitId;
+  final Value<String?> periodKey;
+  final Value<String?> startDate;
+  final Value<String?> endDate;
+  final Value<bool?> completed;
+  final Value<bool?> protected;
+  final Value<int?> definitionVersion;
+  final Value<String?> timezone;
+  final Value<int> revision;
+  final Value<String> extra;
+  final Value<int> rowid;
+  const PeriodEvaluationsCompanion({
+    this.id = const Value.absent(),
+    this.habitId = const Value.absent(),
+    this.periodKey = const Value.absent(),
+    this.startDate = const Value.absent(),
+    this.endDate = const Value.absent(),
+    this.completed = const Value.absent(),
+    this.protected = const Value.absent(),
+    this.definitionVersion = const Value.absent(),
+    this.timezone = const Value.absent(),
+    this.revision = const Value.absent(),
+    this.extra = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PeriodEvaluationsCompanion.insert({
+    required String id,
+    this.habitId = const Value.absent(),
+    this.periodKey = const Value.absent(),
+    this.startDate = const Value.absent(),
+    this.endDate = const Value.absent(),
+    this.completed = const Value.absent(),
+    this.protected = const Value.absent(),
+    this.definitionVersion = const Value.absent(),
+    this.timezone = const Value.absent(),
+    required int revision,
+    this.extra = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       revision = Value(revision);
+  static Insertable<ConfirmedEvaluation> custom({
+    Expression<String>? id,
+    Expression<String>? habitId,
+    Expression<String>? periodKey,
+    Expression<String>? startDate,
+    Expression<String>? endDate,
+    Expression<bool>? completed,
+    Expression<bool>? protected,
+    Expression<int>? definitionVersion,
+    Expression<String>? timezone,
+    Expression<int>? revision,
+    Expression<String>? extra,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (habitId != null) 'habit_id': habitId,
+      if (periodKey != null) 'period_key': periodKey,
+      if (startDate != null) 'start_date': startDate,
+      if (endDate != null) 'end_date': endDate,
+      if (completed != null) 'completed': completed,
+      if (protected != null) 'protected': protected,
+      if (definitionVersion != null) 'definition_version': definitionVersion,
+      if (timezone != null) 'timezone': timezone,
+      if (revision != null) 'revision': revision,
+      if (extra != null) 'extra': extra,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PeriodEvaluationsCompanion copyWith({
+    Value<String>? id,
+    Value<String?>? habitId,
+    Value<String?>? periodKey,
+    Value<String?>? startDate,
+    Value<String?>? endDate,
+    Value<bool?>? completed,
+    Value<bool?>? protected,
+    Value<int?>? definitionVersion,
+    Value<String?>? timezone,
+    Value<int>? revision,
+    Value<String>? extra,
+    Value<int>? rowid,
+  }) {
+    return PeriodEvaluationsCompanion(
+      id: id ?? this.id,
+      habitId: habitId ?? this.habitId,
+      periodKey: periodKey ?? this.periodKey,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      completed: completed ?? this.completed,
+      protected: protected ?? this.protected,
+      definitionVersion: definitionVersion ?? this.definitionVersion,
+      timezone: timezone ?? this.timezone,
+      revision: revision ?? this.revision,
+      extra: extra ?? this.extra,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (habitId.present) {
+      map['habit_id'] = Variable<String>(habitId.value);
+    }
+    if (periodKey.present) {
+      map['period_key'] = Variable<String>(periodKey.value);
+    }
+    if (startDate.present) {
+      map['start_date'] = Variable<String>(startDate.value);
+    }
+    if (endDate.present) {
+      map['end_date'] = Variable<String>(endDate.value);
+    }
+    if (completed.present) {
+      map['completed'] = Variable<bool>(completed.value);
+    }
+    if (protected.present) {
+      map['protected'] = Variable<bool>(protected.value);
+    }
+    if (definitionVersion.present) {
+      map['definition_version'] = Variable<int>(definitionVersion.value);
+    }
+    if (timezone.present) {
+      map['timezone'] = Variable<String>(timezone.value);
+    }
+    if (revision.present) {
+      map['revision'] = Variable<int>(revision.value);
+    }
+    if (extra.present) {
+      map['extra'] = Variable<String>(extra.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PeriodEvaluationsCompanion(')
+          ..write('id: $id, ')
+          ..write('habitId: $habitId, ')
+          ..write('periodKey: $periodKey, ')
+          ..write('startDate: $startDate, ')
+          ..write('endDate: $endDate, ')
+          ..write('completed: $completed, ')
+          ..write('protected: $protected, ')
+          ..write('definitionVersion: $definitionVersion, ')
+          ..write('timezone: $timezone, ')
+          ..write('revision: $revision, ')
+          ..write('extra: $extra, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $LocalSettingsTable extends LocalSettings
+    with TableInfo<$LocalSettingsTable, LocalSetting> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LocalSettingsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _keyMeta = const VerificationMeta('key');
+  @override
+  late final GeneratedColumn<String> key = GeneratedColumn<String>(
+    'key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _valueMeta = const VerificationMeta('value');
+  @override
+  late final GeneratedColumn<String> value = GeneratedColumn<String>(
+    'value',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [key, value];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'local_settings';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<LocalSetting> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('key')) {
+      context.handle(
+        _keyMeta,
+        key.isAcceptableOrUnknown(data['key']!, _keyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_keyMeta);
+    }
+    if (data.containsKey('value')) {
+      context.handle(
+        _valueMeta,
+        value.isAcceptableOrUnknown(data['value']!, _valueMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_valueMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {key};
+  @override
+  LocalSetting map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LocalSetting(
+      key: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}key'],
+      )!,
+      value: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}value'],
+      )!,
+    );
+  }
+
+  @override
+  $LocalSettingsTable createAlias(String alias) {
+    return $LocalSettingsTable(attachedDatabase, alias);
+  }
+}
+
+class LocalSetting extends DataClass implements Insertable<LocalSetting> {
+  final String key;
+  final String value;
+  const LocalSetting({required this.key, required this.value});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['key'] = Variable<String>(key);
+    map['value'] = Variable<String>(value);
+    return map;
+  }
+
+  LocalSettingsCompanion toCompanion(bool nullToAbsent) {
+    return LocalSettingsCompanion(key: Value(key), value: Value(value));
+  }
+
+  factory LocalSetting.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LocalSetting(
+      key: serializer.fromJson<String>(json['key']),
+      value: serializer.fromJson<String>(json['value']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'key': serializer.toJson<String>(key),
+      'value': serializer.toJson<String>(value),
+    };
+  }
+
+  LocalSetting copyWith({String? key, String? value}) =>
+      LocalSetting(key: key ?? this.key, value: value ?? this.value);
+  LocalSetting copyWithCompanion(LocalSettingsCompanion data) {
+    return LocalSetting(
+      key: data.key.present ? data.key.value : this.key,
+      value: data.value.present ? data.value.value : this.value,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LocalSetting(')
+          ..write('key: $key, ')
+          ..write('value: $value')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(key, value);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LocalSetting &&
+          other.key == this.key &&
+          other.value == this.value);
+}
+
+class LocalSettingsCompanion extends UpdateCompanion<LocalSetting> {
+  final Value<String> key;
+  final Value<String> value;
+  final Value<int> rowid;
+  const LocalSettingsCompanion({
+    this.key = const Value.absent(),
+    this.value = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  LocalSettingsCompanion.insert({
+    required String key,
+    required String value,
+    this.rowid = const Value.absent(),
+  }) : key = Value(key),
+       value = Value(value);
+  static Insertable<LocalSetting> custom({
+    Expression<String>? key,
+    Expression<String>? value,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (key != null) 'key': key,
+      if (value != null) 'value': value,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  LocalSettingsCompanion copyWith({
+    Value<String>? key,
+    Value<String>? value,
+    Value<int>? rowid,
+  }) {
+    return LocalSettingsCompanion(
+      key: key ?? this.key,
+      value: value ?? this.value,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (key.present) {
+      map['key'] = Variable<String>(key.value);
+    }
+    if (value.present) {
+      map['value'] = Variable<String>(value.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LocalSettingsCompanion(')
+          ..write('key: $key, ')
+          ..write('value: $value, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -4942,6 +6571,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $SyncStateTable syncState = $SyncStateTable(this);
   late final $DiscardedMutationsTable discardedMutations =
       $DiscardedMutationsTable(this);
+  late final $CalendarEntriesTable calendarEntries = $CalendarEntriesTable(
+    this,
+  );
+  late final $HabitProgressTable habitProgress = $HabitProgressTable(this);
+  late final $PeriodEvaluationsTable periodEvaluations =
+      $PeriodEvaluationsTable(this);
+  late final $LocalSettingsTable localSettings = $LocalSettingsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4953,6 +6589,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     outbox,
     syncState,
     discardedMutations,
+    calendarEntries,
+    habitProgress,
+    periodEvaluations,
+    localSettings,
   ];
 }
 
@@ -7271,6 +8911,921 @@ typedef $$DiscardedMutationsTableProcessedTableManager =
       DiscardedMutation,
       PrefetchHooks Function()
     >;
+typedef $$CalendarEntriesTableCreateCompanionBuilder =
+    CalendarEntriesCompanion Function({
+      Value<int> effectiveAt,
+      required String timezone,
+      Value<int> dayStartOffsetMinutes,
+    });
+typedef $$CalendarEntriesTableUpdateCompanionBuilder =
+    CalendarEntriesCompanion Function({
+      Value<int> effectiveAt,
+      Value<String> timezone,
+      Value<int> dayStartOffsetMinutes,
+    });
+
+class $$CalendarEntriesTableFilterComposer
+    extends Composer<_$AppDatabase, $CalendarEntriesTable> {
+  $$CalendarEntriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get effectiveAt => $composableBuilder(
+    column: $table.effectiveAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get timezone => $composableBuilder(
+    column: $table.timezone,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get dayStartOffsetMinutes => $composableBuilder(
+    column: $table.dayStartOffsetMinutes,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CalendarEntriesTableOrderingComposer
+    extends Composer<_$AppDatabase, $CalendarEntriesTable> {
+  $$CalendarEntriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get effectiveAt => $composableBuilder(
+    column: $table.effectiveAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get timezone => $composableBuilder(
+    column: $table.timezone,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get dayStartOffsetMinutes => $composableBuilder(
+    column: $table.dayStartOffsetMinutes,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CalendarEntriesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CalendarEntriesTable> {
+  $$CalendarEntriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get effectiveAt => $composableBuilder(
+    column: $table.effectiveAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get timezone =>
+      $composableBuilder(column: $table.timezone, builder: (column) => column);
+
+  GeneratedColumn<int> get dayStartOffsetMinutes => $composableBuilder(
+    column: $table.dayStartOffsetMinutes,
+    builder: (column) => column,
+  );
+}
+
+class $$CalendarEntriesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CalendarEntriesTable,
+          CalendarEntryRow,
+          $$CalendarEntriesTableFilterComposer,
+          $$CalendarEntriesTableOrderingComposer,
+          $$CalendarEntriesTableAnnotationComposer,
+          $$CalendarEntriesTableCreateCompanionBuilder,
+          $$CalendarEntriesTableUpdateCompanionBuilder,
+          (
+            CalendarEntryRow,
+            BaseReferences<
+              _$AppDatabase,
+              $CalendarEntriesTable,
+              CalendarEntryRow
+            >,
+          ),
+          CalendarEntryRow,
+          PrefetchHooks Function()
+        > {
+  $$CalendarEntriesTableTableManager(
+    _$AppDatabase db,
+    $CalendarEntriesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CalendarEntriesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CalendarEntriesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CalendarEntriesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> effectiveAt = const Value.absent(),
+                Value<String> timezone = const Value.absent(),
+                Value<int> dayStartOffsetMinutes = const Value.absent(),
+              }) => CalendarEntriesCompanion(
+                effectiveAt: effectiveAt,
+                timezone: timezone,
+                dayStartOffsetMinutes: dayStartOffsetMinutes,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> effectiveAt = const Value.absent(),
+                required String timezone,
+                Value<int> dayStartOffsetMinutes = const Value.absent(),
+              }) => CalendarEntriesCompanion.insert(
+                effectiveAt: effectiveAt,
+                timezone: timezone,
+                dayStartOffsetMinutes: dayStartOffsetMinutes,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$CalendarEntriesTable, CalendarEntryRow>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $CalendarEntriesTable,
+                    CalendarEntryRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CalendarEntriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CalendarEntriesTable,
+      CalendarEntryRow,
+      $$CalendarEntriesTableFilterComposer,
+      $$CalendarEntriesTableOrderingComposer,
+      $$CalendarEntriesTableAnnotationComposer,
+      $$CalendarEntriesTableCreateCompanionBuilder,
+      $$CalendarEntriesTableUpdateCompanionBuilder,
+      (
+        CalendarEntryRow,
+        BaseReferences<_$AppDatabase, $CalendarEntriesTable, CalendarEntryRow>,
+      ),
+      CalendarEntryRow,
+      PrefetchHooks Function()
+    >;
+typedef $$HabitProgressTableCreateCompanionBuilder =
+    HabitProgressCompanion Function({
+      required String habitId,
+      Value<int?> current,
+      Value<int?> longest,
+      Value<String?> unit,
+      Value<String?> computedThrough,
+      required int version,
+      Value<String> extra,
+      Value<int> rowid,
+    });
+typedef $$HabitProgressTableUpdateCompanionBuilder =
+    HabitProgressCompanion Function({
+      Value<String> habitId,
+      Value<int?> current,
+      Value<int?> longest,
+      Value<String?> unit,
+      Value<String?> computedThrough,
+      Value<int> version,
+      Value<String> extra,
+      Value<int> rowid,
+    });
+
+class $$HabitProgressTableFilterComposer
+    extends Composer<_$AppDatabase, $HabitProgressTable> {
+  $$HabitProgressTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get habitId => $composableBuilder(
+    column: $table.habitId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get current => $composableBuilder(
+    column: $table.current,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get longest => $composableBuilder(
+    column: $table.longest,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get unit => $composableBuilder(
+    column: $table.unit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get computedThrough => $composableBuilder(
+    column: $table.computedThrough,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get extra => $composableBuilder(
+    column: $table.extra,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$HabitProgressTableOrderingComposer
+    extends Composer<_$AppDatabase, $HabitProgressTable> {
+  $$HabitProgressTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get habitId => $composableBuilder(
+    column: $table.habitId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get current => $composableBuilder(
+    column: $table.current,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get longest => $composableBuilder(
+    column: $table.longest,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get unit => $composableBuilder(
+    column: $table.unit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get computedThrough => $composableBuilder(
+    column: $table.computedThrough,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get extra => $composableBuilder(
+    column: $table.extra,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$HabitProgressTableAnnotationComposer
+    extends Composer<_$AppDatabase, $HabitProgressTable> {
+  $$HabitProgressTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get habitId =>
+      $composableBuilder(column: $table.habitId, builder: (column) => column);
+
+  GeneratedColumn<int> get current =>
+      $composableBuilder(column: $table.current, builder: (column) => column);
+
+  GeneratedColumn<int> get longest =>
+      $composableBuilder(column: $table.longest, builder: (column) => column);
+
+  GeneratedColumn<String> get unit =>
+      $composableBuilder(column: $table.unit, builder: (column) => column);
+
+  GeneratedColumn<String> get computedThrough => $composableBuilder(
+    column: $table.computedThrough,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<String> get extra =>
+      $composableBuilder(column: $table.extra, builder: (column) => column);
+}
+
+class $$HabitProgressTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $HabitProgressTable,
+          ConfirmedProgress,
+          $$HabitProgressTableFilterComposer,
+          $$HabitProgressTableOrderingComposer,
+          $$HabitProgressTableAnnotationComposer,
+          $$HabitProgressTableCreateCompanionBuilder,
+          $$HabitProgressTableUpdateCompanionBuilder,
+          (
+            ConfirmedProgress,
+            BaseReferences<
+              _$AppDatabase,
+              $HabitProgressTable,
+              ConfirmedProgress
+            >,
+          ),
+          ConfirmedProgress,
+          PrefetchHooks Function()
+        > {
+  $$HabitProgressTableTableManager(_$AppDatabase db, $HabitProgressTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$HabitProgressTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$HabitProgressTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$HabitProgressTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> habitId = const Value.absent(),
+                Value<int?> current = const Value.absent(),
+                Value<int?> longest = const Value.absent(),
+                Value<String?> unit = const Value.absent(),
+                Value<String?> computedThrough = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<String> extra = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => HabitProgressCompanion(
+                habitId: habitId,
+                current: current,
+                longest: longest,
+                unit: unit,
+                computedThrough: computedThrough,
+                version: version,
+                extra: extra,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String habitId,
+                Value<int?> current = const Value.absent(),
+                Value<int?> longest = const Value.absent(),
+                Value<String?> unit = const Value.absent(),
+                Value<String?> computedThrough = const Value.absent(),
+                required int version,
+                Value<String> extra = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => HabitProgressCompanion.insert(
+                habitId: habitId,
+                current: current,
+                longest: longest,
+                unit: unit,
+                computedThrough: computedThrough,
+                version: version,
+                extra: extra,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$HabitProgressTable, ConfirmedProgress>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $HabitProgressTable,
+                    ConfirmedProgress
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$HabitProgressTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $HabitProgressTable,
+      ConfirmedProgress,
+      $$HabitProgressTableFilterComposer,
+      $$HabitProgressTableOrderingComposer,
+      $$HabitProgressTableAnnotationComposer,
+      $$HabitProgressTableCreateCompanionBuilder,
+      $$HabitProgressTableUpdateCompanionBuilder,
+      (
+        ConfirmedProgress,
+        BaseReferences<_$AppDatabase, $HabitProgressTable, ConfirmedProgress>,
+      ),
+      ConfirmedProgress,
+      PrefetchHooks Function()
+    >;
+typedef $$PeriodEvaluationsTableCreateCompanionBuilder =
+    PeriodEvaluationsCompanion Function({
+      required String id,
+      Value<String?> habitId,
+      Value<String?> periodKey,
+      Value<String?> startDate,
+      Value<String?> endDate,
+      Value<bool?> completed,
+      Value<bool?> protected,
+      Value<int?> definitionVersion,
+      Value<String?> timezone,
+      required int revision,
+      Value<String> extra,
+      Value<int> rowid,
+    });
+typedef $$PeriodEvaluationsTableUpdateCompanionBuilder =
+    PeriodEvaluationsCompanion Function({
+      Value<String> id,
+      Value<String?> habitId,
+      Value<String?> periodKey,
+      Value<String?> startDate,
+      Value<String?> endDate,
+      Value<bool?> completed,
+      Value<bool?> protected,
+      Value<int?> definitionVersion,
+      Value<String?> timezone,
+      Value<int> revision,
+      Value<String> extra,
+      Value<int> rowid,
+    });
+
+class $$PeriodEvaluationsTableFilterComposer
+    extends Composer<_$AppDatabase, $PeriodEvaluationsTable> {
+  $$PeriodEvaluationsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get habitId => $composableBuilder(
+    column: $table.habitId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get periodKey => $composableBuilder(
+    column: $table.periodKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get startDate => $composableBuilder(
+    column: $table.startDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get endDate => $composableBuilder(
+    column: $table.endDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get completed => $composableBuilder(
+    column: $table.completed,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get protected => $composableBuilder(
+    column: $table.protected,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get definitionVersion => $composableBuilder(
+    column: $table.definitionVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get timezone => $composableBuilder(
+    column: $table.timezone,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get revision => $composableBuilder(
+    column: $table.revision,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get extra => $composableBuilder(
+    column: $table.extra,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PeriodEvaluationsTableOrderingComposer
+    extends Composer<_$AppDatabase, $PeriodEvaluationsTable> {
+  $$PeriodEvaluationsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get habitId => $composableBuilder(
+    column: $table.habitId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get periodKey => $composableBuilder(
+    column: $table.periodKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get startDate => $composableBuilder(
+    column: $table.startDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get endDate => $composableBuilder(
+    column: $table.endDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get completed => $composableBuilder(
+    column: $table.completed,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get protected => $composableBuilder(
+    column: $table.protected,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get definitionVersion => $composableBuilder(
+    column: $table.definitionVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get timezone => $composableBuilder(
+    column: $table.timezone,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get revision => $composableBuilder(
+    column: $table.revision,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get extra => $composableBuilder(
+    column: $table.extra,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PeriodEvaluationsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PeriodEvaluationsTable> {
+  $$PeriodEvaluationsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get habitId =>
+      $composableBuilder(column: $table.habitId, builder: (column) => column);
+
+  GeneratedColumn<String> get periodKey =>
+      $composableBuilder(column: $table.periodKey, builder: (column) => column);
+
+  GeneratedColumn<String> get startDate =>
+      $composableBuilder(column: $table.startDate, builder: (column) => column);
+
+  GeneratedColumn<String> get endDate =>
+      $composableBuilder(column: $table.endDate, builder: (column) => column);
+
+  GeneratedColumn<bool> get completed =>
+      $composableBuilder(column: $table.completed, builder: (column) => column);
+
+  GeneratedColumn<bool> get protected =>
+      $composableBuilder(column: $table.protected, builder: (column) => column);
+
+  GeneratedColumn<int> get definitionVersion => $composableBuilder(
+    column: $table.definitionVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get timezone =>
+      $composableBuilder(column: $table.timezone, builder: (column) => column);
+
+  GeneratedColumn<int> get revision =>
+      $composableBuilder(column: $table.revision, builder: (column) => column);
+
+  GeneratedColumn<String> get extra =>
+      $composableBuilder(column: $table.extra, builder: (column) => column);
+}
+
+class $$PeriodEvaluationsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PeriodEvaluationsTable,
+          ConfirmedEvaluation,
+          $$PeriodEvaluationsTableFilterComposer,
+          $$PeriodEvaluationsTableOrderingComposer,
+          $$PeriodEvaluationsTableAnnotationComposer,
+          $$PeriodEvaluationsTableCreateCompanionBuilder,
+          $$PeriodEvaluationsTableUpdateCompanionBuilder,
+          (
+            ConfirmedEvaluation,
+            BaseReferences<
+              _$AppDatabase,
+              $PeriodEvaluationsTable,
+              ConfirmedEvaluation
+            >,
+          ),
+          ConfirmedEvaluation,
+          PrefetchHooks Function()
+        > {
+  $$PeriodEvaluationsTableTableManager(
+    _$AppDatabase db,
+    $PeriodEvaluationsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PeriodEvaluationsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PeriodEvaluationsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PeriodEvaluationsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String?> habitId = const Value.absent(),
+                Value<String?> periodKey = const Value.absent(),
+                Value<String?> startDate = const Value.absent(),
+                Value<String?> endDate = const Value.absent(),
+                Value<bool?> completed = const Value.absent(),
+                Value<bool?> protected = const Value.absent(),
+                Value<int?> definitionVersion = const Value.absent(),
+                Value<String?> timezone = const Value.absent(),
+                Value<int> revision = const Value.absent(),
+                Value<String> extra = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PeriodEvaluationsCompanion(
+                id: id,
+                habitId: habitId,
+                periodKey: periodKey,
+                startDate: startDate,
+                endDate: endDate,
+                completed: completed,
+                protected: protected,
+                definitionVersion: definitionVersion,
+                timezone: timezone,
+                revision: revision,
+                extra: extra,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<String?> habitId = const Value.absent(),
+                Value<String?> periodKey = const Value.absent(),
+                Value<String?> startDate = const Value.absent(),
+                Value<String?> endDate = const Value.absent(),
+                Value<bool?> completed = const Value.absent(),
+                Value<bool?> protected = const Value.absent(),
+                Value<int?> definitionVersion = const Value.absent(),
+                Value<String?> timezone = const Value.absent(),
+                required int revision,
+                Value<String> extra = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PeriodEvaluationsCompanion.insert(
+                id: id,
+                habitId: habitId,
+                periodKey: periodKey,
+                startDate: startDate,
+                endDate: endDate,
+                completed: completed,
+                protected: protected,
+                definitionVersion: definitionVersion,
+                timezone: timezone,
+                revision: revision,
+                extra: extra,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$PeriodEvaluationsTable, ConfirmedEvaluation>(
+                    table,
+                  ),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $PeriodEvaluationsTable,
+                    ConfirmedEvaluation
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PeriodEvaluationsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PeriodEvaluationsTable,
+      ConfirmedEvaluation,
+      $$PeriodEvaluationsTableFilterComposer,
+      $$PeriodEvaluationsTableOrderingComposer,
+      $$PeriodEvaluationsTableAnnotationComposer,
+      $$PeriodEvaluationsTableCreateCompanionBuilder,
+      $$PeriodEvaluationsTableUpdateCompanionBuilder,
+      (
+        ConfirmedEvaluation,
+        BaseReferences<
+          _$AppDatabase,
+          $PeriodEvaluationsTable,
+          ConfirmedEvaluation
+        >,
+      ),
+      ConfirmedEvaluation,
+      PrefetchHooks Function()
+    >;
+typedef $$LocalSettingsTableCreateCompanionBuilder =
+    LocalSettingsCompanion Function({
+      required String key,
+      required String value,
+      Value<int> rowid,
+    });
+typedef $$LocalSettingsTableUpdateCompanionBuilder =
+    LocalSettingsCompanion Function({
+      Value<String> key,
+      Value<String> value,
+      Value<int> rowid,
+    });
+
+class $$LocalSettingsTableFilterComposer
+    extends Composer<_$AppDatabase, $LocalSettingsTable> {
+  $$LocalSettingsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get key => $composableBuilder(
+    column: $table.key,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get value => $composableBuilder(
+    column: $table.value,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$LocalSettingsTableOrderingComposer
+    extends Composer<_$AppDatabase, $LocalSettingsTable> {
+  $$LocalSettingsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get key => $composableBuilder(
+    column: $table.key,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get value => $composableBuilder(
+    column: $table.value,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$LocalSettingsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $LocalSettingsTable> {
+  $$LocalSettingsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get key =>
+      $composableBuilder(column: $table.key, builder: (column) => column);
+
+  GeneratedColumn<String> get value =>
+      $composableBuilder(column: $table.value, builder: (column) => column);
+}
+
+class $$LocalSettingsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $LocalSettingsTable,
+          LocalSetting,
+          $$LocalSettingsTableFilterComposer,
+          $$LocalSettingsTableOrderingComposer,
+          $$LocalSettingsTableAnnotationComposer,
+          $$LocalSettingsTableCreateCompanionBuilder,
+          $$LocalSettingsTableUpdateCompanionBuilder,
+          (
+            LocalSetting,
+            BaseReferences<_$AppDatabase, $LocalSettingsTable, LocalSetting>,
+          ),
+          LocalSetting,
+          PrefetchHooks Function()
+        > {
+  $$LocalSettingsTableTableManager(_$AppDatabase db, $LocalSettingsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LocalSettingsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$LocalSettingsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$LocalSettingsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> key = const Value.absent(),
+            Value<String> value = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) => LocalSettingsCompanion(key: key, value: value, rowid: rowid),
+          createCompanionCallback:
+              ({
+                required String key,
+                required String value,
+                Value<int> rowid = const Value.absent(),
+              }) => LocalSettingsCompanion.insert(
+                key: key,
+                value: value,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$LocalSettingsTable, LocalSetting>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $LocalSettingsTable,
+                    LocalSetting
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$LocalSettingsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $LocalSettingsTable,
+      LocalSetting,
+      $$LocalSettingsTableFilterComposer,
+      $$LocalSettingsTableOrderingComposer,
+      $$LocalSettingsTableAnnotationComposer,
+      $$LocalSettingsTableCreateCompanionBuilder,
+      $$LocalSettingsTableUpdateCompanionBuilder,
+      (
+        LocalSetting,
+        BaseReferences<_$AppDatabase, $LocalSettingsTable, LocalSetting>,
+      ),
+      LocalSetting,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -7287,4 +9842,12 @@ class $AppDatabaseManager {
       $$SyncStateTableTableManager(_db, _db.syncState);
   $$DiscardedMutationsTableTableManager get discardedMutations =>
       $$DiscardedMutationsTableTableManager(_db, _db.discardedMutations);
+  $$CalendarEntriesTableTableManager get calendarEntries =>
+      $$CalendarEntriesTableTableManager(_db, _db.calendarEntries);
+  $$HabitProgressTableTableManager get habitProgress =>
+      $$HabitProgressTableTableManager(_db, _db.habitProgress);
+  $$PeriodEvaluationsTableTableManager get periodEvaluations =>
+      $$PeriodEvaluationsTableTableManager(_db, _db.periodEvaluations);
+  $$LocalSettingsTableTableManager get localSettings =>
+      $$LocalSettingsTableTableManager(_db, _db.localSettings);
 }

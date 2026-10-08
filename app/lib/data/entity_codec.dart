@@ -64,6 +64,74 @@ abstract final class EntityCodec {
     );
   }
 
+  static const progressFields = {'habit_id', 'current', 'longest', 'unit', 'computed_through'};
+
+  static const evaluationFields = {
+    'id', 'habit_id', 'period_key', 'start_date', 'end_date', 'completed', 'protected', //
+    'definition_version', 'timezone', 'revision',
+  };
+
+  /// A32 habit_progress. Decoding a wrong-typed known field throws (the item is then kept raw).
+  static HabitProgressCompanion progressRow(
+    Map<String, dynamic> p, {
+    required String habitId,
+    required int version,
+  }) {
+    return HabitProgressCompanion(
+      habitId: Value(habitId),
+      current: Value(_strictInt(p['current'])),
+      longest: Value(_strictInt(p['longest'])),
+      unit: Value(_str(p['unit'])),
+      computedThrough: Value(_str(p['computed_through'])),
+      version: Value(version),
+      extra: Value(_extra(p, progressFields)),
+    );
+  }
+
+  /// A32 period_evaluation (version = revision).
+  static PeriodEvaluationsCompanion evaluationRow(
+    Map<String, dynamic> p, {
+    required String id,
+    required int version,
+  }) {
+    return PeriodEvaluationsCompanion(
+      id: Value(id),
+      habitId: Value(_str(p['habit_id'])),
+      periodKey: Value(_str(p['period_key'])),
+      startDate: Value(_str(p['start_date'])),
+      endDate: Value(_str(p['end_date'])),
+      completed: Value(_strictBool(p['completed'])),
+      protected: Value(_strictBool(p['protected'])),
+      definitionVersion: Value(_int(p['definition_version'])),
+      timezone: Value(_str(p['timezone'])),
+      revision: Value(version),
+      extra: Value(_extra(p, evaluationFields)),
+    );
+  }
+
+  static Map<String, dynamic> progressPayload(ConfirmedProgress r) => {
+    ..._decodeMap(r.extra),
+    'habit_id': r.habitId,
+    'current': r.current,
+    'longest': r.longest,
+    'unit': r.unit,
+    'computed_through': r.computedThrough,
+  };
+
+  static Map<String, dynamic> evaluationPayload(ConfirmedEvaluation r) => {
+    ..._decodeMap(r.extra),
+    'id': r.id,
+    'habit_id': r.habitId,
+    'period_key': r.periodKey,
+    'start_date': r.startDate,
+    'end_date': r.endDate,
+    'completed': r.completed,
+    'protected': r.protected,
+    'definition_version': r.definitionVersion,
+    'timezone': r.timezone,
+    'revision': r.revision,
+  };
+
   /// The entity as the server described it: known fields plus the preserved unknown ones.
   static Map<String, dynamic> habitPayload(ConfirmedHabit r) => {
     ..._decodeMap(r.extra),
@@ -103,6 +171,10 @@ abstract final class EntityCodec {
 
   static String? _str(Object? v) => v is String ? v : null;
   static int? _int(Object? v) => v is int ? v : null;
+
+  /// Null stays null; any other non-int is a decode error (F2 keeps the item raw).
+  static int? _strictInt(Object? v) => v == null ? null : v as int;
+  static bool? _strictBool(Object? v) => v == null ? null : v as bool;
   static String? _json(Map<String, dynamic> p, String key) =>
       p.containsKey(key) ? jsonEncode(p[key]) : null;
   static Object? _decode(String? text) => text == null ? null : jsonDecode(text);
