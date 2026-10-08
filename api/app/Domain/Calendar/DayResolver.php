@@ -31,14 +31,7 @@ final readonly class DayResolver
     public function resolve(DateTimeInterface $occurredAt, ?string $capturedTimezone = null, ?LocalDate $localDateHint = null): DayResolution
     {
         $entry = $this->timeline->entryAt($occurredAt);
-        $now = $this->clock->now();
-
-        if ($occurredAt > $now->add(new DateInterval('PT'.self::FUTURE_TOLERANCE_SECONDS.'S'))) {
-            throw new DayResolutionException('future_event');
-        }
-        if ($occurredAt < $now->sub(new DateInterval('PT'.self::MAX_OFFLINE_AGE_SECONDS.'S'))) {
-            throw new DayResolutionException('event_too_old');
-        }
+        $this->assertWithinBounds($occurredAt);
         $date = $this->timeline->localDateAt($occurredAt);
 
         // A29: a different captured zone is fine when the client's date already agrees with
@@ -61,6 +54,19 @@ final readonly class DayResolver
      */
     public function resolveBackdate(LocalDate $date, DateTimeInterface $occurredAt): DayResolution
     {
+        $this->assertWithinBounds($occurredAt);
+        $this->validateBackdate($date, $occurredAt);
+
+        return new DayResolution($date, $this->timeline->entryAt($this->timeline->startOfLocalDay($date)), null);
+    }
+
+    /**
+     * occurred_at may be at most 5 minutes ahead of the server and at most 90 days old (spec 08).
+     *
+     * @throws DayResolutionException
+     */
+    private function assertWithinBounds(DateTimeInterface $occurredAt): void
+    {
         $now = $this->clock->now();
         if ($occurredAt > $now->add(new DateInterval('PT'.self::FUTURE_TOLERANCE_SECONDS.'S'))) {
             throw new DayResolutionException('future_event');
@@ -68,9 +74,6 @@ final readonly class DayResolver
         if ($occurredAt < $now->sub(new DateInterval('PT'.self::MAX_OFFLINE_AGE_SECONDS.'S'))) {
             throw new DayResolutionException('event_too_old');
         }
-        $this->validateBackdate($date, $occurredAt);
-
-        return new DayResolution($date, $this->timeline->entryAt($this->timeline->startOfLocalDay($date)), null);
     }
 
     /** The user's current business date. */
