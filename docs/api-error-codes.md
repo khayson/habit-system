@@ -45,6 +45,7 @@ Every error response uses one envelope (CLAUDE.md, A25):
 | `unsupported_type` | 422 | Habit type unknown or not declared in `X-Capabilities` (A21). | — | `error_422_unsupported_type.json` |
 | `unsupported_operation` | 422 | Operation (or alias) not supported by the habit's type (A21, A27). | — | `error_422_unsupported_operation.json` |
 | `invalid_value` | 422 | Value, target or increment breaks the type's rules. | — | `error_422_invalid_value.json` |
+| `entity_read_only` | 422 | The mutation targets a server-derived entity (`habit_progress`, `period_evaluation`, A32). Same answer for an own, foreign or missing id. | — | `error_422_entity_read_only.json` |
 | `rate_limited` | 429 | Rate limit hit. | `Retry-After` header (seconds) | `error_429_rate_limited.json` |
 | `http_error` | other 4xx (e.g. 418) | Fallback for a 4xx with no dedicated code. | — | `error_4xx_http_error.json` |
 | `server_error` | 500 (and 5xx without a code) | Unhandled failure. Retriable. In a `/sync` ack it is per mutation (status `rejected`, no receipt). | `retryable: true` in a sync ack (`sync/ack_server_error.json`) | `error_500_server_error.json` |

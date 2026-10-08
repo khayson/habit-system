@@ -1,0 +1,14 @@
+{
+  "description": "A32: the mutation targets a server-derived, read-only entity (habit_progress, period_evaluation). Identical for own, foreign and missing ids.",
+  "status": 422,
+  "body": {
+    "error": {
+      "code": "entity_read_only",
+      "message": "This is calculated by the server and cannot be changed."
+    },
+    "meta": {
+      "request_id": "{{uuid}}",
+      "server_time": "{{timestamp}}"
+    }
+  }
+}

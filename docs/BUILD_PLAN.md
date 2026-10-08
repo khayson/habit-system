@@ -66,17 +66,31 @@ First the engine fixes F1–F8 and F10 from `docs/reviews/PHASE_2B1_REVIEW.md` �
 
 ## Phase 3 — MVP complete · L
 
+Split like Phase 2 (Phase 2b.2 review §5): **3.1 is the server side, 3.2 the app**. The labels are 3.1/3.2 because "Phase 3b" already names profile photo and location (A20).
+
+### Phase 3.1 — Server
+
+First the app fixes G1–G5 from `docs/reviews/PHASE_2B2_REVIEW.md` §3. Then, fixture-first: D1 calendar changes and `profile.set_timezone` (with `users.version` and the user entity carrying `calendar_history`); D2 zero-length dates and `nextEffectiveDate`; `period_evaluations.user_id`; the A32 derived entities `habit_progress` and `period_evaluation` (read-only, journaled in the computing transaction, bootstrapped through `entities`); `PeriodCloser` (A10, daily periods; `protected` stays false until Phase 5); the streak cache from `dirty_from`; explicit log backdate (≤ 30 days, never after local today at `occurred_at`); `GET /habits/{id}/heatmap`; an e2e scenario where another device receives the new entities.
+
+**Gate**: closer idempotency and crash-retry tests; a late offline log re-evaluates its closed period and journals the new revision in the same transaction as the log write; a mutation racing the closer on real PostgreSQL (no lost update, no duplicate evaluation, seq gap-free); the D1 and D2 fixtures (Pago_Pago → Auckland, the arbitrary-instant failure); ownership 404s on every new route and entity; backdate boundaries (day 30/31, local today/tomorrow near midnight in a non-UTC zone); mutation check extended with closer, revision, journal, effective-at and zero-length mutants; CI green on a pushed SHA. Review stop.
+
+### Phase 3.2 — App
+
+Multi-entry calendar timeline from the user entity; local tables for `habit_progress` and `period_evaluation`; Dart `HabitSchedule` due-ness pinned by the PHP fixtures; Today with due-ness, streak and the XP chip behind `rewards_enabled` (A13c); heatmap (12) and history with backdate (13); 04 gets Edit, "Follow device time zone" and ask-on-change (through `profile.set_timezone`) plus the reminder-permission block (also shown when notification permission was never asked on this device); local reminders (11) with permission states and the DST test; account-isolated logout; best-effort background sync and the notification-action schema (A23), with a real two-isolate test and `BEGIN IMMEDIATE` on independent connections; `dependency_pending` in the e2e job.
+
+**Gate (Phase 3 as a whole)**: the spec's MVP list; real Android device incl. battery restriction; DST reminder test.
+
+### Phase 3 design notes (carried from the original plan)
+
 - **Calendar changes (D1, A26):** `CalendarHistory::appendChange()` as a pure domain method (injected `Clock`) that computes the effective instant (the next local day start in the old calendar); `profile.set_timezone` and day-offset changes go through it. `TimezoneTimeline` asserts monotonic dates at construction so a bad history fails loudly. Fixture to write first: Pacific/Auckland → America/Los_Angeles effective at an arbitrary instant (2026-03-10T12:00Z) produces a backwards date (2026-03-11 → 2026-03-10); the same change at the A26 instant produces none.
 - **Zero-length dates (D2, A30):** a local date with no instants is not part of the period grid (not due, not evaluated, neither breaks nor extends a streak) in `PeriodEngine`, `StreakCalculator` and `ConsistencyCalculator`. Fixtures to write first: Pacific/Pago_Pago → Pacific/Auckland at the A26 instant skips 2026-03-11; real-zone cases Pacific/Apia 2011-12-30 and Pacific/Kiritimati 1994-12-31.
 - `HabitSchedule::nextEffectiveDate()` returns the next Monday when **either** the old or the new frequency is weekly (A30), so a frequency change never leaves days outside every period.
 - `period_evaluations.user_id` (owner FK on every user resource) in the migration that first fills the table.
 - Streak cache + `period_evaluations` (daily), closure runner (A10), heatmap endpoint + screen 12, history and ≤ 30-day backdate (13), local reminders with permission states (11), token refresh, account-isolated logout, best-effort background sync (through `LocalMutationService`), notification action payload schema (A23), XP chip behind a flag (A13c).
 
-**Gate**: the spec's MVP list; real Android device incl. battery restriction; DST reminder test.
-
 ## Phase 3b — Profile photo and location · S–M
 
-- Migration for the A20 columns; `profile.update` and `profile.set_timezone` mutations; avatar upload / read / delete endpoints and the image pipeline; private object storage (local disk in dev); Profile (20) with photo picker + crop, location fields and the durable `pending_uploads` queue.
+- Migration for the A20 columns; the `profile.update` mutation (`profile.set_timezone` lands in 3.1); avatar upload / read / delete endpoints and the image pipeline; private object storage (local disk in dev); Profile (20) with photo picker + crop, location fields and the durable `pending_uploads` queue.
 
 **Gate**: EXIF/GPS stripped (test image); oversized, polyglot and decompression-bomb inputs rejected; cross-owner avatar read → 404; photo visible offline and uploaded after reconnect; account purge removes the objects.
 

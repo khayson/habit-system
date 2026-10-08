@@ -307,3 +307,17 @@ Decisions from the architect's Phase 2b.1 review (`docs/reviews/PHASE_2B1_REVIEW
 - **Client.** An app that does not know an `entity` stores the item in `opaque_entities` under that name, so a bootstrap and a later pull keep one entity under one name. Any other unknown top-level list is still kept, under type `bootstrap:<key>`; nothing is dropped (invariant 13).
 - **Undecodable items.** A change, bootstrap item or ack this app version cannot decode is stored raw as `undecodable:<entity>` and the cursor still advances (review F2).
 - **Server.** No server work until the first new entity type exists.
+
+## 11. Added after the Phase 2b.2 review (2026-10-08)
+
+Decisions from the architect's Phase 2b.2 review (`docs/reviews/PHASE_2B2_REVIEW.md`).
+
+### A32 — Derived entities · ADOPT
+
+The client never evaluates streaks (invariant 9), but screens must work offline, so the server sends results as sync entities, journaled in the SAME transaction that computes them (invariant 6). Both are READ-ONLY for clients: a mutation targeting them is rejected with code `entity_read_only`.
+
+- **`habit_progress`**: id = the habit id. Payload `{habit_id, current, longest, unit, computed_through}`. Version = the streak cache's `version`. Deliberately NOT part of the `habit` entity: bumping a habit's version on every log would cause false conflicts against definition edits.
+- **`period_evaluation`**: id = the `period_evaluations` row id. Payload `{id, habit_id, period_key, start_date, end_date, completed, protected, definition_version, timezone, revision}`. Version = revision. Journaled when a period closes and again when a late offline log changes the result.
+- **Bootstrap** carries both through A31's `entities` array (its first real use): `habit_progress` for every non-deleted habit; `period_evaluation` limited to the last 400 days. Older history comes from `GET /habits/{id}/heatmap` when online.
+- **Habit delete** journals a delete for its `habit_progress` in the same transaction. Its evaluations stay on the server (needed for restore) and are not sent in bootstrap for deleted habits. A restore brings them back.
+- **Not-due days are not stored.** The Dart port of due-ness (`HabitSchedule`) comes in 3.2 and is pinned by the same fixtures as PHP.
