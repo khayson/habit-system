@@ -719,13 +719,22 @@ class SyncEngine {
         .insertOnConflictUpdate(EntityCodec.logRow(payload, id: id, version: version));
   }
 
-  Future<void> _applyUser(Map<String, dynamic> user) => _updateState(
-    SyncStateCompanion(
-      userPayload: Value(jsonEncode(user)),
-      calendarTimezone: Value(user['timezone'] as String?),
-      calendarDayStartOffset: Value(user['day_start_offset_minutes'] as int? ?? 0),
-    ),
-  );
+  /// G3: a user payload may be partial (later phases journal XP or level alone). Only the
+  /// calendar fields it carries are written, and it is merged into the stored payload, so a
+  /// partial update never clears the calendar (which would stop every local write) or the name.
+  Future<void> _applyUser(Map<String, dynamic> user) async {
+    final stored = EntityCodec.decodeJson((await _state()).userPayload);
+    final merged = {if (stored is Map) ...stored.cast<String, dynamic>(), ...user};
+    final timezone = user['timezone'];
+    final offset = user['day_start_offset_minutes'];
+    await _updateState(
+      SyncStateCompanion(
+        userPayload: Value(jsonEncode(merged)),
+        calendarTimezone: timezone is String ? Value(timezone) : const Value.absent(),
+        calendarDayStartOffset: offset is int ? Value(offset) : const Value.absent(),
+      ),
+    );
+  }
 
   /// Acked rows can go once the confirmed row reflects them; unacknowledged rows never do.
   Future<void> _prune() async {

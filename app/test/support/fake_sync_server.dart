@@ -331,6 +331,10 @@ class FakeSyncServer implements SyncTransport {
     });
   }
 
+  /// Journals a (possibly partial) user entity, as later phases will for XP or level.
+  void journalUser(Map<String, dynamic> payload) =>
+      _journal('user', payload['id'] as String, 'upsert', seq + 1, payload);
+
   /// Journals a change for an entity type the app does not know.
   void journalOpaque(String entity, String id, Map<String, dynamic> payload) =>
       _journal(entity, id, 'upsert', 1, payload);

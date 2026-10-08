@@ -750,6 +750,19 @@ void main() {
     });
   });
 
+  test('G3: a partial user payload leaves the calendar and other fields alone', () async {
+    await phone.sync();
+    server.journalUser({'id': 'user-1', 'xp': 120});
+
+    expect(await phone.sync(), SyncOutcome.completed);
+
+    final state = await phone.state();
+    expect((state.calendarTimezone, state.calendarDayStartOffset), ('America/Los_Angeles', 0));
+    expect(jsonDecode(state.userPayload!), containsPair('name', 'Maya'));
+    expect(jsonDecode(state.userPayload!), containsPair('xp', 120));
+    await phone.writer.setLogValue(habitId: await phone.habit(), value: 1); // still writable
+  });
+
   test('unknown habit types, unknown fields and unknown entities survive a round trip', () async {
     final unknownHabit = {
       'id': 'future-habit',
