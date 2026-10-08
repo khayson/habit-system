@@ -19,6 +19,9 @@ use DateTimeImmutable;
  *   by the definition of its first active day, and is due only when the habit is active on at
  *   least `count` of its days. ASSUMPTION(A1-week-partial).
  * - Day boundaries (and so the day-start offset, A22) come from the calendar history.
+ * - Zero-length dates (no instants: skipped by a calendar change or the zone's own history) are
+ *   not part of the grid (A30): never a period, never an active day of a week. So they are
+ *   neither completed nor missed, a streak runs across them, and consistency never counts them.
  */
 final readonly class PeriodEngine
 {
@@ -29,13 +32,14 @@ final readonly class PeriodEngine
      *
      * @return list<Period>
      */
-    public function periods(HabitSchedule $schedule, LocalDate $from, LocalDate $to): array
+    public function periods(HabitSchedule $schedule, LocalDate $from, LocalDate $to, ?TimezoneTimeline $timeline = null): array
     {
+        $exists = fn (LocalDate $date): bool => $timeline === null || ! $timeline->isZeroLength($date);
         $periods = [];
 
         for ($date = $from; ! $date->isAfter($to); $date = $date->addDays(1)) {
             $definition = $schedule->versionOn($date);
-            if ($definition === null || ! $schedule->isActive($date)
+            if ($definition === null || ! $schedule->isActive($date) || ! $exists($date)
                 || $definition->frequency->isWeekly() || ! $definition->frequency->schedules($date)) {
                 continue;
             }
@@ -46,7 +50,7 @@ final readonly class PeriodEngine
             $active = [];
             for ($i = 0; $i < 7; $i++) {
                 $day = $monday->addDays($i);
-                if ($schedule->isEligible($day)) {
+                if ($schedule->isEligible($day) && $exists($day)) {
                     $active[] = $day;
                 }
             }

@@ -67,6 +67,20 @@ final readonly class HabitSchedule
         return $this->isActive($date) && $this->versionOn($date) !== null;
     }
 
+    /**
+     * The first date a new definition may govern (A30): tomorrow, or the next Monday when either
+     * the old or the new frequency is weekly, so a change never leaves days outside every period
+     * and never splits an open week.
+     */
+    public static function nextEffectiveDate(LocalDate $today, Frequency $old, Frequency $new): LocalDate
+    {
+        if ($old->isWeekly() || $new->isWeekly()) {
+            return $today->mondayOfWeek()->addDays(7);
+        }
+
+        return $today->addDays(1);
+    }
+
     public function latest(): DefinitionVersion
     {
         return $this->versions[count($this->versions) - 1];
