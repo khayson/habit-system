@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:habit/notifications/notification_scheduler.dart';
+import 'package:habit/providers/account_context.dart';
 
 import '../support/app_harness.dart';
 import '../support/fake_notification_scheduler.dart';
@@ -14,7 +15,7 @@ import '../support/fake_sync_server.dart';
 void main() {
   setUpAll(loadTestZones);
 
-  Future<(dynamic, FakeNotificationScheduler)> open(
+  Future<(AccountContext, FakeNotificationScheduler)> open(
     WidgetTester tester,
     String location, {
     FakeNotificationScheduler? os,
