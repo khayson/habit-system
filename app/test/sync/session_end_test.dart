@@ -120,7 +120,7 @@ void main() {
 
   test("logout cancels this account's reminders and background sync", () async {
     await withReminder();
-    http.on('POST /auth/logout', Reply(204, ''));
+    http.on('POST /auth/logout', const Reply(204, ''));
 
     await session.signOut();
 
