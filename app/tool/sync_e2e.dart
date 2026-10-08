@@ -4,7 +4,8 @@
 //   dart run tool/sync_e2e.dart [http://127.0.0.1:8000/api/v1]
 //
 // Environment: E2E_DATABASE_URL (postgresql://user:pass@host:port/db, the API's database) and
-// optionally E2E_PSQL (path to psql, default `psql`). They simulate a database restore.
+// optionally E2E_PSQL (path to psql, default `psql`); they simulate a database restore.
+// E2E_CLOSE_CMD runs the period closer once (e.g. `php artisan habits:close-periods --sync`).
 //
 // One fresh account, two devices with their own databases and tokens. Scenarios, in order:
 //   setup     A creates a habit; B bootstraps it.
@@ -13,6 +14,7 @@
 //   restore   A deletes the day; B logs it again on the tombstone version and restores it.
 //   db-restore the server journal rolls back (restore from backup): 410, re-bootstrap, outbox kept.
 //   refresh   A refreshes; the old token still works inside the 10-minute grace window.
+//   derived   a past day closes; B receives habit_progress and period_evaluation (A32).
 // Exits non-zero at the first failed check, or unless both databases end identical.
 import 'dart:convert';
 import 'dart:io';
@@ -127,7 +129,9 @@ Future<void> main(List<String> args) async {
 
   await _scenario('db-restore', () async {
     await a.writer.setLogValue(habitId: habit, value: 0); // queued before the restore
-    await _rollBackJournal(email, 2);
+    // Further back than one edit journals (the log plus its derived entities, A32), so the
+    // re-sent edit cannot carry the head past B's cursor again.
+    await _rollBackJournal(email, 6);
     final before = a.transport.bootstraps;
     await a.sync();
     _check(a.transport.bootstraps > before, 'A got 410 and bootstrapped again');
@@ -151,6 +155,42 @@ Future<void> main(List<String> args) async {
     await a.sync();
     await b.sync();
     _check((await b.log(habit, today)).value == '0', 'B sees both edits');
+  });
+
+  await _scenario('derived', () async {
+    // A32 on real data: a habit backdated two days, checked in yesterday; after the closer
+    // runs, the other device receives habit_progress and period_evaluation. This client has no
+    // tables for them yet, so they must arrive as opaque entities (A31, invariant 13).
+    final derived = await a.writer.createHabit(
+      name: 'Read',
+      type: 'binary',
+      target: 1,
+      category: 'learning',
+      startLocalDate: today.addDays(-2),
+      backdate: true,
+    );
+    final yesterday = DateTime.now().toUtc().subtract(const Duration(hours: 24));
+    final tick = await a.writer.setLogValue(habitId: derived, value: 1, at: yesterday);
+    await a.sync();
+    await _closePeriods();
+    await b.sync();
+
+    final opaque = await b.db.select(b.db.opaqueEntities).get();
+    final progress = opaque.where((o) => o.entityType == 'habit_progress' && o.entityId == derived);
+    _check(progress.length == 1, 'B holds habit_progress for the new habit');
+    final evaluations = opaque
+        .where((o) => o.entityType == 'period_evaluation')
+        .map((o) => jsonDecode(o.payload) as Map<String, dynamic>)
+        .where((p) => p['habit_id'] == derived)
+        .toList();
+    final yesterdayKey = 'd:${tick.date}';
+    final closedYesterday = evaluations.where((p) => p['period_key'] == yesterdayKey).toList();
+    _check(closedYesterday.length == 1, 'B holds the evaluation for $yesterdayKey');
+    _check(closedYesterday.single['completed'] == true, 'yesterday was completed');
+    _check(
+      evaluations.any((p) => p['completed'] == false),
+      'the day before (no check-in) is closed as not completed',
+    );
   });
 
   await a.sync();
@@ -180,6 +220,17 @@ Future<void> _scenario(String name, Future<void> Function() body) async {
     _say('FAIL $name: $e');
     exit(1);
   }
+}
+
+/// Runs the A10 closer once (E2E_CLOSE_CMD, e.g. `php artisan habits:close-periods --sync`).
+Future<void> _closePeriods() async {
+  final command = Platform.environment['E2E_CLOSE_CMD'];
+  if (command == null || command.isEmpty) {
+    throw StateError('E2E_CLOSE_CMD is required for the derived scenario');
+  }
+  final result = await Process.run(command, const [], runInShell: true);
+  if (result.exitCode != 0) throw StateError('close-periods failed: ${result.stderr}');
+  _say('  closer: ${'${result.stdout}'.trim()}');
 }
 
 /// A restore from an older backup, as the API sees it: the user's journal head moves back and

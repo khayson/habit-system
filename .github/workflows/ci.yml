@@ -129,6 +129,8 @@ jobs:
       DB_USERNAME: habit
       DB_PASSWORD: habit
       E2E_DATABASE_URL: postgresql://habit:habit@127.0.0.1:5432/habit_e2e
+      # Run from app/: the A10 closer, once, inline.
+      E2E_CLOSE_CMD: php ../api/artisan habits:close-periods --sync
     steps:
       - uses: actions/checkout@v7
       - uses: shivammathur/setup-php@v2

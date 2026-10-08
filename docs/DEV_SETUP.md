@@ -139,7 +139,8 @@ setup (create a habit on A, bootstrap B), merged (both tick the same day offline
 to A's log id), conflict (a stale edit is kept as needs-attention, then discarded), restore (A
 deletes, B logs again on the tombstone version), db-restore (the server journal rolls back: 410,
 re-bootstrap, the queued edit survives) and refresh (the old token works inside the 10-minute
-grace window). It prints PASS/FAIL per scenario, then `CONVERGED` (exit 0) or stops non-zero.
+grace window) and derived (a past day closes and the other device receives `habit_progress` and
+`period_evaluation`, A32). It prints PASS/FAIL per scenario, then `CONVERGED` (exit 0) or stops non-zero.
 
 ```powershell
 scripts\db-up.ps1
@@ -147,6 +148,7 @@ scripts\api-serve.ps1                     # in another terminal
 cd app
 $env:E2E_DATABASE_URL = 'postgresql://habit:habit@127.0.0.1:5432/habit'
 $env:E2E_PSQL = "$env:USERPROFILE\tools\pgsql-17\bin\psql.exe"   # if psql is not on PATH
+$env:E2E_CLOSE_CMD = "$env:USERPROFILE\tools\php-8.4\php.exe ..\api\artisan habits:close-periods --sync"
 dart run tool/sync_e2e.dart               # default http://127.0.0.1:8000/api/v1
 ```
 
