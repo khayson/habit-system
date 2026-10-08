@@ -174,11 +174,8 @@ class LocalView {
         ),
       );
     }
-    items.sort(
-      (a, b) => (a.habit.payload['name'] as String? ?? '').compareTo(
-        b.habit.payload['name'] as String? ?? '',
-      ),
-    );
+    // G4: creation order. Ids are UUIDv7 (time-ordered), so a rename never moves a habit.
+    items.sort((a, b) => a.habit.id.compareTo(b.habit.id));
 
     final state = await (db.select(db.syncState)..where((s) => s.id.equals(1))).getSingle();
     final user = EntityCodec.decodeJson(state.userPayload);

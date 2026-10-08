@@ -32,6 +32,27 @@ void main() {
     expect(writes, 1);
   });
 
+  test('G4: Today lists habits in creation order; a rename does not move one', () async {
+    await actions.createOneTapHabit(name: 'Zebra walk', category: 'health');
+    await actions.createOneTapHabit(name: 'Apple a day', category: 'health');
+    expect((await phone.view.today(phone.now))!.items.map((i) => i.name), [
+      'Zebra walk',
+      'Apple a day',
+    ]);
+
+    // A rename (as the server would journal it) keeps the position.
+    // Renaming the second to 'Aardvark' would move it first under a name sort.
+    final second = (await phone.view.today(phone.now))!.items.last.habit.id;
+    await phone.db.customStatement(
+      "UPDATE outbox SET payload = json_set(payload, '\$.name', 'Aardvark') "
+      "WHERE entity_id = '$second'",
+    );
+    expect((await phone.view.today(phone.now))!.items.map((i) => i.name), [
+      'Zebra walk',
+      'Aardvark',
+    ]);
+  });
+
   test('toggle checks in, then undoes', () async {
     await actions.createOneTapHabit(name: 'Stretch', category: 'health');
     var item = (await phone.view.today(phone.now))!.items.single;
