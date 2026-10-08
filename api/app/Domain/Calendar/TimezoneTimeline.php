@@ -79,7 +79,7 @@ final readonly class TimezoneTimeline
      */
     public function isZeroLength(LocalDate $date): bool
     {
-        return $this->endOfLocalDay($date) <= $this->startOfLocalDay($date);
+        return $this->localDateAt($this->startOfLocalDay($date))->isAfter($date);
     }
 
     /** The date of an instant under one entry. */
@@ -104,14 +104,26 @@ final readonly class TimezoneTimeline
     /** First instant of a business date (UTC). */
     public function startOfLocalDay(LocalDate $date): DateTimeImmutable
     {
-        foreach (array_reverse($this->entries) as $entry) {
-            $start = self::startFor($date, $entry);
-            if ($entry->effectiveAt <= $start) {
+        // H1: the first instant whose date is this date or later. Dates never go backwards, so
+        // walk the entries' intervals in order: inside entry i's interval [effective_i,
+        // effective_i+1) the first such instant is the later of the interval start and the
+        // entry's own day start; the first interval that contains it wins. This holds for zone
+        // changes of 24 hours or more, where a date repeats (westward) or is skipped (eastward).
+        $n = count($this->entries);
+        if ($n === 0) {
+            throw new DayResolutionException('no_calendar');
+        }
+        for ($i = 0; $i < $n; $i++) {
+            $start = self::startFor($date, $this->entries[$i]);
+            if ($i > 0 && $start < $this->entries[$i]->effectiveAt) {
+                $start = $this->entries[$i]->effectiveAt;
+            }
+            if ($i === $n - 1 || $start < $this->entries[$i + 1]->effectiveAt) {
                 return $start;
             }
         }
 
-        return self::startFor($date, $this->entries[0] ?? throw new DayResolutionException('no_calendar'));
+        throw new DayResolutionException('no_calendar');
     }
 
     /**
@@ -120,7 +132,13 @@ final readonly class TimezoneTimeline
      */
     public function nextDayStartAfter(DateTimeInterface $instant): DateTimeImmutable
     {
-        return $this->startOfLocalDay($this->localDateAt($instant)->addDays(1));
+        return $this->dayStartAfter($instant, 1);
+    }
+
+    /** The start of the $k-th day after the one an instant falls in (H1: A26 candidates). */
+    public function dayStartAfter(DateTimeInterface $instant, int $k): DateTimeImmutable
+    {
+        return $this->startOfLocalDay($this->localDateAt($instant)->addDays($k));
     }
 
     /** The entry that governs a business date (the one in force at its start). */

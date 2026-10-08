@@ -16,6 +16,7 @@ const PHP_FIXTURE_CONSUMERS = [
     'progress' => 'HabitTypesTest',
     'calendar_changes' => 'CalendarChangesTest',
     'zero_length' => 'ZeroLengthDatesTest',
+    'calendar_boundaries' => 'CalendarBoundariesTest',
 ];
 
 it('consumes every domain fixture that names the php suite', function () {

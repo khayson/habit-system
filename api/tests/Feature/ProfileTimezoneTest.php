@@ -99,3 +99,15 @@ it('answers another user\'s id exactly like a missing one', function () {
         ->and($foreign['error'])->toBe(['code' => 'not_found', 'message' => 'Not found.']);
     expect(DB::table('user_timezone_history')->where('user_id', $bob['id'])->count())->toBe(1);
 });
+
+it('refuses a change of more than 24 hours westward as validation, never a server error (H1)', function () {
+    $kiri = $this->registerUser('Kiri', timezone: 'Pacific/Kiritimati');
+
+    $ack = $this->sync($kiri['token'], [M::setTimezone($kiri['id'], 'Pacific/Pago_Pago', 1)])->json('data.acks.0');
+
+    expect($ack['status'])->toBe('rejected')
+        ->and($ack['error']['code'])->toBe('validation_failed')
+        ->and($ack['error']['fields'])->toHaveKey('timezone')
+        ->and($ack['error'])->not->toHaveKey('retryable');
+    expect(DB::table('user_timezone_history')->where('user_id', $kiri['id'])->count())->toBe(1);
+});

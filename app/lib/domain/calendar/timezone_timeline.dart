@@ -94,7 +94,7 @@ class TimezoneTimeline {
 
   /// A date with no instants (skipped by a calendar change or the zone itself); not part of the
   /// period grid (A30).
-  bool isZeroLength(LocalDate date) => !endOfLocalDay(date).isAfter(startOfLocalDay(date));
+  bool isZeroLength(LocalDate date) => localDateAt(startOfLocalDay(date)).isAfter(date);
 
   static LocalDate _dateUnder(CalendarEntry entry, DateTime instant) {
     final ms = instant.millisecondsSinceEpoch;
@@ -109,13 +109,20 @@ class TimezoneTimeline {
     return date;
   }
 
+  /// H1: the first instant whose date is this date or later. Inside entry i's interval
+  /// [effective_i, effective_i+1) that is the later of the interval start and the entry's own day
+  /// start; the first interval containing it wins. Holds for changes of 24 hours or more.
   DateTime startOfLocalDay(LocalDate date) {
     if (entries.isEmpty) throw const DayResolutionException('no_calendar');
-    for (final entry in entries.reversed) {
-      final start = _startFor(date, entry);
-      if (entry.effectiveAt.millisecondsSinceEpoch <= start) return _utc(start);
+    for (var i = 0; i < entries.length; i++) {
+      var start = _startFor(date, entries[i]);
+      final from = entries[i].effectiveAt.millisecondsSinceEpoch;
+      if (i > 0 && start < from) start = from;
+      if (i == entries.length - 1 || start < entries[i + 1].effectiveAt.millisecondsSinceEpoch) {
+        return _utc(start);
+      }
     }
-    return _utc(_startFor(date, entries.first));
+    throw const DayResolutionException('no_calendar');
   }
 
   DateTime endOfLocalDay(LocalDate date) => startOfLocalDay(date.addDays(1));

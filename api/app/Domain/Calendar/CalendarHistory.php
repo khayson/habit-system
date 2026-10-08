@@ -3,6 +3,7 @@
 namespace App\Domain\Calendar;
 
 use App\Domain\Clock;
+use InvalidArgumentException;
 
 /**
  * Calendar changes (D1, A26). Pure: the history comes in, the new history goes out; the
@@ -12,7 +13,9 @@ use App\Domain\Clock;
  *   calendar in force now, never at the request instant, so a date never goes backwards.
  * - At most one entry is pending (effective after now). A new change replaces it; it never
  *   stacks. Changing back to the calendar in force cancels the pending entry.
- * - The result is a valid TimezoneTimeline (its constructor asserts monotonic dates).
+ * - The result is a valid TimezoneTimeline (its constructor asserts monotonic dates). For a zone
+ *   change of more than 24 hours westward no day start works (the new date is always behind the
+ *   old one); that change is refused with DayResolutionException('calendar_change_backwards').
  */
 final readonly class CalendarHistory
 {
@@ -34,7 +37,21 @@ final readonly class CalendarHistory
             return new CalendarChange($current, null, $pending !== []);
         }
 
-        $effectiveAt = $current->nextDayStartAfter($now);
+        // H1: the first old-calendar day start, from the next one on, at which the new calendar's
+        // date is not before the old one. The largest offset gap is 26 hours, so three are enough.
+        [$effectiveAt, $timeline] = [null, null];
+        for ($k = 1; $k <= 3 && $timeline === null; $k++) {
+            $candidate = $current->dayStartAfter($now, $k);
+            try {
+                $timeline = new TimezoneTimeline([...$settled, new CalendarEntry($candidate, $timezone, $dayStartOffsetMinutes)]);
+                $effectiveAt = $candidate;
+            } catch (InvalidArgumentException) {
+                continue;
+            }
+        }
+        if ($effectiveAt === null || $timeline === null) {
+            throw new DayResolutionException('calendar_change_backwards');
+        }
         $entry = new CalendarEntry($effectiveAt, $timezone, $dayStartOffsetMinutes);
         $same = count($pending) === 1
             && $pending[0]->timezone === $timezone
@@ -44,6 +61,6 @@ final readonly class CalendarHistory
             return new CalendarChange($timeline, null, false);
         }
 
-        return new CalendarChange(new TimezoneTimeline([...$settled, $entry]), $entry, true);
+        return new CalendarChange($timeline, $entry, true);
     }
 }

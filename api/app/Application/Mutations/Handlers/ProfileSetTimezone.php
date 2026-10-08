@@ -9,6 +9,7 @@ use App\Application\Mutations\MutationContext;
 use App\Application\Presenters\EntityPresenter;
 use App\Domain\Calendar\CalendarEntry;
 use App\Domain\Calendar\CalendarHistory;
+use App\Domain\Calendar\DayResolutionException;
 use App\Domain\Clock;
 use App\Exceptions\ApiException;
 use App\Support\UtcTime;
@@ -55,7 +56,12 @@ final readonly class ProfileSetTimezone
         $now = $this->clock->now();
         $timeline = UserCalendar::timeline($ctx->userId);
         $inForce = $timeline->entryAt($now);
-        $change = (new CalendarHistory($this->clock))->appendChange($timeline, (string) $p['timezone'], $inForce->dayStartOffsetMinutes);
+        try {
+            $change = (new CalendarHistory($this->clock))->appendChange($timeline, (string) $p['timezone'], $inForce->dayStartOffsetMinutes);
+        } catch (DayResolutionException) {
+            // H1: e.g. more than 24 hours westward; never a retryable server_error.
+            throw ValidationException::withMessages(['timezone' => ['Your days cannot move to this time zone directly. Choose a nearer zone first.']]);
+        }
         if (! $change->changed) {
             // Identical desired state: acknowledge without a new version (spec 07).
             return new HandlerResult('user', $ctx->userId, $version);

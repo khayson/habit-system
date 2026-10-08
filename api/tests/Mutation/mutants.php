@@ -106,4 +106,30 @@ return [
         'search' => '! $schedule->isActive($date) || ! $exists($date)',
         'replace' => '! $schedule->isActive($date)',
     ],
+    [
+        // H1: the pre-3.2 rule (newest entry whose own day start is after its effective_at).
+        'name' => 'H1: a date starts at the newest entry\'s own day start',
+        'file' => 'app/Domain/Calendar/TimezoneTimeline.php',
+        'search' => <<<'PHP'
+        for ($i = 0; $i < $n; $i++) {
+            $start = self::startFor($date, $this->entries[$i]);
+            if ($i > 0 && $start < $this->entries[$i]->effectiveAt) {
+                $start = $this->entries[$i]->effectiveAt;
+            }
+            if ($i === $n - 1 || $start < $this->entries[$i + 1]->effectiveAt) {
+                return $start;
+            }
+        }
+PHP,
+        'replace' => <<<'PHP'
+        foreach (array_reverse($this->entries) as $entry) {
+            $start = self::startFor($date, $entry);
+            if ($entry->effectiveAt <= $start) {
+                return $start;
+            }
+        }
+
+        return self::startFor($date, $this->entries[0]);
+PHP,
+    ],
 ];

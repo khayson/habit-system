@@ -80,6 +80,7 @@ void main() {
       'domain/weekly': 'test/domain/provisional_progress_test.dart',
       'domain/day_resolution': 'test/domain/day_resolution_test.dart',
       'domain/calendar_changes': 'test/domain/calendar_changes_test.dart',
+      'domain/calendar_boundaries': 'test/domain/calendar_boundaries_test.dart',
       'sync/ack_server_error': 'test/sync/sync_fixtures_test.dart',
       'sync/bootstrap_entities': 'test/sync/sync_fixtures_test.dart',
       'sync/ack_restored': 'test/sync/sync_fixtures_test.dart',
