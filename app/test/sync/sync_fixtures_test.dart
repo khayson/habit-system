@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:habit/domain/calendar/timezone_timeline.dart';
+import 'package:habit/domain/calendar/local_date.dart';
 import 'package:habit/sync/outbox_states.dart';
 import 'package:habit/sync/sync_engine.dart';
 import 'package:habit/sync/sync_transport.dart';
@@ -81,6 +83,58 @@ void main() {
     await phone.db.close();
   });
 
+  test('log_backdate_payload: a past check-in sends date_mode backdate and log_date', () async {
+    final fixture = contractFixture('sync/log_backdate_payload.json');
+    expect(fixture['suites'], contains('dart'));
+    final phone = await Device(FakeSyncServer()).init();
+    phone.now = DateTime.parse(fixture['now'] as String);
+    final habit = await phone.writer.createHabit(
+      name: 'Meditation',
+      type: 'binary',
+      target: 1,
+      category: 'mindful',
+      startLocalDate: LocalDate.parse(fixture['habit_start_local_date'] as String),
+    );
+    final expected = fixture['mutation'] as Map<String, dynamic>;
+    final payload = expected['payload'] as Map<String, dynamic>;
+
+    await phone.writer.setLogValue(
+      habitId: habit,
+      value: payload['value'] as Object,
+      logDate: LocalDate.parse(payload['log_date'] as String),
+    );
+
+    final row = (await phone.outbox()).last;
+    final wire = {
+      'mutation_id': row.mutationId,
+      'entity': row.entity,
+      'entity_id': row.entityId,
+      'operation': row.operation,
+      'base_version': row.baseVersion,
+      'occurred_at': row.occurredAt,
+      'captured_timezone': row.capturedTimezone,
+      'local_date_hint': row.localDateHint,
+      'payload': jsonDecode(row.payload),
+    };
+    expectContract(expected, wire);
+    expect((wire['payload'] as Map)['habit_id'], habit);
+    await phone.db.close();
+  });
+
+  test('a past check-in the server would refuse writes nothing', () async {
+    final phone = await Device(FakeSyncServer()).init();
+    final habit = await phone.habit();
+    final before = (await phone.outbox()).length;
+    for (final date in ['2026-05-29', '2026-04-27']) {
+      await expectLater(
+        phone.writer.setLogValue(habitId: habit, value: 1, logDate: LocalDate.parse(date)),
+        throwsA(isA<DayResolutionException>()),
+      );
+    }
+    expect((await phone.outbox()).length, before);
+    await phone.db.close();
+  });
+
   for (final name in ['ack_restored', 'ack_merged_entity_id', 'ack_delete_natural_key']) {
     test('$name: accepted and remapped to the canonical entity_id', () async {
       final phone = await runWithAck(name);
@@ -92,6 +146,32 @@ void main() {
       expect(row.ackVersion, expected['version']);
       expect(row.entityId, expected['entity_id'], reason: 'the ack id is canonical (A29)');
     });
+  }
+}
+
+/// [expected] with placeholders matched by format ({{uuid}}, {{timestamp}}), the rest exactly.
+void expectContract(Object? expected, Object? actual, [String path = r'$']) {
+  switch (expected) {
+    case '{{uuid}}':
+      expect(
+        actual,
+        matches(RegExp(r'^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$')),
+        reason: path,
+      );
+    case '{{timestamp}}':
+      expect(
+        actual,
+        matches(RegExp(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$')),
+        reason: path,
+      );
+    case final Map<String, dynamic> map:
+      expect(actual, isA<Map<dynamic, dynamic>>(), reason: path);
+      expect((actual! as Map).keys.toSet(), map.keys.toSet(), reason: '$path keys');
+      for (final e in map.entries) {
+        expectContract(e.value, (actual as Map)[e.key], '$path.${e.key}');
+      }
+    default:
+      expect(actual, expected, reason: path);
   }
 }
 

@@ -1,0 +1,40 @@
+{
+  "description": "Phase 3.2a, screen 13: a past check-in. The app sends log.set_value with date_mode backdate and the chosen local date in log_date (ASSUMPTION(A3.1-backdate-payload)); occurred_at is the real moment of the write, never invented. The server files it under log_date and acks resolved_date = log_date.",
+  "suites": [
+    "php",
+    "dart"
+  ],
+  "now": "2026-05-28T17:22:00Z",
+  "calendar": "America/Los_Angeles",
+  "habit_start_local_date": "2026-05-01",
+  "mutation": {
+    "mutation_id": "{{uuid}}",
+    "entity": "habit_log",
+    "entity_id": "{{uuid}}",
+    "operation": "log.set_value",
+    "base_version": 0,
+    "occurred_at": "2026-05-28T17:22:00Z",
+    "captured_timezone": "America/Los_Angeles",
+    "local_date_hint": "2026-05-20",
+    "payload": {
+      "habit_id": "{{uuid}}",
+      "value": 1,
+      "date_mode": "backdate",
+      "log_date": "2026-05-20"
+    }
+  },
+  "expect": {
+    "mutation_id": "{{uuid}}",
+    "status": "accepted",
+    "duplicate": false,
+    "entity": "habit_log",
+    "entity_id": "{{uuid}}",
+    "version": 1,
+    "resolved_date": "2026-05-20"
+  },
+  "rules": [
+    "local_date_hint equals log_date, so the device files the provisional value under the chosen day",
+    "occurred_at is the time of the write; it is not moved into the chosen day",
+    "a log_date older than 30 local days or after the local today is rejected (backdate_too_old, backdate_future)"
+  ]
+}

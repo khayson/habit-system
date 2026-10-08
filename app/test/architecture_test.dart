@@ -87,6 +87,7 @@ void main() {
       'sync/ack_restored': 'test/sync/sync_fixtures_test.dart',
       'sync/ack_merged_entity_id': 'test/sync/sync_fixtures_test.dart',
       'sync/ack_delete_natural_key': 'test/sync/sync_fixtures_test.dart',
+      'sync/log_backdate_payload': 'test/sync/sync_fixtures_test.dart',
     };
 
     test('every domain and sync fixture that names the dart suite has a consumer', () {

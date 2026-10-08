@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../domain/calendar/day_resolver.dart';
 import '../domain/calendar/local_date.dart';
 import '../sync/outbox_states.dart';
+import '../domain/calendar/timezone_timeline.dart' show DayResolutionException;
 import 'account_calendar.dart';
 import 'app_database.dart';
 
@@ -66,11 +67,24 @@ class LocalMutationService {
 
   /// log.set_value for the habit-day of [at] (default: now on the server's clock, F10) in the
   /// server's calendar.
-  Future<LocalWrite> setLogValue({required String habitId, required Object value, DateTime? at}) {
+  ///
+  /// With [logDate] it is a past check-in (screen 13): date_mode "backdate" + log_date, filed
+  /// under that date, with occurred_at still the real moment of the write (never invented).
+  /// Dates the server would refuse (after the local today, more than 30 days back) throw
+  /// [DayResolutionException] and write nothing.
+  Future<LocalWrite> setLogValue({
+    required String habitId,
+    required Object value,
+    DateTime? at,
+    LocalDate? logDate,
+  }) {
     return db.transaction(() async {
       final calendar = await _calendar();
       final occurredAt = (at ?? calendar.now(clock())).toUtc();
-      final date = calendar.timeline.localDateAt(occurredAt);
+      if (logDate != null) {
+        DayResolver(calendar.timeline, () => occurredAt).validateBackdate(logDate);
+      }
+      final date = logDate ?? calendar.timeline.localDateAt(occurredAt);
       final rows = await _rowsFor(habitId, date);
 
       // Coalesce only into the newest row for this habit-day, only while it is unsent.
@@ -95,7 +109,11 @@ class LocalMutationService {
         localDate: date,
         habitId: habitId,
         occurredAt: occurredAt,
-        payload: {'habit_id': habitId, 'value': value},
+        payload: {
+          'habit_id': habitId,
+          'value': value,
+          if (logDate != null) ...{'date_mode': 'backdate', 'log_date': logDate.toString()},
+        },
       );
       return LocalWrite(mutationId, date, coalesced: false);
     });
