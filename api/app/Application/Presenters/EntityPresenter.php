@@ -118,6 +118,27 @@ final readonly class EntityPresenter
     }
 
     /**
+     * Phase 3.2b reminder: a clock time and ISO days, never a UTC instant. Tombstones keep
+     * their fields with deleted_at set.
+     *
+     * @return array<string, mixed>
+     */
+    public function reminder(stdClass $row): array
+    {
+        return [
+            'id' => $row->id,
+            'habit_id' => $row->habit_id,
+            'local_time' => substr((string) $row->local_time, 0, 5),
+            'days_of_week' => array_map(intval(...), (array) HabitRepository::json($row->days_of_week)),
+            'timezone_mode' => $row->timezone_mode,
+            'timezone' => $row->timezone,
+            'enabled' => (bool) $row->enabled,
+            'version' => (int) $row->version,
+            'deleted_at' => $row->deleted_at === null ? null : UtcTime::format(WireTime::parse((string) $row->deleted_at)),
+        ];
+    }
+
+    /**
      * A32 period_evaluation: one closed period's result. Its version is the revision.
      *
      * @return array<string, mixed>

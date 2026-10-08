@@ -64,6 +64,30 @@ final class M
         ];
     }
 
+    /**
+     * Phase 3.2b: a reminder mutation from contract-fixtures/sync/reminder_mutations.json, with
+     * real ids and optional payload overrides.
+     *
+     * @param  'create'|'update'|'delete'  $step
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    public static function reminder(string $step, string $reminderId, ?string $habitId = null, ?int $baseVersion = null, array $payload = [], ?string $mutationId = null): array
+    {
+        $fixture = json_decode((string) file_get_contents(contractFixturePath('sync/reminder_mutations.json')), true, flags: JSON_THROW_ON_ERROR);
+        $m = $fixture[$step]['mutation'];
+        $m['mutation_id'] = $mutationId ?? (string) Str::uuid7();
+        $m['entity_id'] = $reminderId;
+        if ($step === 'create') {
+            $m['payload']['habit_id'] = $habitId;
+        } else {
+            $m['base_version'] = $baseVersion ?? $m['base_version'];
+        }
+        $m['payload'] = [...$m['payload'], ...$payload];
+
+        return $m;
+    }
+
     /** @return array<string, mixed> */
     public static function delete(string $logId, int $baseVersion, string $habitId, ?string $mutationId = null): array
     {

@@ -1,0 +1,43 @@
+{
+  "description": "Phase 3.2b: the reminder entity as /sync changes and the bootstrap's A31 entities carry it. Tombstones keep their fields with deleted_at set.",
+  "suites": [
+    "php",
+    "dart"
+  ],
+  "change": {
+    "seq": "{{seq}}",
+    "entity": "reminder",
+    "id": "{{uuid}}",
+    "operation": "upsert",
+    "version": 1,
+    "payload": {
+      "id": "{{uuid}}",
+      "habit_id": "{{uuid}}",
+      "local_time": "08:00",
+      "days_of_week": [1, 2, 3, 4, 5],
+      "timezone_mode": "habit_zone",
+      "timezone": null,
+      "enabled": true,
+      "version": 1,
+      "deleted_at": null
+    }
+  },
+  "tombstone": {
+    "seq": "{{seq}}",
+    "entity": "reminder",
+    "id": "{{uuid}}",
+    "operation": "delete",
+    "version": 3,
+    "payload": {
+      "id": "{{uuid}}",
+      "habit_id": "{{uuid}}",
+      "local_time": "07:30",
+      "days_of_week": [1, 2, 3, 4, 5, 6, 7],
+      "timezone_mode": "device_zone",
+      "timezone": null,
+      "enabled": true,
+      "version": 3,
+      "deleted_at": "{{timestamp}}"
+    }
+  }
+}

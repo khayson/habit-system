@@ -8,6 +8,7 @@ use App\Application\Mutations\Handlers\HabitCreate;
 use App\Application\Mutations\Handlers\LogDelete;
 use App\Application\Mutations\Handlers\LogSetValue;
 use App\Application\Mutations\Handlers\ProfileSetTimezone;
+use App\Application\Mutations\Handlers\ReminderWrites;
 use App\Domain\Calendar\LocalDate;
 use App\Domain\Clock;
 use App\Domain\Habit\HabitTypeRegistry;
@@ -50,6 +51,7 @@ final readonly class MutationApplier
         private LogSetValue $logSetValue,
         private LogDelete $logDelete,
         private ProfileSetTimezone $profileSetTimezone,
+        private ReminderWrites $reminders,
         private Clock $clock,
     ) {}
 
@@ -159,6 +161,15 @@ final readonly class MutationApplier
         }
         if ($m->entity === 'habit' && $m->operation === 'habit.create') {
             return [$m->operation, self::accepted($m, $this->habitCreate->handle($ctx))];
+        }
+
+        if ($m->entity === 'reminder') {
+            return match ($m->operation) {
+                'reminder.create' => [$m->operation, self::accepted($m, $this->reminders->create($ctx))],
+                'reminder.update' => [$m->operation, self::accepted($m, $this->reminders->update($ctx))],
+                'reminder.delete' => [$m->operation, self::accepted($m, $this->reminders->delete($ctx))],
+                default => throw new UnsupportedOperation($m->entity, $m->operation),
+            };
         }
 
         if ($m->entity === 'habit_log' && $m->operation === 'log.delete') {

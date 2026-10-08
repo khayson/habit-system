@@ -139,4 +139,18 @@ PHP,
         return self::startFor($date, $this->entries[0]);
 PHP,
     ],
+    [
+        'name' => '3.2b: reminder update reads the row without the owner scope',
+        'file' => 'app/Application/Mutations/Handlers/ReminderWrites.php',
+        'search' => "\$row = DB::table('reminders')->where('id', \$m->entityId)->where('user_id', \$ctx->userId)->lockForUpdate()->first()",
+        'replace' => "\$row = DB::table('reminders')->where('id', \$m->entityId)->lockForUpdate()->first()",
+        'tests' => 'tests/Feature/ReminderTest.php',
+    ],
+    [
+        'name' => '3.2b: a reminder delete is not journaled',
+        'file' => 'app/Application/Mutations/Handlers/ReminderWrites.php',
+        'search' => "return \$this->journaled(\$ctx->userId, \$m->entityId, 'delete');",
+        'replace' => "return new HandlerResult('reminder', \$m->entityId, (int) \$row->version + 1);",
+        'tests' => 'tests/Feature/ReminderTest.php',
+    ],
 ];

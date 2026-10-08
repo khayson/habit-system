@@ -18,7 +18,8 @@ use stdClass;
  *
  * Pages: user (first page only) → habits (with definitions and ranges) → logs, including
  * tombstones so deletions reconcile → A32 derived entities in A31's `entities` array:
- * habit_progress for every habit, then period_evaluation for the last 400 days.
+ * habit_progress for every habit, then period_evaluation for the last 400 days, then reminders
+ * (Phase 3.2b, tombstones included).
  */
 final readonly class BootstrapService
 {
@@ -33,6 +34,8 @@ final readonly class BootstrapService
     private const string PHASE_PROGRESS = 'progress';
 
     private const string PHASE_EVALUATIONS = 'evaluations';
+
+    private const string PHASE_REMINDERS = 'reminders';
 
     /** A32: older evaluations come from GET /habits/{id}/heatmap when online. */
     public const int EVALUATION_DAYS = 400;
@@ -98,6 +101,17 @@ final readonly class BootstrapService
             $next = $rows->count() > $limit
                 ? ['phase' => self::PHASE_PROGRESS, 'after' => (string) $rows->get($limit - 1)?->habit_id]
                 : ['phase' => self::PHASE_EVALUATIONS, 'after' => null];
+        } elseif ($state['phase'] === self::PHASE_REMINDERS) {
+            $rows = DB::table('reminders')->where('user_id', $userId)
+                ->when($state['after'] !== null, fn ($q) => $q->where('id', '>', $state['after']))
+                ->orderBy('id')->limit($limit + 1)->get();
+            $entities = $rows->take($limit)->map(fn (stdClass $r) => [
+                'entity' => 'reminder',
+                'id' => $r->id,
+                'version' => (int) $r->version,
+                'payload' => $this->presenter->reminder($r),
+            ])->values()->all();
+            $next = $rows->count() > $limit ? ['phase' => self::PHASE_REMINDERS, 'after' => (string) $rows->get($limit - 1)?->id] : null;
         } else {
             $since = UserCalendar::timeline($userId)->localDateAt($this->clock->now())->addDays(-self::EVALUATION_DAYS);
             $rows = DB::table('period_evaluations')
@@ -111,7 +125,9 @@ final readonly class BootstrapService
                 'version' => (int) $e->revision,
                 'payload' => $this->presenter->periodEvaluation($e),
             ])->values()->all();
-            $next = $rows->count() > $limit ? ['phase' => self::PHASE_EVALUATIONS, 'after' => (string) $rows->get($limit - 1)?->id] : null;
+            $next = $rows->count() > $limit
+                ? ['phase' => self::PHASE_EVALUATIONS, 'after' => (string) $rows->get($limit - 1)?->id]
+                : ['phase' => self::PHASE_REMINDERS, 'after' => null];
         }
 
         $snap = (int) $state['snap'];

@@ -1,0 +1,91 @@
+{
+  "description": "Phase 3.2b: reminders as a synced entity. reminder.create, reminder.update (absolute, version-checked) and reminder.delete (tombstone), as the app's writer builds them, and the acks the server returns. local_time is a clock time (HH:MM), never UTC; days_of_week are unique ISO days 1=Mon..7=Sun, sorted; timezone_mode is habit_zone or device_zone (spec 06).",
+  "suites": [
+    "php",
+    "dart"
+  ],
+  "now": "2026-05-28T17:22:00Z",
+  "create": {
+    "mutation": {
+      "mutation_id": "{{uuid}}",
+      "entity": "reminder",
+      "entity_id": "{{uuid}}",
+      "operation": "reminder.create",
+      "base_version": null,
+      "occurred_at": "2026-05-28T17:22:00Z",
+      "captured_timezone": "America/Los_Angeles",
+      "local_date_hint": null,
+      "payload": {
+        "habit_id": "{{uuid}}",
+        "local_time": "08:00",
+        "days_of_week": [1, 2, 3, 4, 5],
+        "timezone_mode": "habit_zone",
+        "timezone": null,
+        "enabled": true
+      }
+    },
+    "expect": {
+      "mutation_id": "{{uuid}}",
+      "status": "accepted",
+      "duplicate": false,
+      "entity": "reminder",
+      "entity_id": "{{uuid}}",
+      "version": 1
+    }
+  },
+  "update": {
+    "mutation": {
+      "mutation_id": "{{uuid}}",
+      "entity": "reminder",
+      "entity_id": "{{uuid}}",
+      "operation": "reminder.update",
+      "base_version": 1,
+      "occurred_at": "2026-05-28T17:22:00Z",
+      "captured_timezone": "America/Los_Angeles",
+      "local_date_hint": null,
+      "payload": {
+        "local_time": "07:30",
+        "days_of_week": [1, 2, 3, 4, 5, 6, 7],
+        "timezone_mode": "device_zone",
+        "timezone": null,
+        "enabled": true
+      }
+    },
+    "expect": {
+      "mutation_id": "{{uuid}}",
+      "status": "accepted",
+      "duplicate": false,
+      "entity": "reminder",
+      "entity_id": "{{uuid}}",
+      "version": 2
+    }
+  },
+  "delete": {
+    "mutation": {
+      "mutation_id": "{{uuid}}",
+      "entity": "reminder",
+      "entity_id": "{{uuid}}",
+      "operation": "reminder.delete",
+      "base_version": 2,
+      "occurred_at": "2026-05-28T17:22:00Z",
+      "captured_timezone": "America/Los_Angeles",
+      "local_date_hint": null,
+      "payload": {}
+    },
+    "expect": {
+      "mutation_id": "{{uuid}}",
+      "status": "accepted",
+      "duplicate": false,
+      "entity": "reminder",
+      "entity_id": "{{uuid}}",
+      "version": 3
+    }
+  },
+  "rules": [
+    "update and delete need base_version equal to the current version; otherwise conflict version_conflict with the current reminder",
+    "update or delete of a deleted reminder: conflict resource_deleted",
+    "a habit_id that is missing or another owner's: dependency_pending, as for logs",
+    "an id that is missing or another owner's on update or delete: rejected not_found",
+    "an identical update is acked without a new version"
+  ]
+}
