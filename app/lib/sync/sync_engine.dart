@@ -870,7 +870,8 @@ class SyncEngine {
     await db.customUpdate(
       '''DELETE FROM outbox WHERE state = ? AND (
            (entity = 'habit' AND EXISTS (SELECT 1 FROM habits h WHERE h.id = outbox.entity_id AND h.version >= COALESCE(outbox.ack_version, 0)))
-        OR (entity = 'habit_log' AND EXISTS (SELECT 1 FROM habit_logs l WHERE l.id = outbox.entity_id AND l.version >= COALESCE(outbox.ack_version, 0))))''',
+        OR (entity = 'habit_log' AND EXISTS (SELECT 1 FROM habit_logs l WHERE l.id = outbox.entity_id AND l.version >= COALESCE(outbox.ack_version, 0)))
+        OR (entity = 'user' AND EXISTS (SELECT 1 FROM sync_state s WHERE s.id = 1 AND CAST(json_extract(s.user_payload, '\$.version') AS INTEGER) >= COALESCE(outbox.ack_version, 0))))''',
       variables: [const Variable(OutboxState.acked)],
       updates: {db.outbox},
     );

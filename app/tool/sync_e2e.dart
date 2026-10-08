@@ -14,7 +14,9 @@
 //   restore   A deletes the day; B logs it again on the tombstone version and restores it.
 //   db-restore the server journal rolls back (restore from backup): 410, re-bootstrap, outbox kept.
 //   refresh   A refreshes; the old token still works inside the 10-minute grace window.
-//   derived   a past day closes; B receives habit_progress and period_evaluation (A32).
+//   derived   a past day closes; B holds typed habit_progress and period_evaluation rows (A32).
+//   dependency_pending  A creates a habit and ticks it in one request; both land, B converges.
+//   calendar  A sets a zone; B gains the pending calendar entry; A changes back; it is gone.
 // Exits non-zero at the first failed check, or unless both databases end identical.
 import 'dart:convert';
 import 'dart:io';
@@ -175,22 +177,69 @@ Future<void> main(List<String> args) async {
     await _closePeriods();
     await b.sync();
 
-    final opaque = await b.db.select(b.db.opaqueEntities).get();
-    final progress = opaque.where((o) => o.entityType == 'habit_progress' && o.entityId == derived);
-    _check(progress.length == 1, 'B holds habit_progress for the new habit');
-    final evaluations = opaque
-        .where((o) => o.entityType == 'period_evaluation')
-        .map((o) => jsonDecode(o.payload) as Map<String, dynamic>)
-        .where((p) => p['habit_id'] == derived)
-        .toList();
+    final progress = await (b.db.select(
+      b.db.habitProgress,
+    )..where((p) => p.habitId.equals(derived))).get();
+    _check(progress.length == 1, 'B holds a typed habit_progress row for the new habit');
+    final evaluations = await (b.db.select(
+      b.db.periodEvaluations,
+    )..where((e) => e.habitId.equals(derived))).get();
     final yesterdayKey = 'd:${tick.date}';
-    final closedYesterday = evaluations.where((p) => p['period_key'] == yesterdayKey).toList();
-    _check(closedYesterday.length == 1, 'B holds the evaluation for $yesterdayKey');
-    _check(closedYesterday.single['completed'] == true, 'yesterday was completed');
+    final closedYesterday = evaluations.where((e) => e.periodKey == yesterdayKey).toList();
+    _check(closedYesterday.length == 1, 'B holds the typed evaluation for $yesterdayKey');
+    _check(closedYesterday.single.completed == true, 'yesterday was completed');
     _check(
-      evaluations.any((p) => p['completed'] == false),
+      evaluations.any((e) => e.completed == false),
       'the day before (no check-in) is closed as not completed',
     );
+    _check(
+      (await b.db.select(b.db.opaqueEntities).get()).every(
+        (o) => o.entityType != 'habit_progress' && o.entityType != 'period_evaluation',
+      ),
+      'nothing derived is left opaque',
+    );
+  });
+
+  await _scenario('dependency_pending', () async {
+    // The habit and its first check-in travel in one request while the habit is not yet on
+    // the server: the log must never be lost behind its parent.
+    final fresh = await a.writer.createHabit(
+      name: 'Breathe',
+      type: 'binary',
+      target: 1,
+      category: 'mindfulness',
+      startLocalDate: today,
+    );
+    await a.writer.setLogValue(habitId: fresh, value: 1);
+    a.transport.batches.clear();
+    await a.sync();
+    _check(a.transport.batches.first == 2, 'one request carried both mutations');
+    _check((await a.outbox()).isEmpty, 'A has nothing left to send');
+    await b.sync();
+    _check((await b.log(fresh, today)).value == '1', 'B sees the check-in on the new habit');
+  });
+
+  await _scenario('calendar', () async {
+    Future<List<String>> entries(_Device d) async => [
+      for (final e in await (d.db.select(
+        d.db.calendarEntries,
+      )..orderBy([(c) => OrderingTerm.asc(c.effectiveAt)])).get())
+        e.timezone,
+    ];
+    await a.writer.setTimezone('Europe/Paris');
+    await a.sync();
+    await b.sync();
+    _check((await entries(b)).last == 'Europe/Paris', 'B gains the pending Paris entry');
+    _check(
+      (await AccountCalendar.load(b.db))!.pendingAfter(DateTime.now())?.timezone == 'Europe/Paris',
+      'on B it is pending, not yet in force',
+    );
+
+    await a.writer.setTimezone('America/Los_Angeles');
+    await a.sync();
+    await b.sync();
+    _check(!(await entries(b)).contains('Europe/Paris'), "B's pending entry is removed");
+    _check((await entries(a)).join(',') == (await entries(b)).join(','), 'both calendars agree');
   });
 
   await a.sync();
@@ -261,6 +310,9 @@ class _CountingTransport implements SyncTransport {
   final SyncTransport inner;
   int bootstraps = 0;
 
+  /// Mutations per request, in order.
+  final List<int> batches = [];
+
   @override
   Future<SyncPage> sync({
     required String deviceId,
@@ -268,13 +320,16 @@ class _CountingTransport implements SyncTransport {
     required int pullLimit,
     required List<Map<String, Object?>> mutations,
     required List<String> capabilities,
-  }) => inner.sync(
-    deviceId: deviceId,
-    cursor: cursor,
-    pullLimit: pullLimit,
-    mutations: mutations,
-    capabilities: capabilities,
-  );
+  }) {
+    if (mutations.isNotEmpty) batches.add(mutations.length);
+    return inner.sync(
+      deviceId: deviceId,
+      cursor: cursor,
+      pullLimit: pullLimit,
+      mutations: mutations,
+      capabilities: capabilities,
+    );
+  }
 
   @override
   Future<BootstrapPage> bootstrap({required String? cursor, required int limit}) {
@@ -355,6 +410,12 @@ class _Device {
       'logs': [
         for (final l in logs)
           '${l.id} ${l.logDate} value=${l.value} v${l.version} deleted=${l.deletedAt != null}',
+      ],
+      'calendar': [
+        for (final e in await (db.select(
+          db.calendarEntries,
+        )..orderBy([(c) => OrderingTerm.asc(c.effectiveAt)])).get())
+          '${e.effectiveAt} ${e.timezone} ${e.dayStartOffsetMinutes}',
       ],
       'outbox': (await outbox()).length,
     };

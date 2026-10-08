@@ -38,6 +38,7 @@ void main() {
 
     await phone.sync();
     expect(await entries(), ['America/Los_Angeles', 'Europe/Paris']);
+    expect(await phone.outbox(), isEmpty, reason: 'acked and reflected in the user: pruned');
 
     await phone.writer.setTimezone('America/Los_Angeles');
     expect((await phone.outbox()).last.baseVersion, 2, reason: 'the confirmed user version');

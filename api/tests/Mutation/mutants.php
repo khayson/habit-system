@@ -97,8 +97,8 @@ return [
     [
         'name' => 'A26: a calendar change takes effect at the request instant',
         'file' => 'app/Domain/Calendar/CalendarHistory.php',
-        'search' => '$effectiveAt = $current->nextDayStartAfter($now);',
-        'replace' => '$effectiveAt = $now;',
+        'search' => '$candidate = $current->dayStartAfter($now, $k);',
+        'replace' => '$candidate = $now;',
     ],
     [
         'name' => 'A30: zero-length dates count as missed days',
