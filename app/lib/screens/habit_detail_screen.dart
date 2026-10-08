@@ -465,7 +465,13 @@ class _Cell extends StatelessWidget {
         ),
       );
     }
-    return Semantics(label: label, button: tappable, excludeSemantics: true, child: box);
+    return Semantics(
+      container: true,
+      label: label,
+      button: tappable,
+      excludeSemantics: true,
+      child: box,
+    );
   }
 
   static int _day(LocalDate date) =>

@@ -22,18 +22,23 @@ class DeviceSettings {
     db.localSettings,
   )..where((s) => s.key.equals(key))).getSingleOrNull())?.value;
 
-  Future<void> write(String key, String value) => db
-      .into(db.localSettings)
-      .insertOnConflictUpdate(LocalSettingsCompanion.insert(key: key, value: value));
+  /// One transaction per write, like every other local write, so watchers see it at once.
+  Future<void> write(String key, String value) => db.transaction(
+    () => db
+        .into(db.localSettings)
+        .insertOnConflictUpdate(LocalSettingsCompanion.insert(key: key, value: value)),
+  );
 
   Future<void> setFollowDevice(bool on) => write(followDevice, on ? '1' : '0');
 
   /// "Not now" is remembered per detected zone: a later move to another zone asks again.
   Future<void> notNow(String zone) => write('$_notNowPrefix$zone', '1');
 
+  /// The settings rows themselves are selected, so a settings write always changes the result
+  /// and re-runs the status (a constant query is not re-delivered for every write).
   Stream<TimezoneStatus?> watch(DateTime Function() deviceNow) => db
       .customSelect(
-        'SELECT 1',
+        "SELECT key || '=' || value AS kv FROM local_settings",
         readsFrom: {db.localSettings, db.outbox, db.calendarEntries, db.syncState},
       )
       .watch()

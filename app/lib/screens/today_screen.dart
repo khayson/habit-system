@@ -259,6 +259,9 @@ class AskZoneCard extends StatefulWidget {
 class _AskZoneCardState extends State<AskZoneCard> with WidgetsBindingObserver {
   String? _deviceZone;
 
+  /// Answered on this screen: hidden at once, before the stored answer is read back.
+  final _answered = <String>{};
+
   @override
   void initState() {
     super.initState();
@@ -290,7 +293,9 @@ class _AskZoneCardState extends State<AskZoneCard> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     final status = context.watch<StreamModel<TodayView?>>().value?.timezone;
     final zone = _deviceZone;
-    if (status == null || zone == null || !status.shouldAsk(zone)) return const SizedBox.shrink();
+    if (status == null || zone == null || _answered.contains(zone) || !status.shouldAsk(zone)) {
+      return const SizedBox.shrink();
+    }
     final l10n = AppLocalizations.of(context);
     final text = Theme.of(context).textTheme;
     final tokens = HabitTokens.of(context);
@@ -318,11 +323,17 @@ class _AskZoneCardState extends State<AskZoneCard> with WidgetsBindingObserver {
               runSpacing: HabitSpace.s8,
               children: [
                 FilledButton(
-                  onPressed: () => account.actions.setTimezone(zone),
+                  onPressed: () {
+                    setState(() => _answered.add(zone));
+                    account.actions.setTimezone(zone);
+                  },
                   child: Text(l10n.askZoneUse),
                 ),
                 TextButton(
-                  onPressed: () => DeviceSettings(account.session.db).notNow(zone),
+                  onPressed: () {
+                    setState(() => _answered.add(zone));
+                    DeviceSettings(account.session.db).notNow(zone);
+                  },
                   child: Text(l10n.askZoneNotNow),
                 ),
               ],

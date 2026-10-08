@@ -126,9 +126,15 @@ class LocalView {
   }) {
     late StreamController<void> triggers;
     StreamSubscription<void>? tables;
+    StreamSubscription<void>? settings;
     Timer? timer;
     triggers = StreamController<void>(
       onListen: () {
+        // The ask-on-change answer: selected as rows so every settings write re-runs Today.
+        settings = db
+            .select(db.localSettings)
+            .watch()
+            .listen((_) => triggers.add(null), onError: triggers.addError);
         tables = db
             .customSelect(
               'SELECT 1',
@@ -147,6 +153,7 @@ class LocalView {
       },
       onCancel: () async {
         timer?.cancel();
+        await settings?.cancel();
         await tables?.cancel();
         await triggers.close();
       },
