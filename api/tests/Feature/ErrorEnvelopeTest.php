@@ -86,7 +86,9 @@ it('404 for a missing or foreign model with no model name or id in the body', fu
     $response = $this->getJson('/api/v1/__test/missing-model');
 
     expectFixture('error_404_not_found', $response);
-    expect($response->getContent())->not->toContain('Habit')->not->toContain('abc');
+    // The error object only: meta.request_id is a random UUID and may contain "abc" by chance.
+    $error = json_encode($response->json('error'), JSON_THROW_ON_ERROR);
+    expect($error)->not->toContain('Habit')->not->toContain('abc');
 });
 
 it('409 version_conflict carries the canonical current resource', function () {
