@@ -80,6 +80,10 @@ Split again after the 3.1 review: **3.2a** (app data and screens) then **3.2b** 
 
 - **3.2a**: schema v5 (`calendar_entries`, typed `habit_progress` / `period_evaluations`, opaque rows upgraded); the engine merges `calendar_history`; a multi-entry `AccountCalendar`; Dart `HabitSchedule` pinned by `schedule.json`; Today (05) with due-ness; the bottom tab bar and the Habit library (07) so habit detail is reached as the design draws it (Habits tab, then a habit); habit detail with the heatmap (12); history and backdate (13); screen 04 completed (Edit, follow device time zone, ask-on-change through `profile.set_timezone`, rebase once on conflict); e2e `derived` (typed rows), `dependency_pending` and `calendar`. Insights (14) and Profile (20) tabs appear as drawn but stay disabled until their phases.
 - **3.2b**: local reminders (11) with permission states and the DST test; 04's reminder-permission block; account-isolated logout; best-effort background sync and the notification-action schema (A23), with a real two-isolate test and `BEGIN IMMEDIATE` on independent connections; real Android device gate incl. battery restriction.
+  - Reminders have no server side yet, so 3.2b starts with one: `reminders` as a synced entity (`reminder.create` / `update` / `delete` through the `MutationApplier`, bootstrapped through `entities`). The spec's REST `/reminders` routes and the reminder-device / diagnostics endpoints are not built (nothing uses them).
+  - The real-device gate is Khay Studios' to run, from `docs/DEVICE_GATE.md`.
+- **App strings** live in `app/lib/l10n/app_en.arb` (gen-l10n). Generated files are never hand-edited or formatted.
+- **`protected_in_streak` joins `habit_progress` in Phase 5**; the client's heuristic for the 12 footer goes then.
 - **XP chip → Phase 5.** Nothing accrues XP before the rewards ledger, so a chip now would be dead code. Today's summary card gets its XP · level line with the ledger.
 - **A32 habit delete.** "Habit delete journals a delete for its `habit_progress`" lands with the delete/archive operation in Phase 4.
 

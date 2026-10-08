@@ -87,3 +87,25 @@ Standard Khay Studios Flutter conventions apply (Provider, go_router only, singl
 - Do not invent endpoints, columns or screens. If something is missing, list it under "Open questions" in the review packet, proceed with the smallest safe assumption, and mark it in code: `// ASSUMPTION(A#): …`.
 - No features outside the current phase.
 - **Review packet** (end of every phase): what shipped · tests added + command output · deviations from spec/amendments · open questions · risks.
+- App strings live in `app/lib/l10n/app_en.arb` (gen-l10n). Generated files are never hand-edited or formatted.
+
+### Working rules
+
+Accuracy
+1. Claim only what you ran or read. Quote command output. Take SHAs only from `git rev-parse HEAD` and `git ls-remote origin main`.
+2. Source order: SPEC_AMENDMENTS > spec > the architect's prompt > design file. The design file wins only on how a screen looks and reads. Any other conflict: stop, list it, take the smallest safe assumption and mark it ASSUMPTION(...).
+3. Anything not in the prompt is a deviation, including tooling and dependencies. List each one in the packet; an unlisted addition is a mistake.
+4. Fix a failing test at its cause. Never weaken, skip or loosen a test to get green. A bug fix starts with a test that fails on the old code.
+5. Generated files (*.g.dart, lib/l10n/generated/): only the project's generator writes them, never the formatter or your hands.
+6. Before every push: scripts\check.ps1 passes on the final tree, git status is clean, and git diff --stat origin/main..HEAD contains only what the commit messages say.
+7. A schema change ships with its migration, an upgrade test (outbox and data survive) and, on the server, a rollback test.
+8. Do not write into docs/reviews/.
+9. Pushed is not passed: CI takes about 3 minutes; check the run for the pushed SHA once after that (no polling loop) and quote its run id.
+
+Cost
+10. Read ranges and grep hits, not whole files. Never re-read a file you already read this session. Never print generated files, fixtures or whole diffs (use --stat, then the hunk you need).
+11. While iterating, run only the affected test file or filter. Run the full check once per part and before a push, not after each commit.
+12. Screenshots only for the list in the prompt, one per state, no re-takes unless the screen changed.
+13. Cap tool output (| tail -40). Batch independent calls. No narration between calls and no plan restatements.
+14. No subagents for work you can do in one or two calls. Nothing beyond the phase.
+15. The packet is short (about 1.5 pages): shipped (one line per item), evidence (commands and results), deviations, open questions, risks. No per-commit recap.
