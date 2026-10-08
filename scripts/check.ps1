@@ -16,8 +16,12 @@ try {
     # Generated *.g.dart is build_runner's output (80 columns); CI checks it is up to date instead.
     $sources = Get-ChildItem lib, test, integration_test, tool -Recurse -Filter *.dart |
         Where-Object { $_.Name -notlike '*.g.dart' } | ForEach-Object { $_.FullName }
-    dart format --output=none --set-exit-if-changed @sources
-    if ($LASTEXITCODE -ne 0) { throw 'dart format found changes' }
+    # In batches: one command line with every path passes Windows' length limit.
+    for ($i = 0; $i -lt $sources.Count; $i += 60) {
+        $batch = $sources[$i..([Math]::Min($i + 59, $sources.Count - 1))]
+        dart format --output=none --set-exit-if-changed @batch
+        if ($LASTEXITCODE -ne 0) { throw 'dart format found changes' }
+    }
     flutter analyze
     if ($LASTEXITCODE -ne 0) { throw 'flutter analyze failed' }
     flutter test
