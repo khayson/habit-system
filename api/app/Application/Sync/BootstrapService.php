@@ -17,9 +17,9 @@ use stdClass;
  * applies only if its version is >= the local one).
  *
  * Pages: user (first page only) → habits (with definitions and ranges) → logs, including
- * tombstones so deletions reconcile → A32 derived entities in A31's `entities` array:
- * habit_progress for every habit, then period_evaluation for the last 400 days, then reminders
- * (Phase 3.2b, tombstones included).
+ * tombstones so deletions reconcile → reminders (Phase 3.2b, tombstones included) and the A32
+ * derived entities in A31's `entities` array: habit_progress for every habit, then
+ * period_evaluation for the last 400 days (the last page, as the contract pins).
  */
 final readonly class BootstrapService
 {
@@ -84,7 +84,7 @@ final readonly class BootstrapService
             $logs = $rows->take($limit)->map(fn (stdClass $l) => $this->presenter->log($l, (string) $l->habit_type))->values()->all();
             $next = $rows->count() > $limit
                 ? ['phase' => self::PHASE_LOGS, 'after' => (string) $rows->get($limit - 1)?->id]
-                : ['phase' => self::PHASE_PROGRESS, 'after' => null];
+                : ['phase' => self::PHASE_REMINDERS, 'after' => null];
         } elseif ($state['phase'] === self::PHASE_PROGRESS) {
             $rows = DB::table('habit_streak_cache')
                 ->join('habits', 'habits.id', '=', 'habit_streak_cache.habit_id')
@@ -111,7 +111,9 @@ final readonly class BootstrapService
                 'version' => (int) $r->version,
                 'payload' => $this->presenter->reminder($r),
             ])->values()->all();
-            $next = $rows->count() > $limit ? ['phase' => self::PHASE_REMINDERS, 'after' => (string) $rows->get($limit - 1)?->id] : null;
+            $next = $rows->count() > $limit
+                ? ['phase' => self::PHASE_REMINDERS, 'after' => (string) $rows->get($limit - 1)?->id]
+                : ['phase' => self::PHASE_PROGRESS, 'after' => null];
         } else {
             $since = UserCalendar::timeline($userId)->localDateAt($this->clock->now())->addDays(-self::EVALUATION_DAYS);
             $rows = DB::table('period_evaluations')
@@ -125,9 +127,7 @@ final readonly class BootstrapService
                 'version' => (int) $e->revision,
                 'payload' => $this->presenter->periodEvaluation($e),
             ])->values()->all();
-            $next = $rows->count() > $limit
-                ? ['phase' => self::PHASE_EVALUATIONS, 'after' => (string) $rows->get($limit - 1)?->id]
-                : ['phase' => self::PHASE_REMINDERS, 'after' => null];
+            $next = $rows->count() > $limit ? ['phase' => self::PHASE_EVALUATIONS, 'after' => (string) $rows->get($limit - 1)?->id] : null;
         }
 
         $snap = (int) $state['snap'];
