@@ -93,7 +93,11 @@ void main() {
         );
         String outcome;
         try {
-          resolver.validateBackdate(LocalDate.parse(c['date'] as String));
+          final at = c['occurred_at'] as String?;
+          resolver.validateBackdate(
+            LocalDate.parse(c['date'] as String),
+            at: at == null ? null : DateTime.parse(at),
+          );
           outcome = 'ok';
         } on DayResolutionException catch (e) {
           outcome = e.reason;

@@ -60,7 +60,8 @@ it('validates explicit backdates', function (array $case) {
     $resolver = resolverFor($case['calendar'], $case['now']);
 
     try {
-        $resolver->validateBackdate(LocalDate::fromString($case['date']));
+        $at = isset($case['occurred_at']) ? F::instant($case['occurred_at']) : null;
+        $resolver->validateBackdate(LocalDate::fromString($case['date']), $at);
         $outcome = 'ok';
     } catch (DayResolutionException $e) {
         $outcome = $e->reason;

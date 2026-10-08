@@ -51,8 +51,9 @@ class DayResolver {
 
   LocalDate today() => timeline.localDateAt(clock().toUtc());
 
-  void validateBackdate(LocalDate date) {
-    final today = this.today();
+  /// [at] is a log's occurred_at: "today" is the user's local date then (default: now).
+  void validateBackdate(LocalDate date, {DateTime? at}) {
+    final today = at == null ? this.today() : timeline.localDateAt(at);
     if (date.isAfter(today)) throw const DayResolutionException('backdate_future');
     if (date.daysUntil(today) > maxBackdateDays) {
       throw const DayResolutionException('backdate_too_old');

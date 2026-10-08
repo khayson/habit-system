@@ -51,6 +51,28 @@ final readonly class DayResolver
         return new DayResolution($date, $entry, $localDateHint?->equals($date));
     }
 
+    /**
+     * Explicit backdate for a log (spec 08): the client names the local date; occurred_at stays
+     * the real moment of the action and is still bounded (5 minutes ahead, 90 days back). The
+     * date is checked against the user's local today at occurred_at. The captured zone is not
+     * compared, because the date is explicit rather than derived.
+     *
+     * @throws DayResolutionException
+     */
+    public function resolveBackdate(LocalDate $date, DateTimeInterface $occurredAt): DayResolution
+    {
+        $now = $this->clock->now();
+        if ($occurredAt > $now->add(new DateInterval('PT'.self::FUTURE_TOLERANCE_SECONDS.'S'))) {
+            throw new DayResolutionException('future_event');
+        }
+        if ($occurredAt < $now->sub(new DateInterval('PT'.self::MAX_OFFLINE_AGE_SECONDS.'S'))) {
+            throw new DayResolutionException('event_too_old');
+        }
+        $this->validateBackdate($date, $occurredAt);
+
+        return new DayResolution($date, $this->timeline->entryAt($this->timeline->startOfLocalDay($date)), null);
+    }
+
     /** The user's current business date. */
     public function today(): LocalDate
     {
@@ -60,12 +82,13 @@ final readonly class DayResolver
     /**
      * Explicit backdate mode: a validated local date, at most 30 days back, never in the future.
      * It does not invent an event timestamp. (Active-range checks belong to the period engine.)
+     * "Today" is the user's local date at $at (a log's occurred_at), or now.
      *
      * @throws DayResolutionException
      */
-    public function validateBackdate(LocalDate $date): void
+    public function validateBackdate(LocalDate $date, ?DateTimeInterface $at = null): void
     {
-        $today = $this->today();
+        $today = $at === null ? $this->today() : $this->timeline->localDateAt($at);
         if ($date->isAfter($today)) {
             throw new DayResolutionException('backdate_future');
         }

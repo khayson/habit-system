@@ -646,6 +646,38 @@
       "now": "2026-05-29T06:30:00Z",
       "date": "2026-05-29",
       "expect": "backdate_future"
+    },
+    {
+      "name": "a log's backdate is checked against local today at its occurred_at: late 26 May cannot claim 27 May",
+      "calendar": "la",
+      "now": "2026-05-28T17:22:00Z",
+      "occurred_at": "2026-05-27T06:30:00Z",
+      "date": "2026-05-27",
+      "expect": "backdate_future"
+    },
+    {
+      "name": "the same event may claim its own local day",
+      "calendar": "la",
+      "now": "2026-05-28T17:22:00Z",
+      "occurred_at": "2026-05-27T06:30:00Z",
+      "date": "2026-05-26",
+      "expect": "ok"
+    },
+    {
+      "name": "30 days before local today at occurred_at is allowed",
+      "calendar": "la",
+      "now": "2026-05-28T17:22:00Z",
+      "occurred_at": "2026-05-27T06:30:00Z",
+      "date": "2026-04-26",
+      "expect": "ok"
+    },
+    {
+      "name": "31 days before local today at occurred_at is rejected",
+      "calendar": "la",
+      "now": "2026-05-28T17:22:00Z",
+      "occurred_at": "2026-05-27T06:30:00Z",
+      "date": "2026-04-25",
+      "expect": "backdate_too_old"
     }
   ]
 }

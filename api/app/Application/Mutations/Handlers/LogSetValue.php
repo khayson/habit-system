@@ -10,6 +10,7 @@ use App\Application\Mutations\MutationContext;
 use App\Application\Periods\PeriodCloser;
 use App\Application\Presenters\EntityPresenter;
 use App\Domain\Calendar\DayResolver;
+use App\Domain\Calendar\LocalDate;
 use App\Domain\Clock;
 use App\Domain\Habit\HabitTypeRegistry;
 use App\Domain\Habit\LogState;
@@ -19,6 +20,7 @@ use App\Support\WireTime;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use LogicException;
 use stdClass;
@@ -43,15 +45,27 @@ final readonly class LogSetValue
     public function handle(MutationContext $ctx, stdClass $habit): HandlerResult
     {
         $m = $ctx->mutation;
-        Validator::make($m->payload, ['value' => ['present'], 'detail' => ['nullable', 'array']])->validate();
+        // ASSUMPTION(A3.1-backdate-payload): explicit backdate mirrors habit.create's
+        // date_mode, with the claimed local date in log_date (the spec names the rule, not the
+        // field). Without date_mode the date comes from occurred_at as always.
+        $p = Validator::make($m->payload, [
+            'value' => ['present'],
+            'detail' => ['nullable', 'array'],
+            'date_mode' => ['nullable', Rule::in(['normal', 'backdate'])],
+            'log_date' => ['required_if:date_mode,backdate', 'nullable', 'date_format:Y-m-d'],
+        ])->validate();
         if ($m->baseVersion === null) {
             throw ValidationException::withMessages(['base_version' => ['base_version is required; use 0 when the log is absent.']]);
         }
 
         $type = $this->types->get((string) $habit->type);
         $schedule = $this->habits->schedule($habit);
-        $resolution = (new DayResolver(UserCalendar::timeline($ctx->userId), $this->clock))
-            ->resolve($m->occurredAt, $m->capturedTimezone, $m->localDateHint);
+        $resolver = new DayResolver(UserCalendar::timeline($ctx->userId), $this->clock);
+        $resolution = ($p['date_mode'] ?? 'normal') === 'backdate'
+            // Spec 08: a separately validated local date, at most 30 days before the user's
+            // local today at occurred_at and never after it; no invented timestamp.
+            ? $resolver->resolveBackdate(LocalDate::fromString((string) $p['log_date']), $m->occurredAt)
+            : $resolver->resolve($m->occurredAt, $m->capturedTimezone, $m->localDateHint);
         $date = $resolution->localDate;
         $definition = $schedule->versionOn($date);
         if ($definition === null || ! $schedule->isEligible($date)) {
