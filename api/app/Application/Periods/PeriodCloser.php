@@ -215,6 +215,7 @@ final readonly class PeriodCloser
         DB::table('users')->where('id', $userId)->update([
             'version' => $version,
             'timezone' => $inForce->timezone,
+            'calendar_journaled_at' => UtcTime::format($inForce->effectiveAt),
             'updated_at' => UtcTime::format($this->clock->now()),
         ]);
         $row = DB::table('users')->where('id', $userId)->first() ?? (object) [];
@@ -223,15 +224,19 @@ final readonly class PeriodCloser
         return 1;
     }
 
+    /**
+     * H5: the in-force entry differs from the one the user entity last published. One column
+     * read; never a journal scan. Null (nothing published yet) is never stale.
+     */
     private function calendarChangedSinceJournal(string $userId): bool
     {
-        $last = DB::table('server_changes')->where('user_id', $userId)->where('entity_type', 'user')->orderByDesc('seq')->value('payload');
-        $payload = HabitRepository::json($last);
+        $published = DB::table('users')->where('id', $userId)->value('calendar_journaled_at');
+        if ($published === null) {
+            return false;
+        }
         $inForce = UserCalendar::timeline($userId)->entryAt($this->clock->now());
 
-        return $payload !== []
-            && (($payload['timezone'] ?? null) !== $inForce->timezone
-                || (int) ($payload['day_start_offset_minutes'] ?? 0) !== $inForce->dayStartOffsetMinutes);
+        return UtcTime::format(new \DateTimeImmutable((string) $published)) !== UtcTime::format($inForce->effectiveAt);
     }
 
     /** @param array<string, mixed> $result */

@@ -247,3 +247,35 @@ it('never blocks a user for long when a worker dies (H3)', function () {
     Log::shouldHaveReceived('warning')->once()
         ->with('ClosePeriodsJob failed', ['user_id' => $this->maya['id']]);
 });
+
+it('checks calendar staleness without reading the journal, and re-journals the user once (H5)', function () {
+    $this->sync($this->maya['token'], [M::setTimezone($this->maya['id'], 'Europe/Paris', 1)]);
+    $closer = app(PeriodCloser::class);
+    $journalReads = 0;
+    $watching = false;
+    DB::listen(function ($q) use (&$journalReads, &$watching) {
+        if ($watching && str_contains($q->sql, 'server_changes') && str_starts_with(strtolower(ltrim($q->sql)), 'select')) {
+            $journalReads++;
+        }
+    });
+    $watch = function (Closure $run) use (&$watching) {
+        $watching = true;
+        try {
+            return $run();
+        } finally {
+            $watching = false;
+        }
+    };
+
+    $watch(fn () => $closer->closeUser($this->maya['id'])); // habits up to date; the change still pending
+    expect($watch(fn () => $closer->isStale($this->maya['id'])))->toBeFalse('nothing in force has changed');
+
+    $this->freezeClock('2026-05-29T07:30:00Z'); // Paris is now in force
+    $before = DB::table('server_changes')->where('entity_type', 'user')->count();
+    expect($watch(fn () => $closer->isStale($this->maya['id'])))->toBeTrue();
+    $watch(fn () => $closer->closeUser($this->maya['id']));
+    $watch(fn () => $closer->closeUser($this->maya['id']));
+
+    expect(DB::table('server_changes')->where('entity_type', 'user')->count())->toBe($before + 1, 'journaled exactly once')
+        ->and($journalReads)->toBe(0);
+});

@@ -37,6 +37,8 @@ final readonly class AccountService
                 'email' => $email,
                 'password' => Hash::make($password),
                 'timezone' => $timezone,
+                // H5: the registration entry below is the calendar this user entity publishes.
+                'calendar_journaled_at' => $now,
                 'created_at' => $now,
                 'updated_at' => $now,
             ]);

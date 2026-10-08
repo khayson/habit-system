@@ -79,7 +79,12 @@ final readonly class ProfileSetTimezone
                 'created_at' => $stamp,
             ]);
         }
-        DB::table('users')->where('id', $ctx->userId)->update(['version' => $version + 1, 'updated_at' => $stamp]);
+        DB::table('users')->where('id', $ctx->userId)->update([
+            'version' => $version + 1,
+            // H5: the in-force entry this user entity publishes (a pending change is not in force).
+            'calendar_journaled_at' => UtcTime::format($change->timeline->entryAt($now)->effectiveAt),
+            'updated_at' => $stamp,
+        ]);
         $row = DB::table('users')->where('id', $ctx->userId)->first() ?? (object) [];
         $this->journal->append($ctx->userId, 'user', $ctx->userId, 'upsert', $version + 1, $this->presenter->user($row));
 
