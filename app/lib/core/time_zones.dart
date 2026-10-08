@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 
 import '../domain/calendar/timezone_timeline.dart';
@@ -17,3 +18,12 @@ abstract final class TimeZones {
     _ready.complete();
   }
 }
+
+/// The device's IANA zone. Replaceable in tests; screens never read the platform directly.
+abstract final class DeviceZone {
+  static Future<String> Function() read = _platform;
+
+  static Future<String> _platform() async => (await FlutterTimezone.getLocalTimezone()).identifier;
+}
+
+Future<String> deviceTimezone() => DeviceZone.read();

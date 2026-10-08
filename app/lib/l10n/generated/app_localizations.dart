@@ -860,6 +860,636 @@ abstract class AppLocalizations {
   /// **'Every day'**
   String get newHabitDaily;
 
+  /// No description provided for @navToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get navToday;
+
+  /// No description provided for @navHabits.
+  ///
+  /// In en, this message translates to:
+  /// **'Habits'**
+  String get navHabits;
+
+  /// No description provided for @navInsights.
+  ///
+  /// In en, this message translates to:
+  /// **'Insights'**
+  String get navInsights;
+
+  /// No description provided for @navProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get navProfile;
+
+  /// No description provided for @navLater.
+  ///
+  /// In en, this message translates to:
+  /// **'{tab}, arrives in a later update'**
+  String navLater(String tab);
+
+  /// No description provided for @libraryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your habits'**
+  String get libraryTitle;
+
+  /// No description provided for @librarySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{active, plural, =1{1 active routine} other{{active} active routines}} · {archived} archived'**
+  String librarySubtitle(int active, int archived);
+
+  /// No description provided for @librarySearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search your habits'**
+  String get librarySearch;
+
+  /// No description provided for @libraryAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get libraryAll;
+
+  /// No description provided for @libraryCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a habit'**
+  String get libraryCreate;
+
+  /// No description provided for @libraryNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No habits match your search.'**
+  String get libraryNoMatch;
+
+  /// No description provided for @libraryOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open {name}. {detail}'**
+  String libraryOpen(String name, String detail);
+
+  /// No description provided for @typeYesNo.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes / no'**
+  String get typeYesNo;
+
+  /// No description provided for @typeQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity'**
+  String get typeQuantity;
+
+  /// No description provided for @typeDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get typeDuration;
+
+  /// No description provided for @typeUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs an app update'**
+  String get typeUnknown;
+
+  /// No description provided for @freqDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'daily'**
+  String get freqDaily;
+
+  /// No description provided for @freqWeekdays.
+  ///
+  /// In en, this message translates to:
+  /// **'weekdays'**
+  String get freqWeekdays;
+
+  /// No description provided for @freqWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}× / week'**
+  String freqWeekly(int count);
+
+  /// No description provided for @freqInterval.
+  ///
+  /// In en, this message translates to:
+  /// **'every {days} days'**
+  String freqInterval(int days);
+
+  /// No description provided for @freqUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'custom schedule'**
+  String get freqUnknown;
+
+  /// No description provided for @minutesShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String minutesShort(String minutes);
+
+  /// No description provided for @rowDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'{type} · {target} · {frequency}'**
+  String rowDetail(String type, String target, String frequency);
+
+  /// No description provided for @rowDetailNoTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'{type} · {frequency}'**
+  String rowDetailNoTarget(String type, String frequency);
+
+  /// No description provided for @todayCompletedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed at {time}'**
+  String todayCompletedAt(String time);
+
+  /// No description provided for @todayCompletedAtWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed at {time} · waiting to sync'**
+  String todayCompletedAtWaiting(String time);
+
+  /// No description provided for @todayWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {target} this week · counted on this device'**
+  String todayWeek(int done, int target);
+
+  /// No description provided for @todayOpenDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Open {name}'**
+  String todayOpenDetail(String name);
+
+  /// No description provided for @askZoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your device is now in {zone}. Use it for your days?'**
+  String askZoneTitle(String zone);
+
+  /// No description provided for @askZoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The change applies from the start of your next day.'**
+  String get askZoneBody;
+
+  /// No description provided for @askZoneUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Use'**
+  String get askZoneUse;
+
+  /// No description provided for @askZoneNotNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get askZoneNotNow;
+
+  /// No description provided for @detailSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{schedule} · {category}'**
+  String detailSubtitle(String schedule, String category);
+
+  /// No description provided for @categoryMindfulness.
+  ///
+  /// In en, this message translates to:
+  /// **'Mindfulness'**
+  String get categoryMindfulness;
+
+  /// No description provided for @statDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day} other{{count} days}}'**
+  String statDays(int count);
+
+  /// No description provided for @statWeeks.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 week} other{{count} weeks}}'**
+  String statWeeks(int count);
+
+  /// No description provided for @statPeriods.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 time} other{{count} times}}'**
+  String statPeriods(int count);
+
+  /// No description provided for @statNotYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not yet'**
+  String get statNotYet;
+
+  /// No description provided for @statCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current streak'**
+  String get statCurrent;
+
+  /// No description provided for @statCurrentAsOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Current streak · as of {date}'**
+  String statCurrentAsOf(String date);
+
+  /// No description provided for @statBest.
+  ///
+  /// In en, this message translates to:
+  /// **'Best streak'**
+  String get statBest;
+
+  /// No description provided for @statToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get statToday;
+
+  /// No description provided for @statTodayDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Today · done'**
+  String get statTodayDone;
+
+  /// No description provided for @statDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get statDone;
+
+  /// No description provided for @heatmapMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
+  String get heatmapMonth;
+
+  /// No description provided for @heatmapPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous month'**
+  String get heatmapPrevious;
+
+  /// No description provided for @heatmapNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next month'**
+  String get heatmapNext;
+
+  /// No description provided for @legendComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete'**
+  String get legendComplete;
+
+  /// No description provided for @legendProtected.
+  ///
+  /// In en, this message translates to:
+  /// **'Protected'**
+  String get legendProtected;
+
+  /// No description provided for @legendMissed.
+  ///
+  /// In en, this message translates to:
+  /// **'Missed (–)'**
+  String get legendMissed;
+
+  /// No description provided for @legendNotDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Not due (outline)'**
+  String get legendNotDue;
+
+  /// No description provided for @statusComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete'**
+  String get statusComplete;
+
+  /// No description provided for @statusProtected.
+  ///
+  /// In en, this message translates to:
+  /// **'Protected'**
+  String get statusProtected;
+
+  /// No description provided for @statusMissed.
+  ///
+  /// In en, this message translates to:
+  /// **'Missed'**
+  String get statusMissed;
+
+  /// No description provided for @statusNotDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Not due'**
+  String get statusNotDue;
+
+  /// No description provided for @statusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get statusPending;
+
+  /// No description provided for @statusUpcoming.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming'**
+  String get statusUpcoming;
+
+  /// No description provided for @cellLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{date}, {status}'**
+  String cellLabel(String date, String status);
+
+  /// No description provided for @cellLabelProvisional.
+  ///
+  /// In en, this message translates to:
+  /// **'{date}, {status}, saved on this device'**
+  String cellLabelProvisional(String date, String status);
+
+  /// No description provided for @streakProtected.
+  ///
+  /// In en, this message translates to:
+  /// **'Your streak includes {count, plural, =1{1 protected day} other{{count} protected days}}.'**
+  String streakProtected(int count);
+
+  /// No description provided for @streakPause.
+  ///
+  /// In en, this message translates to:
+  /// **'A missed day is a pause, not a failure.'**
+  String get streakPause;
+
+  /// No description provided for @olderNeedsConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Older history needs a connection'**
+  String get olderNeedsConnection;
+
+  /// No description provided for @olderLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading older history…'**
+  String get olderLoading;
+
+  /// No description provided for @historyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your history'**
+  String get historyTitle;
+
+  /// No description provided for @historySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check-ins stay editable and traceable.'**
+  String get historySubtitle;
+
+  /// No description provided for @historyTabToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get historyTabToday;
+
+  /// No description provided for @historyTabHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get historyTabHistory;
+
+  /// No description provided for @historyRow.
+  ///
+  /// In en, this message translates to:
+  /// **'{date} · {name}'**
+  String historyRow(String date, String name);
+
+  /// No description provided for @historyRowDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} · completed at {time}'**
+  String historyRowDetail(String value, String time);
+
+  /// No description provided for @historyRowWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} · waiting to sync'**
+  String historyRowWaiting(String value);
+
+  /// No description provided for @historyEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get historyEdit;
+
+  /// No description provided for @historyEditLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit the check-in for {date}'**
+  String historyEditLabel(String date);
+
+  /// No description provided for @historyEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No check-ins in the last 30 days.'**
+  String get historyEmpty;
+
+  /// No description provided for @historyEmptyToday.
+  ///
+  /// In en, this message translates to:
+  /// **'No check-in yet today.'**
+  String get historyEmptyToday;
+
+  /// No description provided for @historyAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a past check-in'**
+  String get historyAddTitle;
+
+  /// No description provided for @historyDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Local habit date'**
+  String get historyDateLabel;
+
+  /// No description provided for @historyDateChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose calendar day'**
+  String get historyDateChoose;
+
+  /// No description provided for @historyValueCheckIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Check-in'**
+  String get historyValueCheckIn;
+
+  /// No description provided for @historyValueDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get historyValueDone;
+
+  /// No description provided for @historyValueNotDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Not done'**
+  String get historyValueNotDone;
+
+  /// No description provided for @historyValueDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get historyValueDuration;
+
+  /// No description provided for @historyValueAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get historyValueAmount;
+
+  /// No description provided for @historyMinutesUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'minutes'**
+  String get historyMinutesUnit;
+
+  /// No description provided for @historyTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Target that day: {target}'**
+  String historyTarget(String target);
+
+  /// No description provided for @historyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses your habit timezone for that date. Streak and freeze changes are reconciled after syncing.'**
+  String get historyNote;
+
+  /// No description provided for @historySave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save past check-in'**
+  String get historySave;
+
+  /// No description provided for @historySaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved on this device. It syncs when you are online.'**
+  String get historySaved;
+
+  /// No description provided for @historyRefuseFuture.
+  ///
+  /// In en, this message translates to:
+  /// **'That date has not started yet in your habit calendar.'**
+  String get historyRefuseFuture;
+
+  /// No description provided for @historyRefuseOld.
+  ///
+  /// In en, this message translates to:
+  /// **'Past check-ins can go back 30 days.'**
+  String get historyRefuseOld;
+
+  /// No description provided for @historyRefuseInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'This habit was not active on that date.'**
+  String get historyRefuseInactive;
+
+  /// No description provided for @historyValueInvalidMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a whole number of minutes, like 10.'**
+  String get historyValueInvalidMinutes;
+
+  /// No description provided for @historyValueInvalidAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an amount, like 1.5.'**
+  String get historyValueInvalidAmount;
+
+  /// No description provided for @setupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get reminders that respect your routine.'**
+  String get setupSubtitle;
+
+  /// No description provided for @setupEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get setupEdit;
+
+  /// No description provided for @setupEditZone.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit habit timezone'**
+  String get setupEditZone;
+
+  /// No description provided for @setupFollow.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow device timezone'**
+  String get setupFollow;
+
+  /// No description provided for @setupFollowNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask before changing your habit calendar'**
+  String get setupFollowNote;
+
+  /// No description provided for @setupQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'{zone} · waiting to sync'**
+  String setupQueued(String zone);
+
+  /// No description provided for @setupPending.
+  ///
+  /// In en, this message translates to:
+  /// **'{zone} · changes at the start of your next day ({time})'**
+  String setupPending(String zone, String time);
+
+  /// No description provided for @setupQueuedProblem.
+  ///
+  /// In en, this message translates to:
+  /// **'This change needs a look. Open Sync to review it.'**
+  String get setupQueuedProblem;
+
+  /// No description provided for @setupNextDay.
+  ///
+  /// In en, this message translates to:
+  /// **'A new timezone applies from the start of your next day.'**
+  String get setupNextDay;
+
+  /// No description provided for @zonePickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a timezone'**
+  String get zonePickerTitle;
+
+  /// No description provided for @zoneSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search timezones'**
+  String get zoneSearch;
+
+  /// No description provided for @zoneNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No timezones match.'**
+  String get zoneNoMatch;
+
+  /// No description provided for @zoneRow.
+  ///
+  /// In en, this message translates to:
+  /// **'{city}, {offset}'**
+  String zoneRow(String city, String offset);
+
   /// No description provided for @newHabitCreate.
   ///
   /// In en, this message translates to:

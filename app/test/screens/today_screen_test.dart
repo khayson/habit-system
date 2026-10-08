@@ -11,6 +11,7 @@ void main() {
   setUpAll(loadTestZones);
 
   testWidgets('loading, then the first-run empty state (23)', (tester) async {
+    useTallPhone(tester);
     final account = (await tester.runAsync(() => testAccount(FakeSyncServer())))!;
     await tester.pumpWidget(testApp(initial: '/today', account: account));
 
@@ -38,10 +39,13 @@ void main() {
     expect(find.text('New · waiting to sync'), findsOneWidget);
     expect(find.text('1 waiting'), findsOneWidget);
 
-    await tester.tap(find.text('Stretch'));
+    await tester.tap(find.byTooltip('Check in Stretch'));
     await settle(tester);
 
-    expect(find.text('Done · waiting to sync'), findsOneWidget);
+    expect(
+      find.textContaining(RegExp(r'^Completed at 10:22\sAM · waiting to sync$')),
+      findsOneWidget,
+    );
     expect(find.text('1 of 1 habits complete'), findsOneWidget);
     expect(find.text('Includes changes waiting to sync.'), findsOneWidget);
     expect(find.text('2 waiting'), findsOneWidget);
@@ -56,13 +60,13 @@ void main() {
     });
     await tester.pumpWidget(testApp(initial: '/today', account: account));
     await settle(tester);
-    await tester.tap(find.text('Stretch'));
+    await tester.tap(find.byTooltip('Check in Stretch'));
     await settle(tester);
 
     await syncNow(tester, account);
     await settle(tester);
 
-    expect(find.text('Done'), findsOneWidget);
+    expect(find.textContaining(RegExp(r'^Completed at 10:22\sAM$')), findsOneWidget);
     expect(find.text('Synced'), findsOneWidget);
     expect(find.text('Includes changes waiting to sync.'), findsNothing);
     expect(server.logs.values.single['value'], 1);
@@ -89,7 +93,7 @@ void main() {
     expect(find.text('Needs a look · tap to review'), findsOneWidget);
     expect(find.text('Needs a look'), findsOneWidget, reason: 'the chip');
 
-    await tester.tap(find.text('Stretch'));
+    await tester.tap(find.byTooltip('Needs a look · tap to review'));
     await settle(tester);
 
     expect(find.text('This check-in needs a look'), findsOneWidget);

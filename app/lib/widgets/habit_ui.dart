@@ -314,3 +314,66 @@ class FieldLabel extends StatelessWidget {
     );
   }
 }
+
+/// The design's segmented control (07 categories, 13 Today / History): a tinted track with the
+/// selected segment raised on the surface colour. Each segment is a 44 px+ target and announces
+/// its selection.
+class SegmentedTabs extends StatelessWidget {
+  final List<String> labels;
+  final int selected;
+  final ValueChanged<int> onSelected;
+
+  const SegmentedTabs({
+    super.key,
+    required this.labels,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = HabitTokens.of(context);
+    final text = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.all(HabitSpace.s4),
+      decoration: BoxDecoration(
+        color: tokens.border.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(HabitRadius.r16),
+      ),
+      child: Row(
+        children: [
+          for (var i = 0; i < labels.length; i++)
+            Expanded(
+              child: Semantics(
+                button: true,
+                selected: i == selected,
+                child: Material(
+                  color: i == selected ? tokens.surface : Colors.transparent,
+                  borderRadius: BorderRadius.circular(HabitRadius.r12),
+                  child: InkWell(
+                    onTap: () => onSelected(i),
+                    borderRadius: BorderRadius.circular(HabitRadius.r12),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: HabitSize.control),
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: HabitSpace.s4),
+                          child: Text(
+                            labels[i],
+                            textAlign: TextAlign.center,
+                            style: text.bodyMedium?.copyWith(
+                              color: i == selected ? tokens.primary : tokens.muted,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}

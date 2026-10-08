@@ -132,7 +132,7 @@ class HabitSchedule {
             ScheduleFrequency.fromWire(habit['frequency_type'], habit['frequency_config']),
             {
               'type': habit['type'],
-              'target': habit['target_value'],
+              'target_value': habit['target_value'],
               'unit': habit['unit'],
               'frequency_type': habit['frequency_type'],
               'frequency_config': habit['frequency_config'],

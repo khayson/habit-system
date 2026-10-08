@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../app/router.dart';
 import '../config/habit_tokens.dart';
 import '../core/exceptions/app_exception.dart';
+import '../core/time_zones.dart';
 import '../core/validation.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../providers/session_provider.dart';
@@ -15,8 +15,6 @@ import 'widgets/password_field.dart';
 
 /// Reads the device's IANA zone for registration. Replaceable in tests.
 typedef DeviceTimezone = Future<String> Function();
-
-Future<String> deviceTimezone() async => (await FlutterTimezone.getLocalTimezone()).identifier;
 
 /// Screen 03. A valid form registers (201) and goes to 04; an invalid one stays here with field
 /// errors and every entered value kept (design flow 01).

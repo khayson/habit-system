@@ -66,11 +66,16 @@ class FakeSyncServer implements SyncTransport {
     'day_start_offset_minutes': 0,
     'xp': 0,
     'version': userVersion,
-    if (sendCalendarHistory) 'calendar_history': [
-      {'effective_at': '2026-01-01T00:00:00Z', 'timezone': timezone, 'day_start_offset_minutes': 0},
-      if (pendingZone != null)
-        {'effective_at': pendingAt, 'timezone': pendingZone, 'day_start_offset_minutes': 0},
-    ],
+    if (sendCalendarHistory)
+      'calendar_history': [
+        {
+          'effective_at': '2026-01-01T00:00:00Z',
+          'timezone': timezone,
+          'day_start_offset_minutes': 0,
+        },
+        if (pendingZone != null)
+          {'effective_at': pendingAt, 'timezone': pendingZone, 'day_start_offset_minutes': 0},
+      ],
   };
 
   /// Another device changed the profile: the version this device holds is now stale.
@@ -224,8 +229,22 @@ class FakeSyncServer implements SyncTransport {
       'archived_at': null,
       'version': 1,
       'definition_version': 1,
-      'definitions': <Object>[],
-      'active_ranges': <Object>[],
+      'definitions': [
+        {
+          'version': 1,
+          'effective_date': p['start_local_date'],
+          'type': p['type'],
+          'target_value': p['target_value'],
+          'unit': p['unit'],
+          'category': p['category'],
+          'frequency_type': p['frequency_type'],
+          'frequency_config': p['frequency_config'],
+          'config': <String, Object>{},
+        },
+      ],
+      'active_ranges': [
+        {'starts_on': p['start_local_date'], 'ends_before': null},
+      ],
     };
     _journal('habit', id, 'upsert', 1, habits[id]!);
     return _accepted(m, id, 1);

@@ -111,6 +111,11 @@ class AccountCalendar {
   DateTime localTimeAt(DateTime instant) =>
       tz.TZDateTime.from(instant.toUtc(), tz.getLocation(zoneAt(instant.toUtc())));
 
+  /// Wall-clock time at [instant] in a named zone (e.g. when a pending change starts, read in
+  /// the zone in force before it).
+  static DateTime wallClockIn(String zone, DateTime instant) =>
+      tz.TZDateTime.from(instant.toUtc(), tz.getLocation(zone));
+
   /// Wall-clock time in the zone in force (for display, e.g. the greeting), corrected.
   DateTime localNow(DateTime deviceNow) {
     final at = now(deviceNow);

@@ -11,6 +11,7 @@ import '../sync/outbox_states.dart';
 import 'account_calendar.dart';
 import 'app_database.dart';
 import 'entity_codec.dart';
+import 'timezone_view.dart';
 
 /// What the UI reads: the pending overlay (derived from outbox rows) over the confirmed rows.
 /// Nothing here writes; confirmed rows only ever hold what the server said (invariant 9).
@@ -129,7 +130,17 @@ class LocalView {
     triggers = StreamController<void>(
       onListen: () {
         tables = db
-            .customSelect('SELECT 1', readsFrom: {db.habits, db.habitLogs, db.outbox, db.syncState})
+            .customSelect(
+              'SELECT 1',
+              readsFrom: {
+                db.habits,
+                db.habitLogs,
+                db.outbox,
+                db.syncState,
+                db.calendarEntries,
+                db.localSettings,
+              },
+            )
             .watch()
             .listen((_) => triggers.add(null), onError: triggers.addError);
         timer = Timer.periodic(tick, (_) => triggers.add(null));
@@ -196,6 +207,7 @@ class LocalView {
       localNow: calendar.localNow(deviceNow),
       userName: user is Map ? user['name'] as String? : null,
       items: items,
+      timezone: await DeviceSettings(db).status(deviceNow),
     );
   }
 
@@ -257,11 +269,15 @@ class TodayView {
   final String? userName;
   final List<TodayItem> items;
 
+  /// For the ask-on-change card (screen 04).
+  final TimezoneStatus? timezone;
+
   const TodayView({
     required this.date,
     required this.localNow,
     required this.userName,
     required this.items,
+    this.timezone,
   });
 
   int get completeCount => items.where((i) => i.complete).length;

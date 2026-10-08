@@ -162,7 +162,7 @@ class HabitDetail {
   /// The target governing [date] (a new definition never reinterprets older days).
   Object? targetOn(LocalDate date) {
     final wire = schedule.versionOn(date)?.wire;
-    return wire == null ? habit.payload['target_value'] : (wire['target'] ?? wire['target_value']);
+    return wire == null ? habit.payload['target_value'] : wire['target_value'];
   }
 
   /// Closed periods from the server's evaluations; today and open periods from local logs

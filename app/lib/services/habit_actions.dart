@@ -1,6 +1,7 @@
 import '../data/account_calendar.dart';
 import '../data/local_mutation_service.dart';
 import '../data/local_view.dart';
+import '../domain/calendar/local_date.dart';
 import '../domain/provisional_type_rules.dart';
 
 /// What the screens ask for, in domain terms. Pure Dart: every write goes through
@@ -49,6 +50,29 @@ class HabitActions {
     );
     onLocalWrite();
     return id;
+  }
+
+  /// Screen 13: a past check-in on [date] (date_mode backdate). Throws DayResolutionException
+  /// for a date the server would refuse, writing nothing.
+  Future<void> setValueOn({
+    required String habitId,
+    required LocalDate date,
+    required Object value,
+  }) async {
+    final calendar = await AccountCalendar.load(writer.db, deviceNow: _clock());
+    if (calendar == null) throw StateError('The account calendar is not known yet.');
+    if (date == calendar.today(_clock())) {
+      await writer.setLogValue(habitId: habitId, value: value);
+    } else {
+      await writer.setLogValue(habitId: habitId, value: value, logDate: date);
+    }
+    onLocalWrite();
+  }
+
+  /// Screen 04: profile.set_timezone (applies from the start of the next day, A26).
+  Future<void> setTimezone(String zone) async {
+    await writer.setTimezone(zone);
+    onLocalWrite();
   }
 
   Future<bool> discard(String mutationId) async {

@@ -12,12 +12,6 @@ import 'package:habit/data/app_database.dart';
 import 'package:habit/l10n/generated/app_localizations.dart';
 import 'package:habit/providers/account_context.dart';
 import 'package:habit/providers/session_provider.dart';
-import 'package:habit/screens/create_account_screen.dart';
-import 'package:habit/screens/create_habit_screen.dart';
-import 'package:habit/screens/sign_in_screen.dart';
-import 'package:habit/screens/sync_queue_screen.dart';
-import 'package:habit/screens/timezone_screen.dart';
-import 'package:habit/screens/today_screen.dart';
 import 'package:habit/services/auth_service.dart';
 import 'package:habit/sync/sync_engine.dart';
 import 'package:habit/sync/sync_transport.dart';
@@ -30,6 +24,7 @@ final testNow = DateTime.utc(2026, 5, 28, 17, 22);
 
 void loadTestZones() {
   TimeZones.load();
+  DeviceZone.read = () async => 'America/Los_Angeles';
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
 }
 
@@ -77,20 +72,10 @@ Widget testApp({
             needsSetup: session.needsSetup,
             location: state.matchedLocation,
           ),
-    routes: [
-      GoRoute(path: Routes.signIn, builder: (_, _) => const SignInScreen()),
-      GoRoute(
-        path: Routes.createAccount,
-        builder: (_, _) => CreateAccountScreen(timezone: () async => 'America/Los_Angeles'),
-      ),
-      GoRoute(path: Routes.setup, builder: (_, _) => const TimezoneScreen()),
-      GoRoute(
-        path: Routes.today,
-        builder: (_, _) => TodayScreen(clock: clock ?? () => testNow),
-      ),
-      GoRoute(path: Routes.newHabit, builder: (_, _) => const CreateHabitScreen()),
-      GoRoute(path: Routes.queue, builder: (_, _) => const SyncQueueScreen()),
-    ],
+    routes: appRoutes(
+      clock: clock ?? () => testNow,
+      registrationZone: () async => 'America/Los_Angeles',
+    ),
   );
   final materialApp = MaterialApp.router(
     theme: AppTheme.light,
@@ -128,6 +113,8 @@ Future<void> settle(WidgetTester tester, {int rounds = 8}) async {
 /// Unmounts the app (cancelling its watch-queries and timers) and closes the database.
 Future<void> tearDownApp(WidgetTester tester, AccountContext account) async {
   await tester.pumpWidget(const SizedBox());
+  // Let queries started by the last frames finish before the database closes.
+  await settle(tester, rounds: 3);
   account.dispose();
   await tester.runAsync(() => account.session.db.close());
 }

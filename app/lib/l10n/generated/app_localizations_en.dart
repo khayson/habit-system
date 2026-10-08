@@ -422,5 +422,409 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newHabitDaily => 'Every day';
 
   @override
+  String get navToday => 'Today';
+
+  @override
+  String get navHabits => 'Habits';
+
+  @override
+  String get navInsights => 'Insights';
+
+  @override
+  String get navProfile => 'Profile';
+
+  @override
+  String navLater(String tab) {
+    return '$tab, arrives in a later update';
+  }
+
+  @override
+  String get libraryTitle => 'Your habits';
+
+  @override
+  String librarySubtitle(int active, int archived) {
+    String _temp0 = intl.Intl.pluralLogic(
+      active,
+      locale: localeName,
+      other: '$active active routines',
+      one: '1 active routine',
+    );
+    return '$_temp0 · $archived archived';
+  }
+
+  @override
+  String get librarySearch => 'Search your habits';
+
+  @override
+  String get libraryAll => 'All';
+
+  @override
+  String get libraryCreate => 'Create a habit';
+
+  @override
+  String get libraryNoMatch => 'No habits match your search.';
+
+  @override
+  String libraryOpen(String name, String detail) {
+    return 'Open $name. $detail';
+  }
+
+  @override
+  String get typeYesNo => 'Yes / no';
+
+  @override
+  String get typeQuantity => 'Quantity';
+
+  @override
+  String get typeDuration => 'Duration';
+
+  @override
+  String get typeUnknown => 'Needs an app update';
+
+  @override
+  String get freqDaily => 'daily';
+
+  @override
+  String get freqWeekdays => 'weekdays';
+
+  @override
+  String freqWeekly(int count) {
+    return '$count× / week';
+  }
+
+  @override
+  String freqInterval(int days) {
+    return 'every $days days';
+  }
+
+  @override
+  String get freqUnknown => 'custom schedule';
+
+  @override
+  String minutesShort(String minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String rowDetail(String type, String target, String frequency) {
+    return '$type · $target · $frequency';
+  }
+
+  @override
+  String rowDetailNoTarget(String type, String frequency) {
+    return '$type · $frequency';
+  }
+
+  @override
+  String todayCompletedAt(String time) {
+    return 'Completed at $time';
+  }
+
+  @override
+  String todayCompletedAtWaiting(String time) {
+    return 'Completed at $time · waiting to sync';
+  }
+
+  @override
+  String todayWeek(int done, int target) {
+    return '$done of $target this week · counted on this device';
+  }
+
+  @override
+  String todayOpenDetail(String name) {
+    return 'Open $name';
+  }
+
+  @override
+  String askZoneTitle(String zone) {
+    return 'Your device is now in $zone. Use it for your days?';
+  }
+
+  @override
+  String get askZoneBody => 'The change applies from the start of your next day.';
+
+  @override
+  String get askZoneUse => 'Use';
+
+  @override
+  String get askZoneNotNow => 'Not now';
+
+  @override
+  String detailSubtitle(String schedule, String category) {
+    return '$schedule · $category';
+  }
+
+  @override
+  String get categoryMindfulness => 'Mindfulness';
+
+  @override
+  String statDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String statWeeks(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count weeks',
+      one: '1 week',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String statPeriods(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count times',
+      one: '1 time',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get statNotYet => 'Not yet';
+
+  @override
+  String get statCurrent => 'Current streak';
+
+  @override
+  String statCurrentAsOf(String date) {
+    return 'Current streak · as of $date';
+  }
+
+  @override
+  String get statBest => 'Best streak';
+
+  @override
+  String get statToday => 'Today';
+
+  @override
+  String get statTodayDone => 'Today · done';
+
+  @override
+  String get statDone => 'Done';
+
+  @override
+  String get heatmapMonth => 'Month';
+
+  @override
+  String get heatmapPrevious => 'Previous month';
+
+  @override
+  String get heatmapNext => 'Next month';
+
+  @override
+  String get legendComplete => 'Complete';
+
+  @override
+  String get legendProtected => 'Protected';
+
+  @override
+  String get legendMissed => 'Missed (–)';
+
+  @override
+  String get legendNotDue => 'Not due (outline)';
+
+  @override
+  String get statusComplete => 'Complete';
+
+  @override
+  String get statusProtected => 'Protected';
+
+  @override
+  String get statusMissed => 'Missed';
+
+  @override
+  String get statusNotDue => 'Not due';
+
+  @override
+  String get statusPending => 'Pending';
+
+  @override
+  String get statusUpcoming => 'Upcoming';
+
+  @override
+  String cellLabel(String date, String status) {
+    return '$date, $status';
+  }
+
+  @override
+  String cellLabelProvisional(String date, String status) {
+    return '$date, $status, saved on this device';
+  }
+
+  @override
+  String streakProtected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count protected days',
+      one: '1 protected day',
+    );
+    return 'Your streak includes $_temp0.';
+  }
+
+  @override
+  String get streakPause => 'A missed day is a pause, not a failure.';
+
+  @override
+  String get olderNeedsConnection => 'Older history needs a connection';
+
+  @override
+  String get olderLoading => 'Loading older history…';
+
+  @override
+  String get historyTitle => 'Your history';
+
+  @override
+  String get historySubtitle => 'Check-ins stay editable and traceable.';
+
+  @override
+  String get historyTabToday => 'Today';
+
+  @override
+  String get historyTabHistory => 'History';
+
+  @override
+  String historyRow(String date, String name) {
+    return '$date · $name';
+  }
+
+  @override
+  String historyRowDetail(String value, String time) {
+    return '$value · completed at $time';
+  }
+
+  @override
+  String historyRowWaiting(String value) {
+    return '$value · waiting to sync';
+  }
+
+  @override
+  String get historyEdit => 'Edit';
+
+  @override
+  String historyEditLabel(String date) {
+    return 'Edit the check-in for $date';
+  }
+
+  @override
+  String get historyEmpty => 'No check-ins in the last 30 days.';
+
+  @override
+  String get historyEmptyToday => 'No check-in yet today.';
+
+  @override
+  String get historyAddTitle => 'Add a past check-in';
+
+  @override
+  String get historyDateLabel => 'Local habit date';
+
+  @override
+  String get historyDateChoose => 'Choose calendar day';
+
+  @override
+  String get historyValueCheckIn => 'Check-in';
+
+  @override
+  String get historyValueDone => 'Done';
+
+  @override
+  String get historyValueNotDone => 'Not done';
+
+  @override
+  String get historyValueDuration => 'Duration';
+
+  @override
+  String get historyValueAmount => 'Amount';
+
+  @override
+  String get historyMinutesUnit => 'minutes';
+
+  @override
+  String historyTarget(String target) {
+    return 'Target that day: $target';
+  }
+
+  @override
+  String get historyNote =>
+      'Uses your habit timezone for that date. Streak and freeze changes are reconciled after syncing.';
+
+  @override
+  String get historySave => 'Save past check-in';
+
+  @override
+  String get historySaved => 'Saved on this device. It syncs when you are online.';
+
+  @override
+  String get historyRefuseFuture => 'That date has not started yet in your habit calendar.';
+
+  @override
+  String get historyRefuseOld => 'Past check-ins can go back 30 days.';
+
+  @override
+  String get historyRefuseInactive => 'This habit was not active on that date.';
+
+  @override
+  String get historyValueInvalidMinutes => 'Enter a whole number of minutes, like 10.';
+
+  @override
+  String get historyValueInvalidAmount => 'Enter an amount, like 1.5.';
+
+  @override
+  String get setupSubtitle => 'Get reminders that respect your routine.';
+
+  @override
+  String get setupEdit => 'Edit';
+
+  @override
+  String get setupEditZone => 'Edit habit timezone';
+
+  @override
+  String get setupFollow => 'Follow device timezone';
+
+  @override
+  String get setupFollowNote => 'Ask before changing your habit calendar';
+
+  @override
+  String setupQueued(String zone) {
+    return '$zone · waiting to sync';
+  }
+
+  @override
+  String setupPending(String zone, String time) {
+    return '$zone · changes at the start of your next day ($time)';
+  }
+
+  @override
+  String get setupQueuedProblem => 'This change needs a look. Open Sync to review it.';
+
+  @override
+  String get setupNextDay => 'A new timezone applies from the start of your next day.';
+
+  @override
+  String get zonePickerTitle => 'Choose a timezone';
+
+  @override
+  String get zoneSearch => 'Search timezones';
+
+  @override
+  String get zoneNoMatch => 'No timezones match.';
+
+  @override
+  String zoneRow(String city, String offset) {
+    return '$city, $offset';
+  }
+
+  @override
   String get newHabitCreate => 'Create habit';
 }

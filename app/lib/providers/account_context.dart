@@ -2,11 +2,13 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 
 import '../config/app_version.dart';
 import '../core/network/api_client.dart';
+import '../data/habit_detail_view.dart';
 import '../data/local_mutation_service.dart';
 import '../data/local_view.dart';
 import '../domain/provisional_type_rules.dart';
 import '../services/auth_service.dart';
 import '../services/habit_actions.dart';
+import '../services/heatmap_service.dart';
 import '../sync/http_sync_transport.dart';
 import '../sync/sync_engine.dart';
 import '../sync/sync_transport.dart';
@@ -23,8 +25,12 @@ class AccountContext {
   final SyncProvider sync;
   final StreamModel<QueueView> queue;
 
+  /// Older heatmap months (screen 12); null where there is no server (tests, offline-only).
+  final RemoteHeatmap? heatmap;
+
   AccountContext({
     required this.session,
+    this.heatmap,
     required SyncTransport transport,
     required Future<void> Function() refreshIfStale,
     Stream<bool>? connectivity,
@@ -58,6 +64,7 @@ class AccountContext {
   factory AccountContext.live(AccountSession session, ApiClient api, AuthService auth) =>
       AccountContext(
         session: session,
+        heatmap: HeatmapService(api),
         transport: HttpSyncTransport(api.dio, currentToken: api.currentToken),
         refreshIfStale: auth.refreshIfStale,
         connectivity: Connectivity().onConnectivityChanged.map(
