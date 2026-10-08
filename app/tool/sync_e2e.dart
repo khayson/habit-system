@@ -228,7 +228,10 @@ Future<void> _closePeriods() async {
   if (command == null || command.isEmpty) {
     throw StateError('E2E_CLOSE_CMD is required for the derived scenario');
   }
-  final result = await Process.run(command, const [], runInShell: true);
+  // One command line, run by the platform shell (a single executable name otherwise).
+  final result = Platform.isWindows
+      ? await Process.run('cmd', ['/c', command])
+      : await Process.run('/bin/sh', ['-c', command]);
   if (result.exitCode != 0) throw StateError('close-periods failed: ${result.stderr}');
   _say('  closer: ${'${result.stdout}'.trim()}');
 }
