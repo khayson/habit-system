@@ -83,8 +83,8 @@ return [
     [
         'name' => 'A10: a changed evaluation keeps its revision',
         'file' => 'app/Application/Periods/PeriodCloser.php',
-        'search' => "'revision' => (int) \$existing->revision + 1,",
-        'replace' => "'revision' => (int) \$existing->revision,",
+        'search' => '$revision = (int) $existing->revision + 1;',
+        'replace' => '$revision = (int) $existing->revision;',
         'tests' => 'tests/Feature/PeriodCloserTest.php',
     ],
     [
@@ -105,6 +105,13 @@ return [
         'file' => 'app/Domain/Period/PeriodEngine.php',
         'search' => '! $schedule->isActive($date) || ! $exists($date)',
         'replace' => '! $schedule->isActive($date)',
+    ],
+    [
+        'name' => 'H2: the closer reads each closed day with its own query',
+        'file' => 'app/Application/Periods/PeriodCloser.php',
+        'search' => '$stored[$evaluation->period->key] ?? null',
+        'replace' => "DB::table('period_evaluations')->where('habit_id', \$habit->id)->where('period_key', \$evaluation->period->key)->first()",
+        'tests' => 'tests/Feature/PeriodCloserTest.php',
     ],
     [
         // H1: the pre-3.2 rule (newest entry whose own day start is after its effective_at).

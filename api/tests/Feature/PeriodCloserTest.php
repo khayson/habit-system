@@ -1,5 +1,6 @@
 <?php
 
+use App\Application\Calendar\UserCalendar;
 use App\Application\Periods\PeriodCloser;
 use App\Jobs\ClosePeriodsJob;
 use Illuminate\Database\Events\QueryExecuted;
@@ -190,4 +191,41 @@ it('refuses mutations on derived entities with one answer for own, foreign and m
             ->and($ack['error'])->toBe(['code' => 'entity_read_only', 'message' => 'This is calculated by the server and cannot be changed.']);
     }
     expect(DB::table('habit_streak_cache')->where('habit_id', $this->habit)->value('current'))->not->toBe(99);
+});
+
+it('refreshes a habit in a fixed number of queries, however long its history (H2)', function () {
+    $closer = app(PeriodCloser::class);
+    $habitWith = function (int $days): string {
+        $id = (string) Str::uuid7();
+        $this->sync($this->maya['token'], [M::habitCreate($id)])->assertOk();
+        // Longer than the API's 30-day backdate allows: set the history up directly.
+        $start = (new DateTimeImmutable('2026-05-28'))->modify("-{$days} days")->format('Y-m-d');
+        DB::table('habits')->where('id', $id)->update(['start_local_date' => $start]);
+        DB::table('habit_definition_versions')->where('habit_id', $id)->update(['effective_date' => $start]);
+        DB::table('habit_active_ranges')->where('habit_id', $id)->update(['starts_on' => $start]);
+
+        return $id;
+    };
+    $count = 0;
+    DB::listen(function () use (&$count) {
+        $count++;
+    });
+    $queries = function (string $habitId) use ($closer, &$count): int {
+        $habit = DB::table('habits')->where('id', $habitId)->first();
+        $timeline = UserCalendar::timeline($this->maya['id']);
+        $count = 0;
+        DB::transaction(fn () => $closer->refreshHabit($this->maya['id'], $habit, $timeline));
+
+        return $count;
+    };
+    $short = $habitWith(30);
+    $long = $habitWith(1000);
+    $closer->closeUser($this->maya['id']); // first run stores every closed day
+    expect(DB::table('period_evaluations')->where('habit_id', $long)->count())->toBe(1000);
+
+    $shortCount = $queries($short);
+    $longCount = $queries($long);
+
+    expect($longCount)->toBe($shortCount)
+        ->and($shortCount)->toBeLessThanOrEqual(5);
 });

@@ -111,10 +111,12 @@ final readonly class PeriodCloser
         $periods = $first->isAfter($today) ? [] : $engine->periods($schedule, $first, $today, $timeline);
         $evaluations = $engine->evaluate($periods, $logs, $today);
 
+        // H2: one query for the habit's stored evaluations; unchanged days cost nothing more.
+        $stored = DB::table('period_evaluations')->where('habit_id', $habit->id)->get()->keyBy('period_key')->all();
         $changed = 0;
         foreach ($evaluations as $evaluation) {
             if ($evaluation->closed && $evaluation->period->kind === PeriodKind::Day) {
-                $changed += $this->storeEvaluation($userId, (string) $habit->id, $evaluation, $engine, $timeline);
+                $changed += $this->storeEvaluation($userId, (string) $habit->id, $evaluation, $engine, $timeline, $stored[$evaluation->period->key] ?? null);
             }
         }
 
@@ -123,21 +125,27 @@ final readonly class PeriodCloser
         return $changed + $this->storeProgress($userId, (string) $habit->id, $streak->current, $streak->longest, $streak->unit, $today->addDays(-1));
     }
 
-    private function storeEvaluation(string $userId, string $habitId, PeriodEvaluation $evaluation, PeriodEngine $engine, TimezoneTimeline $timeline): int
+    private function storeEvaluation(string $userId, string $habitId, PeriodEvaluation $evaluation, PeriodEngine $engine, TimezoneTimeline $timeline, ?stdClass $existing): int
     {
         $period = $evaluation->period;
-        [$startsAt, $endsAt] = $engine->bounds($period, $timeline);
-        $values = [
+        $result = [
             'definition_version' => $period->definition->version,
             'start_date' => $period->startDate->toString(),
             'end_date' => $period->endDate->toString(),
-            'timezone' => $timeline->entryAt($startsAt)->timezone,
-            'starts_at' => UtcTime::format($startsAt),
-            'ends_at' => UtcTime::format($endsAt),
             'completed' => $evaluation->status === PeriodStatus::Complete,
             'protected' => $evaluation->status === PeriodStatus::Protected,
         ];
-        $existing = DB::table('period_evaluations')->where('habit_id', $habitId)->where('period_key', $period->key)->first();
+        // A closed day's bounds never change after it began (A26), so the result alone decides.
+        if ($existing !== null && self::sameResult($existing, $result)) {
+            return 0;
+        }
+        [$startsAt, $endsAt] = $engine->bounds($period, $timeline);
+        $values = [
+            ...$result,
+            'timezone' => $timeline->entryAt($startsAt)->timezone,
+            'starts_at' => UtcTime::format($startsAt),
+            'ends_at' => UtcTime::format($endsAt),
+        ];
         $now = UtcTime::format($this->clock->now());
 
         if ($existing === null) {
@@ -146,18 +154,18 @@ final readonly class PeriodCloser
                 'id' => $id, 'user_id' => $userId, 'habit_id' => $habitId, 'period_key' => $period->key,
                 'revision' => 1, 'created_at' => $now, 'updated_at' => $now, ...$values,
             ]);
+            $revision = 1;
         } else {
-            if (self::sameEvaluation($existing, $values)) {
-                return 0;
-            }
             $id = (string) $existing->id;
+            $revision = (int) $existing->revision + 1;
             DB::table('period_evaluations')->where('id', $id)->update([
-                'revision' => (int) $existing->revision + 1, 'updated_at' => $now, ...$values,
+                'revision' => $revision, 'updated_at' => $now, ...$values,
             ]);
         }
 
-        $row = DB::table('period_evaluations')->where('id', $id)->first() ?? (object) [];
-        $this->journal->append($userId, 'period_evaluation', $id, 'upsert', (int) $row->revision, $this->presenter->periodEvaluation($row));
+        // The payload comes from the values just written; no read-back (H2).
+        $row = (object) ['id' => $id, 'habit_id' => $habitId, 'period_key' => $period->key, 'revision' => $revision, ...$values];
+        $this->journal->append($userId, 'period_evaluation', $id, 'upsert', $revision, $this->presenter->periodEvaluation($row));
 
         return 1;
     }
@@ -186,7 +194,7 @@ final readonly class PeriodCloser
             'habit_id' => $habitId, 'current' => $current, 'longest' => $longest, 'unit' => $unit,
             'computed_through' => $through, 'dirty_from' => null, 'version' => $version, 'updated_at' => $now,
         ]], ['habit_id']);
-        $row = DB::table('habit_streak_cache')->where('habit_id', $habitId)->first() ?? (object) [];
+        $row = (object) ['habit_id' => $habitId, 'current' => $current, 'longest' => $longest, 'unit' => $unit, 'computed_through' => $through];
         $this->journal->append($userId, 'habit_progress', $habitId, 'upsert', $version, $this->presenter->habitProgress($row));
 
         return 1;
@@ -226,16 +234,13 @@ final readonly class PeriodCloser
                 || (int) ($payload['day_start_offset_minutes'] ?? 0) !== $inForce->dayStartOffsetMinutes);
     }
 
-    /** @param array<string, mixed> $values */
-    private static function sameEvaluation(stdClass $existing, array $values): bool
+    /** @param array<string, mixed> $result */
+    private static function sameResult(stdClass $existing, array $result): bool
     {
-        return (int) $existing->definition_version === $values['definition_version']
-            && (string) $existing->start_date === $values['start_date']
-            && (string) $existing->end_date === $values['end_date']
-            && (string) $existing->timezone === $values['timezone']
-            && UtcTime::format(new \DateTimeImmutable((string) $existing->starts_at)) === $values['starts_at']
-            && UtcTime::format(new \DateTimeImmutable((string) $existing->ends_at)) === $values['ends_at']
-            && (bool) $existing->completed === $values['completed']
-            && (bool) $existing->protected === $values['protected'];
+        return (int) $existing->definition_version === $result['definition_version']
+            && (string) $existing->start_date === $result['start_date']
+            && (string) $existing->end_date === $result['end_date']
+            && (bool) $existing->completed === $result['completed']
+            && (bool) $existing->protected === $result['protected'];
     }
 }
