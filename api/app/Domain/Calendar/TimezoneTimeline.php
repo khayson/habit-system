@@ -18,6 +18,9 @@ use InvalidArgumentException;
  *   backwards, even inside a repeated hour or across a zone change (A26).
  * - Period boundaries: a date's start uses the latest entry effective at or before that start,
  *   so a zone change never rewrites days that began earlier.
+ * - Monotonic (A26, D1): construction fails if any change would move a date backwards. A change
+ *   effective at the next local day start in the old calendar never does; one at an arbitrary
+ *   instant can. A change may skip dates forwards (a zero-length date, A30).
  */
 final readonly class TimezoneTimeline
 {
@@ -32,6 +35,16 @@ final readonly class TimezoneTimeline
         for ($i = 1, $n = count($entries); $i < $n; $i++) {
             if ($entries[$i]->effectiveAt <= $entries[$i - 1]->effectiveAt) {
                 throw new InvalidArgumentException('Calendar entries must have strictly increasing effective_at.');
+            }
+            $before = self::dateUnder($entries[$i - 1], $entries[$i]->effectiveAt->modify('-1 second'));
+            $after = self::dateUnder($entries[$i], $entries[$i]->effectiveAt);
+            if ($after->isBefore($before)) {
+                throw new InvalidArgumentException(sprintf(
+                    'Calendar change at %s would move dates backwards (%s to %s).',
+                    $entries[$i]->effectiveAt->format('Y-m-d\TH:i:s\Z'),
+                    $before->toString(),
+                    $after->toString(),
+                ));
             }
         }
         $this->entries = $entries;
@@ -57,7 +70,21 @@ final readonly class TimezoneTimeline
     /** The business date an instant belongs to. */
     public function localDateAt(DateTimeInterface $instant): LocalDate
     {
-        $entry = $this->entryAt($instant);
+        return self::dateUnder($this->entryAt($instant), $instant);
+    }
+
+    /**
+     * A date with no instants: a calendar change (or the zone's own history, e.g. Pacific/Apia
+     * on 2011-12-30) skipped it. It is not part of the period grid (A30).
+     */
+    public function isZeroLength(LocalDate $date): bool
+    {
+        return $this->endOfLocalDay($date) <= $this->startOfLocalDay($date);
+    }
+
+    /** The date of an instant under one entry. */
+    private static function dateUnder(CalendarEntry $entry, DateTimeInterface $instant): LocalDate
+    {
         $wall = DateTimeImmutable::createFromInterface($instant)
             ->setTimezone($entry->zone)
             ->modify("-{$entry->dayStartOffsetMinutes} minutes");

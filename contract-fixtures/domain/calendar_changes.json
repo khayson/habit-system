@@ -1,0 +1,201 @@
+{
+  "kind": "calendar_changes",
+  "suites": [
+    "php",
+    "dart"
+  ],
+  "description": "D1 / A26: calendar changes. A change is effective at the next local day start in the OLD calendar; dates never go backwards; a pending (not yet effective) entry is replaced, never stacked; changing back to the effective calendar cancels the pending entry. TimezoneTimeline rejects any history whose dates would go backwards.",
+  "rules": {
+    "effective_at": "the start of the day after the current local date, in the calendar in force now",
+    "monotonic": "for each entry after the first: the date under the new entry at effective_at is not before the date under the previous entry just before effective_at",
+    "pending": "an entry whose effective_at is after now; at most one; a new change replaces it"
+  },
+  "monotonic": [
+    {
+      "name": "Auckland to Los Angeles at an arbitrary instant moves 11 March back to 10 March",
+      "suites": ["php", "dart"],
+      "calendar": [
+        {"effective_at": "2026-01-01T00:00:00Z", "timezone": "Pacific/Auckland", "day_start_offset_minutes": 0},
+        {"effective_at": "2026-03-10T12:00:00Z", "timezone": "America/Los_Angeles", "day_start_offset_minutes": 0}
+      ],
+      "valid": false
+    },
+    {
+      "name": "Auckland to Los Angeles at the A26 instant (next Auckland day start) keeps dates monotonic",
+      "suites": ["php", "dart"],
+      "calendar": [
+        {"effective_at": "2026-01-01T00:00:00Z", "timezone": "Pacific/Auckland", "day_start_offset_minutes": 0},
+        {"effective_at": "2026-03-10T11:00:00Z", "timezone": "America/Los_Angeles", "day_start_offset_minutes": 0}
+      ],
+      "valid": true,
+      "dates": [
+        ["2026-03-10T10:59:59Z", "2026-03-10"],
+        ["2026-03-10T11:00:00Z", "2026-03-10"],
+        ["2026-03-11T06:59:59Z", "2026-03-10"],
+        ["2026-03-11T07:00:00Z", "2026-03-11"]
+      ],
+      "zero_length": []
+    },
+    {
+      "name": "Pago_Pago to Auckland at the A26 instant skips 11 March (a zero-length date)",
+      "suites": ["php", "dart"],
+      "calendar": [
+        {"effective_at": "2026-01-01T00:00:00Z", "timezone": "Pacific/Pago_Pago", "day_start_offset_minutes": 0},
+        {"effective_at": "2026-03-11T11:00:00Z", "timezone": "Pacific/Auckland", "day_start_offset_minutes": 0}
+      ],
+      "valid": true,
+      "dates": [
+        ["2026-03-11T10:59:59Z", "2026-03-10"],
+        ["2026-03-11T11:00:00Z", "2026-03-12"]
+      ],
+      "zero_length": ["2026-03-11"]
+    },
+    {
+      "name": "a later day start (offset 0 to 120) at the A26 instant keeps dates monotonic",
+      "suites": ["php", "dart"],
+      "calendar": [
+        {"effective_at": "2026-01-01T00:00:00Z", "timezone": "America/Los_Angeles", "day_start_offset_minutes": 0},
+        {"effective_at": "2026-05-29T07:00:00Z", "timezone": "America/Los_Angeles", "day_start_offset_minutes": 120}
+      ],
+      "valid": true,
+      "dates": [
+        ["2026-05-29T06:59:59Z", "2026-05-28"],
+        ["2026-05-29T07:00:00Z", "2026-05-28"],
+        ["2026-05-29T08:59:59Z", "2026-05-28"],
+        ["2026-05-29T09:00:00Z", "2026-05-29"]
+      ],
+      "zero_length": []
+    }
+  ],
+  "append_change": [
+    {
+      "name": "a new zone takes effect at the next local day start in the old zone",
+      "suites": ["php"],
+      "calendar": [
+        {"effective_at": "2026-01-01T00:00:00Z", "timezone": "America/Los_Angeles", "day_start_offset_minutes": 0}
+      ],
+      "now": "2026-05-28T17:22:00Z",
+      "change": {"timezone": "Europe/Paris", "day_start_offset_minutes": 0},
+      "expect": {
+        "changed": true,
+        "calendar": [
+          {"effective_at": "2026-01-01T00:00:00Z", "timezone": "America/Los_Angeles", "day_start_offset_minutes": 0},
+          {"effective_at": "2026-05-29T07:00:00Z", "timezone": "Europe/Paris", "day_start_offset_minutes": 0}
+        ]
+      }
+    },
+    {
+      "name": "a second change before the first takes effect replaces it, never stacks",
+      "suites": ["php"],
+      "calendar": [
+        {"effective_at": "2026-01-01T00:00:00Z", "timezone": "America/Los_Angeles", "day_start_offset_minutes": 0},
+        {"effective_at": "2026-05-29T07:00:00Z", "timezone": "Europe/Paris", "day_start_offset_minutes": 0}
+      ],
+      "now": "2026-05-28T18:00:00Z",
+      "change": {"timezone": "Asia/Tokyo", "day_start_offset_minutes": 0},
+      "expect": {
+        "changed": true,
+        "calendar": [
+          {"effective_at": "2026-01-01T00:00:00Z", "timezone": "America/Los_Angeles", "day_start_offset_minutes": 0},
+          {"effective_at": "2026-05-29T07:00:00Z", "timezone": "Asia/Tokyo", "day_start_offset_minutes": 0}
+        ]
+      }
+    },
+    {
+      "name": "changing back to the zone in force cancels the pending change",
+      "suites": ["php"],
+      "calendar": [
+        {"effective_at": "2026-01-01T00:00:00Z", "timezone": "America/Los_Angeles", "day_start_offset_minutes": 0},
+        {"effective_at": "2026-05-29T07:00:00Z", "timezone": "Europe/Paris", "day_start_offset_minutes": 0}
+      ],
+      "now": "2026-05-28T18:00:00Z",
+      "change": {"timezone": "America/Los_Angeles", "day_start_offset_minutes": 0},
+      "expect": {
+        "changed": true,
+        "calendar": [
+          {"effective_at": "2026-01-01T00:00:00Z", "timezone": "America/Los_Angeles", "day_start_offset_minutes": 0}
+        ]
+      }
+    },
+    {
+      "name": "the zone already in force with nothing pending changes nothing",
+      "suites": ["php"],
+      "calendar": [
+        {"effective_at": "2026-01-01T00:00:00Z", "timezone": "America/Los_Angeles", "day_start_offset_minutes": 0}
+      ],
+      "now": "2026-05-28T17:22:00Z",
+      "change": {"timezone": "America/Los_Angeles", "day_start_offset_minutes": 0},
+      "expect": {
+        "changed": false,
+        "calendar": [
+          {"effective_at": "2026-01-01T00:00:00Z", "timezone": "America/Los_Angeles", "day_start_offset_minutes": 0}
+        ]
+      }
+    },
+    {
+      "name": "the same pending change again changes nothing",
+      "suites": ["php"],
+      "calendar": [
+        {"effective_at": "2026-01-01T00:00:00Z", "timezone": "America/Los_Angeles", "day_start_offset_minutes": 0},
+        {"effective_at": "2026-05-29T07:00:00Z", "timezone": "Europe/Paris", "day_start_offset_minutes": 0}
+      ],
+      "now": "2026-05-28T18:00:00Z",
+      "change": {"timezone": "Europe/Paris", "day_start_offset_minutes": 0},
+      "expect": {
+        "changed": false,
+        "calendar": [
+          {"effective_at": "2026-01-01T00:00:00Z", "timezone": "America/Los_Angeles", "day_start_offset_minutes": 0},
+          {"effective_at": "2026-05-29T07:00:00Z", "timezone": "Europe/Paris", "day_start_offset_minutes": 0}
+        ]
+      }
+    },
+    {
+      "name": "Auckland to Los Angeles lands on the A26 instant, never the request instant",
+      "suites": ["php"],
+      "calendar": [
+        {"effective_at": "2026-01-01T00:00:00Z", "timezone": "Pacific/Auckland", "day_start_offset_minutes": 0}
+      ],
+      "now": "2026-03-10T09:00:00Z",
+      "change": {"timezone": "America/Los_Angeles", "day_start_offset_minutes": 0},
+      "expect": {
+        "changed": true,
+        "calendar": [
+          {"effective_at": "2026-01-01T00:00:00Z", "timezone": "Pacific/Auckland", "day_start_offset_minutes": 0},
+          {"effective_at": "2026-03-10T11:00:00Z", "timezone": "America/Los_Angeles", "day_start_offset_minutes": 0}
+        ]
+      }
+    },
+    {
+      "name": "Pago_Pago to Auckland takes effect at the next Pago_Pago day start",
+      "suites": ["php"],
+      "calendar": [
+        {"effective_at": "2026-01-01T00:00:00Z", "timezone": "Pacific/Pago_Pago", "day_start_offset_minutes": 0}
+      ],
+      "now": "2026-03-10T20:00:00Z",
+      "change": {"timezone": "Pacific/Auckland", "day_start_offset_minutes": 0},
+      "expect": {
+        "changed": true,
+        "calendar": [
+          {"effective_at": "2026-01-01T00:00:00Z", "timezone": "Pacific/Pago_Pago", "day_start_offset_minutes": 0},
+          {"effective_at": "2026-03-11T11:00:00Z", "timezone": "Pacific/Auckland", "day_start_offset_minutes": 0}
+        ]
+      }
+    },
+    {
+      "name": "a day-start offset change uses the same rule (next day start in the old calendar)",
+      "suites": ["php"],
+      "calendar": [
+        {"effective_at": "2026-01-01T00:00:00Z", "timezone": "America/Los_Angeles", "day_start_offset_minutes": 0}
+      ],
+      "now": "2026-05-28T17:22:00Z",
+      "change": {"timezone": "America/Los_Angeles", "day_start_offset_minutes": 120},
+      "expect": {
+        "changed": true,
+        "calendar": [
+          {"effective_at": "2026-01-01T00:00:00Z", "timezone": "America/Los_Angeles", "day_start_offset_minutes": 0},
+          {"effective_at": "2026-05-29T07:00:00Z", "timezone": "America/Los_Angeles", "day_start_offset_minutes": 120}
+        ]
+      }
+    }
+  ]
+}

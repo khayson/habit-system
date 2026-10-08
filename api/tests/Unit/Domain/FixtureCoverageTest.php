@@ -14,6 +14,7 @@ const PHP_FIXTURE_CONSUMERS = [
     'xp' => 'RewardsTest',
     'freezes' => 'RewardsTest',
     'progress' => 'HabitTypesTest',
+    'calendar_changes' => 'CalendarChangesTest',
 ];
 
 it('consumes every domain fixture that names the php suite', function () {

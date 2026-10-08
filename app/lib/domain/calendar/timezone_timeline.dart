@@ -59,7 +59,9 @@ class CalendarEntry {
 ///   transition instant;
 /// - event date: the latest local date whose start is at or before the instant, under the entry
 ///   in force at that instant (the first entry governs earlier instants). Dates never go backwards;
-/// - a date's start uses the latest entry effective at or before that start (A26).
+/// - a date's start uses the latest entry effective at or before that start (A26);
+/// - monotonic (A26, D1): construction fails if a change would move a date backwards. A change
+///   may skip dates forwards (a zero-length date, A30).
 class TimezoneTimeline {
   final List<CalendarEntry> entries;
 
@@ -67,6 +69,14 @@ class TimezoneTimeline {
     for (var i = 1; i < entries.length; i++) {
       if (!entries[i].effectiveAt.isAfter(entries[i - 1].effectiveAt)) {
         throw ArgumentError('Calendar entries must have strictly increasing effective_at.');
+      }
+      final at = entries[i].effectiveAt;
+      final before = _dateUnder(entries[i - 1], at.subtract(const Duration(seconds: 1)));
+      final after = _dateUnder(entries[i], at);
+      if (after.isBefore(before)) {
+        throw ArgumentError(
+          'Calendar change at $at would move dates backwards ($before to $after).',
+        );
       }
     }
   }
@@ -80,8 +90,13 @@ class TimezoneTimeline {
     return found;
   }
 
-  LocalDate localDateAt(DateTime instant) {
-    final entry = entryAt(instant);
+  LocalDate localDateAt(DateTime instant) => _dateUnder(entryAt(instant), instant);
+
+  /// A date with no instants (skipped by a calendar change or the zone itself); not part of the
+  /// period grid (A30).
+  bool isZeroLength(LocalDate date) => !endOfLocalDay(date).isAfter(startOfLocalDay(date));
+
+  static LocalDate _dateUnder(CalendarEntry entry, DateTime instant) {
     final ms = instant.millisecondsSinceEpoch;
     final offsetMs = entry.location.timeZone(ms).offset.inMilliseconds;
     final date = LocalDate.ofWallClockMillis(
