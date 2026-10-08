@@ -2,7 +2,9 @@
 
 namespace App\Application\Presenters;
 
+use App\Application\Calendar\UserCalendar;
 use App\Application\Habits\HabitRepository;
+use App\Domain\Clock;
 use App\Domain\Habit\HabitTypeRegistry;
 use App\Domain\Reward\XpRules;
 use App\Support\UtcTime;
@@ -21,21 +23,37 @@ final readonly class EntityPresenter
         private HabitTypeRegistry $types,
         private HabitRepository $habits,
         private XpRules $xp,
+        private Clock $clock,
     ) {}
+
+    /** How many recent calendar entries the user entity carries (D1). */
+    public const int CALENDAR_HISTORY_LIMIT = 10;
 
     /** @return array<string, mixed> */
     public function user(stdClass $user): array
     {
         $level = $this->xp->level((int) $user->xp);
-        $calendar = DB::table('user_timezone_history')->where('user_id', $user->id)->orderByDesc('effective_at')->first();
+        $inForce = UserCalendar::timeline((string) $user->id)->entryAt($this->clock->now());
+        $recent = DB::table('user_timezone_history')->where('user_id', $user->id)
+            ->orderByDesc('effective_at')->limit(self::CALENDAR_HISTORY_LIMIT)
+            ->get(['timezone', 'day_start_offset_minutes', 'effective_at'])->reverse()->values();
 
         return [
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
-            'timezone' => $user->timezone,
+            // The calendar in force now: what clients before 3.2 read as "the" zone (invariant 13).
+            'timezone' => $inForce->timezone,
             'timezone_mode' => $user->timezone_mode,
-            'day_start_offset_minutes' => (int) ($calendar->day_start_offset_minutes ?? 0),
+            'day_start_offset_minutes' => $inForce->dayStartOffsetMinutes,
+            // ASSUMPTION(A26): the recent entries, oldest first, including one pending (not yet
+            // effective) change, so 3.2 clients can build a multi-entry timeline.
+            'calendar_history' => $recent->map(fn (stdClass $row) => [
+                'timezone' => $row->timezone,
+                'day_start_offset_minutes' => (int) $row->day_start_offset_minutes,
+                'effective_at' => UtcTime::format(WireTime::parse((string) $row->effective_at)),
+            ])->all(),
+            'version' => (int) ($user->version ?? 1),
             'auto_freeze' => (bool) $user->auto_freeze,
             // A9: level fields are server-computed; the client never evaluates the formula.
             'xp' => $level->xp,

@@ -51,6 +51,20 @@ final class M
     }
 
     /** @return array<string, mixed> */
+    public static function setTimezone(string $userId, string $timezone, int $baseVersion, string $occurredAt = '2026-05-28T17:20:00Z', ?string $mutationId = null): array
+    {
+        return [
+            'mutation_id' => $mutationId ?? (string) Str::uuid7(),
+            'entity' => 'user',
+            'entity_id' => $userId,
+            'operation' => 'profile.set_timezone',
+            'base_version' => $baseVersion,
+            'occurred_at' => $occurredAt,
+            'payload' => ['timezone' => $timezone],
+        ];
+    }
+
+    /** @return array<string, mixed> */
     public static function delete(string $logId, int $baseVersion, string $habitId, ?string $mutationId = null): array
     {
         return [
