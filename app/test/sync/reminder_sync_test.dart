@@ -91,7 +91,12 @@ void main() {
     final shown = (await phone.view.reminders()).single;
     expect(
       [shown.localTime, shown.daysOfWeek, shown.timezoneMode, shown.enabled],
-      ['08:00', [1, 2, 3, 4, 5], 'habit_zone', true],
+      [
+        '08:00',
+        [1, 2, 3, 4, 5],
+        'habit_zone',
+        true,
+      ],
     );
 
     final tombstone = materialize(entity['tombstone']) as Map<String, dynamic>;
@@ -123,7 +128,14 @@ void main() {
     expect(reminderRows.single.operation, 'reminder.create');
     expect(jsonDecode(reminderRows.single.payload)['local_time'], '09:15');
     final view = (await phone.view.reminders()).single;
-    expect([view.localTime, view.daysOfWeek, view.provisional], ['09:15', [2], true]);
+    expect(
+      [view.localTime, view.daysOfWeek, view.provisional],
+      [
+        '09:15',
+        [2],
+        true,
+      ],
+    );
     expect(reminderRows.single.state, OutboxState.pending);
     await phone.db.close();
   });

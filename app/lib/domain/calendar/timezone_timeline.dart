@@ -127,6 +127,16 @@ class TimezoneTimeline {
 
   DateTime endOfLocalDay(LocalDate date) => startOfLocalDay(date.addDays(1));
 
+  /// The instant a clock time on [date] means in [timezone] (Phase 3.2b reminders): the first
+  /// occurrence when the clock repeats, the transition when the time is skipped (spec 07: "gap
+  /// shifts forward; repeated fall-back clock time fires once").
+  static DateTime wallTimeInstant(LocalDate date, int minuteOfDay, String timezone) => _utc(
+    _firstInstantOfWallTime(
+      date.midnightMillis + minuteOfDay * Duration.millisecondsPerMinute,
+      CalendarEntry._location(timezone),
+    ),
+  );
+
   static DateTime _utc(int ms) => DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true);
 
   static int _startFor(LocalDate date, CalendarEntry entry) => _firstInstantOfWallTime(
