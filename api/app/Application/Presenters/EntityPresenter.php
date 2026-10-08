@@ -101,6 +101,43 @@ final readonly class EntityPresenter
         ];
     }
 
+    /**
+     * A32 habit_progress: the streak cache row. Its version is the cache's version.
+     *
+     * @return array<string, mixed>
+     */
+    public function habitProgress(stdClass $cache): array
+    {
+        return [
+            'habit_id' => $cache->habit_id,
+            'current' => (int) $cache->current,
+            'longest' => (int) $cache->longest,
+            'unit' => $cache->unit,
+            'computed_through' => $cache->computed_through,
+        ];
+    }
+
+    /**
+     * A32 period_evaluation: one closed period's result. Its version is the revision.
+     *
+     * @return array<string, mixed>
+     */
+    public function periodEvaluation(stdClass $row): array
+    {
+        return [
+            'id' => $row->id,
+            'habit_id' => $row->habit_id,
+            'period_key' => $row->period_key,
+            'start_date' => $row->start_date,
+            'end_date' => $row->end_date,
+            'completed' => (bool) $row->completed,
+            'protected' => (bool) $row->protected,
+            'definition_version' => (int) $row->definition_version,
+            'timezone' => $row->timezone,
+            'revision' => (int) $row->revision,
+        ];
+    }
+
     /** @return array<string, mixed> */
     public function log(stdClass $log, string $typeKey): array
     {

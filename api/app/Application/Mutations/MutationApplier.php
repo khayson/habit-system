@@ -37,6 +37,9 @@ final readonly class MutationApplier
 
     public const int MAX_MUTATION_DEPTH = 8;
 
+    /** A32: entities clients receive but never write. */
+    public const array READ_ONLY_ENTITIES = ['habit_progress', 'period_evaluation'];
+
     private const string OCCURRED_AT = '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?(Z|[+-]\d{2}:\d{2})$/';
 
     public function __construct(
@@ -145,6 +148,11 @@ final readonly class MutationApplier
     private function dispatch(MutationContext $ctx): array
     {
         $m = $ctx->mutation;
+        // A32: derived entities are server-computed. Refused before any lookup, so an own,
+        // foreign or missing id gets the same answer (invariant 2).
+        if (in_array($m->entity, self::READ_ONLY_ENTITIES, true)) {
+            throw ApiException::entityReadOnly();
+        }
 
         if ($m->entity === 'user' && $m->operation === 'profile.set_timezone') {
             return [$m->operation, self::accepted($m, $this->profileSetTimezone->handle($ctx))];

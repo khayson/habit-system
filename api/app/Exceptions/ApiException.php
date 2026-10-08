@@ -58,6 +58,12 @@ class ApiException extends RuntimeException
     }
 
     /** 410: sync cursor older than journal retention. */
+    /** 422: the mutation targets a server-derived entity (A32). Same for own, foreign, missing. */
+    public static function entityReadOnly(): self
+    {
+        return new self(422, 'entity_read_only', 'This is calculated by the server and cannot be changed.');
+    }
+
     public static function cursorExpired(): self
     {
         return new self(410, 'cursor_expired', 'A full refresh is needed. Your unsent changes are kept.');

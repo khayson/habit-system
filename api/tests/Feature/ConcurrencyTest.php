@@ -133,8 +133,11 @@ it('delivers every change exactly once under concurrent writers (A1)', function 
         ->and(DB::table('server_changes')->where('user_id', $user['id'])->count())->toBe($head)
         ->and(DB::table('habit_logs')->count())->toBe($expectedLogs)
         ->and(DB::table('mutation_receipts')->where('user_id', $user['id'])->count())->toBe($expectedLogs + count($habits))
-        // 1 user row + habits + one journal row per applied log.
-        ->and($head)->toBe(1 + count($habits) + $expectedLogs);
+        // 1 user row + habits + one journal row per applied log; the rest are A32 derived
+        // entities (habit_progress, period_evaluation) journaled with those logs.
+        ->and(DB::table('server_changes')->where('user_id', $user['id'])
+            ->whereNotIn('entity_type', ['habit_progress', 'period_evaluation'])->count())
+        ->toBe(1 + count($habits) + $expectedLogs);
 
     // Every mutation was accepted; each shared mutation applied once and was a duplicate once.
     $acks = array_merge(...array_map(fn (string $json) => json_decode($json, true, flags: JSON_THROW_ON_ERROR), $outputs));

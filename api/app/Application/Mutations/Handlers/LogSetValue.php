@@ -7,6 +7,7 @@ use App\Application\Habits\HabitRepository;
 use App\Application\Journal\ChangeJournal;
 use App\Application\Mutations\HandlerResult;
 use App\Application\Mutations\MutationContext;
+use App\Application\Periods\PeriodCloser;
 use App\Application\Presenters\EntityPresenter;
 use App\Domain\Calendar\DayResolver;
 use App\Domain\Clock;
@@ -35,6 +36,7 @@ final readonly class LogSetValue
         private HabitRepository $habits,
         private ChangeJournal $journal,
         private EntityPresenter $presenter,
+        private PeriodCloser $closer,
         private Clock $clock,
     ) {}
 
@@ -130,6 +132,9 @@ final readonly class LogSetValue
         LogWrites::markStreakDirty((string) $habit->id, $date->toString(), $now);
         $row = DB::table('habit_logs')->where('id', $id)->first();
         $this->journal->append($ctx->userId, 'habit_log', $id, 'upsert', $currentVersion + 1, $this->presenter->log($row ?? throw new LogicException('Log vanished inside its own transaction.'), (string) $habit->type));
+        // A10/A32: a late log re-evaluates its closed period, and any log can move the streak;
+        // the derived entities are journaled in this same transaction (invariant 6).
+        $this->closer->refreshHabit($ctx->userId, $habit, UserCalendar::timeline($ctx->userId));
 
         return new HandlerResult('habit_log', $id, $currentVersion + 1, $date->toString());
     }

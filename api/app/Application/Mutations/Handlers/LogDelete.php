@@ -2,9 +2,11 @@
 
 namespace App\Application\Mutations\Handlers;
 
+use App\Application\Calendar\UserCalendar;
 use App\Application\Journal\ChangeJournal;
 use App\Application\Mutations\HandlerResult;
 use App\Application\Mutations\MutationContext;
+use App\Application\Periods\PeriodCloser;
 use App\Application\Presenters\EntityPresenter;
 use App\Domain\Clock;
 use App\Exceptions\ApiException;
@@ -24,6 +26,7 @@ final readonly class LogDelete
     public function __construct(
         private ChangeJournal $journal,
         private EntityPresenter $presenter,
+        private PeriodCloser $closer,
         private Clock $clock,
     ) {}
 
@@ -63,6 +66,11 @@ final readonly class LogDelete
         LogWrites::markStreakDirty((string) $log->habit_id, (string) $log->log_date, $now);
         $row = DB::table('habit_logs')->where('id', $log->id)->first();
         $this->journal->append($ctx->userId, 'habit_log', (string) $log->id, 'delete', $version, $this->presenter->log($row ?? $log, $typeKey));
+        $habit = DB::table('habits')->where('id', $log->habit_id)->first();
+        if ($habit !== null) {
+            // A10/A32: same transaction as the delete (invariant 6).
+            $this->closer->refreshHabit($ctx->userId, $habit, UserCalendar::timeline($ctx->userId));
+        }
 
         return new HandlerResult('habit_log', (string) $log->id, $version, (string) $log->log_date);
     }

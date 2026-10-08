@@ -36,8 +36,9 @@ it('applies habit.create and log.set_value, then pulls the journal in seq order'
         ->assertJsonPath('data.has_more', false);
 
     $changes = $response->json('data.changes');
-    expect(array_column($changes, 'seq'))->toBe([1, 2, 3])
-        ->and(array_column($changes, 'entity'))->toBe(['user', 'habit', 'habit_log'])
+    // A32: the log's habit_progress is journaled in the same transaction, right after it.
+    expect(array_column($changes, 'seq'))->toBe([1, 2, 3, 4])
+        ->and(array_column($changes, 'entity'))->toBe(['user', 'habit', 'habit_log', 'habit_progress'])
         ->and($changes[1]['payload']['definitions'][0]['effective_date'])->toBe('2026-05-28')
         ->and($changes[1]['payload']['active_ranges'][0])->toBe(['starts_on' => '2026-05-28', 'ends_before' => null])
         ->and($changes[2]['payload']['value'])->toBe(1)
@@ -171,7 +172,10 @@ it('an interrupted pull replays safely: re-reading a cursor returns the same pag
         $cursor = $page->json('data.next_cursor');
     } while ($page->json('data.has_more'));
 
-    expect($seen)->toBe(range(1, 7));
+    $head = (int) DB::table('users')->where('id', $this->user['id'])->value('change_seq');
+    expect($seen)->toBe(range(1, $head))
+        ->and(DB::table('server_changes')->where('user_id', $this->user['id'])
+            ->whereNotIn('entity_type', ['habit_progress', 'period_evaluation'])->count())->toBe(7);
     expect($this->sync($this->user['token'], cursor: $cursor)->json('data.changes'))->toBe([]);
 });
 
