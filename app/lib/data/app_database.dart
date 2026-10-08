@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
+import 'package:sqlite3/common.dart' show SqliteException;
 
 import 'entity_codec.dart';
 
@@ -275,6 +277,33 @@ class DiscardedMutations extends Table {
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
+
+  static final _inTransaction = Object();
+
+  /// Phase 3.2b: two independent connections to one file (background sync in its own isolate
+  /// or process) can have SQLite refuse `BEGIN IMMEDIATE` at once with SQLITE_BUSY, without
+  /// waiting on busy_timeout (seen in the 2b spike). A refused BEGIN wrote nothing, so the
+  /// outermost transaction is simply run again; the error never reaches the caller. Nested
+  /// transactions (savepoints) are never retried on their own.
+  @override
+  Future<T> transaction<T>(Future<T> Function() action, {bool requireNew = false}) async {
+    if (Zone.current[_inTransaction] == true) {
+      return super.transaction(action, requireNew: requireNew);
+    }
+    for (var attempt = 1; ; attempt++) {
+      try {
+        return await runZoned(
+          () => super.transaction(action, requireNew: requireNew),
+          zoneValues: {_inTransaction: true},
+        );
+      } on SqliteException catch (e) {
+        if ((e.resultCode & 0xff) != 5 || attempt >= busyRetries) rethrow; // 5 = SQLITE_BUSY
+        await Future<void>.delayed(Duration(milliseconds: 5 * attempt));
+      }
+    }
+  }
+
+  static const busyRetries = 50;
 
   @override
   int get schemaVersion => 6;

@@ -17,6 +17,7 @@ import '../notifications/reminder_scheduling.dart';
 import '../services/auth_service.dart';
 import '../services/habit_actions.dart';
 import '../services/heatmap_service.dart';
+import '../sync/background_sync.dart';
 import '../sync/http_sync_transport.dart';
 import '../sync/sync_engine.dart';
 import '../sync/sync_transport.dart';
@@ -39,10 +40,14 @@ class AccountContext {
   /// The device's notification scheduler (Phase 3.2b); one per device, shared by accounts.
   final NotificationScheduler notifications;
 
+  /// Best-effort background sync registration (Phase 3.2b); null where there is none (tests).
+  final BackgroundSyncScheduler? background;
+
   AccountContext({
     required this.session,
     this.heatmap,
     NotificationScheduler? notifications,
+    this.background,
     required SyncTransport transport,
     required Future<void> Function() refreshIfStale,
     Stream<bool>? connectivity,
@@ -86,8 +91,15 @@ class AccountContext {
     clock: _clock,
   )..start();
 
-  /// Logout (not a token rejection): this account's notifications go; another account's stay.
-  Future<void> endForLogout() => reminders.cancelAll();
+  /// App start and sign-in: this account's background sync is registered (idempotent).
+  Future<void> registerBackground() async => background?.register(session.userId);
+
+  /// Logout (not a token rejection): this account's notifications and background task go;
+  /// another account's stay.
+  Future<void> endForLogout() async {
+    await reminders.cancelAll();
+    await background?.cancel(session.userId);
+  }
 
   late final HabitActions actions = HabitActions(
     writer,
@@ -101,6 +113,7 @@ class AccountContext {
       AccountContext(
         session: session,
         heatmap: HeatmapService(api),
+        background: const WorkmanagerSyncScheduler(),
         transport: HttpSyncTransport(api.dio, currentToken: api.currentToken),
         refreshIfStale: auth.refreshIfStale,
         connectivity: Connectivity().onConnectivityChanged.map(
