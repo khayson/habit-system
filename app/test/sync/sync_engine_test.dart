@@ -398,6 +398,21 @@ void main() {
       expect((state.consecutiveFailures, state.backoffUntil), (0, null));
     });
 
+    test('G2: offline sets a fixed 10 s floor that never doubles', () async {
+      await phone.sync();
+      for (var i = 0; i < 10; i++) {
+        server.failNextSync.add(const SyncTransportException(SyncFailure.network));
+        expect(await phone.sync(force: true), SyncOutcome.offline);
+      }
+      final state = await phone.state();
+      expect(state.backoffUntil! - phone.now.millisecondsSinceEpoch, 10000);
+      expect(state.consecutiveFailures, 0, reason: 'offline is not counted as a failure');
+
+      expect(await phone.sync(), SyncOutcome.backoff, reason: 'inside the floor');
+      phone.now = phone.now.add(const Duration(seconds: 10));
+      expect(await phone.sync(), SyncOutcome.completed, reason: 'retry allowed after 10 s');
+    });
+
     test('force (connectivity regained, Sync now) skips the failure backoff', () async {
       await phone.sync();
       server.failNextSync.add(const SyncTransportException(SyncFailure.network));

@@ -51,6 +51,9 @@ class SyncEngine {
   static const Duration surfaceAfter = Duration(hours: 24);
   static const int pauseAfterRejections = 3;
 
+  /// After an offline outcome, the next unforced run waits this long (G2).
+  static const Duration offlineFloor = Duration(seconds: 10);
+
   /// A sent row the server did not answer is retried; from this many attempts it backs off (F8).
   static const int blockAfterMissingAcks = 3;
 
@@ -116,7 +119,13 @@ class SyncEngine {
             statusCode: Value(null),
           ),
         );
-      case SyncOutcome.backoff || SyncOutcome.offline || SyncOutcome.failed || SyncOutcome.paused:
+      case SyncOutcome.offline:
+        // G2: no network is not a server problem. A short fixed floor stops trigger storms
+        // without making a weak-signal resume wait minutes; it never doubles.
+        await _updateState(
+          SyncStateCompanion(backoffUntil: Value(_now + offlineFloor.inMilliseconds)),
+        );
+      case SyncOutcome.backoff || SyncOutcome.failed || SyncOutcome.paused:
         await _recordFailure();
       case SyncOutcome.busy || SyncOutcome.rateLimited || SyncOutcome.loggedOut:
         break;
