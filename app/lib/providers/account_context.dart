@@ -17,6 +17,7 @@ import '../notifications/reminder_scheduling.dart';
 import '../services/auth_service.dart';
 import '../services/habit_actions.dart';
 import '../services/heatmap_service.dart';
+import '../background/workmanager_sync.dart';
 import '../sync/background_sync.dart';
 import '../sync/http_sync_transport.dart';
 import '../sync/sync_engine.dart';
