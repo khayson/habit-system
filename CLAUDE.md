@@ -97,7 +97,7 @@ Accuracy
 3. Anything not in the prompt is a deviation, including tooling and dependencies. List each one in the packet; an unlisted addition is a mistake.
 4. Fix a failing test at its cause. Never weaken, skip or loosen a test to get green. A bug fix starts with a test that fails on the old code.
 5. Generated files (*.g.dart, lib/l10n/generated/): only the project's generator writes them, never the formatter or your hands.
-6. Before every push: scripts\check.ps1 passes on the final tree, git status is clean, and git diff --stat origin/main..HEAD contains only what the commit messages say.
+6. Before every push: scripts\check.ps1 passes on the final tree, git status is clean, and git diff --stat origin/main..HEAD contains only what the commit messages say. A check whose exit code was not printed did not pass.
 7. A schema change ships with its migration, an upgrade test (outbox and data survive) and, on the server, a rollback test.
 8. Do not write into docs/reviews/.
 9. Pushed is not passed: CI takes about 3 minutes; check the run for the pushed SHA once after that (no polling loop) and quote its run id.
@@ -106,6 +106,6 @@ Cost
 10. Read ranges and grep hits, not whole files. Never re-read a file you already read this session. Never print generated files, fixtures or whole diffs (use --stat, then the hunk you need).
 11. While iterating, run only the affected test file or filter. Run the full check once per part and before a push, not after each commit.
 12. Screenshots only for the list in the prompt, one per state, no re-takes unless the screen changed.
-13. Cap tool output (| tail -40). Batch independent calls. No narration between calls and no plan restatements.
+13. Cap output without hiding the exit code: send a check's output to a file, print the exit code, then tail the file (flutter analyze > out.txt 2>&1; echo exit=$?; tail -40 out.txt, or the PowerShell equivalent). Never pipe a check straight into tail or head. Batch independent calls; no narration between calls and no plan restatements.
 14. No subagents for work you can do in one or two calls. Nothing beyond the phase.
 15. The packet is short (about 1.5 pages): shipped (one line per item), evidence (commands and results), deviations, open questions, risks. No per-commit recap.
