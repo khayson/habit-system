@@ -153,4 +153,22 @@ PHP,
         'replace' => "return new HandlerResult('reminder', \$m->entityId, (int) \$row->version + 1);",
         'tests' => 'tests/Feature/ReminderTest.php',
     ],
+    [
+        'name' => '3.2c: reminder.create without the foreign-id check',
+        'file' => 'app/Application/Mutations/Handlers/ReminderWrites.php',
+        'search' => <<<'PHP'
+            if ($existing->user_id !== $ctx->userId) {
+                throw new ApiException(404, 'not_found', 'Not found.');
+            }
+PHP,
+        'replace' => '',
+        'tests' => 'tests/Feature/ReminderTest.php',
+    ],
+    [
+        'name' => '3.2c: the bootstrap reads reminders without the owner scope',
+        'file' => 'app/Application/Sync/BootstrapService.php',
+        'search' => "\$rows = DB::table('reminders')->where('user_id', \$userId)",
+        'replace' => "\$rows = DB::table('reminders')",
+        'tests' => 'tests/Feature/ReminderTest.php',
+    ],
 ];
