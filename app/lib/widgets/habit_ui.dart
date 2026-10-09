@@ -179,7 +179,10 @@ class IconTile extends StatelessWidget {
   final IconData icon;
   final Tone tone;
 
-  const IconTile({super.key, required this.icon, this.tone = Tone.positive});
+  /// The icon's own colour where the design gives one (04's orange bell on the usual tile).
+  final Color? iconColor;
+
+  const IconTile({super.key, required this.icon, this.tone = Tone.positive, this.iconColor});
 
   @override
   Widget build(BuildContext context) {
@@ -191,7 +194,10 @@ class IconTile extends StatelessWidget {
         color: tone == Tone.neutral ? tokens.positiveBg : tone.background(tokens),
         borderRadius: BorderRadius.circular(HabitRadius.r12),
       ),
-      child: Icon(icon, color: tone.ink(tokens) == tokens.ink ? tokens.primary : tone.ink(tokens)),
+      child: Icon(
+        icon,
+        color: iconColor ?? (tone.ink(tokens) == tokens.ink ? tokens.primary : tone.ink(tokens)),
+      ),
     );
   }
 }

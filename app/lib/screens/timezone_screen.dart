@@ -244,8 +244,8 @@ class _ReminderBlockState extends State<_ReminderBlock> with WidgetsBindingObser
         SurfaceCard(
           child: Row(
             children: [
-              const ExcludeSemantics(
-                child: IconTile(icon: Icons.notifications_none, tone: Tone.warning),
+              ExcludeSemantics(
+                child: IconTile(icon: Icons.notifications_none, iconColor: tokens.warningInk),
               ),
               const SizedBox(width: HabitSpace.s16),
               Expanded(
