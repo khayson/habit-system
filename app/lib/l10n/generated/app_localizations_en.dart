@@ -949,6 +949,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reminderRow => 'Reminder';
 
   @override
+  String get reminderRemove => 'Remove reminder';
+
+  @override
+  String reminderEditAt(String time) {
+    return 'Edit the reminder at $time';
+  }
+
+  @override
+  String get reminderSummaryNone => 'None';
+
+  @override
+  String get reminderSummaryOff => 'Off';
+
+  @override
+  String get reminderSummaryEveryDay => 'every day';
+
+  @override
+  String get reminderSummaryWeekdays => 'weekdays';
+
+  @override
+  String reminderSummary(String time, String days) {
+    return '$time · $days';
+  }
+
+  @override
   String get reminderRowNone => 'Not set';
 
   @override

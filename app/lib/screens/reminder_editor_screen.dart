@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../app/router.dart';
 import '../config/habit_tokens.dart';
 import '../data/reminder_view.dart';
 import '../l10n/generated/app_localizations.dart';
@@ -41,16 +42,33 @@ class ReminderDraft {
   );
 }
 
-/// Screen 11: the reminder editor and the denial state. Reached from 08's Reminder row for a
-/// new habit (the draft is returned on save and written with the habit). Notifications stay
-/// on this device; the OS prompt appears only when the user taps Allow, and after a refusal the
-/// screen shows the device's truth with a way to Settings and when the next reminder is due.
+/// Screen 11: the reminder editor and the denial state. Two modes:
+/// - draft (08's Reminder row, a new habit): the draft is returned on save and written with
+///   the habit;
+/// - live (12's Reminder row, a habit that exists, 3.2c): adds, edits, turns off or removes the
+///   habit's reminder through LocalMutationService (offline; the replan watch picks it up).
+/// Notifications stay on this device; the OS prompt appears only when the user taps Allow, and
+/// after a refusal the screen shows the device's truth with a way to Settings and when the next
+/// reminder is due. Saving never prompts.
 class ReminderEditorScreen extends StatefulWidget {
   final ReminderDraft? draft;
   final String? habitName;
   final DateTime Function() clock;
 
-  const ReminderEditorScreen({super.key, this.draft, this.habitName, this.clock = DateTime.now});
+  /// Live mode: the habit whose reminders are edited, and optionally which one.
+  final String? habitId;
+  final String? reminderId;
+
+  const ReminderEditorScreen({
+    super.key,
+    this.draft,
+    this.habitName,
+    this.habitId,
+    this.reminderId,
+    this.clock = DateTime.now,
+  });
+
+  bool get live => habitId != null;
 
   @override
   State<ReminderEditorScreen> createState() => _ReminderEditorScreenState();
@@ -61,11 +79,44 @@ class _ReminderEditorScreenState extends State<ReminderEditorScreen> with Widget
   NotificationPermission? _permission;
   String? _error;
 
+  /// Live mode: the reminder being edited (null: adding the habit's first), the habit's other
+  /// live reminders, and the habit's name.
+  ReminderView? _editing;
+  List<ReminderView> _others = const [];
+  String? _liveName;
+  bool _loaded = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _refresh());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _refresh();
+      if (widget.live) _loadLive();
+    });
+  }
+
+  Future<void> _loadLive() async {
+    final account = context.read<AccountContext?>();
+    if (account == null) return;
+    final mine = [
+      for (final r in await account.view.reminders())
+        if (r.habitId == widget.habitId) r,
+    ];
+    final habits = await account.view.habits();
+    final habit = habits.where((h) => h.id == widget.habitId).firstOrNull;
+    final editing = mine.where((r) => r.id == widget.reminderId).firstOrNull ?? mine.firstOrNull;
+    if (!mounted) return;
+    setState(() {
+      _editing = editing;
+      _others = [
+        for (final r in mine)
+          if (r.id != editing?.id) r,
+      ];
+      _liveName = habit?.payload['name'] as String?;
+      if (editing != null) _draft = ReminderDraft.fromView(editing);
+      _loaded = true;
+    });
   }
 
   @override
@@ -103,13 +154,44 @@ class _ReminderEditorScreenState extends State<ReminderEditorScreen> with Widget
     }
   }
 
-  void _save() {
+  Future<void> _save() async {
     if (_draft.days.isEmpty) {
       setState(() => _error = AppLocalizations.of(context).reminderNeedsDay);
       return;
     }
-    context.pop(_draft);
+    if (!widget.live) {
+      context.pop(_draft);
+      return;
+    }
+    final actions = context.read<AccountContext?>()!.actions;
+    final editing = _editing;
+    if (editing == null) {
+      await actions.addReminder(
+        habitId: widget.habitId!,
+        localTime: _draft.localTime,
+        days: _draft.days,
+        enabled: _draft.enabled,
+      );
+    } else {
+      await actions.editReminder(
+        reminderId: editing.id,
+        localTime: _draft.localTime,
+        days: _draft.days,
+        enabled: _draft.enabled,
+        timezoneMode: editing.timezoneMode,
+        timezone: editing.timezone,
+      );
+    }
+    if (mounted) _leave();
   }
+
+  Future<void> _remove() async {
+    await context.read<AccountContext?>()!.actions.removeReminder(_editing!.id);
+    if (mounted) _leave();
+  }
+
+  /// Live mode: back to where 11 was opened from, or to the habit's 12 (a deep link).
+  void _leave() => context.canPop() ? context.pop() : context.go(Routes.habit(widget.habitId!));
 
   String _time(BuildContext context, int minuteOfDay) {
     final locale = Localizations.localeOf(context).toLanguageTag();
@@ -156,8 +238,9 @@ class _ReminderEditorScreenState extends State<ReminderEditorScreen> with Widget
     final allowed =
         permission == NotificationPermission.authorized ||
         permission == NotificationPermission.provisional;
-    final name = (widget.habitName ?? '').trim();
+    final name = (widget.live ? _liveName ?? '' : widget.habitName ?? '').trim();
     final next = _nextDue(locale);
+    if (widget.live && !_loaded) return const Scaffold(body: SafeArea(child: SizedBox()));
 
     return Scaffold(
       body: SafeArea(
@@ -167,7 +250,7 @@ class _ReminderEditorScreenState extends State<ReminderEditorScreen> with Widget
             ScreenHeader(
               title: l10n.reminderEditorTitle,
               subtitle: l10n.reminderEditorSubtitle(name.isEmpty ? l10n.reminderNewHabit : name),
-              onBack: () => context.pop(),
+              onBack: () => widget.live ? _leave() : context.pop(),
             ),
             if (permission == NotificationPermission.denied) ...[
               _Banner(
@@ -269,6 +352,17 @@ class _ReminderEditorScreenState extends State<ReminderEditorScreen> with Widget
                 ],
               ),
             ),
+            if (_others.isNotEmpty) ...[
+              const SizedBox(height: HabitSpace.s16),
+              _OtherReminders(
+                times: [
+                  for (final r in _others) _time(context, ReminderDraft.fromView(r).minuteOfDay),
+                ],
+                onOpen: (i) => context.pushReplacement(
+                  Routes.habitReminder(widget.habitId!, reminderId: _others[i].id),
+                ),
+              ),
+            ],
             const SizedBox(height: HabitSpace.s32),
             Text(l10n.reminderNote, style: text.bodyMedium?.copyWith(color: tokens.muted)),
             if (_error != null) ...[
@@ -280,8 +374,71 @@ class _ReminderEditorScreenState extends State<ReminderEditorScreen> with Widget
             ],
             const SizedBox(height: HabitSpace.s32),
             PrimaryButton(label: l10n.reminderSave, onPressed: _save),
+            if (widget.live && _editing != null) ...[
+              const SizedBox(height: HabitSpace.s16),
+              // ASSUMPTION(A3.2c-remove): the design shows no removal; a quiet text button, no
+              // dialog, neutral wording.
+              Center(
+                child: TextButton(
+                  onPressed: _remove,
+                  style: TextButton.styleFrom(
+                    foregroundColor: tokens.muted,
+                    minimumSize: const Size(HabitSize.minTarget, HabitSize.minTarget),
+                  ),
+                  child: Text(l10n.reminderRemove),
+                ),
+              ),
+            ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// The design's "Other reminders" card: the habit's other reminders as times, each opening in
+/// this screen.
+class _OtherReminders extends StatelessWidget {
+  final List<String> times;
+  final ValueChanged<int> onOpen;
+
+  const _OtherReminders({required this.times, required this.onOpen});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final text = Theme.of(context).textTheme;
+    return SurfaceCard(
+      child: Row(
+        children: [
+          const ExcludeSemantics(child: IconTile(icon: Icons.schedule)),
+          const SizedBox(width: HabitSpace.s16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l10n.reminderOther, style: text.titleMedium),
+                Wrap(
+                  children: [
+                    for (var i = 0; i < times.length; i++)
+                      TextButton(
+                        onPressed: () => onOpen(i),
+                        style: TextButton.styleFrom(
+                          minimumSize: const Size(HabitSize.minTarget, HabitSize.minTarget),
+                          padding: const EdgeInsets.symmetric(horizontal: HabitSpace.s8),
+                        ),
+                        child: Semantics(
+                          label: l10n.reminderEditAt(times[i]),
+                          excludeSemantics: true,
+                          child: Text(times[i]),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

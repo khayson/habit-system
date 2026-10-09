@@ -89,6 +89,49 @@ class HabitActions {
     onLocalWrite();
   }
 
+  /// Screen 11 live mode (3.2c): the first reminder of a habit that exists. It follows the
+  /// device's local time, like 08's.
+  Future<void> addReminder({
+    required String habitId,
+    required String localTime,
+    required List<int> days,
+    bool enabled = true,
+  }) async {
+    await writer.createReminder(
+      habitId: habitId,
+      localTime: localTime,
+      daysOfWeek: days,
+      timezoneMode: 'device_zone',
+      enabled: enabled,
+    );
+    onLocalWrite();
+  }
+
+  /// The whole desired state (absolute); unsent edits coalesce in the writer.
+  Future<void> editReminder({
+    required String reminderId,
+    required String localTime,
+    required List<int> days,
+    required bool enabled,
+    required String timezoneMode,
+    String? timezone,
+  }) async {
+    await writer.updateReminder(
+      reminderId: reminderId,
+      localTime: localTime,
+      daysOfWeek: days,
+      timezoneMode: timezoneMode,
+      timezone: timezone,
+      enabled: enabled,
+    );
+    onLocalWrite();
+  }
+
+  Future<void> removeReminder(String reminderId) async {
+    await writer.deleteReminder(reminderId);
+    onLocalWrite();
+  }
+
   /// Screen 04: profile.set_timezone (applies from the start of the next day, A26).
   Future<void> setTimezone(String zone) async {
     await writer.setTimezone(zone);

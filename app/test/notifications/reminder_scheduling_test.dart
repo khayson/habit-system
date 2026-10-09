@@ -77,6 +77,57 @@ void main() {
     await db.close();
   });
 
+  test('turning a reminder off, or removing it, cancels its notifications', () async {
+    for (final change in ['off', 'removed']) {
+      final os = FakeNotificationScheduler();
+      final (db, writer, scheduling) = await account('user-1', os);
+      await habitWithReminder(writer, '18:00');
+      await scheduling.replan();
+      expect(os.pending, hasLength(14));
+
+      final reminder = (await LocalView(db).reminders()).single;
+      if (change == 'off') {
+        await writer.updateReminder(
+          reminderId: reminder.id,
+          localTime: '18:00',
+          daysOfWeek: [1, 2, 3, 4, 5, 6, 7],
+          enabled: false,
+        );
+      } else {
+        await writer.deleteReminder(reminder.id);
+      }
+      await scheduling.replan();
+
+      expect(os.pending, isEmpty, reason: change);
+      expect(await db.select(db.scheduledNotifications).get(), isEmpty, reason: change);
+      await db.close();
+    }
+  });
+
+  test('a reminder added to an existing habit schedules at once', () async {
+    final os = FakeNotificationScheduler();
+    final (db, writer, scheduling) = await account('user-1', os);
+    final habit = await writer.createHabit(
+      name: 'Stretch',
+      type: 'binary',
+      target: 1,
+      category: 'health',
+      startLocalDate: LocalDate.parse('2026-05-01'),
+    );
+    await scheduling.replan();
+    expect(os.pending, isEmpty);
+
+    await writer.createReminder(
+      habitId: habit,
+      localTime: '18:00',
+      daysOfWeek: [1, 2, 3, 4, 5, 6, 7],
+    );
+    await scheduling.replan();
+
+    expect(os.pending, hasLength(14));
+    await db.close();
+  });
+
   test("completing today's habit-day cancels today's notification", () async {
     final os = FakeNotificationScheduler();
     final (db, writer, scheduling) = await account('user-1', os);

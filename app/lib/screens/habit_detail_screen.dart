@@ -147,6 +147,8 @@ class _DetailState extends State<_Detail> {
             ].join('\n'),
             style: text.bodyLarge?.copyWith(color: tokens.muted),
           ),
+          const SizedBox(height: HabitSpace.s32),
+          _ReminderRow(detail: detail),
         ],
       ),
     );
@@ -175,6 +177,70 @@ class _DetailState extends State<_Detail> {
         : detail.schedule.versions.first.effectiveDate;
     final d = DateTime.fromMillisecondsSinceEpoch(start.midnightMillis, isUtc: true);
     return LocalDate.ofWallClockMillis(DateTime.utc(d.year, d.month).millisecondsSinceEpoch);
+  }
+}
+
+/// 12's Reminder row (3.2c): None, the time and days, or Off; opens 11 in live mode.
+/// The design reaches 11 from 08, 09 and 20; this row is the way in until 09 exists (Phase 4).
+class _ReminderRow extends StatelessWidget {
+  final HabitDetail detail;
+
+  const _ReminderRow({required this.detail});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final text = Theme.of(context).textTheme;
+    final tokens = HabitTokens.of(context);
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    String time(String hhmm) {
+      final parts = hhmm.split(':');
+      return DateFormat.jm(locale)
+          .format(DateTime(2026, 1, 1, int.parse(parts[0]), int.parse(parts[1])));
+    }
+
+    String days(List<int> d) {
+      final sorted = [...d]..sort();
+      if (sorted.length == 7) return l10n.reminderSummaryEveryDay;
+      if (sorted.join(',') == '1,2,3,4,5') return l10n.reminderSummaryWeekdays;
+      // 5 January 2026 was a Monday.
+      return sorted.map((x) => DateFormat.E(locale).format(DateTime(2026, 1, 4 + x))).join(', ');
+    }
+
+    final on = detail.reminders.where((r) => r.enabled).toList();
+    final String summary;
+    if (detail.reminders.isEmpty) {
+      summary = l10n.reminderSummaryNone;
+    } else if (on.isEmpty) {
+      summary = l10n.reminderSummaryOff;
+    } else if (on.length == 1) {
+      summary = l10n.reminderSummary(time(on.single.localTime), days(on.single.daysOfWeek));
+    } else {
+      summary = on.map((r) => time(r.localTime)).join(' · ');
+    }
+    return SurfaceCard(
+      onTap: () => context.push(Routes.habitReminder(detail.habit.id)),
+      semanticsLabel: '${l10n.reminderRow}, $summary',
+      child: ExcludeSemantics(
+        child: Row(
+          children: [
+            const IconTile(icon: Icons.notifications_none),
+            const SizedBox(width: HabitSpace.s16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(l10n.reminderRow, style: text.titleMedium ?? text.bodyLarge),
+                  const SizedBox(height: HabitSpace.s4),
+                  Text(summary, style: text.bodySmall?.copyWith(color: tokens.muted)),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: tokens.primary),
+          ],
+        ),
+      ),
+    );
   }
 }
 

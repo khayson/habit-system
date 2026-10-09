@@ -10,6 +10,7 @@ import '../domain/provisional_type_rules.dart';
 import 'account_calendar.dart';
 import 'app_database.dart';
 import 'local_view.dart';
+import 'reminder_view.dart';
 
 /// One heatmap cell's status (screen 12). Every status has text and a symbol in the UI.
 enum DayStatus { complete, protected, missed, notDue, pending, upcoming }
@@ -42,6 +43,7 @@ extension HabitDetailQueries on LocalView {
                 db.habitProgress,
                 db.periodEvaluations,
                 db.calendarEntries,
+                db.reminders,
               },
             )
             .watch()
@@ -105,6 +107,10 @@ extension HabitDetailQueries on LocalView {
       progress: progress,
       evaluations: evaluations,
       logs: logs,
+      reminders: [
+        for (final r in await reminders())
+          if (r.habitId == habitId) r,
+      ],
     );
   }
 }
@@ -124,6 +130,9 @@ class HabitDetail {
   /// Local habit-days with a value (confirmed or pending), keyed by date.
   final Map<String, LogView> logs;
 
+  /// The habit's live reminders as this device intends them (12's Reminder row, 3.2c).
+  final List<ReminderView> reminders;
+
   HabitDetail({
     required this.habit,
     required this.rules,
@@ -134,6 +143,7 @@ class HabitDetail {
     required this.progress,
     required this.evaluations,
     required this.logs,
+    this.reminders = const [],
   });
 
   late final Map<String, ConfirmedEvaluation> _byKey = {

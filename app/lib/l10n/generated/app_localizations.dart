@@ -1706,6 +1706,48 @@ abstract class AppLocalizations {
   /// **'Reminder'**
   String get reminderRow;
 
+  /// No description provided for @reminderRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove reminder'**
+  String get reminderRemove;
+
+  /// No description provided for @reminderEditAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit the reminder at {time}'**
+  String reminderEditAt(String time);
+
+  /// No description provided for @reminderSummaryNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get reminderSummaryNone;
+
+  /// No description provided for @reminderSummaryOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get reminderSummaryOff;
+
+  /// No description provided for @reminderSummaryEveryDay.
+  ///
+  /// In en, this message translates to:
+  /// **'every day'**
+  String get reminderSummaryEveryDay;
+
+  /// No description provided for @reminderSummaryWeekdays.
+  ///
+  /// In en, this message translates to:
+  /// **'weekdays'**
+  String get reminderSummaryWeekdays;
+
+  /// No description provided for @reminderSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{time} · {days}'**
+  String reminderSummary(String time, String days);
+
   /// No description provided for @reminderRowNone.
   ///
   /// In en, this message translates to:
