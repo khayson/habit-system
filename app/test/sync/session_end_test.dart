@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:drift/drift.dart' show DatabaseConnection;
 import 'package:drift/native.dart';
@@ -9,6 +11,7 @@ import 'package:habit/providers/session_provider.dart';
 import 'package:habit/services/auth_service.dart';
 import 'package:habit/sync/http_sync_transport.dart';
 import 'package:habit/sync/sync_engine.dart';
+import 'package:path/path.dart' as p;
 
 import '../core/api_client_test.dart' show MemoryTokenStore;
 import '../services/auth_service_test.dart' show MemoryAccountStore;
@@ -30,6 +33,8 @@ void main() {
   late ApiClient api;
   late AppDatabase db;
   late int ended;
+  late Directory dir;
+  late File file;
   late FakeNotificationScheduler os;
   late _Background background;
 
@@ -38,7 +43,9 @@ void main() {
     tokens = MemoryTokenStore();
     final dio = Dio(BaseOptions(baseUrl: 'http://api.test/api/v1'))..httpClientAdapter = http;
     api = ApiClient.withDio(dio, tokens);
-    db = AppDatabase(DatabaseConnection(NativeDatabase.memory(), closeStreamsSynchronously: true));
+    dir = Directory.systemTemp.createTempSync('habit_session_');
+    file = File(p.join(dir.path, 'habit_account.sqlite'));
+    db = AppDatabase(DatabaseConnection(NativeDatabase(file), closeStreamsSynchronously: true));
     auth = AuthService(
       api,
       tokens,
@@ -87,6 +94,11 @@ void main() {
   tearDown(() async {
     session.account?.dispose();
     await db.close();
+    try {
+      dir.deleteSync(recursive: true);
+    } on FileSystemException {
+      // Windows may hold the file briefly; the OS cleans temp.
+    }
   });
 
   test('a 401 ends the session exactly once and leaves the database and outbox', () async {
@@ -116,6 +128,33 @@ void main() {
     await account.registerBackground();
     expect(os.pending, isNotEmpty);
     expect(background.registered, {'0190a000-0000-7000-8000-00000000000a'});
+  }
+
+  /// K3: a sign-out that cannot tidy up still signs out, and keeps the account's data.
+  for (final broken in ['notifications', 'background sync']) {
+    test('sign-out completes when cancelling $broken throws', () async {
+      await withReminder();
+      final outbox = (await db.select(db.outbox).get()).length;
+      if (broken == 'notifications') {
+        os.failCancel = true;
+      } else {
+        background.fail = true;
+      }
+      http.on('POST /auth/logout', const Reply(204, ''));
+
+      await session.signOut();
+
+      expect(session.isAuthenticated, isFalse);
+      expect(tokens.token, isNull, reason: 'the token is cleared');
+      final reopened = AppDatabase(NativeDatabase(file));
+      expect((await reopened.select(reopened.outbox).get()).length, outbox, reason: 'outbox kept');
+      expect(
+        (await reopened.select(reopened.outbox).get()).map((r) => r.operation),
+        containsAll(['habit.create', 'reminder.create']),
+        reason: 'the queued work is still there to sync after the next sign-in',
+      );
+      await reopened.close();
+    });
   }
 
   test("logout cancels this account's reminders and background sync", () async {
@@ -190,10 +229,14 @@ void main() {
 
 class _Background implements BackgroundSyncScheduler {
   final registered = <String>{};
+  bool fail = false;
 
   @override
   Future<void> register(String accountKey) async => registered.add(accountKey);
 
   @override
-  Future<void> cancel(String accountKey) async => registered.remove(accountKey);
+  Future<void> cancel(String accountKey) async {
+    if (fail) throw StateError('workmanager unavailable');
+    registered.remove(accountKey);
+  }
 }

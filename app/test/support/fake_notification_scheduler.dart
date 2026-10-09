@@ -12,6 +12,9 @@ class FakeNotificationScheduler implements NotificationScheduler {
   final Map<int, (PlannedNotification, String)> pending = {};
   final List<String> calls = [];
 
+  /// Makes every cancel throw, as a broken platform channel would.
+  bool failCancel = false;
+
   @override
   Future<NotificationPermission> permission({required bool asked}) async {
     if (osState == NotificationPermission.unknown && asked) return NotificationPermission.denied;
@@ -33,6 +36,7 @@ class FakeNotificationScheduler implements NotificationScheduler {
 
   @override
   Future<void> cancel(int id) async {
+    if (failCancel) throw StateError('notification plugin unavailable');
     calls.add('cancel $id');
     pending.remove(id);
   }

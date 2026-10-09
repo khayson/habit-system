@@ -57,9 +57,15 @@ class SessionProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Logout ends this account's reminders first (Phase 3.2b); the database stays on the device.
+  /// Logout ends this account's reminders and background sync first (Phase 3.2b), but a failure
+  /// there never keeps the user signed in (K3): the sign-out always happens. The database stays
+  /// on the device.
   Future<void> signOut() async {
-    await _account?.endForLogout();
+    try {
+      await _account?.endForLogout();
+    } on Object {
+      // Best effort: the session must end even if the platform could not cancel.
+    }
     await _auth.signOut();
   }
 
