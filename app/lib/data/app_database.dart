@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
+import 'package:drift/isolate.dart' show DriftRemoteException;
 import 'package:sqlite3/common.dart' show SqliteException;
 
 import 'entity_codec.dart';
@@ -280,28 +281,46 @@ class AppDatabase extends _$AppDatabase {
 
   static final _inTransaction = Object();
 
-  /// Phase 3.2b: two independent connections to one file (background sync in its own isolate
-  /// or process) can have SQLite refuse `BEGIN IMMEDIATE` at once with SQLITE_BUSY, without
-  /// waiting on busy_timeout (seen in the 2b spike). A refused BEGIN wrote nothing, so the
-  /// outermost transaction is simply run again; the error never reaches the caller. Nested
-  /// transactions (savepoints) are never retried on their own.
+  /// Phase 3.2b, K2: two independent connections to one file (background sync in its own
+  /// isolate or process) can have SQLite refuse `BEGIN IMMEDIATE` at once with SQLITE_BUSY,
+  /// without waiting on busy_timeout (seen in the 2b spike). drift sends BEGIN before it calls
+  /// the body, so a refusal arrives before [action] starts: only then is the outermost
+  /// transaction run again; nothing was written. A BUSY from inside the body surfaces, and the
+  /// body never runs twice. Nested transactions (savepoints) are never retried on their own.
+  /// The error is recognised however it crosses the drift isolate (see [isBusy]).
   @override
   Future<T> transaction<T>(Future<T> Function() action, {bool requireNew = false}) async {
     if (Zone.current[_inTransaction] == true) {
       return super.transaction(action, requireNew: requireNew);
     }
     for (var attempt = 1; ; attempt++) {
+      var started = false;
       try {
         return await runZoned(
-          () => super.transaction(action, requireNew: requireNew),
+          () => super.transaction(() {
+            started = true;
+            return action();
+          }, requireNew: requireNew),
           zoneValues: {_inTransaction: true},
         );
-      } on SqliteException catch (e) {
-        if ((e.resultCode & 0xff) != 5 || attempt >= busyRetries) rethrow; // 5 = SQLITE_BUSY
+      } on Object catch (e) {
+        if (started || !isBusy(e) || attempt >= busyRetries) rethrow;
         await Future<void>.delayed(Duration(milliseconds: 5 * attempt));
       }
     }
   }
+
+  /// SQLITE_BUSY as each opener delivers it: an in-process SqliteException; through a drift
+  /// isolate, a DriftRemoteException carrying that SqliteException when the ports can send
+  /// objects (same Flutter engine), or its text when drift serializes (another engine, such as
+  /// workmanager's). Pinned by test/data/busy_retry_test.dart.
+  static bool isBusy(Object error) => switch (error) {
+    SqliteException(:final resultCode) => (resultCode & 0xff) == 5,
+    DriftRemoteException(remoteCause: final SqliteException cause) =>
+      (cause.resultCode & 0xff) == 5,
+    DriftRemoteException(:final remoteCause) => '$remoteCause'.contains('database is locked'),
+    _ => false,
+  };
 
   static const busyRetries = 50;
 

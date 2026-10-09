@@ -67,3 +67,14 @@ The order is now fixed and commented in code.
 - A separate OS process (not just a separate isolate) does not see the name server; it gets a
   second connection protected only by layer 2, and its writes do not refresh UI streams until the
   UI re-queries (e.g. on resume). Widgets avoid this entirely: they read a JSON snapshot (A23).
+
+## How errors cross the isolate (Phase 3.2c, K2)
+
+An error raised in the drift isolate reaches the caller as a `DriftRemoteException`, never as
+the raw `SqliteException`. What it carries depends on the transport: when the ports can send
+objects (the same Flutter engine) its `remoteCause` is the `SqliteException` itself; when drift
+serializes (isolates of different engines, such as workmanager's background engine) the cause is
+the error's text. `AppDatabase.isBusy` recognises SQLITE_BUSY in all three forms (in-process,
+remote object, remote text), and `AppDatabase.transaction` reruns only a transaction whose
+`BEGIN` was refused (drift sends `BEGIN` before it calls the body). Both transports are pinned by
+`test/data/busy_retry_test.dart`, so a drift upgrade that changes either fails a test.
