@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Application\Accounts\ProfileRules;
 use App\Domain\Calendar\CalendarEntry;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
@@ -25,7 +26,7 @@ final class RegisterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:80'],
+            'name' => ProfileRules::name(),
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')],
             'password' => ['required', 'string', 'max:255', self::passwordRule()],
             'timezone' => ['required', 'string', 'max:64', function (string $attribute, mixed $value, Closure $fail) {

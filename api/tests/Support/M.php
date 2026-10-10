@@ -88,6 +88,26 @@ final class M
         return $m;
     }
 
+    /**
+     * Phase 3b: a profile.update from contract-fixtures/sync/profile_update_mutations.json, for
+     * $userId, with optional payload overrides.
+     *
+     * @param  'accepted'|'version_conflict'|'validation_failed'  $case
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    public static function profileUpdate(string $userId, string $case = 'accepted', ?int $baseVersion = null, array $payload = [], ?string $mutationId = null): array
+    {
+        $fixture = json_decode((string) file_get_contents(contractFixturePath('sync/profile_update_mutations.json')), true, flags: JSON_THROW_ON_ERROR);
+        $m = $fixture[$case]['mutation'];
+        $m['mutation_id'] = $mutationId ?? (string) Str::uuid7();
+        $m['entity_id'] = $userId;
+        $m['base_version'] = $baseVersion ?? $m['base_version'];
+        $m['payload'] = [...$m['payload'], ...$payload];
+
+        return $m;
+    }
+
     /** @return array<string, mixed> */
     public static function delete(string $logId, int $baseVersion, string $habitId, ?string $mutationId = null): array
     {

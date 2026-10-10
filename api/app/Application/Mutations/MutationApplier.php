@@ -8,6 +8,7 @@ use App\Application\Mutations\Handlers\HabitCreate;
 use App\Application\Mutations\Handlers\LogDelete;
 use App\Application\Mutations\Handlers\LogSetValue;
 use App\Application\Mutations\Handlers\ProfileSetTimezone;
+use App\Application\Mutations\Handlers\ProfileUpdate;
 use App\Application\Mutations\Handlers\ReminderWrites;
 use App\Domain\Calendar\LocalDate;
 use App\Domain\Clock;
@@ -51,6 +52,7 @@ final readonly class MutationApplier
         private LogSetValue $logSetValue,
         private LogDelete $logDelete,
         private ProfileSetTimezone $profileSetTimezone,
+        private ProfileUpdate $profileUpdate,
         private ReminderWrites $reminders,
         private Clock $clock,
     ) {}
@@ -158,6 +160,9 @@ final readonly class MutationApplier
 
         if ($m->entity === 'user' && $m->operation === 'profile.set_timezone') {
             return [$m->operation, self::accepted($m, $this->profileSetTimezone->handle($ctx))];
+        }
+        if ($m->entity === 'user' && $m->operation === 'profile.update') {
+            return [$m->operation, self::accepted($m, $this->profileUpdate->handle($ctx))];
         }
         if ($m->entity === 'habit' && $m->operation === 'habit.create') {
             return [$m->operation, self::accepted($m, $this->habitCreate->handle($ctx))];
