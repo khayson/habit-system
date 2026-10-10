@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Tests\Support\M;
 
+require_once __DIR__.'/../Support/writers.php';
+
 /*
  * A1 gate on real PostgreSQL: N writer processes commit concurrently for one user while a puller
  * walks the journal with small pages. Because seq is allocated under the user-row lock, commit
@@ -24,36 +26,6 @@ const NOW = '2026-05-28T17:22:00Z';
 
 beforeEach(fn () => Artisan::call('migrate:fresh', ['--force' => true]));
 afterEach(fn () => Artisan::call('migrate:fresh', ['--force' => true]));
-
-/** @return array{0: resource, 1: array<int, resource>} */
-function startWriter(string $userId, int $index, array $mutations): array
-{
-    $file = tempnam(sys_get_temp_dir(), 'habit-writer-');
-    file_put_contents($file, json_encode($mutations, JSON_THROW_ON_ERROR));
-    $env = array_merge(getenv(), [
-        'APP_ENV' => 'testing',
-        'DB_CONNECTION' => 'pgsql',
-        'DB_HOST' => (string) config('database.connections.pgsql.host'),
-        'DB_PORT' => (string) config('database.connections.pgsql.port'),
-        'DB_DATABASE' => (string) config('database.connections.pgsql.database'),
-        'DB_USERNAME' => (string) config('database.connections.pgsql.username'),
-        'DB_PASSWORD' => (string) config('database.connections.pgsql.password'),
-    ]);
-    $process = proc_open(
-        [PHP_BINARY, base_path('tests/Concurrency/writer.php'), $userId, sprintf('01970000-0000-7000-8000-%012d', $index), $file, NOW],
-        [1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
-        $pipes,
-        base_path(),
-        $env,
-    );
-    if (! is_resource($process)) {
-        throw new RuntimeException('Could not start writer');
-    }
-    stream_set_blocking($pipes[1], false);
-    stream_set_blocking($pipes[2], false);
-
-    return [$process, $pipes];
-}
 
 it('delivers every change exactly once under concurrent writers (A1)', function () {
     $this->freezeClock(NOW);
@@ -73,7 +45,7 @@ it('delivers every change exactly once under concurrent writers (A1)', function 
         $own = array_map(fn (int $d) => M::setValue($habits[$w], 1, 0, sprintf('2026-05-%02dT18:00:00Z', $d)), range(1, LOGS_PER_WRITER));
         // Writers 0 and 1 also both send the same shared mutations (same mutation ids).
         $mutations = $w < 2 ? [...array_slice($own, 0, 10), ...$shared, ...array_slice($own, 10)] : $own;
-        $writers[$w] = startWriter($user['id'], $w, $mutations);
+        $writers[$w] = startWriter($user['id'], $w, $mutations, NOW);
     }
 
     // Pull with small pages while the writers commit.
