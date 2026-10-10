@@ -132,6 +132,16 @@ class HabitActions {
     onLocalWrite();
   }
 
+  /// Screen 20: profile.update (A20).
+  Future<void> updateProfile({
+    required String name,
+    required String? city,
+    required String? countryCode,
+  }) async {
+    await writer.updateProfile(name: name, city: city, countryCode: countryCode);
+    onLocalWrite();
+  }
+
   /// Screen 04: profile.set_timezone (applies from the start of the next day, A26).
   Future<void> setTimezone(String zone) async {
     await writer.setTimezone(zone);

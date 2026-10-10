@@ -13,6 +13,7 @@ import 'package:habit/data/app_database.dart';
 import 'package:habit/l10n/generated/app_localizations.dart';
 import 'package:habit/providers/account_context.dart';
 import 'package:habit/providers/session_provider.dart';
+import 'package:habit/services/photo_picker.dart';
 import 'package:habit/services/auth_service.dart';
 import 'package:habit/sync/sync_engine.dart';
 import 'package:habit/sync/sync_transport.dart';
@@ -67,6 +68,7 @@ Widget testApp({
   SessionProvider? session,
   DateTime Function()? clock,
   UrlOpener? urlOpener,
+  PhotoPicker? photoPicker,
 }) {
   final router = GoRouter(
     initialLocation: initial,
@@ -82,6 +84,7 @@ Widget testApp({
       clock: clock ?? () => testNow,
       registrationZone: () async => 'America/Los_Angeles',
       urlOpener: urlOpener ?? FakeUrlOpener(),
+      photoPicker: photoPicker,
     ),
   );
   final materialApp = MaterialApp.router(

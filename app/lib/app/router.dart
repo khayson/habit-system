@@ -5,11 +5,13 @@ import '../core/time_zones.dart';
 import '../core/url_launcher_opener.dart';
 import '../core/url_opener.dart';
 import '../providers/session_provider.dart';
+import '../services/photo_picker.dart';
 import '../screens/app_shell.dart';
 import '../screens/create_account_screen.dart';
 import '../screens/create_habit_screen.dart';
 import '../screens/habit_detail_screen.dart';
 import '../screens/habit_library_screen.dart';
+import '../screens/profile_screen.dart';
 import '../screens/history_screen.dart';
 import '../screens/reminder_editor_screen.dart';
 import '../screens/server_status_screen.dart';
@@ -24,6 +26,7 @@ abstract final class Routes {
   static const setup = '/setup';
   static const today = '/today';
   static const habits = '/habits';
+  static const profile = '/profile';
   static const newHabit = '/habits/new';
   static String habit(String id) => '/habits/$id';
 
@@ -76,11 +79,12 @@ GoRouter buildRouter(SessionProvider session) => GoRouter(
 
 /// Every screen's route. Today, Habits and habit detail share the bottom navigation (design
 /// 05, 07, 12); history (13) and the editor (08) are full screens without it, as in the design.
-/// [clock], [registrationZone] and [urlOpener] are seams for tests.
+/// [clock], [registrationZone], [urlOpener] and [photoPicker] are seams for tests.
 List<RouteBase> appRoutes({
   DateTime Function() clock = DateTime.now,
   DeviceTimezone? registrationZone,
   UrlOpener? urlOpener,
+  PhotoPicker? photoPicker,
 }) => [
   GoRoute(path: Routes.signIn, builder: (context, state) => const SignInScreen()),
   GoRoute(
@@ -121,6 +125,14 @@ List<RouteBase> appRoutes({
         builder: (context, state) => TodayScreen(clock: clock),
       ),
       GoRoute(path: Routes.habits, builder: (context, state) => const HabitLibraryScreen()),
+      GoRoute(
+        path: Routes.profile,
+        builder: (context, state) => ProfileScreen(
+          picker: photoPicker ?? const DevicePhotoPicker(),
+          urlOpener: urlOpener ?? const UrlLauncherOpener(),
+          clock: clock,
+        ),
+      ),
       GoRoute(
         path: '/habits/:id',
         builder: (context, state) =>

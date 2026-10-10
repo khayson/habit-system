@@ -6,8 +6,8 @@ import '../config/habit_tokens.dart';
 import '../l10n/generated/app_localizations.dart';
 
 /// The design file's bottom navigation (screens 05, 07, 12): Today, Habits, Insights, Profile.
-/// Insights and Profile are drawn as in the design and arrive with their phases; until then
-/// they are disabled and say so to assistive technology.
+/// Insights is drawn as in the design and arrives with its phase; until then it is disabled
+/// and says so to assistive technology. Profile (20) opens with Phase 3b.
 class AppShell extends StatelessWidget {
   final String location;
   final Widget child;
@@ -19,6 +19,7 @@ class AppShell extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final tokens = HabitTokens.of(context);
     final habits = location.startsWith(Routes.habits);
+    final profile = location.startsWith(Routes.profile);
     return Scaffold(
       body: child,
       bottomNavigationBar: DecoratedBox(
@@ -35,7 +36,7 @@ class AppShell extends StatelessWidget {
                 _Tab(
                   icon: Icons.home_outlined,
                   label: l10n.navToday,
-                  selected: !habits,
+                  selected: !habits && !profile,
                   onTap: () => context.go(Routes.today),
                 ),
                 _Tab(
@@ -49,7 +50,12 @@ class AppShell extends StatelessWidget {
                   label: l10n.navInsights,
                   selected: false,
                 ),
-                _Tab(icon: Icons.person_outline, label: l10n.navProfile, selected: false),
+                _Tab(
+                  icon: Icons.person_outline,
+                  label: l10n.navProfile,
+                  selected: profile,
+                  onTap: () => context.go(Routes.profile),
+                ),
               ],
             ),
           ),

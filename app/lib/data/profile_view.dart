@@ -6,6 +6,8 @@ import 'package:path/path.dart' as p;
 import '../sync/outbox_states.dart';
 import 'app_database.dart';
 import 'entity_codec.dart';
+import 'local_view.dart';
+import 'reminder_view.dart';
 
 /// Screen 20's data (A20): the confirmed user entity (sync_state.user_payload) with an unsent
 /// profile.update laid over it (provisional, never written into the confirmed row, invariant
@@ -79,6 +81,40 @@ class ProfileView {
   }
 
   static String? _string(Object? v) => v is String && v.isNotEmpty ? v : null;
+
+  /// Screen 20's Reminders row: habits that have reminders (confirmed and queued), by name.
+  Stream<List<HabitReminders>> watchReminders(LocalView view) => db
+      .customSelect(
+        'SELECT (SELECT COUNT(*) FROM reminders) + (SELECT COUNT(*) FROM outbox) '
+        '+ (SELECT COUNT(*) FROM habits) AS n, (SELECT MAX(seq) FROM outbox) AS s',
+        readsFrom: {db.reminders, db.outbox, db.habits},
+      )
+      .watch()
+      .asyncMap((_) async {
+        final names = {for (final h in await view.habits()) h.id: h.payload['name'] as String?};
+        final byHabit = <String, HabitReminders>{};
+        for (final r in await view.reminders()) {
+          final habitId = r.habitId;
+          if (habitId == null || !names.containsKey(habitId)) continue;
+          final current = byHabit[habitId] ?? HabitReminders(habitId, names[habitId] ?? '', 0, 0);
+          byHabit[habitId] = HabitReminders(
+            habitId,
+            current.habitName,
+            current.total + 1,
+            current.enabled + (r.enabled ? 1 : 0),
+          );
+        }
+        return byHabit.values.toList()..sort((a, b) => a.habitName.compareTo(b.habitName));
+      });
+}
+
+class HabitReminders {
+  final String habitId;
+  final String habitName;
+  final int total;
+  final int enabled;
+
+  const HabitReminders(this.habitId, this.habitName, this.total, this.enabled);
 }
 
 /// pending_uploads states.

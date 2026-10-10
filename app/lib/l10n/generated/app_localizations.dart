@@ -1574,6 +1574,240 @@ abstract class AppLocalizations {
   /// **'A habit reminder'**
   String get reminderTitleHidden;
 
+  /// No description provided for @profileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your space'**
+  String get profileTitle;
+
+  /// No description provided for @profileSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferences that follow your life.'**
+  String get profileSubtitle;
+
+  /// No description provided for @profileLocationEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your city and country'**
+  String get profileLocationEmpty;
+
+  /// No description provided for @profileEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit profile'**
+  String get profileEdit;
+
+  /// No description provided for @avatarLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile photo of {name}'**
+  String avatarLabel(String name);
+
+  /// No description provided for @avatarChangeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Change the profile photo'**
+  String get avatarChangeHint;
+
+  /// No description provided for @photoSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile photo'**
+  String get photoSheetTitle;
+
+  /// No description provided for @photoChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose photo'**
+  String get photoChoose;
+
+  /// No description provided for @photoTake.
+  ///
+  /// In en, this message translates to:
+  /// **'Take photo'**
+  String get photoTake;
+
+  /// No description provided for @photoRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove photo'**
+  String get photoRemove;
+
+  /// No description provided for @photoCropTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Crop photo'**
+  String get photoCropTitle;
+
+  /// No description provided for @photoRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'That photo couldn\'t be used. Choose another.'**
+  String get photoRejected;
+
+  /// No description provided for @photoWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting to upload'**
+  String get photoWaiting;
+
+  /// No description provided for @profileEditQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting to sync'**
+  String get profileEditQueued;
+
+  /// No description provided for @profileTimezone.
+  ///
+  /// In en, this message translates to:
+  /// **'Timezone'**
+  String get profileTimezone;
+
+  /// No description provided for @profileTimezoneEditLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit the timezone'**
+  String get profileTimezoneEditLabel;
+
+  /// No description provided for @profileReminders.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders'**
+  String get profileReminders;
+
+  /// No description provided for @profileRemindersCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No reminders} =1{1 reminder} other{{count} reminders}}'**
+  String profileRemindersCount(int count);
+
+  /// No description provided for @profileNotificationsOn.
+  ///
+  /// In en, this message translates to:
+  /// **'notifications on'**
+  String get profileNotificationsOn;
+
+  /// No description provided for @profileNotificationsOff.
+  ///
+  /// In en, this message translates to:
+  /// **'off in device settings'**
+  String get profileNotificationsOff;
+
+  /// No description provided for @profileNotificationsUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'notifications not allowed yet'**
+  String get profileNotificationsUnknown;
+
+  /// No description provided for @profileRemindersLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} · {permission}'**
+  String profileRemindersLine(String count, String permission);
+
+  /// No description provided for @remindersSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders'**
+  String get remindersSheetTitle;
+
+  /// No description provided for @remindersSheetEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No reminders yet. Add one from a habit.'**
+  String get remindersSheetEmpty;
+
+  /// No description provided for @remindersSheetHabitLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders for {habit}'**
+  String remindersSheetHabitLabel(String habit);
+
+  /// No description provided for @hideNamesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide habit names in notifications'**
+  String get hideNamesTitle;
+
+  /// No description provided for @hideNamesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders on the lock screen won\'t say which habit they are for.'**
+  String get hideNamesBody;
+
+  /// No description provided for @signedInAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in as {email}'**
+  String signedInAs(String email);
+
+  /// No description provided for @signOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get signOut;
+
+  /// No description provided for @signOutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out?'**
+  String get signOutTitle;
+
+  /// No description provided for @signOutUnsynced.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 change hasn\'t synced yet. It stays saved on this phone and uploads the next time you sign in here.} other{{count} changes haven\'t synced yet. They stay saved on this phone and upload the next time you sign in here.}}'**
+  String signOutUnsynced(int count);
+
+  /// No description provided for @profileEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit profile'**
+  String get profileEditTitle;
+
+  /// No description provided for @fieldCity.
+  ///
+  /// In en, this message translates to:
+  /// **'City'**
+  String get fieldCity;
+
+  /// No description provided for @fieldCountry.
+  ///
+  /// In en, this message translates to:
+  /// **'Country'**
+  String get fieldCountry;
+
+  /// No description provided for @countryNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No country'**
+  String get countryNone;
+
+  /// No description provided for @countrySearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search countries'**
+  String get countrySearch;
+
+  /// No description provided for @countryPickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Country'**
+  String get countryPickerTitle;
+
+  /// No description provided for @profileSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get profileSave;
+
+  /// No description provided for @errorCityTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Use 60 characters or fewer.'**
+  String get errorCityTooLong;
+
   /// No description provided for @remindersTitle.
   ///
   /// In en, this message translates to:

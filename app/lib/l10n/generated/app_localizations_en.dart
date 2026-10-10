@@ -869,6 +869,149 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reminderTitleHidden => 'A habit reminder';
 
   @override
+  String get profileTitle => 'Your space';
+
+  @override
+  String get profileSubtitle => 'Preferences that follow your life.';
+
+  @override
+  String get profileLocationEmpty => 'Add your city and country';
+
+  @override
+  String get profileEdit => 'Edit profile';
+
+  @override
+  String avatarLabel(String name) {
+    return 'Profile photo of $name';
+  }
+
+  @override
+  String get avatarChangeHint => 'Change the profile photo';
+
+  @override
+  String get photoSheetTitle => 'Profile photo';
+
+  @override
+  String get photoChoose => 'Choose photo';
+
+  @override
+  String get photoTake => 'Take photo';
+
+  @override
+  String get photoRemove => 'Remove photo';
+
+  @override
+  String get photoCropTitle => 'Crop photo';
+
+  @override
+  String get photoRejected => 'That photo couldn\'t be used. Choose another.';
+
+  @override
+  String get photoWaiting => 'Waiting to upload';
+
+  @override
+  String get profileEditQueued => 'Waiting to sync';
+
+  @override
+  String get profileTimezone => 'Timezone';
+
+  @override
+  String get profileTimezoneEditLabel => 'Edit the timezone';
+
+  @override
+  String get profileReminders => 'Reminders';
+
+  @override
+  String profileRemindersCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count reminders',
+      one: '1 reminder',
+      zero: 'No reminders',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get profileNotificationsOn => 'notifications on';
+
+  @override
+  String get profileNotificationsOff => 'off in device settings';
+
+  @override
+  String get profileNotificationsUnknown => 'notifications not allowed yet';
+
+  @override
+  String profileRemindersLine(String count, String permission) {
+    return '$count · $permission';
+  }
+
+  @override
+  String get remindersSheetTitle => 'Reminders';
+
+  @override
+  String get remindersSheetEmpty => 'No reminders yet. Add one from a habit.';
+
+  @override
+  String remindersSheetHabitLabel(String habit) {
+    return 'Reminders for $habit';
+  }
+
+  @override
+  String get hideNamesTitle => 'Hide habit names in notifications';
+
+  @override
+  String get hideNamesBody => 'Reminders on the lock screen won\'t say which habit they are for.';
+
+  @override
+  String signedInAs(String email) {
+    return 'Signed in as $email';
+  }
+
+  @override
+  String get signOut => 'Sign out';
+
+  @override
+  String get signOutTitle => 'Sign out?';
+
+  @override
+  String signOutUnsynced(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count changes haven\'t synced yet. They stay saved on this phone and upload the next time you sign in here.',
+      one: '1 change hasn\'t synced yet. It stays saved on this phone and uploads the next time you sign in here.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get profileEditTitle => 'Edit profile';
+
+  @override
+  String get fieldCity => 'City';
+
+  @override
+  String get fieldCountry => 'Country';
+
+  @override
+  String get countryNone => 'No country';
+
+  @override
+  String get countrySearch => 'Search countries';
+
+  @override
+  String get countryPickerTitle => 'Country';
+
+  @override
+  String get profileSave => 'Save';
+
+  @override
+  String get errorCityTooLong => 'Use 60 characters or fewer.';
+
+  @override
   String get remindersTitle => 'Local reminders';
 
   @override
