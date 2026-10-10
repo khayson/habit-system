@@ -191,6 +191,8 @@ Adopts Profile (screen 20) as designed: photo avatar (sizes 24/40/80) and a "Cit
 
 **Profile edits are mutations (A14)**: add `profile.update {name, city, country_code}` (version-checked against `users.version`) and `profile.set_timezone` (future-effective, validated IANA). `PATCH /me` stays as the REST adapter. The `user` entity in the journal carries name, city, country_code, avatar_version, the A9 reward fields and freeze balance.
 
+Clarification (2026-10-10, 3b.1 review): there is no PATCH /me; profile changes go through /sync (A14) and the photo through the avatar endpoints; the user entity also carries has_avatar.
+
 **Photo upload (binary, so not a journal mutation)**
 - `PUT /api/v1/me/avatar` (multipart, `Idempotency-Key`), `DELETE /api/v1/me/avatar`, `GET /api/v1/me/avatar/{sm|md|lg}`. Authenticated and owner-only; `Cache-Control: private`; ETag = `avatar_sha256`. No public URLs (matches "private by default, no public profile").
 - Pipeline: validate by file content (finfo), not extension; cap upload at 5 MB and decoded size at 25 megapixels before decoding; decode, strip all metadata (EXIF/GPS), re-encode (WebP or JPEG) as 96 / 160 / 320 px squares; discard the original; never serve user bytes unprocessed. Store in the private object store at `avatars/{user_id}/{uuid}.webp`; delete the previous object on replace.
