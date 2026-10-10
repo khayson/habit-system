@@ -111,7 +111,10 @@ void main() {
     expect(find.text('M'), findsOneWidget, reason: 'initials without a photo');
     expect(find.text('Add your city and country'), findsOneWidget);
     expect(find.text('Timezone'), findsOneWidget);
-    expect(find.text('America/Los_Angeles'), findsOneWidget);
+    // I2: the city as screen 04 names it; the IANA id is for assistive technology only.
+    expect(find.text('Los Angeles'), findsOneWidget);
+    expect(find.text('America/Los_Angeles'), findsNothing);
+    expect(find.bySemanticsLabel(RegExp('America/Los_Angeles')), findsOneWidget);
     expect(find.text('Reminders'), findsOneWidget);
     expect(find.text('Signed in as maya@example.com'), findsOneWidget);
     expect(find.text('Privacy and export'), findsNothing, reason: '21 arrives in Phase 6');

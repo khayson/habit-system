@@ -19,6 +19,7 @@ import '../services/photo_picker.dart';
 import '../widgets/avatar_view.dart';
 import '../widgets/habit_ui.dart';
 import '../widgets/legal_links.dart';
+import 'timezone_screen.dart';
 import 'widgets/profile_sheets.dart';
 
 /// Screen 20 (A20): the avatar card, Timezone and Reminders rows and "Signed in as", as
@@ -139,6 +140,8 @@ class _ProfileState extends State<_Profile> with WidgetsBindingObserver {
             icon: Icons.schedule,
             title: l10n.profileTimezone,
             subtitle: _zoneLine(l10n, zone),
+            // I2: the city is shown (as screen 04 names it); the IANA id is read out.
+            subtitleSemantics: _zoneId(zone),
             trailing: TextButton(
               onPressed: () => context.push(Routes.setup),
               child: Semantics(label: l10n.profileTimezoneEditLabel, child: Text(l10n.setupEdit)),
@@ -187,9 +190,13 @@ class _ProfileState extends State<_Profile> with WidgetsBindingObserver {
 
   String _zoneLine(AppLocalizations l10n, TimezoneStatus? status) {
     if (status == null) return '';
-    if (status.queuedZone != null) return l10n.setupQueued(status.queuedZone!);
-    return status.inForce;
+    if (status.queuedZone != null) {
+      return l10n.setupQueued(TimezoneScreen.cityName(status.queuedZone!));
+    }
+    return TimezoneScreen.cityName(status.inForce);
   }
+
+  String? _zoneId(TimezoneStatus? status) => status?.queuedZone ?? status?.inForce;
 
   Future<void> _signOut(BuildContext context, ProfileState profile) async {
     final session = context.read<SessionProvider>();
@@ -298,6 +305,9 @@ class _Row extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
+
+  /// Read out instead of [subtitle] when the visible line is a shortening.
+  final String? subtitleSemantics;
   final Widget? trailing;
   final VoidCallback? onTap;
 
@@ -305,6 +315,7 @@ class _Row extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.subtitle,
+    this.subtitleSemantics,
     this.trailing,
     this.onTap,
   });
@@ -323,7 +334,11 @@ class _Row extends StatelessWidget {
             children: [
               Text(title, style: text.titleMedium ?? text.bodyLarge),
               const SizedBox(height: HabitSpace.s4),
-              Text(subtitle, style: text.bodySmall?.copyWith(color: tokens.muted)),
+              Text(
+                subtitle,
+                semanticsLabel: subtitleSemantics,
+                style: text.bodySmall?.copyWith(color: tokens.muted),
+              ),
             ],
           ),
         ),
