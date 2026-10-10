@@ -1,0 +1,84 @@
+{
+  "description": "Phase 3b (A20): profile.update {name, city, country_code} on the user entity, through /sync. The payload is the whole desired state; city and country_code may be null (cleared). Version-checked against users.version; an identical update acks without a new version. The entity id is the caller's user id; any other id is 404 not_found. The dart suite joins in 3b.2.",
+  "suites": [
+    "php"
+  ],
+  "now": "2026-05-28T17:22:00Z",
+  "accepted": {
+    "mutation": {
+      "mutation_id": "{{uuid}}",
+      "entity": "user",
+      "entity_id": "{{user_id}}",
+      "operation": "profile.update",
+      "base_version": 1,
+      "occurred_at": "2026-05-28T17:22:00Z",
+      "captured_timezone": "America/Los_Angeles",
+      "local_date_hint": null,
+      "payload": {
+        "name": "Maya Chen",
+        "city": "Accra",
+        "country_code": "GH"
+      }
+    },
+    "expect": {
+      "mutation_id": "{{uuid}}",
+      "status": "accepted",
+      "duplicate": false,
+      "entity": "user",
+      "entity_id": "{{user_id}}",
+      "version": 2
+    }
+  },
+  "version_conflict": {
+    "mutation": {
+      "mutation_id": "{{uuid}}",
+      "entity": "user",
+      "entity_id": "{{user_id}}",
+      "operation": "profile.update",
+      "base_version": 1,
+      "occurred_at": "2026-05-28T17:22:00Z",
+      "captured_timezone": "America/Los_Angeles",
+      "local_date_hint": null,
+      "payload": {
+        "name": "Maya",
+        "city": null,
+        "country_code": null
+      }
+    },
+    "after_version": 2,
+    "expect": {
+      "status": "conflict",
+      "entity": "user",
+      "error_code": "version_conflict",
+      "current_version": 2
+    }
+  },
+  "validation_failed": {
+    "mutation": {
+      "mutation_id": "{{uuid}}",
+      "entity": "user",
+      "entity_id": "{{user_id}}",
+      "operation": "profile.update",
+      "base_version": 1,
+      "occurred_at": "2026-05-28T17:22:00Z",
+      "captured_timezone": "America/Los_Angeles",
+      "local_date_hint": null,
+      "payload": {
+        "name": "",
+        "city": "A city name that is far too long to fit in sixty characters at all",
+        "country_code": "gh"
+      }
+    },
+    "expect": {
+      "status": "rejected",
+      "error_code": "validation_failed",
+      "fields": ["name", "city", "country_code"]
+    }
+  },
+  "rules": [
+    "name: the same rule as POST /auth/register",
+    "city: trimmed; empty becomes null; at most 60 characters; no control characters",
+    "country_code: upper-case ISO 3166-1 alpha-2 from contract-fixtures/profile/countries.json, or null",
+    "city and country_code are independent and each optional (ASSUMPTION(A3b-location-optional))"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "description": "Phase 3b (A20): the user entity as GET /me, /sync/bootstrap and /sync changes present it. 'fields' must all be present; 'never' must never appear. city and country_code are labels the user typed or picked (never GPS); avatar_version counts photo changes (0 = never had one). Readers tolerate any of the 3b fields being absent (an older server) and unknown extras. The dart suite joins in 3b.2.",
+  "suites": [
+    "php"
+  ],
+  "fields": [
+    "id", "name", "email", "timezone", "timezone_mode", "day_start_offset_minutes", "calendar_history",
+    "version", "auto_freeze", "xp", "level", "progress_into_level", "next_level_threshold",
+    "freeze_balance", "created_at", "city", "country_code", "avatar_version"
+  ],
+  "never": [
+    "password", "avatar_key", "avatar_sha256", "terms_version", "privacy_version", "legal_accepted_at"
+  ],
+  "example_3b": {
+    "city": "Accra",
+    "country_code": "GH",
+    "avatar_version": 0
+  }
+}
