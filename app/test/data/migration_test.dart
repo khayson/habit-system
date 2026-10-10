@@ -24,6 +24,35 @@ void main() {
     }
   });
 
+  test(
+    'v7 -> v8 adds the notification text key; scheduled rows, outbox and data survive',
+    () async {
+      final v8 = AppDatabase(NativeDatabase(file));
+      await v8.customStatement(
+        "INSERT INTO sync_state (id, user_id, device_id, cursor) VALUES (1, 'u', 'd', 'c:12')",
+      );
+      await v8.customStatement(
+        'INSERT INTO outbox (mutation_id, entity, entity_id, operation, occurred_at, payload, '
+        "state, created_at) VALUES ('m1', 'habit', 'h1', 'habit.archive', "
+        "'2026-05-28T00:00:00Z', '{}', 'pending', 0)",
+      );
+      await v8.customStatement(
+        'INSERT INTO scheduled_notifications (platform_id, reminder_id, habit_id, slot_date, fire_at) '
+        "VALUES (7, 'r1', 'h1', '2026-05-29', 1780000000000)",
+      );
+      await dropV8(v8);
+      await v8.customStatement('PRAGMA user_version = 7');
+      await v8.close();
+
+      final upgraded = AppDatabase(NativeDatabase(file));
+      final row = await upgraded.select(upgraded.scheduledNotifications).getSingle();
+      expect((row.platformId, row.fireAt, row.contentKey), (7, 1780000000000, null));
+      expect((await upgraded.select(upgraded.outbox).getSingle()).operation, 'habit.archive');
+      expect((await upgraded.select(upgraded.syncState).getSingle()).cursor, 'c:12');
+      await upgraded.close();
+    },
+  );
+
   test('v6 -> v7 adds the photo pointer and the upload queue; outbox and data survive', () async {
     final v7 = AppDatabase(NativeDatabase(file));
     await v7.customStatement(
@@ -252,8 +281,14 @@ void main() {
   });
 }
 
-/// Takes a current database back to v6: drops what v7 added.
+/// Takes a current database back to v7: drops what v8 added.
+Future<void> dropV8(AppDatabase db) async {
+  await db.customStatement('ALTER TABLE scheduled_notifications DROP COLUMN content_key');
+}
+
+/// Takes a current database back to v6: drops what v7 and v8 added.
 Future<void> dropV7(AppDatabase db) async {
+  await dropV8(db);
   await db.customStatement('DROP TABLE pending_uploads');
   for (final column in ['avatar_file', 'avatar_file_version']) {
     await db.customStatement('ALTER TABLE sync_state DROP COLUMN $column');

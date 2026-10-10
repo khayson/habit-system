@@ -91,8 +91,8 @@ void main() {
         )
         .get();
 
-    expect(db.schemaVersion, 7);
-    expect(userVersion.data.values.single, 7);
+    expect(db.schemaVersion, 8);
+    expect(userVersion.data.values.single, 8);
     expect(journal.data.values.single, 'wal');
     expect(fk.data.values.single, 1);
     expect(synchronous.data.values.single, 2, reason: 'synchronous = FULL (2)');

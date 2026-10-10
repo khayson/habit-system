@@ -7361,6 +7361,17 @@ class $ScheduledNotificationsTable extends ScheduledNotifications
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _contentKeyMeta = const VerificationMeta(
+    'contentKey',
+  );
+  @override
+  late final GeneratedColumn<String> contentKey = GeneratedColumn<String>(
+    'content_key',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     platformId,
@@ -7368,6 +7379,7 @@ class $ScheduledNotificationsTable extends ScheduledNotifications
     habitId,
     slotDate,
     fireAt,
+    contentKey,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -7419,6 +7431,12 @@ class $ScheduledNotificationsTable extends ScheduledNotifications
     } else if (isInserting) {
       context.missing(_fireAtMeta);
     }
+    if (data.containsKey('content_key')) {
+      context.handle(
+        _contentKeyMeta,
+        contentKey.isAcceptableOrUnknown(data['content_key']!, _contentKeyMeta),
+      );
+    }
     return context;
   }
 
@@ -7448,6 +7466,10 @@ class $ScheduledNotificationsTable extends ScheduledNotifications
         DriftSqlType.int,
         data['${effectivePrefix}fire_at'],
       )!,
+      contentKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}content_key'],
+      ),
     );
   }
 
@@ -7469,12 +7491,18 @@ class ScheduledNotification extends DataClass
 
   /// UTC milliseconds.
   final int fireAt;
+
+  /// Phase 4.2a (B3): a key of the text handed to the OS, so a rename (or another text change)
+  /// replaces the notification. Null in rows from v7: they differ from any key and are
+  /// replaced once.
+  final String? contentKey;
   const ScheduledNotification({
     required this.platformId,
     required this.reminderId,
     required this.habitId,
     required this.slotDate,
     required this.fireAt,
+    this.contentKey,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -7484,6 +7512,9 @@ class ScheduledNotification extends DataClass
     map['habit_id'] = Variable<String>(habitId);
     map['slot_date'] = Variable<String>(slotDate);
     map['fire_at'] = Variable<int>(fireAt);
+    if (!nullToAbsent || contentKey != null) {
+      map['content_key'] = Variable<String>(contentKey);
+    }
     return map;
   }
 
@@ -7494,6 +7525,9 @@ class ScheduledNotification extends DataClass
       habitId: Value(habitId),
       slotDate: Value(slotDate),
       fireAt: Value(fireAt),
+      contentKey: contentKey == null && nullToAbsent
+          ? const Value.absent()
+          : Value(contentKey),
     );
   }
 
@@ -7508,6 +7542,7 @@ class ScheduledNotification extends DataClass
       habitId: serializer.fromJson<String>(json['habitId']),
       slotDate: serializer.fromJson<String>(json['slotDate']),
       fireAt: serializer.fromJson<int>(json['fireAt']),
+      contentKey: serializer.fromJson<String?>(json['contentKey']),
     );
   }
   @override
@@ -7519,6 +7554,7 @@ class ScheduledNotification extends DataClass
       'habitId': serializer.toJson<String>(habitId),
       'slotDate': serializer.toJson<String>(slotDate),
       'fireAt': serializer.toJson<int>(fireAt),
+      'contentKey': serializer.toJson<String?>(contentKey),
     };
   }
 
@@ -7528,12 +7564,14 @@ class ScheduledNotification extends DataClass
     String? habitId,
     String? slotDate,
     int? fireAt,
+    Value<String?> contentKey = const Value.absent(),
   }) => ScheduledNotification(
     platformId: platformId ?? this.platformId,
     reminderId: reminderId ?? this.reminderId,
     habitId: habitId ?? this.habitId,
     slotDate: slotDate ?? this.slotDate,
     fireAt: fireAt ?? this.fireAt,
+    contentKey: contentKey.present ? contentKey.value : this.contentKey,
   );
   ScheduledNotification copyWithCompanion(
     ScheduledNotificationsCompanion data,
@@ -7548,6 +7586,9 @@ class ScheduledNotification extends DataClass
       habitId: data.habitId.present ? data.habitId.value : this.habitId,
       slotDate: data.slotDate.present ? data.slotDate.value : this.slotDate,
       fireAt: data.fireAt.present ? data.fireAt.value : this.fireAt,
+      contentKey: data.contentKey.present
+          ? data.contentKey.value
+          : this.contentKey,
     );
   }
 
@@ -7558,14 +7599,21 @@ class ScheduledNotification extends DataClass
           ..write('reminderId: $reminderId, ')
           ..write('habitId: $habitId, ')
           ..write('slotDate: $slotDate, ')
-          ..write('fireAt: $fireAt')
+          ..write('fireAt: $fireAt, ')
+          ..write('contentKey: $contentKey')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(platformId, reminderId, habitId, slotDate, fireAt);
+  int get hashCode => Object.hash(
+    platformId,
+    reminderId,
+    habitId,
+    slotDate,
+    fireAt,
+    contentKey,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -7574,7 +7622,8 @@ class ScheduledNotification extends DataClass
           other.reminderId == this.reminderId &&
           other.habitId == this.habitId &&
           other.slotDate == this.slotDate &&
-          other.fireAt == this.fireAt);
+          other.fireAt == this.fireAt &&
+          other.contentKey == this.contentKey);
 }
 
 class ScheduledNotificationsCompanion
@@ -7584,12 +7633,14 @@ class ScheduledNotificationsCompanion
   final Value<String> habitId;
   final Value<String> slotDate;
   final Value<int> fireAt;
+  final Value<String?> contentKey;
   const ScheduledNotificationsCompanion({
     this.platformId = const Value.absent(),
     this.reminderId = const Value.absent(),
     this.habitId = const Value.absent(),
     this.slotDate = const Value.absent(),
     this.fireAt = const Value.absent(),
+    this.contentKey = const Value.absent(),
   });
   ScheduledNotificationsCompanion.insert({
     this.platformId = const Value.absent(),
@@ -7597,6 +7648,7 @@ class ScheduledNotificationsCompanion
     required String habitId,
     required String slotDate,
     required int fireAt,
+    this.contentKey = const Value.absent(),
   }) : reminderId = Value(reminderId),
        habitId = Value(habitId),
        slotDate = Value(slotDate),
@@ -7607,6 +7659,7 @@ class ScheduledNotificationsCompanion
     Expression<String>? habitId,
     Expression<String>? slotDate,
     Expression<int>? fireAt,
+    Expression<String>? contentKey,
   }) {
     return RawValuesInsertable({
       if (platformId != null) 'platform_id': platformId,
@@ -7614,6 +7667,7 @@ class ScheduledNotificationsCompanion
       if (habitId != null) 'habit_id': habitId,
       if (slotDate != null) 'slot_date': slotDate,
       if (fireAt != null) 'fire_at': fireAt,
+      if (contentKey != null) 'content_key': contentKey,
     });
   }
 
@@ -7623,6 +7677,7 @@ class ScheduledNotificationsCompanion
     Value<String>? habitId,
     Value<String>? slotDate,
     Value<int>? fireAt,
+    Value<String?>? contentKey,
   }) {
     return ScheduledNotificationsCompanion(
       platformId: platformId ?? this.platformId,
@@ -7630,6 +7685,7 @@ class ScheduledNotificationsCompanion
       habitId: habitId ?? this.habitId,
       slotDate: slotDate ?? this.slotDate,
       fireAt: fireAt ?? this.fireAt,
+      contentKey: contentKey ?? this.contentKey,
     );
   }
 
@@ -7651,6 +7707,9 @@ class ScheduledNotificationsCompanion
     if (fireAt.present) {
       map['fire_at'] = Variable<int>(fireAt.value);
     }
+    if (contentKey.present) {
+      map['content_key'] = Variable<String>(contentKey.value);
+    }
     return map;
   }
 
@@ -7661,7 +7720,8 @@ class ScheduledNotificationsCompanion
           ..write('reminderId: $reminderId, ')
           ..write('habitId: $habitId, ')
           ..write('slotDate: $slotDate, ')
-          ..write('fireAt: $fireAt')
+          ..write('fireAt: $fireAt, ')
+          ..write('contentKey: $contentKey')
           ..write(')'))
         .toString();
   }
@@ -11811,6 +11871,7 @@ typedef $$ScheduledNotificationsTableCreateCompanionBuilder =
       required String habitId,
       required String slotDate,
       required int fireAt,
+      Value<String?> contentKey,
     });
 typedef $$ScheduledNotificationsTableUpdateCompanionBuilder =
     ScheduledNotificationsCompanion Function({
@@ -11819,6 +11880,7 @@ typedef $$ScheduledNotificationsTableUpdateCompanionBuilder =
       Value<String> habitId,
       Value<String> slotDate,
       Value<int> fireAt,
+      Value<String?> contentKey,
     });
 
 class $$ScheduledNotificationsTableFilterComposer
@@ -11852,6 +11914,11 @@ class $$ScheduledNotificationsTableFilterComposer
 
   ColumnFilters<int> get fireAt => $composableBuilder(
     column: $table.fireAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get contentKey => $composableBuilder(
+    column: $table.contentKey,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -11889,6 +11956,11 @@ class $$ScheduledNotificationsTableOrderingComposer
     column: $table.fireAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get contentKey => $composableBuilder(
+    column: $table.contentKey,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ScheduledNotificationsTableAnnotationComposer
@@ -11918,6 +11990,11 @@ class $$ScheduledNotificationsTableAnnotationComposer
 
   GeneratedColumn<int> get fireAt =>
       $composableBuilder(column: $table.fireAt, builder: (column) => column);
+
+  GeneratedColumn<String> get contentKey => $composableBuilder(
+    column: $table.contentKey,
+    builder: (column) => column,
+  );
 }
 
 class $$ScheduledNotificationsTableTableManager
@@ -11971,12 +12048,14 @@ class $$ScheduledNotificationsTableTableManager
                 Value<String> habitId = const Value.absent(),
                 Value<String> slotDate = const Value.absent(),
                 Value<int> fireAt = const Value.absent(),
+                Value<String?> contentKey = const Value.absent(),
               }) => ScheduledNotificationsCompanion(
                 platformId: platformId,
                 reminderId: reminderId,
                 habitId: habitId,
                 slotDate: slotDate,
                 fireAt: fireAt,
+                contentKey: contentKey,
               ),
           createCompanionCallback:
               ({
@@ -11985,12 +12064,14 @@ class $$ScheduledNotificationsTableTableManager
                 required String habitId,
                 required String slotDate,
                 required int fireAt,
+                Value<String?> contentKey = const Value.absent(),
               }) => ScheduledNotificationsCompanion.insert(
                 platformId: platformId,
                 reminderId: reminderId,
                 habitId: habitId,
                 slotDate: slotDate,
                 fireAt: fireAt,
+                contentKey: contentKey,
               ),
           withReferenceMapper: (p0) => p0
               .map(

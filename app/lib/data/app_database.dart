@@ -249,6 +249,11 @@ class ScheduledNotifications extends Table {
   /// UTC milliseconds.
   IntColumn get fireAt => integer()();
 
+  /// Phase 4.2a (B3): a key of the text handed to the OS, so a rename (or another text change)
+  /// replaces the notification. Null in rows from v7: they differ from any key and are
+  /// replaced once.
+  TextColumn get contentKey => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {platformId};
 }
@@ -364,7 +369,7 @@ class AppDatabase extends _$AppDatabase {
   Future<T> writeRetrying<T>(Future<T> Function() write) => transaction(write);
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -418,6 +423,11 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(syncState, syncState.avatarFile);
         await m.addColumn(syncState, syncState.avatarFileVersion);
         await m.createTable(pendingUploads);
+      }
+      // A database before v6 created scheduled_notifications above, already with this column.
+      if (from < 8 && from >= 6) {
+        // Phase 4.2a: the text key of each scheduled notification (B3).
+        await m.addColumn(scheduledNotifications, scheduledNotifications.contentKey);
       }
     },
     beforeOpen: (details) async {

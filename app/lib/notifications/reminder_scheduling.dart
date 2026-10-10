@@ -105,7 +105,11 @@ class ReminderScheduling {
     final now = _clock().toUtc();
     final calendar = await AccountCalendar.load(db, deviceNow: now);
     if (calendar == null) return;
-    final habits = {for (final h in await view.habits()) h.id: h};
+    // B2 (A34): an archived habit (confirmed, or archived on this device) has no reminders.
+    final habits = {
+      for (final h in await view.habits())
+        if (!h.archived) h.id: h,
+    };
     final reminders = [
       for (final r in await view.reminders()) ?PlannerReminder.fromWire(r.payload),
     ];
@@ -178,9 +182,15 @@ class ReminderScheduling {
     final existing = {
       for (final row in await db.select(db.scheduledNotifications).get()) row.platformId: row,
     };
+    String titleOf(PlannedNotification p) =>
+        hideNames ? hiddenTitle : title(names[p.habitId] ?? '');
+    // B3: what the person sees is part of the plan; a rename replaces, the ids stay.
+    String keyOf(PlannedNotification p) => _contentKey(titleOf(p), body);
     for (final row in existing.values) {
       final keep = wanted[row.platformId];
-      if (keep == null || keep.fireAt.millisecondsSinceEpoch != row.fireAt) {
+      if (keep == null ||
+          keep.fireAt.millisecondsSinceEpoch != row.fireAt ||
+          row.contentKey != keyOf(keep)) {
         await scheduler.cancel(row.platformId);
         await db.writeRetrying(
           () => (db.delete(
@@ -191,12 +201,12 @@ class ReminderScheduling {
     }
     for (final p in plan) {
       final row = existing[p.id];
-      if (row != null && row.fireAt == p.fireAt.millisecondsSinceEpoch) continue;
-      await scheduler.schedule(
-        p,
-        title: hideNames ? hiddenTitle : title(names[p.habitId] ?? ''),
-        body: body,
-      );
+      if (row != null &&
+          row.fireAt == p.fireAt.millisecondsSinceEpoch &&
+          row.contentKey == keyOf(p)) {
+        continue;
+      }
+      await scheduler.schedule(p, title: titleOf(p), body: body);
       await db.writeRetrying(
         () => db
             .into(db.scheduledNotifications)
@@ -207,10 +217,21 @@ class ReminderScheduling {
                 habitId: p.habitId,
                 slotDate: p.slotDate.toString(),
                 fireAt: p.fireAt.millisecondsSinceEpoch,
+                contentKey: Value(keyOf(p)),
               ),
             ),
       );
     }
+  }
+
+  /// A short, stable key of a notification's text (FNV-1a); the text itself is not stored.
+  static String _contentKey(String title, String? body) {
+    var hash = 0x811c9dc5;
+    for (final unit in '$title\u0000${body ?? ''}'.codeUnits) {
+      hash ^= unit;
+      hash = (hash * 0x01000193) & 0xffffffff;
+    }
+    return hash.toRadixString(16);
   }
 
   /// Logout: cancels every notification this account handed to the OS, and stops replanning.

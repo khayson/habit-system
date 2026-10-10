@@ -108,6 +108,14 @@ class FakeSyncServer implements SyncTransport {
     _journal('habit', id, 'upsert', habit['version'] as int, habit);
   }
 
+  /// Another device changed a reminder (Phase 4.2a), journaled as the real server does.
+  void serverEditReminder(String id, void Function(Map<String, dynamic> reminder) change) {
+    final reminder = reminders[id]!;
+    change(reminder);
+    reminder['version'] = (reminder['version'] as int) + 1;
+    _journal('reminder', id, 'upsert', reminder['version'] as int, reminder);
+  }
+
   /// Another device changed the profile: the version this device holds is now stale.
   void bumpUserVersion() {
     userVersion++;
