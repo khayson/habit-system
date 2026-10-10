@@ -215,6 +215,24 @@ void main() {
     },
   );
 
+  test(
+    'a removed photo\'s downloaded copy is deleted at once; a photo being chosen is not',
+    () async {
+      avatars.otherDeviceUploads([4, 4]);
+      await cycle();
+      final cached = (await profile()).photoPath!;
+      // A file copied in for a choice whose queue row does not exist yet.
+      final choosing = File(p.join(root.path, PhotoService.folder, 'local-in-progress.jpg'))
+        ..writeAsBytesSync([1]);
+
+      avatars.otherDeviceRemoves();
+      await cycle();
+
+      expect(File(cached).existsSync(), isFalse, reason: 'no waiting period for server copies');
+      expect(choosing.existsSync(), isTrue, reason: 'a choice in progress is never collected');
+    },
+  );
+
   test('a failed fetch is silent and tried again next cycle', () async {
     avatars.otherDeviceUploads([5]);
     avatars.failNext.add(const AvatarTransportException(AvatarFailure.network));

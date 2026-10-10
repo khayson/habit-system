@@ -189,8 +189,8 @@ class AvatarSync {
     }
   }
 
-  /// A file newer than this is never collected: a photo being chosen right now is copied in
-  /// before its queue row exists.
+  /// A photo chosen here (local-*) newer than this is never collected: it is copied in before
+  /// its queue row exists. Downloaded server copies have no waiting period.
   static const Duration collectAfter = Duration(minutes: 10);
 
   /// Deletes photo files nothing points at any more (older downloads, replaced choices).
@@ -205,8 +205,10 @@ class AvatarSync {
     await for (final entity in dir.list(recursive: true)) {
       if (entity is! File) continue;
       final relative = p.relative(entity.path, from: filesRoot);
+      if (kept.contains(relative)) continue;
+      final choice = p.basename(relative).startsWith('local-');
       final age = clock().difference((await entity.stat()).modified.toUtc());
-      if (!kept.contains(relative) && age >= collectAfter) {
+      if (!choice || age >= collectAfter) {
         try {
           await entity.delete();
         } on FileSystemException {
