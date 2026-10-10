@@ -812,6 +812,24 @@ abstract class AppLocalizations {
   /// **'Change'**
   String get queueChangeOther;
 
+  /// No description provided for @queueYourProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Your profile'**
+  String get queueYourProfile;
+
+  /// No description provided for @queueChangeProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Name and location'**
+  String get queueChangeProfile;
+
+  /// No description provided for @queueChangeTimezone.
+  ///
+  /// In en, this message translates to:
+  /// **'Time zone'**
+  String get queueChangeTimezone;
+
   /// No description provided for @queueItemTitle.
   ///
   /// In en, this message translates to:

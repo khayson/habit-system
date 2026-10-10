@@ -175,7 +175,7 @@ class _QueueRow extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      l10n.queueItemTitle(item.habitName ?? l10n.queueUnnamedHabit, _change(l10n)),
+                      l10n.queueItemTitle(_subject(l10n), _change(l10n)),
                       style: text.titleMedium ?? text.bodyLarge,
                     ),
                     const SizedBox(height: HabitSpace.s4),
@@ -216,9 +216,15 @@ class _QueueRow extends StatelessWidget {
     );
   }
 
+  /// What the change is about: the habit, or the profile for changes to the user entity.
+  String _subject(AppLocalizations l10n) =>
+      item.row.entity == 'user' ? l10n.queueYourProfile : item.habitName ?? l10n.queueUnnamedHabit;
+
   /// What the change does, from the operation and the type rules (no type keys here).
   String _change(AppLocalizations l10n) {
     final row = item.row;
+    if (row.operation == 'profile.update') return l10n.queueChangeProfile;
+    if (row.operation == 'profile.set_timezone') return l10n.queueChangeTimezone;
     if (row.operation == 'habit.create') return l10n.queueChangeNewHabit;
     if (row.operation == 'log.delete') return l10n.queueChangeRemoved;
     if (row.operation == 'log.set_value') {

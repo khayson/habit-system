@@ -99,6 +99,25 @@ void main() {
     await tearDownApp(tester, account);
   });
 
+  testWidgets('a profile edit that changed elsewhere first is described in words (3b)', (
+    tester,
+  ) async {
+    final server = FakeSyncServer();
+    final account = (await tester.runAsync(() => testAccount(server)))!;
+    await tester.runAsync(() async {
+      await account.writer.updateProfile(name: 'Maya Chen', city: 'Accra', countryCode: 'GH');
+      server.bumpUserVersion();
+      await account.sync.sync(force: true);
+    });
+    await tester.pumpWidget(testApp(initial: '/sync', account: account));
+    await settle(tester);
+
+    expect(find.text('Your profile · Name and location'), findsOneWidget);
+    expect(find.text('It changed on another device first.'), findsOneWidget);
+    expect(find.text('Discard'), findsOneWidget);
+    await tearDownApp(tester, account);
+  });
+
   testWidgets('a change that is backing off can be tried again now', (tester) async {
     final server = FakeSyncServer();
     final account = (await tester.runAsync(() => testAccount(server)))!;

@@ -394,6 +394,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get queueChangeOther => 'Change';
 
   @override
+  String get queueYourProfile => 'Your profile';
+
+  @override
+  String get queueChangeProfile => 'Name and location';
+
+  @override
+  String get queueChangeTimezone => 'Time zone';
+
+  @override
   String queueItemTitle(String habit, String change) {
     return '$habit · $change';
   }
