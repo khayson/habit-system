@@ -1,7 +1,8 @@
 {
-  "description": "Phase 3b (A20): profile.update {name, city, country_code} on the user entity, through /sync. The payload is the whole desired state; city and country_code may be null (cleared). Version-checked against users.version; an identical update acks without a new version. The entity id is the caller's user id; any other id is 404 not_found. The dart suite joins in 3b.2.",
+  "description": "Phase 3b (A20): profile.update {name, city, country_code} on the user entity, through /sync. The payload is the whole desired state; city and country_code may be null (cleared). Version-checked against users.version; an identical update acks without a new version. The entity id is the caller's user id; any other id is 404 not_found.",
   "suites": [
-    "php"
+    "php",
+    "dart"
   ],
   "now": "2026-05-28T17:22:00Z",
   "accepted": {

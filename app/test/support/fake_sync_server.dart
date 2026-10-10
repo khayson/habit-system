@@ -60,13 +60,30 @@ class FakeSyncServer implements SyncTransport {
   /// False to act as a server before 3.2 (no calendar_history on the user).
   bool sendCalendarHistory = true;
 
+  /// Phase 3b profile (profile.update) and photo state (the avatar endpoints bump these).
+  String name = 'Maya';
+  String? city;
+  String? countryCode;
+  int avatarVersion = 0;
+  bool hasAvatar = false;
+
+  /// False to act as a server before 3b (no profile or photo fields on the user).
+  bool sendProfileFields = true;
+
   Map<String, dynamic> get user => {
     'id': 'user-1',
-    'name': 'Maya',
+    'name': name,
+    'email': 'maya@example.com',
     'timezone': timezone,
     'day_start_offset_minutes': 0,
     'xp': 0,
     'version': userVersion,
+    if (sendProfileFields) ...{
+      'city': city,
+      'country_code': countryCode,
+      'avatar_version': avatarVersion,
+      'has_avatar': hasAvatar,
+    },
     if (sendCalendarHistory)
       'calendar_history': [
         {
@@ -168,6 +185,7 @@ class FakeSyncServer implements SyncTransport {
       'log.set_value' || 'log.set_binary' => _setValue(m),
       'log.delete' => _delete(m),
       'profile.set_timezone' => _setTimezone(m),
+      'profile.update' => _profileUpdate(m),
       'reminder.create' || 'reminder.update' || 'reminder.delete' => _reminder(m),
       _ => _failed(m, 'rejected', {'code': 'unsupported_operation', 'message': 'x'}),
     };
@@ -200,6 +218,46 @@ class FakeSyncServer implements SyncTransport {
       'entity_id': 'user-1',
       'version': userVersion,
     };
+  }
+
+  /// Phase 3b: profile.update as the real ProfileUpdate answers it (identical state: no bump).
+  Map<String, dynamic> _profileUpdate(Map<String, dynamic> m) {
+    if (m['base_version'] != userVersion) {
+      return _failed(m, 'conflict', {
+        'code': 'version_conflict',
+        'message': 'x',
+        'resource_id': 'user-1',
+        'expected_version': m['base_version'],
+        'current_version': userVersion,
+        'current': user,
+      });
+    }
+    final p = (m['payload'] as Map).cast<String, dynamic>();
+    final changed = p['name'] != name || p['city'] != city || p['country_code'] != countryCode;
+    if (changed) {
+      name = p['name'] as String;
+      city = p['city'] as String?;
+      countryCode = p['country_code'] as String?;
+      userVersion++;
+      _journal('user', 'user-1', 'upsert', userVersion, user);
+    }
+    return {
+      'mutation_id': m['mutation_id'],
+      'status': 'accepted',
+      'duplicate': false,
+      'entity': 'user',
+      'entity_id': 'user-1',
+      'version': userVersion,
+    };
+  }
+
+  /// A photo change through the avatar endpoints (another device, or this one's upload): bumps
+  /// avatar_version and the user version and journals the user.
+  void changeAvatar({required bool present}) {
+    avatarVersion++;
+    hasAvatar = present;
+    userVersion++;
+    _journal('user', 'user-1', 'upsert', userVersion, user);
   }
 
   /// Phase 3.2b reminders, as the real ReminderWrites answers them.

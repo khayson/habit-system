@@ -163,6 +163,53 @@ class LocalMutationService {
     });
   }
 
+  /// profile.update (A20): the whole desired state, so the payload always carries all three
+  /// keys (null clears city or country). Entity user, id = the user id, base_version = the
+  /// confirmed user version. A second unsent profile.update coalesces into the first and keeps
+  /// its base_version (as reminder.update does). Inputs are trimmed; an empty city is null.
+  Future<String> updateProfile({
+    required String name,
+    required String? city,
+    required String? countryCode,
+  }) {
+    final trimmedCity = city?.trim();
+    final payload = <String, Object?>{
+      'name': name.trim(),
+      'city': trimmedCity == null || trimmedCity.isEmpty ? null : trimmedCity,
+      'country_code': countryCode,
+    };
+    return db.transaction(() async {
+      final calendar = await _calendar();
+      final state = await (db.select(db.syncState)..where((s) => s.id.equals(1))).getSingle();
+      final pending =
+          await (db.select(db.outbox)
+                ..where(
+                  (o) => o.operation.equals('profile.update') & o.state.equals(OutboxState.pending),
+                )
+                ..orderBy([(o) => OrderingTerm.desc(o.seq)])
+                ..limit(1))
+              .getSingleOrNull();
+      if (pending != null) {
+        await (db.update(db.outbox)..where((o) => o.seq.equals(pending.seq))).write(
+          OutboxCompanion(payload: Value(jsonEncode(payload))),
+        );
+        return pending.mutationId;
+      }
+      final user = jsonDecode(state.userPayload ?? '{}');
+      final version = user is Map && user['version'] is int ? user['version'] as int : null;
+      return _append(
+        entity: 'user',
+        entityId: state.userId,
+        operation: 'profile.update',
+        baseVersion: version,
+        calendar: calendar,
+        localDate: null,
+        habitId: null,
+        payload: payload,
+      );
+    });
+  }
+
   /// log.delete for one habit-day. Carries habit_id + log_date so the server can resolve it
   /// even if the id never reached it (A29).
   Future<LocalWrite> deleteLog({required String habitId, required LocalDate date}) {
