@@ -1,0 +1,84 @@
+name: Legal pages
+
+# A33: the public Terms of Service and Privacy Policy pages, built from docs/legal.
+# Pull requests and pushes build them as an artifact (draft warnings are fine). Publishing is
+# only ever a manual run with "publish" ticked, which fails unless every fact is filled and
+# both documents are final. A push never deploys.
+
+on:
+  pull_request:
+    paths:
+      - docs/legal/**
+      - api/app/Legal/**
+      - scripts/build-legal.php
+      - .github/workflows/legal-pages.yml
+  push:
+    branches: [main]
+    paths:
+      - docs/legal/**
+      - api/app/Legal/**
+      - scripts/build-legal.php
+      - .github/workflows/legal-pages.yml
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish to GitHub Pages (every fact filled, status final)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: legal-pages-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, intl
+          coverage: none
+      - name: Cache Composer
+        uses: actions/cache@v6
+        with:
+          path: ~/.composer/cache/files
+          key: composer-${{ hashFiles('api/composer.lock') }}
+      - name: Composer install
+        working-directory: api
+        run: composer install --no-interaction --prefer-dist --no-progress --no-dev
+      - name: Build (draft warnings allowed)
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.publish) }}
+        run: php scripts/build-legal.php --out=_site
+      - name: Build for publishing (fails on a missing fact or a draft)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish }}
+        run: php scripts/build-legal.php --out=_site --publish
+      - name: Upload the pages
+        uses: actions/upload-artifact@v7
+        with:
+          name: legal-pages
+          path: _site
+      - name: Upload for GitHub Pages
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish }}
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+  deploy:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish }}
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v6
+      - id: deployment
+        uses: actions/deploy-pages@v5
