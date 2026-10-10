@@ -68,14 +68,23 @@ final readonly class HabitSchedule
     }
 
     /**
-     * The first date a new definition may govern (A30): tomorrow, or the next Monday when either
-     * the old or the new frequency is weekly, so a change never leaves days outside every period
-     * and never splits an open week.
+     * The first date a new definition may govern (A30, A34): the next Monday when either the old
+     * or the new frequency is weekly (never split an open week); for an interval old definition,
+     * the first day after today it schedules (its periods are single scheduled days, so the
+     * change starts where the next one would); otherwise tomorrow.
      */
     public static function nextEffectiveDate(LocalDate $today, Frequency $old, Frequency $new): LocalDate
     {
         if ($old->isWeekly() || $new->isWeekly()) {
             return $today->mondayOfWeek()->addDays(7);
+        }
+        if ($old->type === FrequencyType::Interval && $old->anchorDate !== null && $old->everyNDays > 0) {
+            if ($old->anchorDate->isAfter($today)) {
+                return $old->anchorDate;
+            }
+            $periods = intdiv($old->anchorDate->daysUntil($today), $old->everyNDays) + 1;
+
+            return $old->anchorDate->addDays($periods * $old->everyNDays);
         }
 
         return $today->addDays(1);
