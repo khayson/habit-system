@@ -87,7 +87,8 @@ class _ReminderEditorScreenState extends State<ReminderEditorScreen> with Widget
   String? _liveName;
   bool _loaded = false;
 
-  /// L1: a write is running; Save and Remove ignore taps until it finishes.
+  /// L1: a write is running; Save and Remove ignore taps until it finishes. S7: after a
+  /// successful write it stays set while 11 leaves.
   bool _saving = false;
 
   @override
@@ -180,8 +181,10 @@ class _ReminderEditorScreenState extends State<ReminderEditorScreen> with Widget
     final editing = _editing;
     try {
       await _write(actions, editing);
-    } finally {
+    } catch (_) {
+      // S7: cleared only on failure; after a success 11 is leaving and stays disabled.
       if (mounted) setState(() => _saving = false);
+      rethrow;
     }
     if (mounted) _leave();
   }
@@ -211,8 +214,9 @@ class _ReminderEditorScreenState extends State<ReminderEditorScreen> with Widget
     setState(() => _saving = true);
     try {
       await context.read<AccountContext?>()!.actions.removeReminder(_editing!.id);
-    } finally {
+    } catch (_) {
       if (mounted) setState(() => _saving = false);
+      rethrow;
     }
     if (mounted) _leave();
   }
