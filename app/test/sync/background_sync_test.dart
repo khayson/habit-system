@@ -125,6 +125,42 @@ void main() {
     holder.close();
   });
 
+  test(
+    'the lease statements are retried when SQLite refuses the write at once (CI 38062073726)',
+    () async {
+      final server = FakeSyncServer();
+      final setup = independent(file.path);
+      await initAccountState(setup, userId: 'user-1', deviceId: 'd1', user: server.user);
+      await setup.close();
+      final impatient = AppDatabase(
+        NativeDatabase(
+          file,
+          setup: (db) {
+            configureConnection(db);
+            db.execute('PRAGMA busy_timeout = 0');
+          },
+        ),
+      );
+      await impatient.customSelect('SELECT 1').get(); // open before the lock matters
+      // Another connection holds the write lock as the engine takes its lease.
+      final holder = sqlite.sqlite3.open(file.path)..execute('BEGIN IMMEDIATE');
+      Future<void>.delayed(const Duration(milliseconds: 60), () => holder.execute('COMMIT'));
+
+      final outcome = await SyncEngine(
+        db: impatient,
+        transport: server,
+        capabilities: const ['binary'],
+        clock: () => now,
+      ).run(force: true);
+
+      expect(outcome, SyncOutcome.completed);
+      final state = await impatient.select(impatient.syncState).getSingle();
+      expect(state.leaseOwner, isNull, reason: 'released');
+      await impatient.close();
+      holder.close();
+    },
+  );
+
   test('a second isolate writing during a sync run: no lost write, no SQLITE_BUSY', () async {
     final server = FakeSyncServer();
     final main = independent(file.path);

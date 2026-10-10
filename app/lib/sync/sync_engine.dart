@@ -952,30 +952,42 @@ class SyncEngine {
   );
 
   /// Free or expired leases only: a crashed owner is recovered by expiry, never by its id (F3).
+  /// Each lease statement runs in a transaction so a write SQLite refuses at once (BUSY from a
+  /// stale WAL snapshot, without waiting on busy_timeout) is retried like any other (K2).
   Future<bool> _acquireLease() async {
-    final taken = await db.customUpdate(
-      'UPDATE sync_state SET lease_owner = ?, lease_until = ? '
-      'WHERE id = 1 AND (lease_owner IS NULL OR lease_until < ?)',
-      variables: [Variable(ownerId), Variable(_now + leaseDuration.inMilliseconds), Variable(_now)],
-      updates: {db.syncState},
+    final taken = await db.transaction(
+      () => db.customUpdate(
+        'UPDATE sync_state SET lease_owner = ?, lease_until = ? '
+        'WHERE id = 1 AND (lease_owner IS NULL OR lease_until < ?)',
+        variables: [
+          Variable(ownerId),
+          Variable(_now + leaseDuration.inMilliseconds),
+          Variable(_now),
+        ],
+        updates: {db.syncState},
+      ),
     );
     return taken == 1;
   }
 
   /// Extends the lease, or stops the run if another engine has taken it over.
   Future<void> _renewLease() async {
-    final renewed = await db.customUpdate(
-      'UPDATE sync_state SET lease_until = ? WHERE id = 1 AND lease_owner = ?',
-      variables: [Variable(_now + leaseDuration.inMilliseconds), Variable(ownerId)],
-      updates: {db.syncState},
+    final renewed = await db.transaction(
+      () => db.customUpdate(
+        'UPDATE sync_state SET lease_until = ? WHERE id = 1 AND lease_owner = ?',
+        variables: [Variable(_now + leaseDuration.inMilliseconds), Variable(ownerId)],
+        updates: {db.syncState},
+      ),
     );
     if (renewed != 1) throw const _LeaseLost();
   }
 
-  Future<void> _releaseLease() => db.customUpdate(
-    'UPDATE sync_state SET lease_owner = NULL, lease_until = NULL WHERE id = 1 AND lease_owner = ?',
-    variables: [Variable(ownerId)],
-    updates: {db.syncState},
+  Future<void> _releaseLease() => db.transaction(
+    () => db.customUpdate(
+      'UPDATE sync_state SET lease_owner = NULL, lease_until = NULL WHERE id = 1 AND lease_owner = ?',
+      variables: [Variable(ownerId)],
+      updates: {db.syncState},
+    ),
   );
 }
 
