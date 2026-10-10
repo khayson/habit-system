@@ -72,16 +72,35 @@ Future<void> showPhotoSheet(
       ],
     ]),
   );
-  if (choice == null) return;
+  if (choice == null || !context.mounted) return;
+  final messenger = ScaffoldMessenger.of(context);
+  void say(String line) => messenger.showSnackBar(SnackBar(content: Text(line)));
   if (choice == 'remove') {
-    await account.photos.remove();
+    try {
+      await account.photos.remove();
+    } on Object {
+      say(l10n.saveFailed);
+      return;
+    }
   } else {
-    final path = await picker.pick(
-      choice == 'camera' ? PhotoSource.camera : PhotoSource.gallery,
-      cropTitle: l10n.photoCropTitle,
-    );
+    // R1: a refused permission or a broken picker is a plain line, never a crash.
+    final String? path;
+    try {
+      path = await picker.pick(
+        choice == 'camera' ? PhotoSource.camera : PhotoSource.gallery,
+        cropTitle: l10n.photoCropTitle,
+      );
+    } on Object {
+      say(l10n.photoPickFailed);
+      return;
+    }
     if (path == null) return;
-    await account.photos.choose(path);
+    try {
+      await account.photos.choose(path);
+    } on Object {
+      say(l10n.photoAddFailed);
+      return;
+    }
   }
   account.sync.scheduleAfterWrite();
 }
@@ -115,6 +134,7 @@ class _EditProfileState extends State<_EditProfile> {
   late final _city = TextEditingController(text: widget.profile.city ?? '');
   late String? _country = widget.profile.countryCode;
   bool _saving = false;
+  bool _failed = false;
 
   @override
   void initState() {
@@ -150,16 +170,25 @@ class _EditProfileState extends State<_EditProfile> {
 
   Future<void> _save() async {
     if (_saving) return;
-    setState(() => _saving = true);
+    setState(() {
+      _saving = true;
+      _failed = false;
+    });
     try {
       await widget.account.actions.updateProfile(
         name: _name.text,
         city: _city.text,
         countryCode: _country,
       );
-    } catch (_) {
-      if (mounted) setState(() => _saving = false);
-      rethrow;
+    } on Object {
+      // R1: the input stays and Save works again; one plain line says what happened.
+      if (mounted) {
+        setState(() {
+          _saving = false;
+          _failed = true;
+        });
+      }
+      return;
     }
     if (mounted) Navigator.pop(context);
   }
@@ -224,6 +253,13 @@ class _EditProfileState extends State<_EditProfile> {
         ),
       ),
       const SizedBox(height: HabitSpace.s32),
+      if (_failed) ...[
+        Semantics(
+          liveRegion: true,
+          child: Text(l10n.saveFailed, style: text.bodyMedium?.copyWith(color: tokens.errorInk)),
+        ),
+        const SizedBox(height: HabitSpace.s16),
+      ],
       PrimaryButton(label: l10n.profileSave, loading: _saving, onPressed: canSave ? _save : null),
     ]);
   }
@@ -343,6 +379,7 @@ class _Reminders extends StatefulWidget {
 
 class _RemindersState extends State<_Reminders> {
   bool? _hide;
+  bool _failed = false;
   late NotificationPermission? _permission = widget.permission;
 
   @override
@@ -421,13 +458,33 @@ class _RemindersState extends State<_Reminders> {
           onChanged: _hide == null
               ? null
               : (on) async {
-                  setState(() => _hide = on);
-                  await widget.account.reminders.setHideHabitNames(on);
+                  setState(() {
+                    _hide = on;
+                    _failed = false;
+                  });
+                  try {
+                    await widget.account.reminders.setHideHabitNames(on);
+                  } on Object {
+                    // R1: back to what is saved, with one plain line.
+                    if (mounted) {
+                      setState(() {
+                        _hide = !on;
+                        _failed = true;
+                      });
+                    }
+                  }
                 },
           title: Text(l10n.hideNamesTitle, style: text.titleMedium),
           subtitle: Text(l10n.hideNamesBody, style: text.bodySmall?.copyWith(color: tokens.muted)),
         ),
       ),
+      if (_failed) ...[
+        const SizedBox(height: HabitSpace.s12),
+        Semantics(
+          liveRegion: true,
+          child: Text(l10n.saveFailed, style: text.bodyMedium?.copyWith(color: tokens.errorInk)),
+        ),
+      ],
     ]);
   }
 }

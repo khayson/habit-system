@@ -1012,6 +1012,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorCityTooLong => 'Use 60 characters or fewer.';
 
   @override
+  String get photoPickFailed =>
+      'We couldn\'t open your photos. You can allow access in your device settings.';
+
+  @override
+  String get photoAddFailed => 'That photo couldn\'t be added. Try another.';
+
+  @override
+  String get saveFailed => 'We couldn\'t save that. Try again.';
+
+  @override
   String get remindersTitle => 'Local reminders';
 
   @override

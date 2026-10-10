@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:drift/drift.dart' show DatabaseConnection;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:habit/app/router.dart';
 import 'package:habit/core/network/api_client.dart';
@@ -29,11 +30,16 @@ class FakePhotoPicker implements PhotoPicker {
   String? path;
   final List<PhotoSource> asked = [];
 
+  /// Thrown by the next pick (the platform refused, as a denied permission does).
+  Object? failWith;
+
   FakePhotoPicker(this.path);
 
   @override
   Future<String?> pick(PhotoSource source, {required String cropTitle}) async {
     asked.add(source);
+    final failure = failWith;
+    if (failure != null) throw failure;
     return path;
   }
 }
@@ -256,6 +262,99 @@ void main() {
     await tester.scrollUntilVisible(find.text('Sign out'), 300);
     expect(tester.takeException(), isNull);
     await tearDownApp(tester, a);
+  });
+
+  group('R1: failures show one neutral line and change nothing', () {
+    Future<void> failInserts(WidgetTester tester, AccountContext a, String table) =>
+        tester.runAsync(
+          () => a.session.db.customStatement(
+            'CREATE TRIGGER fail_$table BEFORE INSERT ON $table '
+            "BEGIN SELECT RAISE(ABORT, 'storage unavailable'); END",
+          ),
+        );
+
+    Future<int> queued(WidgetTester tester, AccountContext a) async =>
+        (await tester.runAsync(() async {
+          final db = a.session.db;
+          return (await db.select(db.outbox).get()).length +
+              (await db.select(db.pendingUploads).get()).length;
+        }))!;
+
+    testWidgets('the picker fails (no access)', (tester) async {
+      picker.failWith = PlatformException(code: 'photo_access_denied');
+      final a = await account(tester, FakeSyncServer());
+      await open(tester, a);
+
+      await tester.tap(find.bySemanticsLabel('Profile photo of Maya'));
+      await settle(tester);
+      await tester.tap(find.text('Choose photo'));
+      await settleUntil(tester, find.textContaining("couldn't open your photos"));
+
+      expect(
+        find.text("We couldn't open your photos. You can allow access in your device settings."),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+      expect(await queued(tester, a), 0);
+      await tearDownApp(tester, a);
+    });
+
+    testWidgets('the photo cannot be stored', (tester) async {
+      picker.path = p.join(temp.path, 'gone.jpg'); // the cropper's file has vanished
+      final a = await account(tester, FakeSyncServer());
+      await open(tester, a);
+
+      await tester.tap(find.bySemanticsLabel('Profile photo of Maya'));
+      await settle(tester);
+      await tester.tap(find.text('Choose photo'));
+      await settleUntil(tester, find.textContaining("couldn't be added"));
+
+      expect(find.text("That photo couldn't be added. Try another."), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      expect(await queued(tester, a), 0);
+      expect(find.text('M'), findsOneWidget);
+      await tearDownApp(tester, a);
+    });
+
+    testWidgets('saving the profile fails: the input stays, Save works again', (tester) async {
+      final a = await account(tester, FakeSyncServer());
+      await failInserts(tester, a, 'outbox');
+      await open(tester, a);
+      await tester.tap(find.text('Edit profile'));
+      await settle(tester);
+
+      await tester.enterText(find.widgetWithText(TextField, 'City'), 'Accra');
+      await tester.pump(); // Save is enabled on the next frame
+      await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+      await settleUntil(tester, find.text("We couldn't save that. Try again."));
+
+      expect(find.text("We couldn't save that. Try again."), findsOneWidget);
+      expect(find.text('Accra'), findsOneWidget, reason: 'the input is kept, the sheet open');
+      expect(
+        tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Save')).onPressed,
+        isNotNull,
+        reason: 'no longer busy',
+      );
+      expect(tester.takeException(), isNull);
+      expect(await queued(tester, a), 0);
+      await tearDownApp(tester, a);
+    });
+
+    testWidgets('saving the hide-names switch fails: it goes back', (tester) async {
+      final a = await account(tester, FakeSyncServer());
+      await failInserts(tester, a, 'local_settings');
+      await open(tester, a);
+      await tester.tap(find.text('Reminders'));
+      await settle(tester, rounds: 16);
+
+      await tester.tap(find.byType(Switch));
+      await settleUntil(tester, find.text("We couldn't save that. Try again."));
+
+      expect(find.text("We couldn't save that. Try again."), findsOneWidget);
+      expect(tester.widget<Switch>(find.byType(Switch)).value, isFalse, reason: 'back');
+      expect(tester.takeException(), isNull);
+      await tearDownApp(tester, a);
+    });
   });
 
   group('sign out', () {

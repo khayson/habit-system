@@ -1808,6 +1808,24 @@ abstract class AppLocalizations {
   /// **'Use 60 characters or fewer.'**
   String get errorCityTooLong;
 
+  /// No description provided for @photoPickFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t open your photos. You can allow access in your device settings.'**
+  String get photoPickFailed;
+
+  /// No description provided for @photoAddFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'That photo couldn\'t be added. Try another.'**
+  String get photoAddFailed;
+
+  /// No description provided for @saveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t save that. Try again.'**
+  String get saveFailed;
+
   /// No description provided for @remindersTitle.
   ///
   /// In en, this message translates to:
