@@ -3372,6 +3372,28 @@ class $SyncStateTable extends SyncState
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _avatarFileMeta = const VerificationMeta(
+    'avatarFile',
+  );
+  @override
+  late final GeneratedColumn<String> avatarFile = GeneratedColumn<String>(
+    'avatar_file',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _avatarFileVersionMeta = const VerificationMeta(
+    'avatarFileVersion',
+  );
+  @override
+  late final GeneratedColumn<int> avatarFileVersion = GeneratedColumn<int>(
+    'avatar_file_version',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3396,6 +3418,8 @@ class $SyncStateTable extends SyncState
     lastError,
     clockSkewMs,
     appVersion,
+    avatarFile,
+    avatarFileVersion,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3578,6 +3602,21 @@ class $SyncStateTable extends SyncState
         appVersion.isAcceptableOrUnknown(data['app_version']!, _appVersionMeta),
       );
     }
+    if (data.containsKey('avatar_file')) {
+      context.handle(
+        _avatarFileMeta,
+        avatarFile.isAcceptableOrUnknown(data['avatar_file']!, _avatarFileMeta),
+      );
+    }
+    if (data.containsKey('avatar_file_version')) {
+      context.handle(
+        _avatarFileVersionMeta,
+        avatarFileVersion.isAcceptableOrUnknown(
+          data['avatar_file_version']!,
+          _avatarFileVersionMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -3675,6 +3714,14 @@ class $SyncStateTable extends SyncState
         DriftSqlType.string,
         data['${effectivePrefix}app_version'],
       ),
+      avatarFile: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}avatar_file'],
+      ),
+      avatarFileVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}avatar_file_version'],
+      ),
     );
   }
 
@@ -3723,6 +3770,15 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
 
   /// The app version that last synced this database; a change replays undecodable items (G5).
   final String? appVersion;
+
+  /// Phase 3b (A20): the profile photo this device shows, as a path relative to the account's
+  /// folder: a photo chosen here (waiting to upload, or uploaded) or a downloaded copy of the
+  /// server's. Null shows initials.
+  final String? avatarFile;
+
+  /// The server avatar_version [avatarFile] belongs to; null while a photo chosen here has not
+  /// been acknowledged.
+  final int? avatarFileVersion;
   const SyncStateRow({
     required this.id,
     required this.userId,
@@ -3746,6 +3802,8 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
     this.lastError,
     required this.clockSkewMs,
     this.appVersion,
+    this.avatarFile,
+    this.avatarFileVersion,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3799,6 +3857,12 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
     map['clock_skew_ms'] = Variable<int>(clockSkewMs);
     if (!nullToAbsent || appVersion != null) {
       map['app_version'] = Variable<String>(appVersion);
+    }
+    if (!nullToAbsent || avatarFile != null) {
+      map['avatar_file'] = Variable<String>(avatarFile);
+    }
+    if (!nullToAbsent || avatarFileVersion != null) {
+      map['avatar_file_version'] = Variable<int>(avatarFileVersion);
     }
     return map;
   }
@@ -3855,6 +3919,12 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
       appVersion: appVersion == null && nullToAbsent
           ? const Value.absent()
           : Value(appVersion),
+      avatarFile: avatarFile == null && nullToAbsent
+          ? const Value.absent()
+          : Value(avatarFile),
+      avatarFileVersion: avatarFileVersion == null && nullToAbsent
+          ? const Value.absent()
+          : Value(avatarFileVersion),
     );
   }
 
@@ -3892,6 +3962,8 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
       lastError: serializer.fromJson<String?>(json['lastError']),
       clockSkewMs: serializer.fromJson<int>(json['clockSkewMs']),
       appVersion: serializer.fromJson<String?>(json['appVersion']),
+      avatarFile: serializer.fromJson<String?>(json['avatarFile']),
+      avatarFileVersion: serializer.fromJson<int?>(json['avatarFileVersion']),
     );
   }
   @override
@@ -3920,6 +3992,8 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
       'lastError': serializer.toJson<String?>(lastError),
       'clockSkewMs': serializer.toJson<int>(clockSkewMs),
       'appVersion': serializer.toJson<String?>(appVersion),
+      'avatarFile': serializer.toJson<String?>(avatarFile),
+      'avatarFileVersion': serializer.toJson<int?>(avatarFileVersion),
     };
   }
 
@@ -3946,6 +4020,8 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
     Value<String?> lastError = const Value.absent(),
     int? clockSkewMs,
     Value<String?> appVersion = const Value.absent(),
+    Value<String?> avatarFile = const Value.absent(),
+    Value<int?> avatarFileVersion = const Value.absent(),
   }) => SyncStateRow(
     id: id ?? this.id,
     userId: userId ?? this.userId,
@@ -3976,6 +4052,10 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
     lastError: lastError.present ? lastError.value : this.lastError,
     clockSkewMs: clockSkewMs ?? this.clockSkewMs,
     appVersion: appVersion.present ? appVersion.value : this.appVersion,
+    avatarFile: avatarFile.present ? avatarFile.value : this.avatarFile,
+    avatarFileVersion: avatarFileVersion.present
+        ? avatarFileVersion.value
+        : this.avatarFileVersion,
   );
   SyncStateRow copyWithCompanion(SyncStateCompanion data) {
     return SyncStateRow(
@@ -4033,6 +4113,12 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
       appVersion: data.appVersion.present
           ? data.appVersion.value
           : this.appVersion,
+      avatarFile: data.avatarFile.present
+          ? data.avatarFile.value
+          : this.avatarFile,
+      avatarFileVersion: data.avatarFileVersion.present
+          ? data.avatarFileVersion.value
+          : this.avatarFileVersion,
     );
   }
 
@@ -4060,7 +4146,9 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
           ..write('statusCode: $statusCode, ')
           ..write('lastError: $lastError, ')
           ..write('clockSkewMs: $clockSkewMs, ')
-          ..write('appVersion: $appVersion')
+          ..write('appVersion: $appVersion, ')
+          ..write('avatarFile: $avatarFile, ')
+          ..write('avatarFileVersion: $avatarFileVersion')
           ..write(')'))
         .toString();
   }
@@ -4089,6 +4177,8 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
     lastError,
     clockSkewMs,
     appVersion,
+    avatarFile,
+    avatarFileVersion,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -4115,7 +4205,9 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
           other.statusCode == this.statusCode &&
           other.lastError == this.lastError &&
           other.clockSkewMs == this.clockSkewMs &&
-          other.appVersion == this.appVersion);
+          other.appVersion == this.appVersion &&
+          other.avatarFile == this.avatarFile &&
+          other.avatarFileVersion == this.avatarFileVersion);
 }
 
 class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
@@ -4141,6 +4233,8 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
   final Value<String?> lastError;
   final Value<int> clockSkewMs;
   final Value<String?> appVersion;
+  final Value<String?> avatarFile;
+  final Value<int?> avatarFileVersion;
   const SyncStateCompanion({
     this.id = const Value.absent(),
     this.userId = const Value.absent(),
@@ -4164,6 +4258,8 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
     this.lastError = const Value.absent(),
     this.clockSkewMs = const Value.absent(),
     this.appVersion = const Value.absent(),
+    this.avatarFile = const Value.absent(),
+    this.avatarFileVersion = const Value.absent(),
   });
   SyncStateCompanion.insert({
     this.id = const Value.absent(),
@@ -4188,6 +4284,8 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
     this.lastError = const Value.absent(),
     this.clockSkewMs = const Value.absent(),
     this.appVersion = const Value.absent(),
+    this.avatarFile = const Value.absent(),
+    this.avatarFileVersion = const Value.absent(),
   }) : userId = Value(userId),
        deviceId = Value(deviceId);
   static Insertable<SyncStateRow> custom({
@@ -4213,6 +4311,8 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
     Expression<String>? lastError,
     Expression<int>? clockSkewMs,
     Expression<String>? appVersion,
+    Expression<String>? avatarFile,
+    Expression<int>? avatarFileVersion,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -4240,6 +4340,8 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
       if (lastError != null) 'last_error': lastError,
       if (clockSkewMs != null) 'clock_skew_ms': clockSkewMs,
       if (appVersion != null) 'app_version': appVersion,
+      if (avatarFile != null) 'avatar_file': avatarFile,
+      if (avatarFileVersion != null) 'avatar_file_version': avatarFileVersion,
     });
   }
 
@@ -4266,6 +4368,8 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
     Value<String?>? lastError,
     Value<int>? clockSkewMs,
     Value<String?>? appVersion,
+    Value<String?>? avatarFile,
+    Value<int?>? avatarFileVersion,
   }) {
     return SyncStateCompanion(
       id: id ?? this.id,
@@ -4291,6 +4395,8 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
       lastError: lastError ?? this.lastError,
       clockSkewMs: clockSkewMs ?? this.clockSkewMs,
       appVersion: appVersion ?? this.appVersion,
+      avatarFile: avatarFile ?? this.avatarFile,
+      avatarFileVersion: avatarFileVersion ?? this.avatarFileVersion,
     );
   }
 
@@ -4367,6 +4473,12 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
     if (appVersion.present) {
       map['app_version'] = Variable<String>(appVersion.value);
     }
+    if (avatarFile.present) {
+      map['avatar_file'] = Variable<String>(avatarFile.value);
+    }
+    if (avatarFileVersion.present) {
+      map['avatar_file_version'] = Variable<int>(avatarFileVersion.value);
+    }
     return map;
   }
 
@@ -4394,7 +4506,9 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
           ..write('statusCode: $statusCode, ')
           ..write('lastError: $lastError, ')
           ..write('clockSkewMs: $clockSkewMs, ')
-          ..write('appVersion: $appVersion')
+          ..write('appVersion: $appVersion, ')
+          ..write('avatarFile: $avatarFile, ')
+          ..write('avatarFileVersion: $avatarFileVersion')
           ..write(')'))
         .toString();
   }
@@ -7553,6 +7667,523 @@ class ScheduledNotificationsCompanion
   }
 }
 
+class $PendingUploadsTable extends PendingUploads
+    with TableInfo<$PendingUploadsTable, PendingUpload> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PendingUploadsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _opMeta = const VerificationMeta('op');
+  @override
+  late final GeneratedColumn<String> op = GeneratedColumn<String>(
+    'op',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _localPathMeta = const VerificationMeta(
+    'localPath',
+  );
+  @override
+  late final GeneratedColumn<String> localPath = GeneratedColumn<String>(
+    'local_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _stateMeta = const VerificationMeta('state');
+  @override
+  late final GeneratedColumn<String> state = GeneratedColumn<String>(
+    'state',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _attemptsMeta = const VerificationMeta(
+    'attempts',
+  );
+  @override
+  late final GeneratedColumn<int> attempts = GeneratedColumn<int>(
+    'attempts',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _nextAttemptAtMeta = const VerificationMeta(
+    'nextAttemptAt',
+  );
+  @override
+  late final GeneratedColumn<int> nextAttemptAt = GeneratedColumn<int>(
+    'next_attempt_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _lastErrorMeta = const VerificationMeta(
+    'lastError',
+  );
+  @override
+  late final GeneratedColumn<String> lastError = GeneratedColumn<String>(
+    'last_error',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    op,
+    localPath,
+    state,
+    attempts,
+    nextAttemptAt,
+    lastError,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'pending_uploads';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PendingUpload> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('op')) {
+      context.handle(_opMeta, op.isAcceptableOrUnknown(data['op']!, _opMeta));
+    } else if (isInserting) {
+      context.missing(_opMeta);
+    }
+    if (data.containsKey('local_path')) {
+      context.handle(
+        _localPathMeta,
+        localPath.isAcceptableOrUnknown(data['local_path']!, _localPathMeta),
+      );
+    }
+    if (data.containsKey('state')) {
+      context.handle(
+        _stateMeta,
+        state.isAcceptableOrUnknown(data['state']!, _stateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_stateMeta);
+    }
+    if (data.containsKey('attempts')) {
+      context.handle(
+        _attemptsMeta,
+        attempts.isAcceptableOrUnknown(data['attempts']!, _attemptsMeta),
+      );
+    }
+    if (data.containsKey('next_attempt_at')) {
+      context.handle(
+        _nextAttemptAtMeta,
+        nextAttemptAt.isAcceptableOrUnknown(
+          data['next_attempt_at']!,
+          _nextAttemptAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_error')) {
+      context.handle(
+        _lastErrorMeta,
+        lastError.isAcceptableOrUnknown(data['last_error']!, _lastErrorMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PendingUpload map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PendingUpload(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      op: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}op'],
+      )!,
+      localPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}local_path'],
+      ),
+      state: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}state'],
+      )!,
+      attempts: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}attempts'],
+      )!,
+      nextAttemptAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}next_attempt_at'],
+      ),
+      lastError: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_error'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $PendingUploadsTable createAlias(String alias) {
+    return $PendingUploadsTable(attachedDatabase, alias);
+  }
+}
+
+class PendingUpload extends DataClass implements Insertable<PendingUpload> {
+  final String id;
+
+  /// put or delete.
+  final String op;
+
+  /// For a put: the prepared JPEG, relative to the account's folder.
+  final String? localPath;
+  final String state;
+  final int attempts;
+  final int? nextAttemptAt;
+  final String? lastError;
+  final int createdAt;
+  const PendingUpload({
+    required this.id,
+    required this.op,
+    this.localPath,
+    required this.state,
+    required this.attempts,
+    this.nextAttemptAt,
+    this.lastError,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['op'] = Variable<String>(op);
+    if (!nullToAbsent || localPath != null) {
+      map['local_path'] = Variable<String>(localPath);
+    }
+    map['state'] = Variable<String>(state);
+    map['attempts'] = Variable<int>(attempts);
+    if (!nullToAbsent || nextAttemptAt != null) {
+      map['next_attempt_at'] = Variable<int>(nextAttemptAt);
+    }
+    if (!nullToAbsent || lastError != null) {
+      map['last_error'] = Variable<String>(lastError);
+    }
+    map['created_at'] = Variable<int>(createdAt);
+    return map;
+  }
+
+  PendingUploadsCompanion toCompanion(bool nullToAbsent) {
+    return PendingUploadsCompanion(
+      id: Value(id),
+      op: Value(op),
+      localPath: localPath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(localPath),
+      state: Value(state),
+      attempts: Value(attempts),
+      nextAttemptAt: nextAttemptAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nextAttemptAt),
+      lastError: lastError == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastError),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory PendingUpload.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PendingUpload(
+      id: serializer.fromJson<String>(json['id']),
+      op: serializer.fromJson<String>(json['op']),
+      localPath: serializer.fromJson<String?>(json['localPath']),
+      state: serializer.fromJson<String>(json['state']),
+      attempts: serializer.fromJson<int>(json['attempts']),
+      nextAttemptAt: serializer.fromJson<int?>(json['nextAttemptAt']),
+      lastError: serializer.fromJson<String?>(json['lastError']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'op': serializer.toJson<String>(op),
+      'localPath': serializer.toJson<String?>(localPath),
+      'state': serializer.toJson<String>(state),
+      'attempts': serializer.toJson<int>(attempts),
+      'nextAttemptAt': serializer.toJson<int?>(nextAttemptAt),
+      'lastError': serializer.toJson<String?>(lastError),
+      'createdAt': serializer.toJson<int>(createdAt),
+    };
+  }
+
+  PendingUpload copyWith({
+    String? id,
+    String? op,
+    Value<String?> localPath = const Value.absent(),
+    String? state,
+    int? attempts,
+    Value<int?> nextAttemptAt = const Value.absent(),
+    Value<String?> lastError = const Value.absent(),
+    int? createdAt,
+  }) => PendingUpload(
+    id: id ?? this.id,
+    op: op ?? this.op,
+    localPath: localPath.present ? localPath.value : this.localPath,
+    state: state ?? this.state,
+    attempts: attempts ?? this.attempts,
+    nextAttemptAt: nextAttemptAt.present
+        ? nextAttemptAt.value
+        : this.nextAttemptAt,
+    lastError: lastError.present ? lastError.value : this.lastError,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  PendingUpload copyWithCompanion(PendingUploadsCompanion data) {
+    return PendingUpload(
+      id: data.id.present ? data.id.value : this.id,
+      op: data.op.present ? data.op.value : this.op,
+      localPath: data.localPath.present ? data.localPath.value : this.localPath,
+      state: data.state.present ? data.state.value : this.state,
+      attempts: data.attempts.present ? data.attempts.value : this.attempts,
+      nextAttemptAt: data.nextAttemptAt.present
+          ? data.nextAttemptAt.value
+          : this.nextAttemptAt,
+      lastError: data.lastError.present ? data.lastError.value : this.lastError,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PendingUpload(')
+          ..write('id: $id, ')
+          ..write('op: $op, ')
+          ..write('localPath: $localPath, ')
+          ..write('state: $state, ')
+          ..write('attempts: $attempts, ')
+          ..write('nextAttemptAt: $nextAttemptAt, ')
+          ..write('lastError: $lastError, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    op,
+    localPath,
+    state,
+    attempts,
+    nextAttemptAt,
+    lastError,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PendingUpload &&
+          other.id == this.id &&
+          other.op == this.op &&
+          other.localPath == this.localPath &&
+          other.state == this.state &&
+          other.attempts == this.attempts &&
+          other.nextAttemptAt == this.nextAttemptAt &&
+          other.lastError == this.lastError &&
+          other.createdAt == this.createdAt);
+}
+
+class PendingUploadsCompanion extends UpdateCompanion<PendingUpload> {
+  final Value<String> id;
+  final Value<String> op;
+  final Value<String?> localPath;
+  final Value<String> state;
+  final Value<int> attempts;
+  final Value<int?> nextAttemptAt;
+  final Value<String?> lastError;
+  final Value<int> createdAt;
+  final Value<int> rowid;
+  const PendingUploadsCompanion({
+    this.id = const Value.absent(),
+    this.op = const Value.absent(),
+    this.localPath = const Value.absent(),
+    this.state = const Value.absent(),
+    this.attempts = const Value.absent(),
+    this.nextAttemptAt = const Value.absent(),
+    this.lastError = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PendingUploadsCompanion.insert({
+    required String id,
+    required String op,
+    this.localPath = const Value.absent(),
+    required String state,
+    this.attempts = const Value.absent(),
+    this.nextAttemptAt = const Value.absent(),
+    this.lastError = const Value.absent(),
+    required int createdAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       op = Value(op),
+       state = Value(state),
+       createdAt = Value(createdAt);
+  static Insertable<PendingUpload> custom({
+    Expression<String>? id,
+    Expression<String>? op,
+    Expression<String>? localPath,
+    Expression<String>? state,
+    Expression<int>? attempts,
+    Expression<int>? nextAttemptAt,
+    Expression<String>? lastError,
+    Expression<int>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (op != null) 'op': op,
+      if (localPath != null) 'local_path': localPath,
+      if (state != null) 'state': state,
+      if (attempts != null) 'attempts': attempts,
+      if (nextAttemptAt != null) 'next_attempt_at': nextAttemptAt,
+      if (lastError != null) 'last_error': lastError,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PendingUploadsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? op,
+    Value<String?>? localPath,
+    Value<String>? state,
+    Value<int>? attempts,
+    Value<int?>? nextAttemptAt,
+    Value<String?>? lastError,
+    Value<int>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return PendingUploadsCompanion(
+      id: id ?? this.id,
+      op: op ?? this.op,
+      localPath: localPath ?? this.localPath,
+      state: state ?? this.state,
+      attempts: attempts ?? this.attempts,
+      nextAttemptAt: nextAttemptAt ?? this.nextAttemptAt,
+      lastError: lastError ?? this.lastError,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (op.present) {
+      map['op'] = Variable<String>(op.value);
+    }
+    if (localPath.present) {
+      map['local_path'] = Variable<String>(localPath.value);
+    }
+    if (state.present) {
+      map['state'] = Variable<String>(state.value);
+    }
+    if (attempts.present) {
+      map['attempts'] = Variable<int>(attempts.value);
+    }
+    if (nextAttemptAt.present) {
+      map['next_attempt_at'] = Variable<int>(nextAttemptAt.value);
+    }
+    if (lastError.present) {
+      map['last_error'] = Variable<String>(lastError.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PendingUploadsCompanion(')
+          ..write('id: $id, ')
+          ..write('op: $op, ')
+          ..write('localPath: $localPath, ')
+          ..write('state: $state, ')
+          ..write('attempts: $attempts, ')
+          ..write('nextAttemptAt: $nextAttemptAt, ')
+          ..write('lastError: $lastError, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -7573,6 +8204,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $RemindersTable reminders = $RemindersTable(this);
   late final $ScheduledNotificationsTable scheduledNotifications =
       $ScheduledNotificationsTable(this);
+  late final $PendingUploadsTable pendingUploads = $PendingUploadsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -7590,6 +8222,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     localSettings,
     reminders,
     scheduledNotifications,
+    pendingUploads,
   ];
 }
 
@@ -9088,6 +9721,8 @@ typedef $$SyncStateTableCreateCompanionBuilder = SyncStateCompanion Function({
   Value<String?> lastError,
   Value<int> clockSkewMs,
   Value<String?> appVersion,
+  Value<String?> avatarFile,
+  Value<int?> avatarFileVersion,
 });
 typedef $$SyncStateTableUpdateCompanionBuilder = SyncStateCompanion Function({
   Value<int> id,
@@ -9112,6 +9747,8 @@ typedef $$SyncStateTableUpdateCompanionBuilder = SyncStateCompanion Function({
   Value<String?> lastError,
   Value<int> clockSkewMs,
   Value<String?> appVersion,
+  Value<String?> avatarFile,
+  Value<int?> avatarFileVersion,
 });
 
 class $$SyncStateTableFilterComposer
@@ -9230,6 +9867,16 @@ class $$SyncStateTableFilterComposer
 
   ColumnFilters<String> get appVersion => $composableBuilder(
     column: $table.appVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get avatarFile => $composableBuilder(
+    column: $table.avatarFile,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get avatarFileVersion => $composableBuilder(
+    column: $table.avatarFileVersion,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -9352,6 +9999,16 @@ class $$SyncStateTableOrderingComposer
     column: $table.appVersion,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get avatarFile => $composableBuilder(
+    column: $table.avatarFile,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get avatarFileVersion => $composableBuilder(
+    column: $table.avatarFileVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SyncStateTableAnnotationComposer
@@ -9460,6 +10117,16 @@ class $$SyncStateTableAnnotationComposer
     column: $table.appVersion,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get avatarFile => $composableBuilder(
+    column: $table.avatarFile,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get avatarFileVersion => $composableBuilder(
+    column: $table.avatarFileVersion,
+    builder: (column) => column,
+  );
 }
 
 class $$SyncStateTableTableManager
@@ -9515,6 +10182,8 @@ class $$SyncStateTableTableManager
                 Value<String?> lastError = const Value.absent(),
                 Value<int> clockSkewMs = const Value.absent(),
                 Value<String?> appVersion = const Value.absent(),
+                Value<String?> avatarFile = const Value.absent(),
+                Value<int?> avatarFileVersion = const Value.absent(),
               }) => SyncStateCompanion(
                 id: id,
                 userId: userId,
@@ -9538,6 +10207,8 @@ class $$SyncStateTableTableManager
                 lastError: lastError,
                 clockSkewMs: clockSkewMs,
                 appVersion: appVersion,
+                avatarFile: avatarFile,
+                avatarFileVersion: avatarFileVersion,
               ),
           createCompanionCallback:
               ({
@@ -9563,6 +10234,8 @@ class $$SyncStateTableTableManager
                 Value<String?> lastError = const Value.absent(),
                 Value<int> clockSkewMs = const Value.absent(),
                 Value<String?> appVersion = const Value.absent(),
+                Value<String?> avatarFile = const Value.absent(),
+                Value<int?> avatarFileVersion = const Value.absent(),
               }) => SyncStateCompanion.insert(
                 id: id,
                 userId: userId,
@@ -9586,6 +10259,8 @@ class $$SyncStateTableTableManager
                 lastError: lastError,
                 clockSkewMs: clockSkewMs,
                 appVersion: appVersion,
+                avatarFile: avatarFile,
+                avatarFileVersion: avatarFileVersion,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -11358,6 +12033,276 @@ typedef $$ScheduledNotificationsTableProcessedTableManager =
       ScheduledNotification,
       PrefetchHooks Function()
     >;
+typedef $$PendingUploadsTableCreateCompanionBuilder =
+    PendingUploadsCompanion Function({
+      required String id,
+      required String op,
+      Value<String?> localPath,
+      required String state,
+      Value<int> attempts,
+      Value<int?> nextAttemptAt,
+      Value<String?> lastError,
+      required int createdAt,
+      Value<int> rowid,
+    });
+typedef $$PendingUploadsTableUpdateCompanionBuilder =
+    PendingUploadsCompanion Function({
+      Value<String> id,
+      Value<String> op,
+      Value<String?> localPath,
+      Value<String> state,
+      Value<int> attempts,
+      Value<int?> nextAttemptAt,
+      Value<String?> lastError,
+      Value<int> createdAt,
+      Value<int> rowid,
+    });
+
+class $$PendingUploadsTableFilterComposer
+    extends Composer<_$AppDatabase, $PendingUploadsTable> {
+  $$PendingUploadsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get op => $composableBuilder(
+    column: $table.op,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get localPath => $composableBuilder(
+    column: $table.localPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get state => $composableBuilder(
+    column: $table.state,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get attempts => $composableBuilder(
+    column: $table.attempts,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get nextAttemptAt => $composableBuilder(
+    column: $table.nextAttemptAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PendingUploadsTableOrderingComposer
+    extends Composer<_$AppDatabase, $PendingUploadsTable> {
+  $$PendingUploadsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get op => $composableBuilder(
+    column: $table.op,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get localPath => $composableBuilder(
+    column: $table.localPath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get state => $composableBuilder(
+    column: $table.state,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get attempts => $composableBuilder(
+    column: $table.attempts,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get nextAttemptAt => $composableBuilder(
+    column: $table.nextAttemptAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PendingUploadsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PendingUploadsTable> {
+  $$PendingUploadsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get op =>
+      $composableBuilder(column: $table.op, builder: (column) => column);
+
+  GeneratedColumn<String> get localPath =>
+      $composableBuilder(column: $table.localPath, builder: (column) => column);
+
+  GeneratedColumn<String> get state =>
+      $composableBuilder(column: $table.state, builder: (column) => column);
+
+  GeneratedColumn<int> get attempts =>
+      $composableBuilder(column: $table.attempts, builder: (column) => column);
+
+  GeneratedColumn<int> get nextAttemptAt => $composableBuilder(
+    column: $table.nextAttemptAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get lastError =>
+      $composableBuilder(column: $table.lastError, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$PendingUploadsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PendingUploadsTable,
+          PendingUpload,
+          $$PendingUploadsTableFilterComposer,
+          $$PendingUploadsTableOrderingComposer,
+          $$PendingUploadsTableAnnotationComposer,
+          $$PendingUploadsTableCreateCompanionBuilder,
+          $$PendingUploadsTableUpdateCompanionBuilder,
+          (
+            PendingUpload,
+            BaseReferences<_$AppDatabase, $PendingUploadsTable, PendingUpload>,
+          ),
+          PendingUpload,
+          PrefetchHooks Function()
+        > {
+  $$PendingUploadsTableTableManager(
+    _$AppDatabase db,
+    $PendingUploadsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PendingUploadsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PendingUploadsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PendingUploadsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> op = const Value.absent(),
+                Value<String?> localPath = const Value.absent(),
+                Value<String> state = const Value.absent(),
+                Value<int> attempts = const Value.absent(),
+                Value<int?> nextAttemptAt = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PendingUploadsCompanion(
+                id: id,
+                op: op,
+                localPath: localPath,
+                state: state,
+                attempts: attempts,
+                nextAttemptAt: nextAttemptAt,
+                lastError: lastError,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String op,
+                Value<String?> localPath = const Value.absent(),
+                required String state,
+                Value<int> attempts = const Value.absent(),
+                Value<int?> nextAttemptAt = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+                required int createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => PendingUploadsCompanion.insert(
+                id: id,
+                op: op,
+                localPath: localPath,
+                state: state,
+                attempts: attempts,
+                nextAttemptAt: nextAttemptAt,
+                lastError: lastError,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$PendingUploadsTable, PendingUpload>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $PendingUploadsTable,
+                    PendingUpload
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PendingUploadsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PendingUploadsTable,
+      PendingUpload,
+      $$PendingUploadsTableFilterComposer,
+      $$PendingUploadsTableOrderingComposer,
+      $$PendingUploadsTableAnnotationComposer,
+      $$PendingUploadsTableCreateCompanionBuilder,
+      $$PendingUploadsTableUpdateCompanionBuilder,
+      (
+        PendingUpload,
+        BaseReferences<_$AppDatabase, $PendingUploadsTable, PendingUpload>,
+      ),
+      PendingUpload,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -11389,4 +12334,6 @@ class $AppDatabaseManager {
         _db,
         _db.scheduledNotifications,
       );
+  $$PendingUploadsTableTableManager get pendingUploads =>
+      $$PendingUploadsTableTableManager(_db, _db.pendingUploads);
 }

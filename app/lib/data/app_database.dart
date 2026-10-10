@@ -142,6 +142,15 @@ class SyncState extends Table {
   /// The app version that last synced this database; a change replays undecodable items (G5).
   TextColumn get appVersion => text().nullable()();
 
+  /// Phase 3b (A20): the profile photo this device shows, as a path relative to the account's
+  /// folder: a photo chosen here (waiting to upload, or uploaded) or a downloaded copy of the
+  /// server's. Null shows initials.
+  TextColumn get avatarFile => text().nullable()();
+
+  /// The server avatar_version [avatarFile] belongs to; null while a photo chosen here has not
+  /// been acknowledged.
+  IntColumn get avatarFileVersion => integer().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -244,6 +253,29 @@ class ScheduledNotifications extends Table {
   Set<Column> get primaryKey => {platformId};
 }
 
+/// Phase 3b (A20): profile photo changes waiting for the server. A photo is binary, so it is not
+/// an outbox mutation; the row is the durable queue and its id is the Idempotency-Key. A row is
+/// removed only once the server acknowledged it, or when a newer choice replaces it while it is
+/// unsent (ASSUMPTION(A3b-upload-supersede)). States: pending, rejected.
+@DataClassName('PendingUpload')
+class PendingUploads extends Table {
+  TextColumn get id => text()();
+
+  /// put or delete.
+  TextColumn get op => text()();
+
+  /// For a put: the prepared JPEG, relative to the account's folder.
+  TextColumn get localPath => text().nullable()();
+  TextColumn get state => text()();
+  IntColumn get attempts => integer().withDefault(const Constant(0))();
+  IntColumn get nextAttemptAt => integer().nullable()();
+  TextColumn get lastError => text().nullable()();
+  IntColumn get createdAt => integer()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// Unacknowledged mutations the user chose to discard (screen 18). Kept as a record; never sent.
 class DiscardedMutations extends Table {
   TextColumn get mutationId => text()();
@@ -274,6 +306,7 @@ class DiscardedMutations extends Table {
     LocalSettings,
     Reminders,
     ScheduledNotifications,
+    PendingUploads,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -325,7 +358,7 @@ class AppDatabase extends _$AppDatabase {
   static const busyRetries = 50;
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -373,6 +406,12 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(reminders);
         await m.createTable(scheduledNotifications);
         await _typeOpaqueReminders();
+      }
+      if (from < 7) {
+        // Phase 3b: the photo this device shows, and the durable photo upload queue.
+        await m.addColumn(syncState, syncState.avatarFile);
+        await m.addColumn(syncState, syncState.avatarFileVersion);
+        await m.createTable(pendingUploads);
       }
     },
     beforeOpen: (details) async {

@@ -24,6 +24,36 @@ void main() {
     }
   });
 
+  test('v6 -> v7 adds the photo pointer and the upload queue; outbox and data survive', () async {
+    final v7 = AppDatabase(NativeDatabase(file));
+    await v7.customStatement(
+      "INSERT INTO sync_state (id, user_id, device_id, cursor, user_payload) "
+      "VALUES (1, 'u', 'd', 'c:11', '{\"id\":\"u\",\"name\":\"Maya\",\"version\":4}')",
+    );
+    await v7.customStatement(
+      'INSERT INTO outbox (mutation_id, entity, entity_id, operation, occurred_at, payload, '
+      "state, created_at) VALUES ('m1', 'user', 'u', 'profile.set_timezone', "
+      "'2026-05-28T00:00:00Z', '{\"timezone\":\"Africa/Accra\"}', 'pending', 0)",
+    );
+    await v7.customStatement(
+      "INSERT INTO reminders (id, habit_id, local_time, days_of_week, version) "
+      "VALUES ('r1', 'h1', '08:00', '[1]', 2)",
+    );
+    await dropV7(v7);
+    await v7.customStatement('PRAGMA user_version = 6');
+    await v7.close();
+
+    final upgraded = AppDatabase(NativeDatabase(file));
+    final state = await upgraded.select(upgraded.syncState).getSingle();
+    expect((state.cursor, state.avatarFile, state.avatarFileVersion), ('c:11', null, null));
+    expect(state.userPayload, contains('"name":"Maya"'));
+    final row = await upgraded.select(upgraded.outbox).getSingle();
+    expect((row.mutationId, row.operation, row.state), ('m1', 'profile.set_timezone', 'pending'));
+    expect((await upgraded.select(upgraded.reminders).getSingle()).id, 'r1');
+    expect(await upgraded.select(upgraded.pendingUploads).get(), isEmpty);
+    await upgraded.close();
+  });
+
   test('v5 -> v6 adds reminders and the schedule record; opaque reminders become typed', () async {
     final v6 = AppDatabase(NativeDatabase(file));
     await v6.customStatement(
@@ -49,6 +79,7 @@ void main() {
           '"deleted_at":null,"snooze":10}',
     );
     await opaque('r-bad', 1, '{"id":"r-bad","days_of_week":"weekdays"}');
+    await dropV7(v6);
     for (final table in ['reminders', 'scheduled_notifications']) {
       await v6.customStatement('DROP TABLE $table');
     }
@@ -104,6 +135,7 @@ void main() {
       );
       await opaque('habit_progress', 'h-bad', 1, '{"habit_id":"h-bad","current":"two"}');
       await opaque('weekly_review', 'w1', 1, '{"id":"w1"}');
+      await dropV7(v5);
       for (final table in [
         'calendar_entries',
         'habit_progress',
@@ -150,6 +182,7 @@ void main() {
       "INSERT INTO sync_state (id, user_id, device_id, cursor) VALUES (1, 'u', 'd', 'c:7')",
     );
     await v4.customStatement('ALTER TABLE sync_state DROP COLUMN app_version');
+    await dropV7(v4);
     for (final table in [
       'calendar_entries',
       'habit_progress',
@@ -193,6 +226,7 @@ void main() {
       await v3.customStatement('ALTER TABLE sync_state DROP COLUMN $column');
     }
     await v3.customStatement('DROP TABLE discarded_mutations');
+    await dropV7(v3);
     for (final table in [
       'calendar_entries',
       'habit_progress',
@@ -216,4 +250,12 @@ void main() {
     expect(await upgraded.select(upgraded.discardedMutations).get(), isEmpty);
     await upgraded.close();
   });
+}
+
+/// Takes a current database back to v6: drops what v7 added.
+Future<void> dropV7(AppDatabase db) async {
+  await db.customStatement('DROP TABLE pending_uploads');
+  for (final column in ['avatar_file', 'avatar_file_version']) {
+    await db.customStatement('ALTER TABLE sync_state DROP COLUMN $column');
+  }
 }
