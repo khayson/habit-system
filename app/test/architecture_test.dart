@@ -94,11 +94,12 @@ void main() {
       'auth/register_request': 'test/services/auth_service_test.dart',
       'sync/profile_update_mutations': 'test/data/profile_test.dart',
       'sync/user_entity': 'test/data/profile_test.dart',
+      'habit/habit_mutations': 'test/sync/habit_acks_test.dart',
     };
 
-    test('every domain, sync and auth fixture that names the dart suite has a consumer', () {
+    test('every domain, sync, auth and habit fixture that names the dart suite has a consumer', () {
       final named = <String>{};
-      for (final folder in ['domain', 'sync', 'auth']) {
+      for (final folder in ['domain', 'sync', 'auth', 'habit']) {
         for (final file in Directory(
           p.join('..', 'contract-fixtures', folder),
         ).listSync().whereType<File>()) {

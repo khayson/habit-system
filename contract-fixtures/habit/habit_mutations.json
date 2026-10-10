@@ -1,7 +1,8 @@
 {
   "description": "Phase 4.1 (A34): habit.update, habit.archive and habit.restore through /sync. Each case creates its habit on 2026-05-01 (habit.create, backdate), then runs its steps in order with the server clock at `now` (the user's calendar: America/Los_Angeles, day start 00:00). A step sends one mutation (base_version as given; `null` keeps the habit's current version) and checks the ack and, where given, the canonical habit afterwards. Today is Thursday 2026-05-28: tomorrow is 2026-05-29, next Monday 2026-06-01. Definition rows list version, effective_date and the fields that differ from the habit as created.",
   "suites": [
-    "php"
+    "php",
+    "dart"
   ],
   "now": "2026-05-28T17:22:00Z",
   "cases": [

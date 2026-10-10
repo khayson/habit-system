@@ -27,6 +27,9 @@ class FakeSyncServer implements SyncTransport {
   final Map<String, ({String hash, Map<String, dynamic> ack})> receipts = {};
   final List<Map<String, dynamic>> journal = [];
 
+  /// The next mutation with this operation is rejected with this error (any code, known or not).
+  final Map<String, Map<String, dynamic>> forceErrorFor = {};
+
   // Scripting.
   final List<SyncTransportException> failNextSync = [];
   final List<SyncTransportException> failNextBootstrap = [];
@@ -181,6 +184,8 @@ class FakeSyncServer implements SyncTransport {
       }
       return {...receipt.ack, 'duplicate': true};
     }
+    final forced = forceErrorFor.remove(m['operation']);
+    if (forced != null) return _failed(m, 'rejected', forced);
     if (serverErrorFor.contains(id)) {
       return _failed(m, 'rejected', {
         'code': 'server_error',
