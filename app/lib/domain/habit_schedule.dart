@@ -178,6 +178,19 @@ class HabitSchedule {
     return found;
   }
 
+  /// P3 (A34): the definition in force on [date]: the version governing it, or the first one
+  /// when the habit starts later. The habit's top-level fields are its LATEST version, which
+  /// may start tomorrow; everything that shows a day (Today, weekly progress, the library, the
+  /// detail view) uses this. Only the edit form reads the latest.
+  ScheduleDefinition? inForce(LocalDate date) =>
+      versionOn(date) ?? (versions.isEmpty ? null : versions.first);
+
+  /// The target in force on [date] (wire form), or null without any definition.
+  Object? targetOn(LocalDate date) => inForce(date)?.wire['target_value'];
+
+  /// The unit in force on [date].
+  String? unitOn(LocalDate date) => inForce(date)?.wire['unit'] as String?;
+
   bool isActive(LocalDate date) => ranges.any((r) => r.contains(date));
 
   /// Active and governed by a definition: the date can take part in a period.

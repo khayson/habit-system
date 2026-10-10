@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import '../app/router.dart';
 import '../config/habit_tokens.dart';
 import '../data/local_view.dart';
-import '../domain/habit_schedule.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../providers/account_context.dart';
 import '../providers/stream_model.dart';
@@ -127,13 +126,13 @@ class _HabitRow extends StatelessWidget {
     final account = context.read<AccountContext?>()!;
     final p = habit.payload;
     final rules = account.view.types.lookup(p['type'] as String? ?? '');
-    final schedule = HabitSchedule.fromWire(p);
-    final latest = schedule.versions.isEmpty ? null : schedule.versions.last;
+    // P3: the definition in force today, not the latest (which may start tomorrow).
+    final inForce = habit.inForceToday;
     final detail = format.rowDetail(
       rules,
-      p['target_value'],
-      p['unit'] as String?,
-      latest?.frequency,
+      inForce?.wire['target_value'] ?? p['target_value'],
+      (inForce?.wire['unit'] ?? p['unit']) as String?,
+      inForce?.frequency,
     );
     final name = p['name'] as String? ?? '';
 

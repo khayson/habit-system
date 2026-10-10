@@ -96,6 +96,15 @@ class FakeSyncServer implements SyncTransport {
       ],
   };
 
+  /// Another device changed a habit (Phase 4.2a): [change] edits the stored entity, whose
+  /// version is bumped and journaled as the real server does.
+  void serverEditHabit(String id, void Function(Map<String, dynamic> habit) change) {
+    final habit = habits[id]!;
+    change(habit);
+    habit['version'] = (habit['version'] as int) + 1;
+    _journal('habit', id, 'upsert', habit['version'] as int, habit);
+  }
+
   /// Another device changed the profile: the version this device holds is now stale.
   void bumpUserVersion() {
     userVersion++;

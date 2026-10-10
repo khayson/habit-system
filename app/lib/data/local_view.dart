@@ -22,12 +22,16 @@ class LocalView {
   LocalView(this.db, {ProvisionalTypeRegistry? types})
     : types = types ?? ProvisionalTypeRegistry.builtins();
 
-  Stream<List<HabitView>> watchHabits() => db
-      .customSelect('SELECT 1', readsFrom: {db.habits, db.outbox})
+  /// [deviceNow] gives each habit the local today it is shown on (P3: the definition in force).
+  Stream<List<HabitView>> watchHabits({DateTime Function() deviceNow = DateTime.now}) => db
+      .customSelect('SELECT 1', readsFrom: {db.habits, db.outbox, db.calendarEntries})
       .watch()
-      .asyncMap((_) => habits());
+      .asyncMap((_) => habits(deviceNow: deviceNow()));
 
-  Future<List<HabitView>> habits() async {
+  Future<List<HabitView>> habits({DateTime? deviceNow}) async {
+    final today = deviceNow == null
+        ? null
+        : (await AccountCalendar.load(db, deviceNow: deviceNow))?.today(deviceNow);
     final confirmed = await db.select(db.habits).get();
     final creates =
         await (db.select(db.outbox)
@@ -46,6 +50,7 @@ class LocalView {
           confirmedVersion: row.version,
           syncState: null,
           knownType: types.lookup(row.type ?? '') != null,
+          today: today,
         ),
     };
     for (final row in creates) {
@@ -56,6 +61,7 @@ class LocalView {
         confirmedVersion: null,
         syncState: row.state,
         knownType: types.lookup(payload['type'] as String? ?? '') != null,
+        today: today,
       );
     }
     return views.values.toList();
@@ -189,7 +195,7 @@ class LocalView {
       if (!known && !schedule.isActive(date)) continue;
       final log = await this.log(habit.id, day);
       final rules = types.lookup(p['type'] as String? ?? '');
-      final complete = _complete(rules, log.value, p['target_value']);
+      final complete = _complete(rules, log.value, schedule.targetOn(date) ?? p['target_value']);
       items.add(
         TodayItem(
           habit: habit,
@@ -230,7 +236,7 @@ class LocalView {
     final monday = date.addDays(1 - date.isoWeekday);
     return ProvisionalProgress(types).week(
       type: habit.payload['type'] as String? ?? '',
-      perDayTarget: habit.payload['target_value'],
+      perDayTarget: schedule.targetOn(date) ?? habit.payload['target_value'],
       countTarget: count,
       logs: {
         for (var i = 0; i < 7; i++)
@@ -363,14 +369,28 @@ class HabitView {
   /// False for a type this app version does not know: show an "update the app" card (A21).
   final bool knownType;
 
+  /// The local today the habit is shown on, when the caller gave a clock.
+  final LocalDate? today;
+
   const HabitView({
     required this.payload,
     required this.confirmedVersion,
     required this.syncState,
     required this.knownType,
+    this.today,
   });
 
   String get id => payload['id'] as String;
+
+  HabitSchedule get schedule => HabitSchedule.fromWire(payload);
+
+  /// P3: the definition in force today (the first one before [today] is known).
+  ScheduleDefinition? get inForceToday {
+    final s = schedule;
+    final date = today;
+    return date == null ? (s.versions.isEmpty ? null : s.versions.first) : s.inForce(date);
+  }
+
   bool get provisional => syncState != null;
 }
 
