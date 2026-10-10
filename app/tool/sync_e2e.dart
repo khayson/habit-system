@@ -18,6 +18,11 @@
 //   dependency_pending  A creates a habit and ticks it in one request; both land, B converges.
 //   calendar  A sets a zone; B gains the pending calendar entry; A changes back; it is gone.
 //   reminders A creates, edits and deletes a reminder; B holds the typed row each time.
+//   profile   A edits name, city and country (profile.update); the server and B have them.
+//   photo     A chooses a photo offline (shown at once), reconnects; the engine uploads it with
+//             a real multipart PUT; sm/md/lg are WebP 96/160/320; B fetches md; another
+//             account never gets the bytes (404); removing it clears has_avatar and B's copy.
+//             Needs PHP with GD to make the test JPEG (E2E_PHP, default `php`).
 // Exits non-zero at the first failed check, or unless both databases end identical.
 import 'dart:convert';
 import 'dart:io';
@@ -28,9 +33,13 @@ import 'package:drift/native.dart';
 import 'package:habit/data/account_calendar.dart';
 import 'package:habit/data/app_database.dart';
 import 'package:habit/data/local_mutation_service.dart';
+import 'package:habit/data/photo_service.dart';
+import 'package:habit/data/profile_view.dart';
 import 'package:habit/domain/calendar/local_date.dart';
 import 'package:habit/domain/calendar/timezone_timeline.dart';
 import 'package:habit/domain/provisional_type_rules.dart';
+import 'package:habit/sync/avatar_sync.dart';
+import 'package:habit/sync/http_avatar_transport.dart';
 import 'package:habit/sync/http_sync_transport.dart';
 import 'package:habit/sync/outbox_states.dart';
 import 'package:habit/sync/sync_engine.dart';
@@ -280,6 +289,77 @@ Future<void> main(List<String> args) async {
     _check((await a.outbox()).isEmpty, 'A has nothing left to send');
   });
 
+  await _scenario('profile', () async {
+    await a.writer.updateProfile(name: 'E2E Maya', city: 'Accra', countryCode: 'GH');
+    await a.sync();
+    final me = (await a.dio.get<Map<String, dynamic>>('/me')).data!['data'] as Map;
+    _check(
+      (me['name'], me['city'], me['country_code']) == ('E2E Maya', 'Accra', 'GH'),
+      'the server user has the new name, city and country ($me)',
+    );
+    await b.sync();
+    final onB = (await b.profile.load())!;
+    _check((onB.name, onB.city, onB.countryCode) == ('E2E Maya', 'Accra', 'GH'), 'B has them');
+  });
+
+  await _scenario('photo', () async {
+    final jpeg = await _makeJpeg(dir, 640, 480);
+    final online = a.dio.options.baseUrl;
+    // Offline: nothing answers on this port.
+    a.dio.options.baseUrl = 'http://127.0.0.1:9/api/v1';
+    await a.photos.choose(jpeg);
+    final offline = await a.engine.run(force: true);
+    _check(offline == SyncOutcome.offline, 'offline run (${offline.name})');
+    final shown = (await a.profile.load())!;
+    _check(shown.photoPath != null && File(shown.photoPath!).existsSync(), 'shown at once');
+    _check(shown.uploadPending, 'waiting to upload');
+
+    a.dio.options.baseUrl = online;
+    await a.sync();
+    final after = (await a.profile.load())!;
+    _check(!after.uploadPending, 'uploaded');
+    _check((after.avatarVersion, after.hasAvatar) == (1, true), 'avatar_version 1, has_avatar');
+    _check(after.photoPath == shown.photoPath, 'A keeps its own photo, never downloads it');
+
+    for (final (size, px) in [('sm', 96), ('md', 160), ('lg', 320)]) {
+      final r = await a.dio.get<List<int>>(
+        '/me/avatar/$size',
+        options: Options(responseType: ResponseType.bytes),
+      );
+      _check(r.headers.value('content-type') == 'image/webp', '$size is WebP');
+      _check(_webpSize(r.data!) == (px, px), '$size is ${px}x$px (${_webpSize(r.data!)})');
+    }
+
+    await b.sync();
+    final onB = (await b.profile.load())!;
+    _check(onB.photoPath != null && File(onB.photoPath!).existsSync(), 'B fetched md');
+    _check(onB.photoPath!.endsWith('md-1.webp'), 'cached as md-1.webp');
+
+    final other = await _Device.signIn(online, dir, 'C', '/auth/register', {
+      'name': 'Other',
+      'email': 'e2e-other+${DateTime.now().millisecondsSinceEpoch}@example.test',
+      'password': 'e2e-password-1234',
+      'timezone': 'UTC',
+      'terms_version': '2026-10-10',
+      'privacy_version': '2026-10-10',
+    });
+    final foreign = await other.dio.get<Object?>(
+      '/me/avatar/md',
+      options: Options(validateStatus: (_) => true),
+    );
+    _check(foreign.statusCode == 404, 'another account gets 404 (${foreign.statusCode})');
+    await other.db.close();
+
+    final bCopy = onB.photoPath!;
+    await a.photos.remove();
+    await a.sync();
+    _check(!(await a.profile.load())!.hasAvatar, 'has_avatar false');
+    await b.sync();
+    final bAfter = (await b.profile.load())!;
+    _check(!bAfter.hasAvatar && bAfter.photoPath == null, 'B shows initials');
+    _check(!File(bCopy).existsSync(), 'the cached copy on B is deleted');
+  });
+
   await a.sync();
   await b.sync();
   final stateA = await a.snapshot();
@@ -342,6 +422,42 @@ COMMIT;''';
   if (result.exitCode != 0) throw StateError('psql failed: ${result.stderr}');
 }
 
+/// A real JPEG for the photo scenario, drawn by PHP's GD (the CI runner has PHP for the API).
+Future<String> _makeJpeg(Directory dir, int width, int height) async {
+  final out = '${dir.path}/e2e-photo.jpg';
+  final php = Platform.environment['E2E_PHP'] ?? 'php';
+  final result = await Process.run(php, [
+    '-r',
+    r'$i = imagecreatetruecolor((int) $argv[1], (int) $argv[2]); '
+        r'imagefill($i, 0, 0, imagecolorallocate($i, 40, 120, 70)); '
+        r'imagejpeg($i, $argv[3], 85);',
+    '$width',
+    '$height',
+    out,
+  ]);
+  if (result.exitCode != 0) throw StateError('php could not make the JPEG: ${result.stderr}');
+  return out;
+}
+
+/// Width and height from a WebP header (VP8X, VP8 or VP8L).
+(int, int)? _webpSize(List<int> b) {
+  if (b.length < 30 || String.fromCharCodes(b.sublist(8, 12)) != 'WEBP') return null;
+  int le(int at, int n) {
+    var v = 0;
+    for (var i = n - 1; i >= 0; i--) {
+      v = (v << 8) | b[at + i];
+    }
+    return v;
+  }
+
+  return switch (String.fromCharCodes(b.sublist(12, 16))) {
+    'VP8X' => (le(24, 3) + 1, le(27, 3) + 1),
+    'VP8 ' => (le(26, 2) & 0x3fff, le(28, 2) & 0x3fff),
+    'VP8L' => ((le(21, 4) & 0x3fff) + 1, ((le(21, 4) >> 14) & 0x3fff) + 1),
+    _ => null,
+  };
+}
+
 /// Counts bootstraps so a scenario can see that a 410 happened.
 class _CountingTransport implements SyncTransport {
   _CountingTransport(this.inner);
@@ -377,7 +493,7 @@ class _CountingTransport implements SyncTransport {
 }
 
 class _Device {
-  _Device(this.name, this.db, this.deviceId, this.dio, this.token)
+  _Device(this.name, this.db, this.deviceId, this.dio, this.token, this.filesRoot)
     : transport = _CountingTransport(HttpSyncTransport(dio));
 
   final String name;
@@ -387,10 +503,16 @@ class _Device {
   final _CountingTransport transport;
   String token;
   late final writer = LocalMutationService(db);
+
+  /// Phase 3b: this device's own folder for the profile photo.
+  final String filesRoot;
+  late final photos = PhotoService(db, filesRoot: filesRoot);
+  late final profile = ProfileView(db, filesRoot: filesRoot);
   late final engine = SyncEngine(
     db: db,
     transport: transport,
     capabilities: ProvisionalTypeRegistry.builtins().keys.toList(),
+    avatars: AvatarSync(db: db, transport: HttpAvatarTransport(dio), filesRoot: filesRoot),
   );
 
   static Future<_Device> signIn(
@@ -412,7 +534,8 @@ class _Device {
     final user = (data['user'] as Map).cast<String, dynamic>();
     final db = AppDatabase(NativeDatabase(File('${dir.path}/habit_${user['id']}_$name.sqlite')));
     await initAccountState(db, userId: user['id'] as String, deviceId: deviceId, user: user);
-    return _Device(name, db, deviceId, dio, token);
+    final files = Directory('${dir.path}/files_$name')..createSync(recursive: true);
+    return _Device(name, db, deviceId, dio, token, files.path);
   }
 
   void useToken(String value) {
