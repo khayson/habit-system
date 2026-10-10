@@ -329,3 +329,21 @@ The client never evaluates streaks (invariant 9), but screens must work offline,
 ### A33 — Legal documents and consent record · ADOPT
 
 Terms of Service and Privacy Policy are public pages built from `docs/legal/*.md` (front matter `title`, `version` YYYY-MM-DD, `effective` YYYY-MM-DD, `status` draft|final) and `docs/legal/facts.json`. `POST /auth/register` requires `terms_version` and `privacy_version` (strings YYYY-MM-DD that are real dates). Stored on `users`: `terms_version char(10) null`, `privacy_version char(10) null`, `legal_accepted_at timestamptz null` (server clock); null only for accounts created before A33. Not part of the user sync entity and not returned by any endpoint (the export will include them in Phase 6). Re-consent after a material change is Phase 7; archive of past versions is git history.
+
+## 13. Added after the Phase 3b review (2026-10-10)
+
+### A34 — Editing, archiving and restoring habits · ADOPT
+- Operations on entity `habit`, applied by the one MutationApplier and journaled: `habit.update`, `habit.archive`, `habit.restore`. Each requires `base_version` = `habits.version`; a stale one is 409 `version_conflict` with the canonical habit as `current`. There is no habit delete in v1 (the spec has none, no screen shows one; the only hard delete is account deletion, Phase 6, and A32's habit-delete clause applies there).
+- `habit.update` payload is the whole desired editable state: `{name, category, target_value, unit, frequency_type, frequency_config}`. `type` is immutable (A4): if sent it must equal the habit's type, else 422 `invalid_value`. A desired state identical to the current one is acknowledged with no version bump and no journal row (like `profile.update`).
+- The name lives on the habit and applies at once. Category, target, unit and frequency are a definition change: a new `habit_definition_versions` row (next version number) effective from `HabitSchedule::nextEffectiveDate`, computed from the user's local date at APPLY time (server clock plus the user's calendar), never from a client date or `occurred_at`. If the latest version has not taken effect yet (its effective date is after today) it is replaced in place by the new desired state; if the desired state equals the version in force, the pending version is removed. Past check-ins and closed periods keep their definition (A4).
+- The habit's top-level fields stay the projection of the LATEST definition version; clients derive what governs a date from `definitions`.
+- `nextEffectiveDate`: daily/weekdays: tomorrow; weekly_count (old or new): next Monday (A30); interval (old definition): the first day after today on which a period of the OLD definition starts.
+- `habit.archive` sets `archived_at` and closes the open active range at the start of the NEXT local day (today's check-ins stay valid). Already archived: acknowledged, no bump. While archived, `habit.update` and every `log.*` write on the habit are rejected 422 `habit_archived`.
+- `habit.restore` clears `archived_at` and opens a new active range starting at max(today, end of the previous range); earlier gaps stay excluded. Not archived: acknowledged, no bump.
+- Reminders are untouched on the server; the app stops scheduling an archived habit's reminders.
+- v1 keeps type-based habit icons: no `icon` field, no picker (no design for one). Reopen with the Tier-1 design drop (4b).
+
+### A35 — Log increments · ADOPT
+- `log.increment {habit_id, delta, date_mode?, log_date?}` on entity `habit_log` (aliases per A27). Atomic additive merge: no `base_version`, the receipt applies it once, concurrent increments commute and none is lost. `delta` > 0: a decimal string (quantity, up to 3 decimals) or whole seconds (duration), validated by the type. It creates the day's log if absent. Date resolution, backdate limits and the active-range check are those of `log.set_value`.
+- On a deleted day (tombstone): 409 `resource_deleted` with the tombstone as `current`. On an archived habit: 422 `habit_archived`. On a type without the operation: 422 `unsupported_operation`.
+- XP and level effects of a threshold crossing are Phase 5; Phase 4 only sums.

@@ -113,9 +113,8 @@ Split like 3.1/3.2: **3b.1** = the server (migration, `profile.update`, avatar p
 
 ## Phase 4 — Habit types and schedules · L
 
-- Quantity and duration; amount entry (34) and timers (33/36); weekdays / weekly_count / interval; versioned edits (09/10); archive / restore (22); conflict review (19).
+Split like 3.1/3.2 and 3b. 4.1 = server and carries: habit.update (versioned definitions), habit.archive, habit.restore, log.increment, the interval rule in nextEffectiveDate, archived habits in bootstrap, the 3b.2 fixes. 4.2 = app part 1: type-widget registry (A21); create (08) with type, target, unit, category; frequency selection (10); edit habit (09) with a provisional overlay and a pending-change note; Habits library (07) and Archived routines (22) with archive/restore; the reminder planner skips archived habits, replans when a habit is renamed (compare the text, not only fire times), caps scheduled notifications per platform (iOS 64, Android 500, nearest first) and skips the days after a weekly goal is met. 4.3 = app part 2: amount entry (34); timers (33/36) as local drafts; Today cards for quantity and duration; provisional increments; conflict review (19) for stale edits, deleted days and archived habits; e2e; device-gate steps. Screen 35 is Phase 5.
 
-- Before any `profile.*` mutation: `users.version` and journaling the user entity on every profile change (review 2a, section 6). The user entity carries the calendar entry (timezone, offset, `effective_at`) so clients pick up calendar changes (review 2b.1, §5).
 - The server enforces "next eligible period" for new definition versions via `HabitSchedule::nextEffectiveDate(LocalDate $today)` (daily/weekdays → tomorrow; weekly → next Monday; interval → start of the next period under the current definition). Never accept a client-chosen effective date.
 
 **Gate**: spec acceptance rows for concurrent increments, stale absolute edit and weekly distinct days.
