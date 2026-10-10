@@ -11,6 +11,7 @@ import '../notifications/notification_scheduler.dart';
 import '../providers/account_context.dart';
 import '../services/habit_actions.dart';
 import '../widgets/habit_ui.dart';
+import 'widgets/notice_banner.dart';
 
 /// A reminder as 08 and 11 edit it: a clock time on chosen ISO days (1 = Monday).
 class ReminderDraft {
@@ -284,7 +285,7 @@ class _ReminderEditorScreenState extends State<ReminderEditorScreen> with Widget
               onBack: () => widget.live ? _leave() : context.pop(),
             ),
             if (permission == NotificationPermission.denied) ...[
-              _Banner(
+              NoticeBanner(
                 tone: Tone.warning,
                 title: l10n.reminderDeniedTitle,
                 body: l10n.reminderDeniedBody,
@@ -294,7 +295,7 @@ class _ReminderEditorScreenState extends State<ReminderEditorScreen> with Widget
               ),
               const SizedBox(height: HabitSpace.s24),
             ] else if (permission == NotificationPermission.unknown) ...[
-              _Banner(
+              NoticeBanner(
                 tone: Tone.info,
                 title: l10n.reminderAskTitle,
                 body: l10n.reminderAskBody,
@@ -467,64 +468,6 @@ class _OtherReminders extends StatelessWidget {
                   ],
                 ),
               ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Banner extends StatelessWidget {
-  final Tone tone;
-  final String title;
-  final String body;
-  final String? extra;
-  final String action;
-  final VoidCallback onAction;
-
-  const _Banner({
-    required this.tone,
-    required this.title,
-    required this.body,
-    required this.action,
-    required this.onAction,
-    this.extra,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    final tokens = HabitTokens.of(context);
-    return Container(
-      padding: const EdgeInsets.fromLTRB(
-        HabitSpace.s24,
-        HabitSpace.s24,
-        HabitSpace.s16,
-        HabitSpace.s12,
-      ),
-      decoration: BoxDecoration(
-        color: tone.background(tokens),
-        borderRadius: BorderRadius.circular(HabitRadius.r24),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: text.titleMedium?.copyWith(color: tokens.ink)),
-          const SizedBox(height: HabitSpace.s8),
-          Text(body, style: text.bodyMedium?.copyWith(color: tokens.muted)),
-          if (extra != null) ...[
-            const SizedBox(height: HabitSpace.s8),
-            Text(extra!, style: text.bodyMedium?.copyWith(color: tokens.ink)),
-          ],
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: onAction,
-              style: TextButton.styleFrom(
-                minimumSize: const Size(HabitSize.minTarget, HabitSize.minTarget),
-              ),
-              child: Text(action),
             ),
           ),
         ],
