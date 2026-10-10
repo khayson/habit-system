@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\AvatarController;
 use App\Http\Controllers\Api\V1\HabitController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\SyncController;
@@ -23,6 +24,12 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::get('/me', [AuthController::class, 'me'])->name('me');
     Route::get('/sync/bootstrap', [SyncController::class, 'bootstrap'])->name('sync.bootstrap');
     Route::get('/habits/{habit}/heatmap', [HabitController::class, 'heatmap'])->name('habits.heatmap');
+    // A20: the caller's own photo only.
+    Route::delete('/me/avatar', [AvatarController::class, 'delete'])->name('me.avatar.delete');
+    Route::get('/me/avatar/{size}', [AvatarController::class, 'show'])->name('me.avatar.show');
 });
+
+// A20: 10 uploads per hour per user (config api.rate_limits.avatar_uploads_per_hour).
+Route::put('/me/avatar', [AvatarController::class, 'put'])->middleware(['auth:sanctum', 'throttle:avatar-upload'])->name('me.avatar.put');
 
 Route::post('/sync', [SyncController::class, 'sync'])->middleware(['auth:sanctum', 'throttle:sync'])->name('sync');
