@@ -9,6 +9,7 @@ import '../data/reminder_view.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../notifications/notification_scheduler.dart';
 import '../providers/account_context.dart';
+import '../services/habit_actions.dart';
 import '../widgets/habit_ui.dart';
 
 /// A reminder as 08 and 11 edit it: a clock time on chosen ISO days (1 = Monday).
@@ -86,6 +87,9 @@ class _ReminderEditorScreenState extends State<ReminderEditorScreen> with Widget
   String? _liveName;
   bool _loaded = false;
 
+  /// L1: a write is running; Save and Remove ignore taps until it finishes.
+  bool _saving = false;
+
   @override
   void initState() {
     super.initState();
@@ -105,8 +109,15 @@ class _ReminderEditorScreenState extends State<ReminderEditorScreen> with Widget
     ];
     final habits = await account.view.habits();
     final habit = habits.where((h) => h.id == widget.habitId).firstOrNull;
-    final editing = mine.where((r) => r.id == widget.reminderId).firstOrNull ?? mine.firstOrNull;
+    final asked = mine.where((r) => r.id == widget.reminderId).firstOrNull;
     if (!mounted) return;
+    // L2: a reminder that is gone (removed here or on another device) never falls back to
+    // editing another one: back to the habit's 12.
+    if (widget.reminderId != null && asked == null) {
+      context.go(Routes.habit(widget.habitId!));
+      return;
+    }
+    final editing = asked ?? mine.firstOrNull;
     setState(() {
       _editing = editing;
       _others = [
@@ -163,8 +174,19 @@ class _ReminderEditorScreenState extends State<ReminderEditorScreen> with Widget
       context.pop(_draft);
       return;
     }
+    if (_saving) return;
+    setState(() => _saving = true);
     final actions = context.read<AccountContext?>()!.actions;
     final editing = _editing;
+    try {
+      await _write(actions, editing);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+    if (mounted) _leave();
+  }
+
+  Future<void> _write(HabitActions actions, ReminderView? editing) async {
     if (editing == null) {
       await actions.addReminder(
         habitId: widget.habitId!,
@@ -182,11 +204,16 @@ class _ReminderEditorScreenState extends State<ReminderEditorScreen> with Widget
         timezone: editing.timezone,
       );
     }
-    if (mounted) _leave();
   }
 
   Future<void> _remove() async {
-    await context.read<AccountContext?>()!.actions.removeReminder(_editing!.id);
+    if (_saving) return;
+    setState(() => _saving = true);
+    try {
+      await context.read<AccountContext?>()!.actions.removeReminder(_editing!.id);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
     if (mounted) _leave();
   }
 
@@ -373,14 +400,14 @@ class _ReminderEditorScreenState extends State<ReminderEditorScreen> with Widget
               ),
             ],
             const SizedBox(height: HabitSpace.s32),
-            PrimaryButton(label: l10n.reminderSave, onPressed: _save),
+            PrimaryButton(label: l10n.reminderSave, loading: _saving, onPressed: _save),
             if (widget.live && _editing != null) ...[
               const SizedBox(height: HabitSpace.s16),
               // ASSUMPTION(A3.2c-remove): the design shows no removal; a quiet text button, no
               // dialog, neutral wording.
               Center(
                 child: TextButton(
-                  onPressed: _remove,
+                  onPressed: _saving ? null : _remove,
                   style: TextButton.styleFrom(
                     foregroundColor: tokens.muted,
                     minimumSize: const Size(HabitSize.minTarget, HabitSize.minTarget),

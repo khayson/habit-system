@@ -152,6 +152,60 @@ void main() {
     await tearDownApp(tester, account);
   });
 
+  testWidgets('L1: a double tap on Save adds one reminder', (tester) async {
+    final (account, _, habit) = await habitOnDevice(tester);
+    await show(tester, account, '/habits/$habit/reminder');
+
+    await tester.tap(find.text('Save reminder'));
+    await tester.tap(find.text('Save reminder'), warnIfMissed: false);
+    await settle(tester);
+
+    final rows = await reminderRows(tester, account);
+    expect(rows.map((r) => r.operation), ['reminder.create']);
+    await tearDownApp(tester, account);
+  });
+
+  testWidgets('L1: a double tap on Remove removes once', (tester) async {
+    final (account, _, habit) = await habitOnDevice(tester);
+    await tester.runAsync(
+      () =>
+          account.writer.createReminder(habitId: habit, localTime: '08:00', daysOfWeek: [1, 2, 3]),
+    );
+    await syncNow(tester, account);
+    await show(tester, account, '/habits/$habit/reminder');
+
+    await tester.tap(find.text('Remove reminder'));
+    await tester.tap(find.text('Remove reminder'), warnIfMissed: false);
+    await settle(tester);
+
+    final rows = await reminderRows(tester, account);
+    expect(rows.map((r) => r.operation), ['reminder.delete']);
+    await tearDownApp(tester, account);
+  });
+
+  testWidgets('L2: a reminder id that no longer exists goes to 12, never another reminder', (
+    tester,
+  ) async {
+    final (account, _, habit) = await habitOnDevice(tester);
+    await tester.runAsync(
+      () =>
+          account.writer.createReminder(habitId: habit, localTime: '08:00', daysOfWeek: [1, 2, 3]),
+    );
+    await syncNow(tester, account);
+    await show(
+      tester,
+      account,
+      '/habits/$habit/reminder?reminder=0199b2c4-1a2b-7c3d-8e4f-5a6b7c8d9e0f',
+    );
+
+    expect(find.text('Gentle reminders'), findsNothing, reason: 'not editing another reminder');
+    expect(find.text('Save reminder'), findsNothing);
+    await tester.scrollUntilVisible(find.text('Reminder'), 200);
+    expect(find.text('Reminder'), findsOneWidget, reason: "the habit's 12");
+    expect(await reminderRows(tester, account), isEmpty);
+    await tearDownApp(tester, account);
+  });
+
   testWidgets('several reminders: the first is edited, the rest are listed and open in 11', (
     tester,
   ) async {
