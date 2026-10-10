@@ -321,3 +321,9 @@ The client never evaluates streaks (invariant 9), but screens must work offline,
 - **Bootstrap** carries both through A31's `entities` array (its first real use): `habit_progress` for every non-deleted habit; `period_evaluation` limited to the last 400 days. Older history comes from `GET /habits/{id}/heatmap` when online.
 - **Habit delete** journals a delete for its `habit_progress` in the same transaction. Its evaluations stay on the server (needed for restore) and are not sent in bootstrap for deleted habits. A restore brings them back.
 - **Not-due days are not stored.** The Dart port of due-ness (`HabitSchedule`) comes in 3.2 and is pinned by the same fixtures as PHP.
+
+## 12. Added after the Phase 3.2c review (2026-10-10)
+
+### A33 — Legal documents and consent record · ADOPT
+
+Terms of Service and Privacy Policy are public pages built from `docs/legal/*.md` (front matter `title`, `version` YYYY-MM-DD, `effective` YYYY-MM-DD, `status` draft|final) and `docs/legal/facts.json`. `POST /auth/register` requires `terms_version` and `privacy_version` (strings YYYY-MM-DD that are real dates). Stored on `users`: `terms_version char(10) null`, `privacy_version char(10) null`, `legal_accepted_at timestamptz null` (server clock); null only for accounts created before A33. Not part of the user sync entity and not returned by any endpoint (the export will include them in Phase 6). Re-consent after a material change is Phase 7; archive of past versions is git history.

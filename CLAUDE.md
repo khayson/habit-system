@@ -88,6 +88,7 @@ Standard Khay Studios Flutter conventions apply (Provider, go_router only, singl
 - No features outside the current phase.
 - **Review packet** (end of every phase): what shipped · tests added + command output · deviations from spec/amendments · open questions · risks.
 - App strings live in `app/lib/l10n/app_en.arb` (gen-l10n). Generated files are never hand-edited or formatted.
+- Any change that collects new data or adds a third party updates docs/legal and bumps its version in the same commit (see docs/legal/README.md).
 
 ### Working rules
 

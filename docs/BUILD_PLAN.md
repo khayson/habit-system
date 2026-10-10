@@ -99,6 +99,10 @@ Original 3.2 scope, for reference: multi-entry calendar timeline from the user e
 - `period_evaluations.user_id` (owner FK on every user resource) in the migration that first fills the table.
 - Streak cache + `period_evaluations` (daily), closure runner (A10), heatmap endpoint + screen 12, history and ≤ 30-day backdate (13), local reminders with permission states (11), token refresh, account-isolated logout, best-effort background sync (through `LocalMutationService`), notification action payload schema (A23), XP chip behind a flag (A13c).
 
+## Phase 3.3 — Terms and Privacy · S
+
+Pulled forward from Phase 7 (A33). The Terms of Service and Privacy Policy are public static pages built from `docs/legal/` (a PHP builder and the "Legal pages" workflow, published to GitHub Pages only on a manual run with publish ticked). Screen 03 links to them (in-app browser, a "couldn't open this" fallback) and registration records which version of each document the user accepted. **Gate**: the builder's page tests (structure, no scripts, contrast in both palettes), the consent-record tests and mutant, the app's link and fallback tests.
+
 ## Phase 3b — Profile photo and location · S–M
 
 - Migration for the A20 columns; the `profile.update` mutation (`profile.set_timezone` lands in 3.1); avatar upload / read / delete endpoints and the image pipeline; private object storage (local disk in dev); Profile (20) with photo picker + crop, location fields and the durable `pending_uploads` queue.
@@ -136,7 +140,7 @@ Original 3.2 scope, for reference: multi-entry calendar timeline from the user e
 
 ## Phase 7 — Hardening and release · M
 
-- OWASP API Top 10 pass; `/sync` load test; accessibility audit (TalkBack, font scale, contrast tool); store listing; hosted Terms of Service and Privacy Policy (screen 03 links them and both stores need a privacy-policy URL); a web page for account-deletion requests (Google Play expects one; check current store requirements); iOS verification when a Mac route exists. Production PHP has a current timezone database; log `timezone_version_get()` at boot. A database-restore runbook, and a **journal epoch inside the signed sync cursor** that the runbook changes, so every pre-restore cursor gets a 410 even after the restored journal passes the client's old seq (Phase 2a.1 review §5). Alerting on the `server_error` ack rate. The journal and receipt pruning job (180-day retention) with indexes on `server_changes.created_at` and `mutation_receipts.committed_at`.
+- OWASP API Top 10 pass; `/sync` load test; accessibility audit (TalkBack, font scale, contrast tool); store listing; a web page for account-deletion requests (Google Play expects one; check current store requirements); iOS verification when a Mac route exists. Production PHP has a current timezone database; log `timezone_version_get()` at boot. A database-restore runbook, and a **journal epoch inside the signed sync cursor** that the runbook changes, so every pre-restore cursor gets a 410 even after the restored journal passes the client's old seq (Phase 2a.1 review §5). Alerting on the `server_error` ack rate. The journal and receipt pruning job (180-day retention) with indexes on `server_changes.created_at` and `mutation_receipts.committed_at`.
 - From the Phase 2b.1 review §5: an **authoritative bootstrap** after a restore (epoch change) overwrites confirmed rows even when the local version is higher, because the `version >=` rule would otherwise keep rows the restored server lost (lands with the cursor epoch); **decide local database encryption** (SQLCipher) before notes, photos and location land; the app's **timezone database** is frozen until an app update, so log its version at start.
 
 ## Phase 8 — Retention pack · L
