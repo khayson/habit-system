@@ -45,10 +45,6 @@ class ApiException extends RuntimeException
     }
 
     /**
-     * 409: target is tombstoned. `$entity` is the entity type (e.g. habit_log); `$tombstoneVersion`
-     * is needed for a reviewed restore and travels as `current_version` (docs/api-error-codes.md).
-     */
-    /**
      * 409: the target is tombstoned. A35: an increment also carries the tombstone as `current`.
      *
      * @param  array<string, mixed>|null  $current
