@@ -27,6 +27,11 @@ AppDatabase openAccountDatabase(String accountKey, {Future<Object> Function()? d
   );
 }
 
+/// Phase 3b: the account's own folder for files (the profile photo), next to its database in
+/// app support storage. Never shared with another account.
+String accountFilesRoot(String supportDirectory, String accountKey) =>
+    '$supportDirectory/${databaseNameFor(accountKey)}_files';
+
 /// File name (without extension) for an account. The key is the server user id (UUID).
 String databaseNameFor(String accountKey) {
   final key = accountKey.toLowerCase();
