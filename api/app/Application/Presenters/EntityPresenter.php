@@ -67,6 +67,7 @@ final readonly class EntityPresenter
             'city' => $user->city,
             'country_code' => $user->country_code,
             'avatar_version' => (int) $user->avatar_version,
+            'has_avatar' => $user->avatar_key !== null,
         ];
     }
 

@@ -60,7 +60,7 @@ it('stores a photo, bumps avatar_version and version, journals the user, and ser
     expect([(int) $row->avatar_version, (int) $row->version])->toBe([1, 2])
         ->and(avatarObjects($this->alice['id']))->toHaveCount(3);
     $change = collect($this->sync($this->alice['token'])->json('data.changes'))->last(fn ($c) => $c['entity'] === 'user');
-    expect([$change['version'], $change['payload']['avatar_version']])->toBe([2, 1]);
+    expect([$change['version'], $change['payload']['avatar_version'], $change['payload']['has_avatar']])->toBe([2, 1, true]);
 
     foreach (['sm' => 96, 'md' => 160, 'lg' => 320] as $size => $px) {
         $image = getAvatar($this, $this->alice['token'], $size)->assertOk();
@@ -119,7 +119,7 @@ it('deletes the photo: columns cleared, versions bumped, journaled, objects remo
     expect([$row->avatar_key, $row->avatar_sha256])->toBe([null, null])
         ->and(avatarObjects($this->alice['id']))->toBe([]);
     $change = collect($this->sync($this->alice['token'])->json('data.changes'))->last(fn ($c) => $c['entity'] === 'user');
-    expect([$change['version'], $change['payload']['avatar_version']])->toBe([3, 2]);
+    expect([$change['version'], $change['payload']['avatar_version'], $change['payload']['has_avatar']])->toBe([3, 2, false]);
     getAvatar($this, $this->alice['token'], 'sm')->assertNotFound();
 
     app('auth')->forgetGuards();
