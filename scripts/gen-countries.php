@@ -1,8 +1,10 @@
 <?php
 
 /*
- * Phase 3b (A20): writes contract-fixtures/profile/countries.json, the country list the server
- * validator and the app's picker share. Generated from CLDR (PHP intl), never written by hand.
+ * Phase 3b (A20): writes the country list the server validator and the app's picker share.
+ * Generated from CLDR (PHP intl), never written by hand. One run writes the canonical
+ * contract-fixtures/profile/countries.json and the two copies that ship with each side:
+ * api/resources/countries.json and app/assets/countries.json (parity tests compare bytes).
  *
  *   php scripts/gen-countries.php
  *
@@ -30,10 +32,13 @@ foreach ($names as $code => $name) {
 $collator = new Collator('en');
 usort($countries, fn (array $a, array $b) => $collator->compare($a['name'], $b['name']));
 
-$target = dirname(__DIR__).'/contract-fixtures/profile/countries.json';
-if (! is_dir(dirname($target))) {
-    mkdir(dirname($target), 0777, true);
+$json = json_encode($countries, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n";
+foreach (['contract-fixtures/profile/countries.json', 'api/resources/countries.json', 'app/assets/countries.json'] as $relative) {
+    $target = dirname(__DIR__).'/'.$relative;
+    if (! is_dir(dirname($target))) {
+        mkdir(dirname($target), 0777, true);
+    }
+    file_put_contents($target, $json);
 }
-file_put_contents($target, json_encode($countries, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n");
 
 fwrite(STDOUT, sprintf("%d countries, first %s, last %s\n", count($countries), $countries[0]['code'], end($countries)['code']));

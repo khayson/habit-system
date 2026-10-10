@@ -31,6 +31,12 @@ it('leaves out CLDR codes that are not countries', function () {
     expect(array_intersect(array_column(countryRows(), 'code'), ['AC', 'CP', 'CQ', 'DG', 'EA', 'EU', 'EZ', 'IC', 'TA', 'UN', 'XA', 'XB', 'ZZ', 'QO']))->toBe([]);
 });
 
+it('ships the server copy byte for byte equal to the canonical file', function () {
+    expect(config()->string('api.countries_path'))->toBe(resource_path('countries.json'))
+        ->and(file_get_contents(resource_path('countries.json')))
+        ->toBe(file_get_contents(dirname(__DIR__, 3).'/contract-fixtures/profile/countries.json'));
+});
+
 it('is the list the validator reads', function () {
     expect(array_keys(Countries::all()))->toEqualCanonicalizing(array_column(countryRows(), 'code'))
         ->and(Countries::isCode('GH'))->toBeTrue()

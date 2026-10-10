@@ -20,6 +20,6 @@ return [
     // A20: the private disk avatar objects live on (never a public one).
     'avatar_disk' => env('AVATAR_DISK', 'local'),
 
-    // A20: the shared country list (contract-fixtures/profile/countries.json).
-    'countries_path' => env('COUNTRIES_PATH', base_path('../contract-fixtures/profile/countries.json')),
+    // A20: the server's copy of the shared country list (scripts/gen-countries.php writes it).
+    'countries_path' => env('COUNTRIES_PATH', resource_path('countries.json')),
 ];
