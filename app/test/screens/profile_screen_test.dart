@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:dio/dio.dart';
 import 'package:drift/drift.dart' show DatabaseConnection;
@@ -47,11 +48,14 @@ class FakePhotoPicker implements PhotoPicker {
 /// Screen 20 (A20): the avatar card, the rows as designed, the edit and photo sheets, the
 /// Reminders sheet and sign out.
 void main() {
+  late List<int> photoBytes;
+
   setUpAll(() async {
     loadTestZones();
     TestWidgetsFlutterBinding.ensureInitialized();
     // Loaded once outside any test's fake clock, so every test reads the completed list.
     await Countries.load();
+    photoBytes = await _squarePng();
   });
 
   late Directory temp;
@@ -59,8 +63,8 @@ void main() {
 
   setUp(() {
     temp = Directory.systemTemp.createTempSync('habit_profile_');
-    // A real JPEG is not needed: the photo shows from whatever file the picker returns.
-    final crop = File(p.join(temp.path, 'crop.jpg'))..writeAsBytesSync(const [0xFF, 0xD8, 0xFF]);
+    // A real, decodable image: a broken one fails to decode later, inside another test.
+    final crop = File(p.join(temp.path, 'crop.png'))..writeAsBytesSync(photoBytes);
     picker = FakePhotoPicker(crop.path);
   });
   tearDown(() {
@@ -479,3 +483,13 @@ Map<String, Object?> sessionBody() => envelope({
   'token': 'tok-1',
   'token_type': 'Bearer',
 });
+
+/// An 8 x 8 PNG drawn with dart:ui, for the picker to hand back.
+Future<List<int>> _squarePng() async {
+  final recorder = ui.PictureRecorder();
+  ui.Canvas(recorder)
+      .drawRect(const ui.Rect.fromLTWH(0, 0, 8, 8), ui.Paint()..color = const ui.Color(0xFF2E7D4F));
+  final image = await recorder.endRecording().toImage(8, 8);
+  final png = await image.toByteData(format: ui.ImageByteFormat.png);
+  return png!.buffer.asUint8List();
+}
