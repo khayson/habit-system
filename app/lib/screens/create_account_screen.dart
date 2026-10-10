@@ -6,11 +6,14 @@ import '../app/router.dart';
 import '../config/habit_tokens.dart';
 import '../core/exceptions/app_exception.dart';
 import '../core/time_zones.dart';
+import '../core/url_launcher_opener.dart';
+import '../core/url_opener.dart';
 import '../core/validation.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../providers/session_provider.dart';
 import '../widgets/error_text.dart';
 import '../widgets/habit_ui.dart';
+import '../widgets/legal_links.dart';
 import 'widgets/password_field.dart';
 
 /// Reads the device's IANA zone for registration. Replaceable in tests.
@@ -20,8 +23,13 @@ typedef DeviceTimezone = Future<String> Function();
 /// errors and every entered value kept (design flow 01).
 class CreateAccountScreen extends StatefulWidget {
   final DeviceTimezone timezone;
+  final UrlOpener urlOpener;
 
-  const CreateAccountScreen({super.key, this.timezone = deviceTimezone});
+  const CreateAccountScreen({
+    super.key,
+    this.timezone = deviceTimezone,
+    this.urlOpener = const UrlLauncherOpener(),
+  });
 
   @override
   State<CreateAccountScreen> createState() => _CreateAccountScreenState();
@@ -133,8 +141,6 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                   validator: (v) => Validation.isPassword(v ?? '') ? null : l10n.errorPasswordShort,
                 ),
                 const SizedBox(height: HabitSpace.s16),
-                // ASSUMPTION(A2b2-terms): the Terms and Privacy Policy are hosted in Phase 7; until
-                // their URLs are configured the line is plain text, never a fabricated link.
                 CheckboxListTile(
                   value: _agreed,
                   onChanged: (v) => setState(() {
@@ -151,6 +157,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                         )
                       : null,
                 ),
+                LegalLinks(opener: widget.urlOpener),
                 const SizedBox(height: HabitSpace.s16),
                 InfoCard(
                   title: l10n.createAccountNoPressureTitle,

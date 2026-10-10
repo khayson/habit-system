@@ -120,6 +120,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get createAccountTermsNeeded => 'Agree to the Terms and Privacy Policy to continue.';
 
   @override
+  String get legalTerms => 'Terms';
+
+  @override
+  String get legalPrivacy => 'Privacy Policy';
+
+  @override
+  String get legalOpensInBrowser => 'Opens in your browser';
+
+  @override
+  String get legalOpenFailedTitle => 'The page didn\'t open here';
+
+  @override
+  String get legalOpenFailedBody => 'You can copy the link and open it in any browser.';
+
+  @override
+  String get legalCopyLink => 'Copy link';
+
+  @override
+  String get legalLinkCopied => 'Link copied';
+
+  @override
   String get createAccountNoPressureTitle => 'No pressure. No public profile.';
 
   @override

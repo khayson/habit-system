@@ -1,6 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/time_zones.dart';
+import '../core/url_launcher_opener.dart';
+import '../core/url_opener.dart';
 import '../providers/session_provider.dart';
 import '../screens/app_shell.dart';
 import '../screens/create_account_screen.dart';
@@ -73,17 +76,19 @@ GoRouter buildRouter(SessionProvider session) => GoRouter(
 
 /// Every screen's route. Today, Habits and habit detail share the bottom navigation (design
 /// 05, 07, 12); history (13) and the editor (08) are full screens without it, as in the design.
-/// [clock] and [registrationZone] are seams for tests.
+/// [clock], [registrationZone] and [urlOpener] are seams for tests.
 List<RouteBase> appRoutes({
   DateTime Function() clock = DateTime.now,
   DeviceTimezone? registrationZone,
+  UrlOpener? urlOpener,
 }) => [
   GoRoute(path: Routes.signIn, builder: (context, state) => const SignInScreen()),
   GoRoute(
     path: Routes.createAccount,
-    builder: (context, state) => registrationZone == null
-        ? const CreateAccountScreen()
-        : CreateAccountScreen(timezone: registrationZone),
+    builder: (context, state) => CreateAccountScreen(
+      timezone: registrationZone ?? deviceTimezone,
+      urlOpener: urlOpener ?? const UrlLauncherOpener(),
+    ),
   ),
   GoRoute(
     path: Routes.setup,

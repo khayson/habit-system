@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:habit/app/router.dart';
 import 'package:habit/config/theme.dart';
 import 'package:habit/core/time_zones.dart';
+import 'package:habit/core/url_opener.dart';
 import 'package:habit/data/app_database.dart';
 import 'package:habit/l10n/generated/app_localizations.dart';
 import 'package:habit/providers/account_context.dart';
@@ -18,6 +19,7 @@ import 'package:habit/sync/sync_transport.dart';
 import 'package:provider/provider.dart';
 
 import 'fake_notification_scheduler.dart';
+import 'fake_url_opener.dart';
 import 'fake_sync_server.dart';
 
 /// 17:22 UTC on 28 May 2026 is 10:22 in Los Angeles (the design file's clock).
@@ -64,6 +66,7 @@ Widget testApp({
   AccountContext? account,
   SessionProvider? session,
   DateTime Function()? clock,
+  UrlOpener? urlOpener,
 }) {
   final router = GoRouter(
     initialLocation: initial,
@@ -78,6 +81,7 @@ Widget testApp({
     routes: appRoutes(
       clock: clock ?? () => testNow,
       registrationZone: () async => 'America/Los_Angeles',
+      urlOpener: urlOpener ?? FakeUrlOpener(),
     ),
   );
   final materialApp = MaterialApp.router(

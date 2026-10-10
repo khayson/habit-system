@@ -308,6 +308,48 @@ abstract class AppLocalizations {
   /// **'Agree to the Terms and Privacy Policy to continue.'**
   String get createAccountTermsNeeded;
 
+  /// No description provided for @legalTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms'**
+  String get legalTerms;
+
+  /// No description provided for @legalPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get legalPrivacy;
+
+  /// No description provided for @legalOpensInBrowser.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens in your browser'**
+  String get legalOpensInBrowser;
+
+  /// No description provided for @legalOpenFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The page didn\'t open here'**
+  String get legalOpenFailedTitle;
+
+  /// No description provided for @legalOpenFailedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You can copy the link and open it in any browser.'**
+  String get legalOpenFailedBody;
+
+  /// No description provided for @legalCopyLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy link'**
+  String get legalCopyLink;
+
+  /// No description provided for @legalLinkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Link copied'**
+  String get legalLinkCopied;
+
   /// No description provided for @createAccountNoPressureTitle.
   ///
   /// In en, this message translates to:
