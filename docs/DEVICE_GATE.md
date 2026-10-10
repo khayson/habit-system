@@ -47,6 +47,7 @@ you saw.
 | 23 | Profile → **Edit profile**: change the name, type a city, pick a country; **Save**. Sync both devices. | 20 shows "City, Country" at once on the first device, and the same name, city and country on the second. |
 | 24 | Profile → tap the photo → **Remove photo**. Sync both devices. | Initials on both devices. |
 | 25 | Profile → **Reminders** → turn on **Hide habit names in notifications**. Set a reminder 5 minutes ahead; lock the phone. | The reminder that appears does not name the habit. Turning the setting off brings the names back on the next reminders. |
+| 26 | Take a portrait photo with the phone camera, choose it as the profile photo, crop it. | It shows upright on this phone, and upright on a second device after sync. Result: ___. |
 
 ## Results
 
@@ -77,3 +78,4 @@ you saw.
 | 23 | | | | |
 | 24 | | | | |
 | 25 | | | | |
+| 26 | | | | |
