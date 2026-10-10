@@ -8,6 +8,7 @@ import '../data/app_database.dart';
 import '../data/calendar_store.dart';
 import '../data/entity_codec.dart';
 import '../domain/calendar/day_resolver.dart';
+import 'avatar_sync.dart';
 import 'outbox_states.dart';
 import 'sync_transport.dart';
 
@@ -74,6 +75,10 @@ class SyncEngine {
   /// build could not decode are replayed once (G5).
   final String? appVersion;
 
+  /// Phase 3b (A20): the profile photo's queue and cache; null where there are no files (old
+  /// tests, the command-line smoke run).
+  final AvatarSync? avatars;
+
   /// Test hook: runs inside the apply transaction just before it commits.
   final Future<void> Function()? beforeApplyCommit;
 
@@ -92,6 +97,7 @@ class SyncEngine {
     this.beforeApplyCommit,
     this.betweenSelectAndMark,
     this.appVersion,
+    this.avatars,
   }) : clock = clock ?? (() => DateTime.now().toUtc()),
        random = random ?? Random(),
        ownerId = ownerId ?? const Uuid().v4();
@@ -202,6 +208,7 @@ class SyncEngine {
     var retriedRotation = false;
     var rebootstraps = 0;
     var chunk = maxChunk;
+    var uploaded = false;
 
     for (var round = 0; round < 1000; round++) {
       await _renewLease();
@@ -223,6 +230,25 @@ class SyncEngine {
         await _noteServerTime(page.serverTime);
         await _apply(page, rows);
         if (!page.hasMore && (await _eligible(1)).isEmpty) {
+          // Phase 3b: the outbox is drained; photo changes go next, one at a time, then one
+          // more pull brings the user entity they changed.
+          if (avatars != null && !uploaded) {
+            uploaded = true;
+            switch (await avatars!.upload()) {
+              case UploadRun.acknowledged:
+                continue;
+              case UploadRun.loggedOut:
+                await _updateState(
+                  SyncStateCompanion(
+                    lastError: Value(_error('unauthenticated', 'The session has ended.')),
+                  ),
+                );
+                return SyncOutcome.loggedOut;
+              case UploadRun.done:
+                break;
+            }
+          }
+          await avatars?.refreshCache();
           await _updateState(
             SyncStateCompanion(
               lastSyncedAt: Value(_now),

@@ -1,3 +1,4 @@
+import 'dart:io' show Directory;
 import 'dart:ui' show PlatformDispatcher;
 
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -8,6 +9,8 @@ import '../core/time_zones.dart';
 import '../data/habit_detail_view.dart';
 import '../data/local_mutation_service.dart';
 import '../data/local_view.dart';
+import '../data/photo_service.dart';
+import '../data/profile_view.dart';
 import '../data/timezone_view.dart';
 import '../domain/provisional_type_rules.dart';
 import '../l10n/generated/app_localizations.dart';
@@ -18,7 +21,10 @@ import '../services/auth_service.dart';
 import '../services/habit_actions.dart';
 import '../services/heatmap_service.dart';
 import '../background/workmanager_sync.dart';
+import '../sync/avatar_sync.dart';
+import '../sync/avatar_transport.dart';
 import '../sync/background_sync.dart';
+import '../sync/http_avatar_transport.dart';
 import '../sync/http_sync_transport.dart';
 import '../sync/sync_engine.dart';
 import '../sync/sync_transport.dart';
@@ -44,16 +50,22 @@ class AccountContext {
   /// Best-effort background sync registration (Phase 3.2b); null where there is none (tests).
   final BackgroundSyncScheduler? background;
 
+  /// Phase 3b: the account's own folder for files (the profile photo).
+  final String filesRoot;
+
   AccountContext({
     required this.session,
     this.heatmap,
     NotificationScheduler? notifications,
     this.background,
     required SyncTransport transport,
+    AvatarTransport? avatarTransport,
+    String? filesRoot,
     required Future<void> Function() refreshIfStale,
     Stream<bool>? connectivity,
     DateTime Function()? clock,
   }) : _clock = clock,
+       filesRoot = filesRoot ?? '${Directory.systemTemp.path}/habit_${session.userId}_files',
        notifications = notifications ?? LocalNotificationsScheduler(),
        writer = LocalMutationService(session.db, clock: clock),
        view = LocalView(session.db),
@@ -64,6 +76,15 @@ class AccountContext {
            capabilities: ProvisionalTypeRegistry.builtins().keys.toList(),
            clock: clock,
            appVersion: AppVersion.current,
+           avatars: avatarTransport == null
+               ? null
+               : AvatarSync(
+                   db: session.db,
+                   transport: avatarTransport,
+                   filesRoot:
+                       filesRoot ?? '${Directory.systemTemp.path}/habit_${session.userId}_files',
+                   clock: clock,
+                 ),
          ),
          refreshIfStale: refreshIfStale,
          connectivity: connectivity,
@@ -71,6 +92,10 @@ class AccountContext {
        queue = StreamModel(Future.value(LocalView(session.db).watchQueue()));
 
   final DateTime Function()? _clock;
+
+  /// Phase 3b: screen 20's data and the photo on this device.
+  late final ProfileView profile = ProfileView(session.db, filesRoot: filesRoot);
+  late final PhotoService photos = PhotoService(session.db, filesRoot: filesRoot, clock: _clock);
 
   late final ReminderPermission permission = ReminderPermission(
     DeviceSettings(session.db),
@@ -110,17 +135,23 @@ class AccountContext {
 
   /// The production wiring: HTTP transport over the shared ApiClient, connectivity_plus as a
   /// trigger only.
-  factory AccountContext.live(AccountSession session, ApiClient api, AuthService auth) =>
-      AccountContext(
-        session: session,
-        heatmap: HeatmapService(api),
-        background: const WorkmanagerSyncScheduler(),
-        transport: HttpSyncTransport(api.dio, currentToken: api.currentToken),
-        refreshIfStale: auth.refreshIfStale,
-        connectivity: Connectivity().onConnectivityChanged.map(
-          (results) => results.any((r) => r != ConnectivityResult.none),
-        ),
-      );
+  factory AccountContext.live(
+    AccountSession session,
+    ApiClient api,
+    AuthService auth, {
+    required String filesRoot,
+  }) => AccountContext(
+    session: session,
+    heatmap: HeatmapService(api),
+    background: const WorkmanagerSyncScheduler(),
+    transport: HttpSyncTransport(api.dio, currentToken: api.currentToken),
+    avatarTransport: HttpAvatarTransport(api.dio),
+    filesRoot: filesRoot,
+    refreshIfStale: auth.refreshIfStale,
+    connectivity: Connectivity().onConnectivityChanged.map(
+      (results) => results.any((r) => r != ConnectivityResult.none),
+    ),
+  );
 
   void dispose() {
     _reminders?.dispose();

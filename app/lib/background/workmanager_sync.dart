@@ -1,12 +1,15 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:workmanager/workmanager.dart';
 
 import '../config/api_config.dart';
 import '../core/storage/account_store.dart';
 import '../core/storage/token_store.dart';
 import '../data/database_opener.dart';
+import '../sync/avatar_sync.dart';
 import '../sync/background_sync.dart';
+import '../sync/http_avatar_transport.dart';
 import '../sync/http_sync_transport.dart';
 
 /// The OS side of background sync (Phase 3.2b): WorkManager registration per account and the
@@ -49,20 +52,25 @@ void backgroundSyncDispatcher() {
     WidgetsFlutterBinding.ensureInitialized();
     final accountKey = input?['account_key'];
     if (task != backgroundSyncTask || accountKey is! String) return true;
+    Dio dio(String token) => Dio(
+      BaseOptions(
+        baseUrl: ApiConfig.baseUrl,
+        connectTimeout: ApiConfig.connectTimeout,
+        receiveTimeout: ApiConfig.receiveTimeout,
+        headers: {'Accept': 'application/json', 'Authorization': 'Bearer $token'},
+      ),
+    );
+    final support = (await getApplicationSupportDirectory()).path;
     await runBackgroundSync(
       accountKey: accountKey,
       tokens: const SecureTokenStore(),
       accounts: const SecureAccountStore(),
       open: openAccountDatabase,
-      transport: (token) => HttpSyncTransport(
-        Dio(
-          BaseOptions(
-            baseUrl: ApiConfig.baseUrl,
-            connectTimeout: ApiConfig.connectTimeout,
-            receiveTimeout: ApiConfig.receiveTimeout,
-            headers: {'Accept': 'application/json', 'Authorization': 'Bearer $token'},
-          ),
-        ),
+      transport: (token) => HttpSyncTransport(dio(token)),
+      avatars: (db, token) => AvatarSync(
+        db: db,
+        transport: HttpAvatarTransport(dio(token)),
+        filesRoot: accountFilesRoot(support, accountKey),
       ),
     );
     // Best effort: a failed run is not retried by the OS; the next period or the foreground

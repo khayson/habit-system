@@ -7,6 +7,7 @@ import 'package:habit/data/local_mutation_service.dart';
 import 'package:habit/data/local_view.dart';
 import 'package:habit/domain/calendar/local_date.dart';
 import 'package:habit/domain/calendar/timezone_timeline.dart';
+import 'package:habit/sync/avatar_sync.dart';
 import 'package:habit/sync/sync_engine.dart';
 import 'package:habit/sync/sync_transport.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
@@ -46,6 +47,7 @@ class Device {
     Future<void> Function()? betweenSelectAndMark,
     String? owner,
     String? appVersion,
+    AvatarSync? avatars,
   }) => SyncEngine(
     db: db,
     transport: transport ?? server,
@@ -56,6 +58,7 @@ class Device {
     appVersion: appVersion,
     beforeApplyCommit: beforeApplyCommit,
     betweenSelectAndMark: betweenSelectAndMark,
+    avatars: avatars,
   );
 
   Future<SyncOutcome> sync({bool force = false}) => engine().run(force: force);

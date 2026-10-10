@@ -9,6 +9,7 @@ import '../core/storage/token_store.dart';
 import '../data/app_database.dart';
 import '../domain/calendar/timezone_timeline.dart';
 import '../domain/provisional_type_rules.dart';
+import 'avatar_sync.dart';
 import 'sync_engine.dart';
 import 'sync_transport.dart';
 
@@ -33,6 +34,7 @@ Future<SyncOutcome?> runBackgroundSync({
   required AccountStore accounts,
   required AppDatabase Function(String accountKey) open,
   required SyncTransport Function(String token) transport,
+  AvatarSync Function(AppDatabase db, String token)? avatars,
 }) async {
   // A logged-out or switched account never syncs from the background.
   if ((await accounts.readUserId())?.toLowerCase() != accountKey.toLowerCase()) return null;
@@ -46,6 +48,8 @@ Future<SyncOutcome?> runBackgroundSync({
       transport: transport(token),
       capabilities: ProvisionalTypeRegistry.builtins().keys.toList(),
       appVersion: AppVersion.current,
+      // Phase 3b: the same cycle as the foreground, photo uploads included.
+      avatars: avatars?.call(db, token),
     ).run();
     if (outcome == SyncOutcome.loggedOut) {
       await (db.update(db.syncState)..where((s) => s.id.equals(1))).write(

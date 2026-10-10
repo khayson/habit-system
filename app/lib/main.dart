@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
 import 'app/app.dart';
@@ -11,6 +12,7 @@ import 'core/network/api_client.dart';
 import 'core/storage/account_store.dart';
 import 'core/storage/token_store.dart';
 import 'core/time_zones.dart';
+import 'data/database_opener.dart';
 import 'providers/account_context.dart';
 import 'providers/health_provider.dart';
 import 'providers/session_provider.dart';
@@ -23,12 +25,19 @@ Future<void> main() async {
   LegalConfig.ensureSafe();
   LicenseRegistry.addLicense(_interLicense);
 
+  // Phase 3b: each account's files (the profile photo) live next to its database.
+  final support = (await getApplicationSupportDirectory()).path;
   const tokens = SecureTokenStore();
   final api = ApiClient(tokens: tokens);
   final auth = AuthService(api, tokens, const SecureAccountStore());
   final session = SessionProvider(
     auth,
-    buildAccount: (account) => AccountContext.live(account, api, auth),
+    buildAccount: (account) => AccountContext.live(
+      account,
+      api,
+      auth,
+      filesRoot: accountFilesRoot(support, account.userId),
+    ),
   );
   api.onUnauthenticated = session.handleUnauthenticated;
   // Reads the keystore and opens the account database lazily: no network, no artificial delay.
