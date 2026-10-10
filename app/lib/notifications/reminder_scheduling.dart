@@ -165,7 +165,7 @@ class ReminderScheduling {
     for (final row in await db.select(db.scheduledNotifications).get()) {
       await scheduler.cancel(row.platformId);
     }
-    await db.delete(db.scheduledNotifications).go();
+    await db.writeRetrying(() => db.delete(db.scheduledNotifications).go());
     await replan();
   }
 
@@ -182,9 +182,11 @@ class ReminderScheduling {
       final keep = wanted[row.platformId];
       if (keep == null || keep.fireAt.millisecondsSinceEpoch != row.fireAt) {
         await scheduler.cancel(row.platformId);
-        await (db.delete(
-          db.scheduledNotifications,
-        )..where((s) => s.platformId.equals(row.platformId))).go();
+        await db.writeRetrying(
+          () => (db.delete(
+            db.scheduledNotifications,
+          )..where((s) => s.platformId.equals(row.platformId))).go(),
+        );
       }
     }
     for (final p in plan) {
@@ -195,17 +197,19 @@ class ReminderScheduling {
         title: hideNames ? hiddenTitle : title(names[p.habitId] ?? ''),
         body: body,
       );
-      await db
-          .into(db.scheduledNotifications)
-          .insertOnConflictUpdate(
-            ScheduledNotificationsCompanion.insert(
-              platformId: Value(p.id),
-              reminderId: p.reminderId,
-              habitId: p.habitId,
-              slotDate: p.slotDate.toString(),
-              fireAt: p.fireAt.millisecondsSinceEpoch,
+      await db.writeRetrying(
+        () => db
+            .into(db.scheduledNotifications)
+            .insertOnConflictUpdate(
+              ScheduledNotificationsCompanion.insert(
+                platformId: Value(p.id),
+                reminderId: p.reminderId,
+                habitId: p.habitId,
+                slotDate: p.slotDate.toString(),
+                fireAt: p.fireAt.millisecondsSinceEpoch,
+              ),
             ),
-          );
+      );
     }
   }
 
@@ -219,7 +223,7 @@ class ReminderScheduling {
     for (final row in await db.select(db.scheduledNotifications).get()) {
       await scheduler.cancel(row.platformId);
     }
-    await db.delete(db.scheduledNotifications).go();
+    await db.writeRetrying(() => db.delete(db.scheduledNotifications).go());
   }
 
   Future<void> dispose() async {

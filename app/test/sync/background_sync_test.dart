@@ -209,6 +209,41 @@ void main() {
     holder.close();
   });
 
+  test('P1: putting in-flight rows back after a failure retries a refused write', () async {
+    final server = FakeSyncServer();
+    final setup = independent(file.path);
+    await initAccountState(setup, userId: 'user-1', deviceId: 'd1', user: server.user);
+    await setup.close();
+    final impatient = AppDatabase(
+      NativeDatabase(
+        file,
+        setup: (db) {
+          configureConnection(db);
+          db.execute('PRAGMA busy_timeout = 0');
+        },
+      ),
+    );
+    await impatient.customSelect('SELECT 1').get(); // open before the lock matters
+    sqlite.Database? holder;
+    // The request fails while another connection holds the write lock, so the engine's
+    // recovery write (in-flight rows back to pending) meets a refused write.
+    final transport = _LockingTransport(server, () {
+      holder = sqlite.sqlite3.open(file.path)..execute('BEGIN IMMEDIATE');
+      Future<void>.delayed(const Duration(milliseconds: 60), () => holder!.execute('COMMIT'));
+    });
+
+    final outcome = await SyncEngine(
+      db: impatient,
+      transport: transport,
+      capabilities: const ['binary'],
+      clock: () => now,
+    ).run(force: true);
+
+    expect(outcome, SyncOutcome.offline);
+    await impatient.close();
+    holder?.close();
+  });
+
   test('a second isolate writing during a sync run: no lost write, no SQLITE_BUSY', () async {
     final server = FakeSyncServer();
     final main = independent(file.path);
@@ -299,4 +334,31 @@ class _Accounts implements AccountStore {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+/// Takes the write lock on its first /sync, then fails as offline.
+class _LockingTransport implements SyncTransport {
+  _LockingTransport(this.inner, this.lock);
+  final SyncTransport inner;
+  final void Function() lock;
+  var _locked = false;
+
+  @override
+  Future<SyncPage> sync({
+    required String deviceId,
+    required String? cursor,
+    required int pullLimit,
+    required List<Map<String, Object?>> mutations,
+    required List<String> capabilities,
+  }) async {
+    if (!_locked) {
+      _locked = true;
+      lock();
+    }
+    throw const SyncTransportException(SyncFailure.network);
+  }
+
+  @override
+  Future<BootstrapPage> bootstrap({required String? cursor, required int limit}) =>
+      inner.bootstrap(cursor: cursor, limit: limit);
 }

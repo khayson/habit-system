@@ -906,22 +906,26 @@ class SyncEngine {
 
   /// Acked rows can go once the confirmed row reflects them; unacknowledged rows never do.
   Future<void> _prune() async {
-    await db.customUpdate(
-      '''DELETE FROM outbox WHERE state = ? AND (
+    await db.writeRetrying(
+      () => db.customUpdate(
+        '''DELETE FROM outbox WHERE state = ? AND (
            (entity = 'habit' AND EXISTS (SELECT 1 FROM habits h WHERE h.id = outbox.entity_id AND h.version >= COALESCE(outbox.ack_version, 0)))
         OR (entity = 'habit_log' AND EXISTS (SELECT 1 FROM habit_logs l WHERE l.id = outbox.entity_id AND l.version >= COALESCE(outbox.ack_version, 0)))
         OR (entity = 'reminder' AND EXISTS (SELECT 1 FROM reminders r WHERE r.id = outbox.entity_id AND r.version >= COALESCE(outbox.ack_version, 0)))
         OR (entity = 'user' AND EXISTS (SELECT 1 FROM sync_state s WHERE s.id = 1 AND CAST(json_extract(s.user_payload, '\$.version') AS INTEGER) >= COALESCE(outbox.ack_version, 0))))''',
-      variables: [const Variable(OutboxState.acked)],
-      updates: {db.outbox},
+        variables: [const Variable(OutboxState.acked)],
+        updates: {db.outbox},
+      ),
     );
   }
 
   /// A waiting log resumes once its habit is confirmed (pulled or bootstrapped).
-  Future<void> _resumeWaiting() => db.customUpdate(
-    'UPDATE outbox SET state = ? WHERE state = ? AND habit_id IN (SELECT id FROM habits)',
-    variables: [const Variable(OutboxState.pending), const Variable(OutboxState.waiting)],
-    updates: {db.outbox},
+  Future<void> _resumeWaiting() => db.writeRetrying(
+    () => db.customUpdate(
+      'UPDATE outbox SET state = ? WHERE state = ? AND habit_id IN (SELECT id FROM habits)',
+      variables: [const Variable(OutboxState.pending), const Variable(OutboxState.waiting)],
+      updates: {db.outbox},
+    ),
   );
 
   // State, lease, helpers ------------------------------------------------------------------------
@@ -948,10 +952,12 @@ class SyncEngine {
   }
 
   /// Rows a crashed run left in flight go back to pending (their re-send is deduped by receipts).
-  Future<void> _recoverInFlight() => db.customUpdate(
-    'UPDATE outbox SET state = ? WHERE state = ?',
-    variables: [const Variable(OutboxState.pending), const Variable(OutboxState.inFlight)],
-    updates: {db.outbox},
+  Future<void> _recoverInFlight() => db.writeRetrying(
+    () => db.customUpdate(
+      'UPDATE outbox SET state = ? WHERE state = ?',
+      variables: [const Variable(OutboxState.pending), const Variable(OutboxState.inFlight)],
+      updates: {db.outbox},
+    ),
   );
 
   /// Free or expired leases only: a crashed owner is recovered by expiry, never by its id (F3).

@@ -74,13 +74,15 @@ class AccountCalendar {
   static Future<void> _recordInvalid(AppDatabase db, SyncStateRow state) async {
     final current = state.lastError == null ? null : jsonDecode(state.lastError!);
     if (current is Map && current['code'] == 'calendar_invalid') return; // no write loop
-    await (db.update(db.syncState)..where((s) => s.id.equals(1))).write(
-      SyncStateCompanion(
-        lastError: Value(
-          jsonEncode({
-            'code': 'calendar_invalid',
-            'message': 'The calendar history was not valid.',
-          }),
+    await db.writeRetrying(
+      () => (db.update(db.syncState)..where((s) => s.id.equals(1))).write(
+        SyncStateCompanion(
+          lastError: Value(
+            jsonEncode({
+              'code': 'calendar_invalid',
+              'message': 'The calendar history was not valid.',
+            }),
+          ),
         ),
       ),
     );

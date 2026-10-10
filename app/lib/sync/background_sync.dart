@@ -52,13 +52,15 @@ Future<SyncOutcome?> runBackgroundSync({
       avatars: avatars?.call(db, token),
     ).run();
     if (outcome == SyncOutcome.loggedOut) {
-      await (db.update(db.syncState)..where((s) => s.id.equals(1))).write(
-        SyncStateCompanion(
-          lastError: Value(
-            jsonEncode({
-              'code': 'reauth_needed',
-              'message': 'Sign in again on this device to keep syncing.',
-            }),
+      await db.writeRetrying(
+        () => (db.update(db.syncState)..where((s) => s.id.equals(1))).write(
+          SyncStateCompanion(
+            lastError: Value(
+              jsonEncode({
+                'code': 'reauth_needed',
+                'message': 'Sign in again on this device to keep syncing.',
+              }),
+            ),
           ),
         ),
       );
