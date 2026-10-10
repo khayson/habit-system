@@ -62,6 +62,11 @@ final readonly class EntityPresenter
             'next_level_threshold' => $level->nextLevelThreshold,
             'freeze_balance' => (int) $user->freeze_balance,
             'created_at' => UtcTime::format(WireTime::parse((string) $user->created_at)),
+            // A20: typed or picked labels (never GPS), and a counter of photo changes. The
+            // avatar's storage key and hash are never exposed.
+            'city' => $user->city,
+            'country_code' => $user->country_code,
+            'avatar_version' => (int) $user->avatar_version,
         ];
     }
 
