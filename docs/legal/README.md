@@ -31,7 +31,8 @@ The Privacy Policy and Terms make these claims. Each one maps to something the p
 | Deletion records kept up to 180 days | Journal retention in the amendments | Update privacy §7 |
 | Technical logs kept `log_retention_days` days | Server logging setup (Phase 7) | Update the fact and privacy §7 |
 | Data is hosted with `hosting_provider` in `hosting_region` | Deployment (Phase 7) | Update the facts and privacy §5, §6 |
-| Reminder text includes the habit name | Phase 3.2b | If a "hide habit names" setting ships, update privacy §3 |
+| Reminder text includes the habit name unless the user hides it in profile settings | Phase 3.2b; the setting ships in Phase 3b | If the setting is dropped, remove that sentence from privacy §3 |
+| The Terms and Privacy pages are hosted on GitHub Pages and set no cookies and run no analytics | `legal-pages.yml`; the page builder test forbids scripts | If the host changes or a script or analytics is added, update privacy §5 |
 | The app does not encrypt its on-device database | Phase 7 carry | If it does, update privacy §6 |
 | No public profiles and no sharing with other users | Spec privacy default | Update the summary and §1 |
 

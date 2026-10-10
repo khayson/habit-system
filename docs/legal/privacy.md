@@ -39,7 +39,7 @@ We do not collect your precise location (GPS), your contacts, or advertising ide
 
 ## 3. Reminders and notifications
 
-Reminders are scheduled on your phone. Our servers do not send you push notifications. A reminder's text includes the name of the habit, so it may appear on your lock screen depending on your phone's settings. You can turn reminders off in the app, or notifications off in your phone's settings, at any time.
+Reminders are scheduled on your phone. Our servers do not send you push notifications. By default a reminder's text includes the name of the habit, so it may appear on your lock screen depending on your phone's settings. You can hide habit names in reminder text in your profile settings. You can also turn reminders off in the app, or notifications off in your phone's settings, at any time.
 
 ## 4. How we use your data, and our grounds
 
@@ -56,7 +56,8 @@ Only with companies that help us run the service, under contract and only on our
 
 - our hosting provider, {{hosting_provider}}, which stores your data on our behalf;
 - a service that delivers our account emails;
-- a breached-password check. When you choose a password, our server asks the Have I Been Pwned service whether it has appeared in a known data breach. Only the first five characters of a one-way hash of the password are sent. Your password and your email address are not.
+- a breached-password check. When you choose a password, our server asks the Have I Been Pwned service whether it has appeared in a known data breach. Only the first five characters of a one-way hash of the password are sent. Your password and your email address are not;
+- GitHub, which hosts these Terms and Privacy pages. Opening them is like visiting any website: GitHub may log your IP address and the request under its own privacy statement. We set no cookies and run no analytics on these pages.
 
 We may also disclose data if the law or a valid legal request requires it, or to protect people's safety. If our business is ever transferred, we will tell you before your data is handled under a different policy.
 
@@ -96,6 +97,6 @@ When we change this policy we will update the date at the top. If a change matte
 
 ## 12. Contact
 
-{{publisher}}
-{{postal_address}}
+{{publisher}}\
+{{postal_address}}\
 {{contact_email}}

@@ -72,6 +72,6 @@ If part of these terms cannot be enforced, the rest stays in force. If we do not
 
 ## 13. Contact
 
-{{publisher}}
-{{postal_address}}
+{{publisher}}\
+{{postal_address}}\
 {{contact_email}}
