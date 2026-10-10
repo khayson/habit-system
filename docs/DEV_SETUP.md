@@ -165,7 +165,10 @@ to A's log id), conflict (a stale edit is kept as needs-attention, then discarde
 deletes, B logs again on the tombstone version), db-restore (the server journal rolls back: 410,
 re-bootstrap, the queued edit survives) and refresh (the old token works inside the 10-minute
 grace window) and derived (a past day closes and the other device receives `habit_progress` and
-`period_evaluation`, A32). It prints PASS/FAIL per scenario, then `CONVERGED` (exit 0) or stops non-zero.
+`period_evaluation`, A32), profile (name, city and country reach the server and B) and photo (a
+photo chosen offline uploads with a real multipart PUT; sm/md/lg are WebP 96/160/320; B fetches
+md; another account gets 404; removal clears it on B). It prints PASS/FAIL per scenario, then
+`CONVERGED` (exit 0) or stops non-zero.
 
 ```powershell
 scripts\db-up.ps1
@@ -174,6 +177,7 @@ cd app
 $env:E2E_DATABASE_URL = 'postgresql://habit:habit@127.0.0.1:5432/habit'
 $env:E2E_PSQL = "$env:USERPROFILE\tools\pgsql-17\bin\psql.exe"   # if psql is not on PATH
 $env:E2E_CLOSE_CMD = "$env:USERPROFILE\tools\php-8.4\php.exe ..\api\artisan habits:close-periods --sync"
+$env:E2E_PHP = "$env:USERPROFILE\tools\php-8.4\php.exe"   # draws the photo scenario's JPEG (GD); default `php`
 dart run tool/sync_e2e.dart               # default http://127.0.0.1:8000/api/v1
 ```
 
