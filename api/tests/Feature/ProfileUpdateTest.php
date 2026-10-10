@@ -95,7 +95,7 @@ it('trims the city, clears empty or null fields, and refuses control characters 
     profileAck($this, $this->maya['token'], M::profileUpdate($this->maya['id'], baseVersion: 2, payload: ['city' => '   ', 'country_code' => null]));
     expect(profileRow($this->maya['id']))->toBe(['Maya Chen', null, null, 3]);
 
-    foreach ([['city' => "Ac\u{0007}cra"], ['country_code' => 'EU'], ['country_code' => 'ZZ'], ['city' => str_repeat('a', 61)]] as $bad) {
+    foreach ([['name' => "Maya\u{001B}Chen"], ['city' => "Ac\u{0007}cra"], ['country_code' => 'EU'], ['country_code' => 'ZZ'], ['city' => str_repeat('a', 61)]] as $bad) {
         $ack = profileAck($this, $this->maya['token'], M::profileUpdate($this->maya['id'], baseVersion: 3, payload: $bad));
         expect($ack['error']['code'])->toBe('validation_failed')
             ->and(array_keys($ack['error']['fields']))->toBe(array_keys($bad));

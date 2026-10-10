@@ -15,7 +15,7 @@ final class ProfileRules
     /** @return list<mixed> */
     public static function name(): array
     {
-        return ['required', 'string', 'max:80'];
+        return ['required', 'string', 'max:80', self::noControlCharacters()];
     }
 
     /**
@@ -25,11 +25,17 @@ final class ProfileRules
      */
     public static function city(): array
     {
-        return ['present', 'nullable', 'string', 'max:'.self::CITY_MAX, function (string $attribute, mixed $value, Closure $fail) {
-            if (is_string($value) && preg_match('/\p{Cc}/u', $value)) {
+        return ['present', 'nullable', 'string', 'max:'.self::CITY_MAX, self::noControlCharacters()];
+    }
+
+    /** Control characters (NUL, line breaks, escapes) never belong in a label. */
+    private static function noControlCharacters(): Closure
+    {
+        return function (string $attribute, mixed $value, Closure $fail) {
+            if (is_string($value) && preg_match('/\p{Cc}/u', $value) === 1) {
                 $fail('Use letters, spaces and punctuation only.');
             }
-        }];
+        };
     }
 
     /**

@@ -71,6 +71,8 @@ it('validates registration', function (array $overrides, string $field) {
     'not an IANA zone' => [['timezone' => 'Mars/Olympus'], 'timezone'],
     'fixed offsets are not zones' => [['timezone' => '+02:00'], 'timezone'],
     'email already used (case-insensitive)' => [['email' => 'MAYA.CHEN@example.com'], 'email'],
+    'a control character in the name (S3)' => [['name' => "Maya\u{0000}Chen"], 'name'],
+    'a line break in the name (S3)' => [['name' => "Maya\nChen"], 'name'],
 ]);
 
 it('rejects a known-breached password (A16)', function () {
