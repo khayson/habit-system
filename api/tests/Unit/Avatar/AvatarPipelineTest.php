@@ -151,13 +151,39 @@ it('refuses a photo whose decoded size would not fit in memory, without a fatal 
 it('counts the rotated copy in the memory estimate for orientations 5 to 8', function () {
     $plain = Images::jpeg(1000, 1000);
     $rotated = Images::withMetadata($plain, orientation: 6, gps: false);
-    // Room for one decoded copy (5 bytes a pixel) but not for a rotated second one (9).
-    $budget = fn () => pipeline(memory_get_usage() + 1000 * 1000 * 7);
+    // Room for a JPEG decode (9 bytes a pixel) but not for the rotated copy on top (13).
+    $budget = fn () => pipeline(memory_get_usage() + 1000 * 1000 * 11);
 
     expect($budget()->process($plain)->sizes)->toHaveCount(3);
     expect(rejection(fn () => $budget()->process($rotated))->getMessage())
         ->toBe('This photo is too large to process. Choose a smaller one.');
 });
+
+it('estimates per type from the measured worst case, with the rotated copy on top', function () {
+    expect(AvatarPipeline::BYTES_PER_PIXEL)->toBe([IMAGETYPE_JPEG => 9, IMAGETYPE_PNG => 10, IMAGETYPE_WEBP => 10])
+        ->and(AvatarPipeline::ROTATED_EXTRA_BYTES_PER_PIXEL)->toBe(4);
+});
+
+it('estimates at least the resident memory the pipeline really takes (Linux, 4000 x 4000)', function (string $type, int $imageType) {
+    if (PHP_OS_FAMILY !== 'Linux') {
+        $this->markTestSkipped('VmHWM (resident high-water mark) is read from /proc, which only Linux has.');
+    }
+    $script = dirname(__DIR__, 4).'/scripts/measure-avatar-memory.php';
+    exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' --size=4000 --types='.$type.' 2>&1', $out, $code);
+    expect($code)->toBe(0, implode("\n", $out));
+    $line = (string) end($out);
+    fwrite(STDERR, "\n[S4] {$line}\n");
+    preg_match('/([\d.]+) MB/', $line, $m);
+
+    $measured = (float) $m[1] * 1048576;
+    expect(4000 * 4000 * AvatarPipeline::BYTES_PER_PIXEL[$imageType])->toBeGreaterThanOrEqual((int) $measured, $line);
+})->with([
+    'baseline jpeg' => ['jpeg', IMAGETYPE_JPEG],
+    'progressive jpeg' => ['jpeg-progressive', IMAGETYPE_JPEG],
+    'rgba png' => ['png-rgba', IMAGETYPE_PNG],
+    'interlaced png' => ['png-interlaced', IMAGETYPE_PNG],
+    'webp' => ['webp', IMAGETYPE_WEBP],
+]);
 
 it('decodes a photo exactly at the pixel cap', function () {
     $input = Images::jpeg(5000, 5000);

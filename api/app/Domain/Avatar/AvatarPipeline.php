@@ -23,13 +23,15 @@ final readonly class AvatarPipeline
     public const int MAX_PIXELS = 25_000_000;
 
     /**
-     * Memory estimate per pixel. GD holds a truecolor pixel in 4 bytes (measured: a 25 MP decode
-     * takes 97.7 MB); one more covers the small resampled copies. A 90° turn (orientations 5 to
-     * 8) needs a second full copy (measured peak 195 MB), so it counts 9.
+     * Memory estimate in bytes per pixel, by input type: the worst measured resident growth
+     * (scripts/measure-avatar-memory.php, 5000 x 5000) plus about 25%. Measured: baseline JPEG
+     * 4.1, progressive JPEG 7.1, RGBA PNG 8.1, interlaced PNG 7.1, WebP 8.3. A test checks the
+     * estimate against Linux VmHWM.
      */
-    public const int BYTES_PER_PIXEL = 5;
+    public const array BYTES_PER_PIXEL = [IMAGETYPE_JPEG => 9, IMAGETYPE_PNG => 10, IMAGETYPE_WEBP => 10];
 
-    public const int ROTATED_BYTES_PER_PIXEL = 9;
+    /** A quarter turn (JPEG orientations 5 to 8) holds a second truecolor copy: 4 more. */
+    public const int ROTATED_EXTRA_BYTES_PER_PIXEL = 4;
 
     public const array SIZES = ['sm' => 96, 'md' => 160, 'lg' => 320];
 
@@ -77,7 +79,7 @@ final readonly class AvatarPipeline
             throw AvatarRejected::unusable('This photo has too many pixels. Choose one under 25 megapixels.');
         }
         $orientation = $type === IMAGETYPE_JPEG ? JpegOrientation::read($bytes) : 1;
-        $perPixel = $orientation >= 5 ? self::ROTATED_BYTES_PER_PIXEL : self::BYTES_PER_PIXEL;
+        $perPixel = self::BYTES_PER_PIXEL[$type] + ($orientation >= 5 ? self::ROTATED_EXTRA_BYTES_PER_PIXEL : 0);
         if ($this->memoryLimit !== -1 && $width * $height * $perPixel > $this->memoryLimit - ($this->memoryUsage)()) {
             throw AvatarRejected::unusable('This photo is too large to process. Choose a smaller one.');
         }
