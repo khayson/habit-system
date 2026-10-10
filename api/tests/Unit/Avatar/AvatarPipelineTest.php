@@ -79,6 +79,32 @@ it('turns an orientation 6 photo upright', function () {
         ->and($topRed)->toBeLessThan(100, 'not left as stored');
 });
 
+it('displays every EXIF orientation upright', function (int $orientation, string $expected) {
+    // Stored quadrants: top-left red, top-right green, bottom-left blue, bottom-right yellow.
+    $input = Images::withMetadata(Images::jpeg(200, 200, function (GdImage $image) {
+        foreach ([[0, 0, 220, 30, 30], [100, 0, 30, 200, 30], [0, 100, 30, 30, 220], [100, 100, 230, 220, 30]] as [$x, $y, $r, $g, $b]) {
+            imagefilledrectangle($image, $x, $y, $x + 99, $y + 99, (int) imagecolorallocate($image, $r, $g, $b));
+        }
+    }), orientation: $orientation, gps: false);
+    $lg = pipeline()->process($input)->sizes['lg'];
+
+    $seen = '';
+    foreach ([[0.25, 0.25], [0.75, 0.25], [0.25, 0.75], [0.75, 0.75]] as [$fx, $fy]) {
+        [$r, $g, $b] = Images::rgbAt($lg, $fx, $fy);
+        $seen .= match (true) {
+            $r > 150 && $g > 150 => 'Y',
+            $r > 150 => 'R',
+            $g > 150 => 'G',
+            default => 'B',
+        };
+    }
+
+    expect($seen)->toBe($expected, "orientation {$orientation}: displayed TL TR BL BR");
+})->with([
+    [1, 'RGBY'], [2, 'GRYB'], [3, 'YBGR'], [4, 'BYRG'],
+    [5, 'RBGY'], [6, 'BRYG'], [7, 'YGBR'], [8, 'GYRB'],
+]);
+
 it('reads a broken APP1 as orientation 1 and still decodes the photo', function (Closure $build) {
     $input = $build(Images::jpeg(120, 80));
 
