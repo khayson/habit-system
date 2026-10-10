@@ -105,6 +105,8 @@ Pulled forward from Phase 7 (A33). The Terms of Service and Privacy Policy are p
 
 ## Phase 3b — Profile photo and location · S–M
 
+Split like 3.1/3.2: **3b.1** = the server (migration, `profile.update`, avatar pipeline, store and endpoints, with the server gate tests); **3b.2** = the app (data layer, Profile 20, sign out, "Hide habit names", e2e, device-gate steps).
+
 - Migration for the A20 columns; the `profile.update` mutation (`profile.set_timezone` lands in 3.1); avatar upload / read / delete endpoints and the image pipeline; private object storage (local disk in dev); Profile (20) with photo picker + crop, location fields and the durable `pending_uploads` queue.
 
 **Gate**: EXIF/GPS stripped (test image); oversized, polyglot and decompression-bomb inputs rejected; cross-owner avatar read → 404; photo visible offline and uploaded after reconnect; account purge removes the objects.
