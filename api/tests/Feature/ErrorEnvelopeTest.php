@@ -2,6 +2,7 @@
 
 use App\Domain\Calendar\CalendarEntry;
 use App\Domain\Calendar\DayResolutionException;
+use App\Domain\Habit\HabitArchived;
 use App\Domain\Habit\InvalidHabitValue;
 use App\Domain\Habit\UnknownHabitType;
 use App\Domain\Habit\UnsupportedOperation;
@@ -40,6 +41,7 @@ beforeEach(function () {
         Route::get('/domain-type', fn () => throw new UnknownHabitType('checklist'));
         Route::get('/domain-operation', fn () => throw new UnsupportedOperation('binary', 'log.increment'));
         Route::get('/domain-value', fn () => throw new InvalidHabitValue('internal detail 250.0005'));
+        Route::get('/domain-archived', fn () => throw new HabitArchived('55555555-5555-4555-8555-555555555555'));
         Route::post('/too-large', fn () => throw new PostTooLargeException);
         Route::post('/validate', function (Request $request) {
             $request->validate(
@@ -183,6 +185,7 @@ it('maps habit-type errors through the domain mapper without leaking detail', fu
     ['domain-type', 'unsupported_type'],
     ['domain-operation', 'unsupported_operation'],
     ['domain-value', 'invalid_value'],
+    ['domain-archived', 'habit_archived'],
 ]);
 
 it('treats an unmapped domain reason as a server error, not a silent 422', function () {

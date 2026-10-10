@@ -9,6 +9,7 @@ use App\Application\Mutations\MutationContext;
 use App\Application\Periods\PeriodCloser;
 use App\Application\Presenters\EntityPresenter;
 use App\Domain\Clock;
+use App\Domain\Habit\HabitArchived;
 use App\Exceptions\ApiException;
 use App\Support\UtcTime;
 use Illuminate\Support\Facades\DB;
@@ -43,7 +44,12 @@ final readonly class LogDelete
         if ($log === null) {
             throw new ApiException(404, 'not_found', 'Not found.');
         }
-        $typeKey = (string) DB::table('habits')->where('id', $log->habit_id)->value('type');
+        $owner = DB::table('habits')->where('id', $log->habit_id)->first(['type', 'archived_at']);
+        $typeKey = (string) ($owner->type ?? '');
+        // A34: no log write lands on an archived habit, a delete included.
+        if ($owner !== null && $owner->archived_at !== null) {
+            throw new HabitArchived((string) $log->habit_id);
+        }
 
         if ($log->deleted_at !== null) {
             if ($m->baseVersion === (int) $log->version) {

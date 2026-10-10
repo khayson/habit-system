@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use App\Domain\Calendar\DayResolutionException;
+use App\Domain\Habit\HabitArchived;
 use App\Domain\Habit\InvalidHabitValue;
 use App\Domain\Habit\UnknownHabitType;
 use App\Domain\Habit\UnsupportedOperation;
@@ -26,6 +27,7 @@ final class DomainErrorMapper
         'unsupported_type' => 'This app version cannot use that kind of habit. Update the app to continue.',
         'unsupported_operation' => 'This change is not supported for this habit.',
         'invalid_value' => 'Check the value and try again.',
+        'habit_archived' => 'This habit is archived. Restore it to change it.',
     ];
 
     /** Null when the exception is not a domain error. */
@@ -36,6 +38,7 @@ final class DomainErrorMapper
             $e instanceof UnknownHabitType => 'unsupported_type',
             $e instanceof UnsupportedOperation => 'unsupported_operation',
             $e instanceof InvalidHabitValue => 'invalid_value',
+            $e instanceof HabitArchived => 'habit_archived',
             default => null,
         };
         if ($code === null) {

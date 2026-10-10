@@ -97,13 +97,13 @@
         {
           "operation": "habit.update",
           "base_version": 1,
-          "payload": {"category": "mind"},
+          "payload": {"category": "mindfulness"},
           "expect": {"status": "accepted", "version": 2},
           "habit": {
-            "category": "mind",
+            "category": "mindfulness",
             "definitions": [
               {"version": 1, "effective_date": "2026-05-01", "category": "health"},
-              {"version": 2, "effective_date": "2026-05-31", "category": "mind"}
+              {"version": 2, "effective_date": "2026-05-31", "category": "mindfulness"}
             ]
           }
         }

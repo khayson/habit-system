@@ -5,13 +5,16 @@ namespace App\Application\Mutations;
 use App\Application\Habits\HabitRepository;
 use App\Application\Journal\ChangeJournal;
 use App\Application\Mutations\Handlers\HabitCreate;
+use App\Application\Mutations\Handlers\HabitWrites;
 use App\Application\Mutations\Handlers\LogDelete;
+use App\Application\Mutations\Handlers\LogIncrement;
 use App\Application\Mutations\Handlers\LogSetValue;
 use App\Application\Mutations\Handlers\ProfileSetTimezone;
 use App\Application\Mutations\Handlers\ProfileUpdate;
 use App\Application\Mutations\Handlers\ReminderWrites;
 use App\Domain\Calendar\LocalDate;
 use App\Domain\Clock;
+use App\Domain\Habit\HabitArchived;
 use App\Domain\Habit\HabitTypeRegistry;
 use App\Domain\Habit\UnsupportedOperation;
 use App\Exceptions\ApiException;
@@ -49,6 +52,8 @@ final readonly class MutationApplier
         private HabitRepository $habits,
         private HabitTypeRegistry $types,
         private HabitCreate $habitCreate,
+        private HabitWrites $habitWrites,
+        private LogIncrement $logIncrement,
         private LogSetValue $logSetValue,
         private LogDelete $logDelete,
         private ProfileSetTimezone $profileSetTimezone,
@@ -164,8 +169,15 @@ final readonly class MutationApplier
         if ($m->entity === 'user' && $m->operation === 'profile.update') {
             return [$m->operation, self::accepted($m, $this->profileUpdate->handle($ctx))];
         }
-        if ($m->entity === 'habit' && $m->operation === 'habit.create') {
-            return [$m->operation, self::accepted($m, $this->habitCreate->handle($ctx))];
+        if ($m->entity === 'habit') {
+            // A34: edit, archive and restore; there is no habit delete in v1.
+            return match ($m->operation) {
+                'habit.create' => [$m->operation, self::accepted($m, $this->habitCreate->handle($ctx))],
+                'habit.update' => [$m->operation, self::accepted($m, $this->habitWrites->update($ctx))],
+                'habit.archive' => [$m->operation, self::accepted($m, $this->habitWrites->archive($ctx))],
+                'habit.restore' => [$m->operation, self::accepted($m, $this->habitWrites->restore($ctx))],
+                default => throw new UnsupportedOperation($m->entity, $m->operation),
+            };
         }
 
         if ($m->entity === 'reminder') {
@@ -187,11 +199,16 @@ final readonly class MutationApplier
                 throw ValidationException::withMessages(['habit_id' => ['A valid habit_id is required.']]);
             }
             $habit = $this->habits->findOwned($ctx->userId, $habitId) ?? throw new DependencyPending;
+            // A34: no log write lands on an archived habit.
+            if ($habit->archived_at !== null) {
+                throw new HabitArchived((string) $habit->id);
+            }
             // A27: aliases are normalised in one place, against the habit's own type.
             $operation = $this->types->canonicalOperation((string) $habit->type, $m->operation);
 
             return match ($operation) {
                 'log.set_value' => [$operation, self::accepted($m, $this->logSetValue->handle($ctx, $habit))],
+                'log.increment' => [$operation, self::accepted($m, $this->logIncrement->handle($ctx, $habit))],
                 default => throw new UnsupportedOperation((string) $habit->type, $operation),
             };
         }

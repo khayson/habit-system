@@ -48,12 +48,18 @@ class ApiException extends RuntimeException
      * 409: target is tombstoned. `$entity` is the entity type (e.g. habit_log); `$tombstoneVersion`
      * is needed for a reviewed restore and travels as `current_version` (docs/api-error-codes.md).
      */
-    public static function resourceDeleted(string $entity, string $resourceId, int $tombstoneVersion): self
+    /**
+     * 409: the target is tombstoned. A35: an increment also carries the tombstone as `current`.
+     *
+     * @param  array<string, mixed>|null  $current
+     */
+    public static function resourceDeleted(string $entity, string $resourceId, int $tombstoneVersion, ?array $current = null): self
     {
         return new self(409, 'resource_deleted', 'This item was deleted on another device.', [
             'entity' => $entity,
             'resource_id' => $resourceId,
             'current_version' => $tombstoneVersion,
+            ...($current === null ? [] : ['current' => $current]),
         ]);
     }
 
