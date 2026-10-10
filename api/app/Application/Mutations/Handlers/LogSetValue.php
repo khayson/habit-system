@@ -2,27 +2,17 @@
 
 namespace App\Application\Mutations\Handlers;
 
-use App\Application\Calendar\UserCalendar;
 use App\Application\Habits\HabitRepository;
-use App\Application\Journal\ChangeJournal;
 use App\Application\Mutations\HandlerResult;
 use App\Application\Mutations\MutationContext;
-use App\Application\Periods\PeriodCloser;
 use App\Application\Presenters\EntityPresenter;
-use App\Domain\Calendar\DayResolver;
-use App\Domain\Calendar\LocalDate;
-use App\Domain\Clock;
 use App\Domain\Habit\HabitTypeRegistry;
 use App\Domain\Habit\LogState;
 use App\Exceptions\ApiException;
-use App\Support\UtcTime;
-use App\Support\WireTime;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
-use LogicException;
 use stdClass;
 
 /**
@@ -35,11 +25,8 @@ final readonly class LogSetValue
 {
     public function __construct(
         private HabitTypeRegistry $types,
-        private HabitRepository $habits,
-        private ChangeJournal $journal,
         private EntityPresenter $presenter,
-        private PeriodCloser $closer,
-        private Clock $clock,
+        private LogDay $day,
     ) {}
 
     public function handle(MutationContext $ctx, stdClass $habit): HandlerResult
@@ -59,18 +46,8 @@ final readonly class LogSetValue
         }
 
         $type = $this->types->get((string) $habit->type);
-        $schedule = $this->habits->schedule($habit);
-        $resolver = new DayResolver(UserCalendar::timeline($ctx->userId), $this->clock);
-        $resolution = ($p['date_mode'] ?? 'normal') === 'backdate'
-            // Spec 08: a separately validated local date, at most 30 days before the user's
-            // local today at occurred_at and never after it; no invented timestamp.
-            ? $resolver->resolveBackdate(LocalDate::fromString((string) $p['log_date']), $m->occurredAt)
-            : $resolver->resolve($m->occurredAt, $m->capturedTimezone, $m->localDateHint);
+        [$resolution, $definition] = $this->day->resolve($ctx, $habit, $p);
         $date = $resolution->localDate;
-        $definition = $schedule->versionOn($date);
-        if ($definition === null || ! $schedule->isEligible($date)) {
-            throw ValidationException::withMessages(['occurred_at' => ['The habit is not active on that date.']]);
-        }
 
         $existing = DB::table('habit_logs')->where('habit_id', $habit->id)->where('log_date', $date->toString())->lockForUpdate()->first();
         // A29 restore: a tombstone is restored only by a client that has seen the delete, i.e. that
@@ -103,53 +80,6 @@ final readonly class LogSetValue
             );
         }
 
-        $complete = $type->isComplete($next, $definition);
-        $previousCompletedAt = $restoring ? null : $existing?->completed_at;
-        $completedAt = match (true) {
-            ! $complete => null,
-            $previousCompletedAt !== null => (string) $previousCompletedAt,
-            default => WireTime::forDatabase($m->occurredAt),
-        };
-        $occurredAt = $existing !== null && ! $restoring && WireTime::parse((string) $existing->occurred_at) > $m->occurredAt
-            ? (string) $existing->occurred_at
-            : WireTime::forDatabase($m->occurredAt);
-        $now = UtcTime::format($this->clock->now());
-        $values = [
-            'value' => $type->toStorage($next->value),
-            'detail' => json_encode((object) $next->detail, JSON_THROW_ON_ERROR),
-            'occurred_at' => $occurredAt,
-            'completed_at' => $completedAt,
-            'resolved_timezone' => $resolution->entry->timezone,
-            'day_start_offset_minutes' => $resolution->entry->dayStartOffsetMinutes,
-            'definition_version' => $definition->version,
-            'version' => $currentVersion + 1,
-            'deleted_at' => null,
-            'updated_at' => $now,
-        ];
-
-        if ($existing === null) {
-            // Client ids are hints: never reuse an id that already exists anywhere.
-            $id = DB::table('habit_logs')->where('id', $m->entityId)->exists() ? (string) Str::uuid7() : $m->entityId;
-            DB::table('habit_logs')->insert([
-                'id' => $id,
-                'user_id' => $ctx->userId,
-                'habit_id' => $habit->id,
-                'log_date' => $date->toString(),
-                'created_at' => $now,
-                ...$values,
-            ]);
-        } else {
-            $id = (string) $existing->id;
-            DB::table('habit_logs')->where('id', $id)->update($values);
-        }
-
-        LogWrites::markStreakDirty((string) $habit->id, $date->toString(), $now);
-        $row = DB::table('habit_logs')->where('id', $id)->first();
-        $this->journal->append($ctx->userId, 'habit_log', $id, 'upsert', $currentVersion + 1, $this->presenter->log($row ?? throw new LogicException('Log vanished inside its own transaction.'), (string) $habit->type));
-        // A10/A32: a late log re-evaluates its closed period, and any log can move the streak;
-        // the derived entities are journaled in this same transaction (invariant 6).
-        $this->closer->refreshHabit($ctx->userId, $habit, UserCalendar::timeline($ctx->userId));
-
-        return new HandlerResult('habit_log', $id, $currentVersion + 1, $date->toString());
+        return $this->day->write($ctx, $habit, $type, $definition, $resolution, $existing, $restoring, $next, $currentVersion);
     }
 }
