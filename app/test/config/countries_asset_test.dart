@@ -8,9 +8,8 @@ import 'package:path/path.dart' as p;
 void main() {
   test('assets/countries.json is the canonical country list', () {
     final asset = File('assets/countries.json').readAsBytesSync();
-    final canonical = File(
-      p.join('..', 'contract-fixtures', 'profile', 'countries.json'),
-    ).readAsBytesSync();
+    final canonical = File(p.join('..', 'contract-fixtures', 'profile', 'countries.json'))
+        .readAsBytesSync();
 
     expect(asset, canonical);
   });
