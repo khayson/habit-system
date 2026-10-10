@@ -80,6 +80,31 @@ flutter run --dart-define=API_BASE_URL=https://api.example.com/api/v1
 Plain HTTP is allowed only in debug builds and only to `10.0.2.2` / `localhost`
 (`android/app/src/debug/res/xml/network_security_config.xml`).
 
+## Terms and Privacy pages (A33)
+
+Screen 03 links to `<LEGAL_BASE_URL>/terms/` and `<LEGAL_BASE_URL>/privacy/`. The default base
+is `https://khayson.github.io/habit-system`; a release build refuses anything but `https://`.
+
+```powershell
+flutter run --dart-define=LEGAL_BASE_URL=https://legal.example.com
+```
+
+Build the pages locally (from the repo root; draft documents and unfilled facts are warnings):
+
+```powershell
+php scripts\build-legal.php --out=$env:TEMP\legal
+php scripts\build-legal.php --out=$env:TEMP\legal --publish   # fails until every fact is filled and both are final
+```
+
+Publishing to GitHub Pages (`.github/workflows/legal-pages.yml`):
+
+1. Fill every `null` in `docs/legal/facts.json` and set `status: final` in both documents.
+   When the wording changes, bump `version` in the document and in
+   `app/lib/config/legal_config.dart` (`LegalVersions`) in the same commit (a test compares them).
+2. Repository Settings → Pages → Source: **GitHub Actions** (once).
+3. Actions → **Legal pages** → Run workflow, tick **publish**. Pull requests and pushes only
+   build the pages as an artifact; they never deploy.
+
 ## Demo: two emulators converge (Phase 2b.2 gate)
 
 Two Android emulators, one account. A creates a habit; B checks it in while A is offline; A
