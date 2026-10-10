@@ -1,0 +1,14 @@
+{
+  "description": "A34: a habit.update or any log.* write on an archived habit. Restore it first.",
+  "status": 422,
+  "body": {
+    "error": {
+      "code": "habit_archived",
+      "message": "This habit is archived. Restore it to change it."
+    },
+    "meta": {
+      "request_id": "{{uuid}}",
+      "server_time": "{{timestamp}}"
+    }
+  }
+}

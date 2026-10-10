@@ -1,0 +1,86 @@
+{
+  "description": "Phase 4.1 (A35): log.increment {habit_id, delta, date_mode?, log_date?} on entity habit_log. An additive merge with no base_version: each receipt applies once, concurrent increments commute. Each case creates its habit on 2026-05-01 and runs its steps in order with the server clock at `now` (America/Los_Angeles). A step's `operation` defaults to log.increment; `replay_of` re-sends an earlier step's mutation (same mutation_id and payload).",
+  "suites": [
+    "php"
+  ],
+  "now": "2026-05-28T17:22:00Z",
+  "cases": [
+    {
+      "name": "quantity: decimal deltas add up and create the day's log",
+      "habit": {"type": "quantity", "target_value": "2000.000", "unit": "ml"},
+      "steps": [
+        {"delta": "250.000", "expect": {"status": "accepted", "version": 1, "value": "250.000"}},
+        {"delta": "250.5", "expect": {"status": "accepted", "version": 2, "value": "500.500"}}
+      ]
+    },
+    {
+      "name": "duration: whole seconds add up",
+      "habit": {"type": "duration", "target_value": 1200, "unit": null},
+      "steps": [
+        {"delta": 300, "expect": {"status": "accepted", "version": 1, "value": 300}},
+        {"delta": 900, "expect": {"status": "accepted", "version": 2, "value": 1200}}
+      ]
+    },
+    {
+      "name": "a replayed receipt applies once",
+      "habit": {"type": "quantity", "target_value": "2000.000", "unit": "ml"},
+      "steps": [
+        {"delta": "250.000", "expect": {"status": "accepted", "version": 1, "value": "250.000"}},
+        {"replay_of": 0, "expect": {"status": "accepted", "duplicate": true, "version": 1, "value": "250.000"}}
+      ]
+    },
+    {
+      "name": "an increment on a deleted day is resource_deleted",
+      "habit": {"type": "quantity", "target_value": "2000.000", "unit": "ml"},
+      "steps": [
+        {"delta": "250.000", "expect": {"status": "accepted", "version": 1}},
+        {"operation": "log.delete", "base_version": 1, "expect": {"status": "accepted", "version": 2}},
+        {"delta": "100.000", "expect": {"status": "conflict", "error_code": "resource_deleted", "current_version": 2}}
+      ]
+    },
+    {
+      "name": "an increment on an archived habit is habit_archived",
+      "habit": {"type": "quantity", "target_value": "2000.000", "unit": "ml"},
+      "steps": [
+        {"operation": "habit.archive", "base_version": 1, "expect": {"status": "accepted", "version": 2}},
+        {"delta": "100.000", "expect": {"status": "rejected", "error_code": "habit_archived"}}
+      ]
+    },
+    {
+      "name": "a type without increments refuses it",
+      "habit": {"type": "binary", "target_value": 1, "unit": null},
+      "steps": [
+        {"delta": 1, "expect": {"status": "rejected", "error_code": "unsupported_operation"}}
+      ]
+    },
+    {
+      "name": "a delta must be positive and well formed",
+      "habit": {"type": "quantity", "target_value": "2000.000", "unit": "ml"},
+      "steps": [
+        {"delta": "0.000", "expect": {"status": "rejected", "error_code": "invalid_value"}},
+        {"delta": "-5", "expect": {"status": "rejected", "error_code": "invalid_value"}},
+        {"delta": 250.5, "expect": {"status": "rejected", "error_code": "invalid_value"}},
+        {"delta": "0.0005", "expect": {"status": "rejected", "error_code": "invalid_value"}}
+      ]
+    },
+    {
+      "name": "an alias names the same operation (A27)",
+      "habit": {"type": "quantity", "target_value": "2000.000", "unit": "ml"},
+      "steps": [
+        {"operation": "log.increment_quantity", "delta": "250.000", "expect": {"status": "accepted", "version": 1, "value": "250.000"}}
+      ]
+    },
+    {
+      "name": "a backdated increment lands on its date",
+      "habit": {"type": "quantity", "target_value": "2000.000", "unit": "ml"},
+      "steps": [
+        {"delta": "300.000", "date_mode": "backdate", "log_date": "2026-05-20", "expect": {"status": "accepted", "version": 1, "value": "300.000", "resolved_date": "2026-05-20"}}
+      ]
+    }
+  ],
+  "rules": [
+    "no base_version: increments commute; the receipt (mutation_id) makes a re-send apply once",
+    "date resolution, backdate limits and the active-range check are those of log.set_value",
+    "XP and level effects of a threshold crossing are Phase 5"
+  ]
+}

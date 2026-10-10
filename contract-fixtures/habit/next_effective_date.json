@@ -1,0 +1,24 @@
+{
+  "description": "Phase 4.1 (A30, A34): the first local date a new definition may govern, from the user's local today at apply time. daily/weekdays: tomorrow; weekly_count on either side: next Monday; an interval old definition: its first scheduled day after today.",
+  "suites": [
+    "php"
+  ],
+  "cases": [
+    {"today": "2026-05-28", "old": {"frequency_type": "daily", "frequency_config": {}}, "new": {"frequency_type": "daily", "frequency_config": {}}, "expect": "2026-05-29"},
+    {"today": "2026-05-28", "old": {"frequency_type": "weekdays", "frequency_config": {"days": [1, 3, 5]}}, "new": {"frequency_type": "daily", "frequency_config": {}}, "expect": "2026-05-29"},
+    {"today": "2026-05-28", "old": {"frequency_type": "daily", "frequency_config": {}}, "new": {"frequency_type": "weekly_count", "frequency_config": {"count": 3}}, "expect": "2026-06-01"},
+    {"today": "2026-05-31", "old": {"frequency_type": "weekly_count", "frequency_config": {"count": 3}}, "new": {"frequency_type": "daily", "frequency_config": {}}, "expect": "2026-06-01"},
+    {"today": "2026-06-01", "old": {"frequency_type": "weekly_count", "frequency_config": {"count": 2}}, "new": {"frequency_type": "weekly_count", "frequency_config": {"count": 4}}, "expect": "2026-06-08"},
+    {"today": "2026-05-28", "old": {"frequency_type": "interval", "frequency_config": {"every_n_days": 3, "anchor_date": "2026-05-01"}}, "new": {"frequency_type": "daily", "frequency_config": {}}, "expect": "2026-05-31"},
+    {"today": "2026-05-29", "old": {"frequency_type": "interval", "frequency_config": {"every_n_days": 3, "anchor_date": "2026-05-01"}}, "new": {"frequency_type": "interval", "frequency_config": {"every_n_days": 2, "anchor_date": "2026-05-01"}}, "expect": "2026-05-31"},
+    {"today": "2026-05-28", "old": {"frequency_type": "interval", "frequency_config": {"every_n_days": 1, "anchor_date": "2026-05-01"}}, "new": {"frequency_type": "daily", "frequency_config": {}}, "expect": "2026-05-29"},
+    {"today": "2026-05-28", "old": {"frequency_type": "interval", "frequency_config": {"every_n_days": 7, "anchor_date": "2026-06-10"}}, "new": {"frequency_type": "daily", "frequency_config": {}}, "expect": "2026-06-10"},
+    {"today": "2026-05-28", "old": {"frequency_type": "interval", "frequency_config": {"every_n_days": 365, "anchor_date": "2026-01-01"}}, "new": {"frequency_type": "daily", "frequency_config": {}}, "expect": "2027-01-01"},
+    {"today": "2026-05-28", "old": {"frequency_type": "interval", "frequency_config": {"every_n_days": 3, "anchor_date": "2026-05-01"}}, "new": {"frequency_type": "weekly_count", "frequency_config": {"count": 2}}, "expect": "2026-06-01"}
+  ],
+  "rules": [
+    "weekly on either side wins (A30): never split an open week",
+    "an interval old definition: the first day after today it schedules (its periods are single scheduled days)",
+    "an interval anchored in the future: its anchor"
+  ]
+}
