@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:drift/drift.dart';
 
 import '../domain/calendar/local_date.dart';
+import '../domain/habit_draft.dart';
 import '../domain/habit_schedule.dart';
 import '../domain/provisional_progress.dart';
 import '../domain/provisional_type_rules.dart';
@@ -23,25 +24,36 @@ class LocalView {
     : types = types ?? ProvisionalTypeRegistry.builtins();
 
   /// [deviceNow] gives each habit the local today it is shown on (P3: the definition in force).
-  Stream<List<HabitView>> watchHabits({DateTime Function() deviceNow = DateTime.now}) => db
+  /// The library (07) leaves archived habits out (A34); screen 22 lists them (watchArchived).
+  Stream<List<HabitView>> watchHabits({
+    DateTime Function() deviceNow = DateTime.now,
+    bool includeArchived = false,
+  }) => db
       .customSelect('SELECT 1', readsFrom: {db.habits, db.outbox, db.calendarEntries})
       .watch()
-      .asyncMap((_) => habits(deviceNow: deviceNow()));
+      .asyncMap(
+        (_) async => [
+          for (final h in await habits(deviceNow: deviceNow()))
+            if (includeArchived || !h.archived) h,
+        ],
+      );
 
   Future<List<HabitView>> habits({DateTime? deviceNow}) async {
     final today = deviceNow == null
         ? null
         : (await AccountCalendar.load(db, deviceNow: deviceNow))?.today(deviceNow);
     final confirmed = await db.select(db.habits).get();
-    final creates =
+    // One query for every queued habit row: creates, then (A34) edits, archives, restores.
+    final habitRows =
         await (db.select(db.outbox)
               ..where(
                 (o) =>
-                    o.operation.equals('habit.create') &
+                    o.entity.equals('habit') &
                     o.state.isIn(OutboxState.unacked + [OutboxState.acked]),
               )
               ..orderBy([(o) => OrderingTerm.asc(o.seq)]))
             .get();
+    final creates = habitRows.where((r) => r.operation == 'habit.create');
 
     final views = <String, HabitView>{
       for (final row in confirmed)
@@ -64,8 +76,53 @@ class LocalView {
         today: today,
       );
     }
+    // A34: unsent edits, archives and restores laid over the confirmed habit (invariant 9: never
+    // written into it). A change in needs_attention never hides or restores a habit, so it can
+    // always be found; an edit in needs_attention still shows the person's own text.
+    for (final row in habitRows) {
+      if (row.operation == 'habit.create') continue;
+      final view = views[row.entityId];
+      if (view == null) continue;
+      final attention = row.state == OutboxState.needsAttention;
+      if (row.operation == 'habit.update') {
+        views[row.entityId] = view.withOverlay(
+          payload: {...view.payload, ...(jsonDecode(row.payload) as Map).cast<String, dynamic>()},
+          editQueued: !attention || view.editQueued,
+          editNeedsAttention: attention || view.editNeedsAttention,
+        );
+      } else if (!attention &&
+          (row.operation == 'habit.archive' || row.operation == 'habit.restore')) {
+        // Other (future) operations are kept in the outbox and ignored here (invariant 13).
+        views[row.entityId] = view.withOverlay(archived: row.operation == 'habit.archive');
+      }
+    }
     return views.values.toList();
   }
+
+  /// Screen 22: archived habits (confirmed archived, or an unsent archive), with the local date
+  /// of archived_at in the account's calendar.
+  Stream<List<ArchivedHabit>> watchArchived({DateTime Function() deviceNow = DateTime.now}) => db
+      .customSelect('SELECT 1', readsFrom: {db.habits, db.outbox, db.calendarEntries})
+      .watch()
+      .asyncMap((_) async {
+        final calendar = await AccountCalendar.load(db, deviceNow: deviceNow());
+        return [
+          for (final h in await habits(deviceNow: deviceNow()))
+            if (h.archived)
+              ArchivedHabit(
+                id: h.id,
+                name: h.payload['name'] as String? ?? '',
+                category: h.payload['category'] as String?,
+                type: h.payload['type'] as String? ?? '',
+                archivedOn: switch ((DateTime.tryParse('${h.payload['archived_at']}'), calendar)) {
+                  (final DateTime at?, final AccountCalendar c?) => c.timeline.localDateAt(
+                    at.toUtc(),
+                  ),
+                  _ => null,
+                },
+              ),
+        ]..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+      });
 
   Stream<LogView> watchLog(String habitId, String date) => db
       .customSelect('SELECT 1', readsFrom: {db.habitLogs, db.outbox})
@@ -187,6 +244,8 @@ class LocalView {
 
     final items = <TodayItem>[];
     for (final habit in await habits()) {
+      // A34: an archived habit (confirmed, or archived on this device) leaves Today.
+      if (habit.archived) continue;
       final p = habit.payload;
       // Due today: schedule, active range, zero-length dates excluded (Phase 3.2a).
       final schedule = HabitSchedule.fromWire(p);
@@ -372,13 +431,55 @@ class HabitView {
   /// The local today the habit is shown on, when the caller gave a clock.
   final LocalDate? today;
 
-  const HabitView({
+  /// A34 overlay state. [archived] starts from the entity's archived_at.
+  final bool archived;
+
+  /// An edit written here and not yet acknowledged.
+  final bool editQueued;
+
+  /// An edit the server would not take; the person's text is still shown, with the marker.
+  final bool editNeedsAttention;
+
+  HabitView({
     required this.payload,
     required this.confirmedVersion,
     required this.syncState,
     required this.knownType,
     this.today,
-  });
+    bool? archived,
+    this.editQueued = false,
+    this.editNeedsAttention = false,
+  }) : archived = archived ?? payload['archived_at'] != null;
+
+  HabitView withOverlay({
+    Map<String, dynamic>? payload,
+    bool? archived,
+    bool? editQueued,
+    bool? editNeedsAttention,
+  }) => HabitView(
+    payload: payload ?? this.payload,
+    confirmedVersion: confirmedVersion,
+    syncState: syncState,
+    knownType: knownType,
+    today: today,
+    archived: archived ?? this.archived,
+    editQueued: editQueued ?? this.editQueued,
+    editNeedsAttention: editNeedsAttention ?? this.editNeedsAttention,
+  );
+
+  /// The edit form's starting point (4.2b): the latest definition with any unsent edit.
+  HabitDraft get editable => HabitDraft.fromWire(payload);
+
+  /// The effective date of a CONFIRMED version that starts after today, else null. The app
+  /// never guesses the date: the server decides it (A34).
+  LocalDate? get pendingFrom {
+    final date = today;
+    if (date == null || confirmedVersion == null) return null;
+    final versions = schedule.versions;
+    if (versions.isEmpty) return null;
+    final latest = versions.last.effectiveDate;
+    return latest.isAfter(date) ? latest : null;
+  }
 
   String get id => payload['id'] as String;
 
@@ -417,4 +518,23 @@ class LogView {
   });
 
   bool get provisional => syncState != null;
+}
+
+/// Screen 22's row (A34).
+class ArchivedHabit {
+  final String id;
+  final String name;
+  final String? category;
+  final String type;
+
+  /// The local date the habit was archived, in the account's calendar.
+  final LocalDate? archivedOn;
+
+  const ArchivedHabit({
+    required this.id,
+    required this.name,
+    required this.category,
+    required this.type,
+    required this.archivedOn,
+  });
 }
