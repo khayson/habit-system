@@ -8,6 +8,7 @@ import '../data/local_view.dart';
 import '../data/reminder_view.dart';
 import '../domain/calendar/local_date.dart';
 import '../domain/habit_schedule.dart';
+import '../domain/provisional_progress.dart';
 import 'notification_scheduler.dart';
 import 'reminder_planner.dart';
 
@@ -124,17 +125,46 @@ class ReminderScheduling {
     final serverNow = calendar.now(now);
     final today = calendar.today(now);
     final completed = <(String, LocalDate)>{};
-    for (final habitId in schedules.keys) {
+    final progress = ProvisionalProgress(view.types);
+    // From yesterday (a slot near a day boundary) or this week's Monday, whichever is earlier,
+    // so a weekly goal counts the days already done (B5).
+    final yesterday = today.addDays(-1);
+    final from = yesterday.addDays(1 - yesterday.isoWeekday);
+    final until = today.addDays(ReminderPlanner.horizonDays);
+    for (final MapEntry(key: habitId, value: schedule) in schedules.entries) {
       final payload = habits[habitId]!.payload;
-      final rules = view.types.lookup(payload['type'] as String? ?? '');
+      final type = payload['type'] as String? ?? '';
+      final rules = view.types.lookup(type);
       if (rules == null) continue;
-      for (var i = -1; i <= ReminderPlanner.horizonDays; i++) {
-        final date = today.addDays(i);
-        final log = await view.log(habitId, date.toString());
-        final value = rules.parseValue(log.value);
-        final target = rules.parseTarget(payload['target_value']);
+      final values = <String, Object?>{};
+      for (var date = from; !date.isAfter(until.addDays(6)); date = date.addDays(1)) {
+        values['$date'] = (await view.log(habitId, '$date')).value;
+      }
+      // A completed day needs no reminder; the target is the one in force that day (P3).
+      for (var date = from; !date.isAfter(until); date = date.addDays(1)) {
+        final value = rules.parseValue(values['$date']);
+        final target = rules.parseTarget(schedule.targetOn(date) ?? payload['target_value']);
         if (value != null && target != null && rules.isComplete(value, target)) {
           completed.add((habitId, date));
+        }
+      }
+      // B5: once a Monday-Sunday week reaches its count (the rule Today's weekly progress
+      // uses), the rest of that week needs no reminder; an undo brings them back.
+      for (var monday = from; !monday.isAfter(until); monday = monday.addDays(7)) {
+        final count = schedule.weeklyCountOn(monday.addDays(6)) ?? schedule.weeklyCountOn(monday);
+        if (count == null) continue;
+        final week = progress.week(
+          type: type,
+          perDayTarget: schedule.targetOn(monday) ?? payload['target_value'],
+          countTarget: count,
+          logs: {
+            for (var i = 0; i < 7; i++) '${monday.addDays(i)}': values['${monday.addDays(i)}'],
+          },
+        );
+        if (week != null && week.complete) {
+          for (var i = 0; i < 7; i++) {
+            completed.add((habitId, monday.addDays(i)));
+          }
         }
       }
     }

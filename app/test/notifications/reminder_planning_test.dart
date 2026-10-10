@@ -138,4 +138,50 @@ void main() {
 
     expect(os.calls.length, calls, reason: 'the text has no name: nothing to replace');
   });
+
+  test(
+    'B5: a weekly goal met on Wednesday plans nothing Thursday to Sunday, then next Monday',
+    () async {
+      // Wednesday 27 May 2026, 10:00 in Los Angeles.
+      phone.now = DateTime.utc(2026, 5, 27, 17);
+      final habit = await phone.writer.createHabit(
+        name: 'Run',
+        type: 'binary',
+        target: 1,
+        category: 'health',
+        frequencyType: 'weekly_count',
+        frequencyConfig: const {'count': 3},
+        startLocalDate: LocalDate.parse('2026-05-01'),
+        backdate: true,
+      );
+      await phone.writer.createReminder(
+        habitId: habit,
+        localTime: '20:00',
+        daysOfWeek: [1, 2, 3, 4, 5, 6, 7],
+      );
+      Set<String> planned() => {for (final p in os.pending.values) '${p.$1.slotDate}'};
+
+      await scheduling.replan();
+      expect(planned(), contains('2026-05-28'), reason: 'not met yet: Thursday is planned');
+
+      for (final day in ['2026-05-25', '2026-05-26', '2026-05-27']) {
+        await phone.writer.setLogValue(habitId: habit, value: 1, logDate: LocalDate.parse(day));
+      }
+      await scheduling.replan();
+      expect(
+        planned().intersection({'2026-05-28', '2026-05-29', '2026-05-30', '2026-05-31'}),
+        isEmpty,
+      );
+      expect(planned(), contains('2026-06-01'), reason: 'the next week starts over');
+
+      // An undo that drops it below the count brings the rest of the week back.
+      await phone.writer.setLogValue(
+        habitId: habit,
+        value: 0,
+        logDate: LocalDate.parse('2026-05-26'),
+      );
+      await scheduling.replan();
+      expect(planned(), contains('2026-05-28'));
+    },
+  );
 }
