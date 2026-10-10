@@ -12,6 +12,9 @@ class FakeNotificationScheduler implements NotificationScheduler {
   final Map<int, (PlannedNotification, String)> pending = {};
   final List<String> calls = [];
 
+  /// The body each pending notification was scheduled with.
+  final Map<int, String?> bodies = {};
+
   /// Makes every cancel throw, as a broken platform channel would.
   bool failCancel = false;
 
@@ -32,6 +35,7 @@ class FakeNotificationScheduler implements NotificationScheduler {
   Future<void> schedule(PlannedNotification n, {required String title, String? body}) async {
     calls.add('schedule ${n.id}');
     pending[n.id] = (n, title);
+    bodies[n.id] = body;
   }
 
   @override

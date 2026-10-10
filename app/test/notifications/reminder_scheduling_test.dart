@@ -34,6 +34,8 @@ void main() {
       accountKey: userId,
       deviceZone: () async => 'America/Los_Angeles',
       title: (name) => name,
+      body: 'A gentle reminder for today.',
+      hiddenTitle: 'A habit reminder',
       clock: () => now,
     );
     return (db, writer, scheduling);
@@ -75,6 +77,79 @@ void main() {
     expect(os.pending.values.every((p) => p.$1.fireAt.toUtc().minute == 30), isTrue);
     expect((await db.select(db.scheduledNotifications).get()).length, 14);
     await db.close();
+  });
+
+  group('Hide habit names in notifications (3b, Part D)', () {
+    /// Every text the OS gets for one notification, plus its identifying fields.
+    List<String> fields(FakeNotificationScheduler os, int id) {
+      final (n, title) = os.pending[id]!;
+      return [title, os.bodies[id] ?? '', n.reminderId, n.habitId, '${n.slotDate}', '${n.id}'];
+    }
+
+    test('is off by default: the habit name is the title', () async {
+      expect(kHideHabitNamesDefault, isFalse);
+      final os = FakeNotificationScheduler();
+      final (db, writer, scheduling) = await account('user-1', os);
+      await habitWithReminder(writer, '18:00');
+
+      await scheduling.replan();
+
+      expect(os.pending.values.map((p) => p.$2).toSet(), {'Stretch'});
+      await db.close();
+    });
+
+    test('on: no field the OS gets carries the habit name', () async {
+      final os = FakeNotificationScheduler();
+      final (db, writer, scheduling) = await account('user-1', os);
+      await habitWithReminder(writer, '18:00');
+      await scheduling.setHideHabitNames(true);
+
+      expect(os.pending, isNotEmpty);
+      for (final id in os.pending.keys) {
+        expect(fields(os, id).join(' | '), isNot(contains('Stretch')));
+      }
+      expect(os.pending.values.map((p) => p.$2).toSet(), {'A habit reminder'});
+      await db.close();
+    });
+
+    test('the toggle replaces notifications already scheduled, both ways', () async {
+      final os = FakeNotificationScheduler();
+      final (db, writer, scheduling) = await account('user-1', os);
+      await habitWithReminder(writer, '18:00');
+      await scheduling.replan();
+      final ids = os.pending.keys.toSet();
+
+      await scheduling.setHideHabitNames(true);
+      expect(os.pending.keys.toSet(), ids);
+      expect(os.pending.values.every((p) => p.$2 == 'A habit reminder'), isTrue);
+      expect(os.calls.where((c) => c.startsWith('cancel')), hasLength(ids.length));
+
+      await scheduling.setHideHabitNames(false);
+      expect(os.pending.values.every((p) => p.$2 == 'Stretch'), isTrue);
+      expect((await db.select(db.scheduledNotifications).get()).length, ids.length);
+      await db.close();
+    });
+
+    test('is per account: another account keeps its names', () async {
+      final os = FakeNotificationScheduler();
+      final (dbA, writerA, a) = await account('user-a', os);
+      final (dbB, writerB, b) = await account('user-b', os);
+      await habitWithReminder(writerA, '18:00');
+      await habitWithReminder(writerB, '19:00');
+      await a.replan();
+      await b.replan();
+
+      await a.setHideHabitNames(true);
+      await b.replan();
+
+      final titles = os.pending.values.map((p) => p.$2).toList();
+      expect(titles.where((t) => t == 'Stretch'), hasLength(14), reason: "B's");
+      expect(titles.where((t) => t == 'A habit reminder'), hasLength(14), reason: "A's");
+      expect(await a.hideHabitNames(), isTrue);
+      expect(await b.hideHabitNames(), isFalse);
+      await dbA.close();
+      await dbB.close();
+    });
   });
 
   test('turning a reminder off, or removing it, cancels its notifications', () async {

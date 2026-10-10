@@ -302,6 +302,7 @@
   "@zoneRow": {"placeholders": {"city": {"type": "String"}, "offset": {"type": "String"}}},
   "newHabitCreate": "Create habit",
   "reminderBody": "A gentle reminder for today.",
+  "reminderTitleHidden": "A habit reminder",
   "remindersTitle": "Local reminders",
   "remindersNotAllowed": "Not allowed yet",
   "remindersAllowed": "Allowed",

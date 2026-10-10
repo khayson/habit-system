@@ -866,6 +866,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reminderBody => 'A gentle reminder for today.';
 
   @override
+  String get reminderTitleHidden => 'A habit reminder';
+
+  @override
   String get remindersTitle => 'Local reminders';
 
   @override

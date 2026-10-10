@@ -11,6 +11,14 @@ import '../domain/habit_schedule.dart';
 import 'notification_scheduler.dart';
 import 'reminder_planner.dart';
 
+/// Phase 3b, Part D: "Hide habit names in notifications" is off unless the user turns it on.
+/// ASSUMPTION(A3b-hide-names): a setting of this device and account (local_settings), not
+/// synced.
+const kHideHabitNamesDefault = false;
+
+/// The local_settings key of [kHideHabitNamesDefault]'s setting.
+const kHideHabitNamesKey = 'notifications.hide_habit_names';
+
 /// Keeps the OS schedule equal to the plan for one account (Phase 3.2b). Every handed-over
 /// notification is recorded in that account's database, so a replan replaces rather than
 /// duplicates and a logout cancels exactly this account's notifications.
@@ -27,6 +35,7 @@ class ReminderScheduling {
     required this.deviceZone,
     required this.title,
     this.body,
+    this.hiddenTitle = '',
     DateTime Function()? clock,
     this.debounce = const Duration(seconds: 1),
   }) : _clock = clock ?? DateTime.now;
@@ -40,6 +49,9 @@ class ReminderScheduling {
   /// Notification text from the habit name (neutral copy, no loss or guilt wording).
   final String Function(String habitName) title;
   final String? body;
+
+  /// The title while habit names are hidden (generic, neutral). The body never names a habit.
+  final String hiddenTitle;
   final Duration debounce;
   final DateTime Function() _clock;
 
@@ -126,10 +138,42 @@ class ReminderScheduling {
       now: serverNow,
       completed: completed,
     );
-    await _apply(plan, {for (final h in habits.values) h.id: h.payload['name'] as String? ?? ''});
+    await _apply(plan, {
+      for (final h in habits.values) h.id: h.payload['name'] as String? ?? '',
+    }, hideNames: await hideHabitNames());
   }
 
-  Future<void> _apply(List<PlannedNotification> plan, Map<String, String> names) async {
+  /// Whether this account hides habit names on this device.
+  Future<bool> hideHabitNames() async {
+    final row = await (db.select(
+      db.localSettings,
+    )..where((s) => s.key.equals(kHideHabitNamesKey))).getSingleOrNull();
+    return row == null ? kHideHabitNamesDefault : row.value == '1';
+  }
+
+  /// Saves the setting and replaces every notification this account already handed to the OS:
+  /// the plan's diff compares fire times only, so text changes need a full replace.
+  Future<void> setHideHabitNames(bool on) async {
+    await db.transaction(
+      () => db
+          .into(db.localSettings)
+          .insertOnConflictUpdate(
+            LocalSettingsCompanion.insert(key: kHideHabitNamesKey, value: on ? '1' : '0'),
+          ),
+    );
+    await _running;
+    for (final row in await db.select(db.scheduledNotifications).get()) {
+      await scheduler.cancel(row.platformId);
+    }
+    await db.delete(db.scheduledNotifications).go();
+    await replan();
+  }
+
+  Future<void> _apply(
+    List<PlannedNotification> plan,
+    Map<String, String> names, {
+    required bool hideNames,
+  }) async {
     final wanted = {for (final p in plan) p.id: p};
     final existing = {
       for (final row in await db.select(db.scheduledNotifications).get()) row.platformId: row,
@@ -146,7 +190,11 @@ class ReminderScheduling {
     for (final p in plan) {
       final row = existing[p.id];
       if (row != null && row.fireAt == p.fireAt.millisecondsSinceEpoch) continue;
-      await scheduler.schedule(p, title: title(names[p.habitId] ?? ''), body: body);
+      await scheduler.schedule(
+        p,
+        title: hideNames ? hiddenTitle : title(names[p.habitId] ?? ''),
+        body: body,
+      );
       await db
           .into(db.scheduledNotifications)
           .insertOnConflictUpdate(

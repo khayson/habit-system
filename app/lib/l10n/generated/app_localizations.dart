@@ -1568,6 +1568,12 @@ abstract class AppLocalizations {
   /// **'A gentle reminder for today.'**
   String get reminderBody;
 
+  /// No description provided for @reminderTitleHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'A habit reminder'**
+  String get reminderTitleHidden;
+
   /// No description provided for @remindersTitle.
   ///
   /// In en, this message translates to:

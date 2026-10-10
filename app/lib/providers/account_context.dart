@@ -114,6 +114,7 @@ class AccountContext {
     deviceZone: DeviceZone.read,
     title: (name) => name,
     body: lookupAppLocalizations(PlatformDispatcher.instance.locale).reminderBody,
+    hiddenTitle: lookupAppLocalizations(PlatformDispatcher.instance.locale).reminderTitleHidden,
     clock: _clock,
   )..start();
 
