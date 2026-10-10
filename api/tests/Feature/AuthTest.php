@@ -22,6 +22,8 @@ function registration(array $overrides = []): array
         'timezone' => 'America/Los_Angeles',
         'device_name' => "Maya's phone",
         'device_id' => '01970000-0000-7000-8000-00000000d001',
+        'terms_version' => '2026-10-10',
+        'privacy_version' => '2026-10-10',
         ...$overrides,
     ];
 }

@@ -25,9 +25,10 @@ final readonly class AccountService
         private Clock $clock,
     ) {}
 
-    public function register(string $name, string $email, string $password, string $timezone): User
+    /** A33: the accepted Terms and Privacy versions are stored with the server time of acceptance. */
+    public function register(string $name, string $email, string $password, string $timezone, string $termsVersion, string $privacyVersion): User
     {
-        return DB::transaction(function () use ($name, $email, $password, $timezone): User {
+        return DB::transaction(function () use ($name, $email, $password, $timezone, $termsVersion, $privacyVersion): User {
             $now = UtcTime::format($this->clock->now());
             $id = (string) Str::uuid7();
 
@@ -39,6 +40,9 @@ final readonly class AccountService
                 'timezone' => $timezone,
                 // H5: the registration entry below is the calendar this user entity publishes.
                 'calendar_journaled_at' => $now,
+                'terms_version' => $termsVersion,
+                'privacy_version' => $privacyVersion,
+                'legal_accepted_at' => $now,
                 'created_at' => $now,
                 'updated_at' => $now,
             ]);

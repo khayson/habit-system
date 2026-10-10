@@ -51,6 +51,9 @@ Future<void> main(List<String> args) async {
     'email': email,
     'password': password,
     'timezone': 'America/Los_Angeles',
+    // A33: the accepted docs/legal versions.
+    'terms_version': '2026-10-10',
+    'privacy_version': '2026-10-10',
   });
   final b = await _Device.signIn(baseUrl, dir, 'B', '/auth/login', {
     'email': email,

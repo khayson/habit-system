@@ -24,6 +24,8 @@ the format and then treat them as equal.
 - `sync/` — `/sync` ack shapes for the A29 contract (Phase 2a.1), and bootstrap page shapes
   (`bootstrap_entities.json`, A31/A32). Each has the shape with placeholders and `rules` the test
   checks in code.
+- `auth/` — request bodies for the auth endpoints (A33: `register_request.json`), with `suites`
+  and `rules` like the sync files.
 - `domain/` — business rules (Phase 1). Each file has `kind`, `suites` (which test suites must
   consume it: `php`, `dart`) and `description`. Cases inside may narrow `suites` further.
 

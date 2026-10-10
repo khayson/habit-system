@@ -40,6 +40,9 @@ abstract class TestCase extends BaseTestCase
             'timezone' => $timezone,
             'device_name' => "{$name}'s phone",
             'device_id' => (string) Str::uuid7(),
+            // A33: the accepted docs/legal versions.
+            'terms_version' => '2026-10-10',
+            'privacy_version' => '2026-10-10',
         ])->assertCreated();
 
         return ['id' => (string) $response->json('data.user.id'), 'token' => (string) $response->json('data.token'), 'email' => $email];

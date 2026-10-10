@@ -8,7 +8,10 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
-/** POST /auth/register: name, email, password, timezone, device_name (+ optional device_id). */
+/**
+ * POST /auth/register: name, email, password, timezone, device_name (+ optional device_id), and
+ * the accepted terms_version and privacy_version (A33).
+ */
 final class RegisterRequest extends FormRequest
 {
     protected function prepareForValidation(): void
@@ -32,6 +35,9 @@ final class RegisterRequest extends FormRequest
             }],
             'device_name' => ['required', 'string', 'max:255'],
             'device_id' => ['nullable', 'uuid'],
+            // A33: the docs/legal front-matter versions the user accepted; real dates only.
+            'terms_version' => ['required', 'string', 'regex:/^\d{4}-\d{2}-\d{2}$/', 'date_format:Y-m-d'],
+            'privacy_version' => ['required', 'string', 'regex:/^\d{4}-\d{2}-\d{2}$/', 'date_format:Y-m-d'],
         ];
     }
 

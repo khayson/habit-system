@@ -33,7 +33,14 @@ final class AuthController
     public function register(RegisterRequest $request): JsonResponse
     {
         $data = $request->validated();
-        $user = $this->accounts->register($data['name'], $data['email'], $data['password'], $data['timezone']);
+        $user = $this->accounts->register(
+            $data['name'],
+            $data['email'],
+            $data['password'],
+            $data['timezone'],
+            $data['terms_version'],
+            $data['privacy_version'],
+        );
         $token = $this->accounts->issueToken($user, $data['device_name'], $data['device_id'] ?? null);
 
         return ApiResponse::success($this->session($user, $token), 201);

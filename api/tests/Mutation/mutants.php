@@ -171,4 +171,14 @@ PHP,
         'replace' => "\$rows = DB::table('reminders')",
         'tests' => 'tests/Feature/ReminderTest.php',
     ],
+    [
+        'name' => 'A33: register does not store the accepted versions',
+        'file' => 'app/Application/Accounts/AccountService.php',
+        'search' => <<<'PHP'
+                'terms_version' => $termsVersion,
+                'privacy_version' => $privacyVersion,
+PHP,
+        'replace' => '',
+        'tests' => 'tests/Feature/LegalConsentTest.php',
+    ],
 ];

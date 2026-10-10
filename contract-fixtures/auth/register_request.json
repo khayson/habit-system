@@ -1,0 +1,21 @@
+{
+  "description": "A33: the body of POST /auth/register as the app sends it. terms_version and privacy_version are the front-matter versions of docs/legal/terms.md and privacy.md the user accepted (YYYY-MM-DD, real dates). The server stores them with legal_accepted_at from its own clock and never returns them.",
+  "suites": [
+    "php",
+    "dart"
+  ],
+  "request": {
+    "name": "Maya Chen",
+    "email": "maya.chen@example.com",
+    "password": "correct horse battery staple",
+    "timezone": "America/Los_Angeles",
+    "device_name": "Maya's phone",
+    "device_id": "{{uuid}}",
+    "terms_version": "2026-10-10",
+    "privacy_version": "2026-10-10"
+  },
+  "rules": [
+    "terms_version and privacy_version are required; each is YYYY-MM-DD and a real calendar date, otherwise 422 validation_failed naming the field",
+    "users.terms_version, users.privacy_version and users.legal_accepted_at (server clock) are stored; none of them appears in /me or the sync user entity"
+  ]
+}
