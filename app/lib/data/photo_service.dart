@@ -5,6 +5,7 @@ import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
 
 import 'app_database.dart';
+import 'jpeg_scrubber.dart';
 import 'profile_view.dart';
 
 /// Phase 3b (A20): the profile photo on this device. Pure Dart (dart:io only): no UI, safe from
@@ -38,7 +39,14 @@ class PhotoService {
     final relative = p.join(folder, 'local-$id.jpg');
     final target = File(p.join(filesRoot, relative));
     await target.parent.create(recursive: true);
-    await File(preparedJpeg).copy(target.path);
+    try {
+      // R4: metadata (EXIF, GPS, XMP, IPTC, comments) never reaches the stored copy or the wire.
+      final bytes = await File(preparedJpeg).readAsBytes();
+      await target.writeAsBytes(JpegScrubber.scrub(bytes), flush: true);
+    } on Object {
+      await _deleteFiles([relative]);
+      rethrow;
+    }
     try {
       final replaced = await db.transaction(() async {
         final replaced = await _supersede();
