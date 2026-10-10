@@ -36,6 +36,7 @@ class ReminderScheduling {
     required this.title,
     this.body,
     this.hiddenTitle = '',
+    this.maxScheduled,
     DateTime Function()? clock,
     this.debounce = const Duration(seconds: 1),
   }) : _clock = clock ?? DateTime.now;
@@ -52,6 +53,9 @@ class ReminderScheduling {
 
   /// The title while habit names are hidden (generic, neutral). The body never names a habit.
   final String hiddenTitle;
+
+  /// B4: the platform's cap (NotificationCaps), decided where the scheduler is created.
+  final int? maxScheduled;
   final Duration debounce;
   final DateTime Function() _clock;
 
@@ -141,6 +145,7 @@ class ReminderScheduling {
       deviceZone: await deviceZone(),
       now: serverNow,
       completed: completed,
+      maxScheduled: maxScheduled,
     );
     await _apply(plan, {
       for (final h in habits.values) h.id: h.payload['name'] as String? ?? '',

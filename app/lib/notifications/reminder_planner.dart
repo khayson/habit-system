@@ -85,6 +85,7 @@ class ReminderPlanner {
     required DateTime now,
     Set<(String, LocalDate)> completed = const {},
     int horizon = horizonDays,
+    int? maxScheduled,
   }) {
     final planned = <PlannedNotification>[];
     for (final reminder in reminders) {
@@ -125,8 +126,14 @@ class ReminderPlanner {
         );
       }
     }
-    planned.sort((a, b) => a.fireAt.compareTo(b.fireAt));
-    return planned;
+    // B4: nearest first, ties by id; beyond the platform's cap the rest wait for a replan.
+    planned.sort((a, b) {
+      final byTime = a.fireAt.compareTo(b.fireAt);
+      return byTime != 0 ? byTime : a.id.compareTo(b.id);
+    });
+    return maxScheduled == null || planned.length <= maxScheduled
+        ? planned
+        : planned.sublist(0, maxScheduled);
   }
 
   /// FNV-1a over "account|reminder|date", folded to a positive 31-bit int (Android ids are

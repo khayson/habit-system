@@ -1,4 +1,4 @@
-import 'dart:io' show Directory;
+import 'dart:io' show Directory, Platform;
 import 'dart:ui' show PlatformDispatcher;
 
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -14,6 +14,7 @@ import '../data/profile_view.dart';
 import '../data/timezone_view.dart';
 import '../domain/provisional_type_rules.dart';
 import '../l10n/generated/app_localizations.dart';
+import '../notifications/notification_caps.dart';
 import '../notifications/notification_scheduler.dart';
 import '../notifications/reminder_permission.dart';
 import '../notifications/reminder_scheduling.dart';
@@ -115,6 +116,7 @@ class AccountContext {
     title: (name) => name,
     body: lookupAppLocalizations(PlatformDispatcher.instance.locale).reminderBody,
     hiddenTitle: lookupAppLocalizations(PlatformDispatcher.instance.locale).reminderTitleHidden,
+    maxScheduled: Platform.isIOS ? NotificationCaps.ios : NotificationCaps.android,
     clock: _clock,
   )..start();
 
