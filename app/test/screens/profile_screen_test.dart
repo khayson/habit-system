@@ -78,6 +78,13 @@ void main() {
     await settle(tester, rounds: 16);
   }
 
+  /// Settles until [finder] finds something (real I/O, drift) or [maxRounds] pass.
+  Future<void> settleUntil(WidgetTester tester, Finder finder, {int maxRounds = 60}) async {
+    for (var i = 0; i < maxRounds && finder.evaluate().isEmpty; i++) {
+      await settle(tester, rounds: 1);
+    }
+  }
+
   Future<List<OutboxRow>> outbox(WidgetTester tester, AccountContext account) async =>
       (await tester.runAsync(() => account.session.db.select(account.session.db.outbox).get()))!;
 
@@ -164,7 +171,8 @@ void main() {
     expect(find.text('Remove photo'), findsNothing, reason: 'no photo yet');
 
     await tester.tap(find.text('Choose photo'));
-    await settle(tester);
+    // Copying the photo is real file I/O: wait for it, not for a fixed number of frames.
+    await settleUntil(tester, find.byType(Image));
     expect(picker.asked, [PhotoSource.gallery]);
     expect(find.byType(Image), findsOneWidget, reason: 'the photo, not initials');
     expect(find.text('Waiting to upload'), findsOneWidget);
@@ -176,7 +184,7 @@ void main() {
     await tester.tap(find.bySemanticsLabel('Profile photo of Maya'));
     await settle(tester);
     await tester.tap(find.text('Remove photo'));
-    await settle(tester);
+    await settleUntil(tester, find.text('M'));
     expect(find.text('M'), findsOneWidget);
     await tearDownApp(tester, a);
   });
