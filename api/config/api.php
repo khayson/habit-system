@@ -16,4 +16,7 @@ return [
         'sync_per_minute' => (int) env('RATE_LIMIT_SYNC_PER_MINUTE', 60),
         'avatar_uploads_per_hour' => (int) env('RATE_LIMIT_AVATAR_UPLOADS_PER_HOUR', 10),
     ],
+
+    // A20: the shared country list (contract-fixtures/profile/countries.json).
+    'countries_path' => env('COUNTRIES_PATH', base_path('../contract-fixtures/profile/countries.json')),
 ];
