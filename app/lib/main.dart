@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'app/app.dart';
 import 'app/router.dart';
 import 'config/api_config.dart';
+import 'config/legal_config.dart';
 import 'core/network/api_client.dart';
 import 'core/storage/account_store.dart';
 import 'core/storage/token_store.dart';
@@ -19,6 +20,7 @@ import 'services/health_service.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   ApiConfig.ensureSafe();
+  LegalConfig.ensureSafe();
   LicenseRegistry.addLicense(_interLicense);
 
   const tokens = SecureTokenStore();

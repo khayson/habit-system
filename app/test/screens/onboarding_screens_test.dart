@@ -4,6 +4,7 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:habit/app/router.dart';
+import 'package:habit/config/legal_config.dart';
 import 'package:habit/core/network/api_client.dart';
 import 'package:habit/data/app_database.dart';
 import 'package:habit/providers/account_context.dart';
@@ -188,6 +189,11 @@ void main() {
 
     final body = http.sent('POST /auth/register').single.data as Map;
     expect(body['timezone'], 'America/Los_Angeles', reason: 'the device zone at registration');
+    expect(
+      (body['terms_version'], body['privacy_version']),
+      (LegalVersions.terms, LegalVersions.privacy),
+      reason: 'A33: the versions screen 03 links to',
+    );
     expect(find.text('Your day, your time'), findsOneWidget, reason: '04 after 201');
     expect(find.text('Los Angeles'), findsOneWidget);
     expect(find.text('America/Los_Angeles'), findsOneWidget);

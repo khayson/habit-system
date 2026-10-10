@@ -1,5 +1,6 @@
 import 'package:uuid/uuid.dart';
 
+import '../config/legal_config.dart';
 import '../core/exceptions/app_exception.dart';
 import '../core/network/api_client.dart';
 import '../core/storage/account_store.dart';
@@ -70,6 +71,7 @@ class AuthService {
   /// The signed-in account, or null.
   AccountSession? get current => _signedIn ? _opened : null;
 
+  /// A33: the body carries the Terms and Privacy versions shown on screen 03 ([LegalVersions]).
   Future<AccountSession> register({
     required String name,
     required String email,
@@ -86,6 +88,8 @@ class AuthService {
         'password': password,
         'timezone': timezone,
         'device_name': _deviceName,
+        'terms_version': LegalVersions.terms,
+        'privacy_version': LegalVersions.privacy,
         'device_id': deviceId,
       },
     );

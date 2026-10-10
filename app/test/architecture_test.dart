@@ -91,11 +91,12 @@ void main() {
       'sync/log_backdate_payload': 'test/sync/sync_fixtures_test.dart',
       'sync/reminder_mutations': 'test/sync/reminder_sync_test.dart',
       'sync/reminder_entity': 'test/sync/reminder_sync_test.dart',
+      'auth/register_request': 'test/services/auth_service_test.dart',
     };
 
-    test('every domain and sync fixture that names the dart suite has a consumer', () {
+    test('every domain, sync and auth fixture that names the dart suite has a consumer', () {
       final named = <String>{};
-      for (final folder in ['domain', 'sync']) {
+      for (final folder in ['domain', 'sync', 'auth']) {
         for (final file in Directory(
           p.join('..', 'contract-fixtures', folder),
         ).listSync().whereType<File>()) {

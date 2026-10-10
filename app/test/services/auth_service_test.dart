@@ -1,12 +1,14 @@
 import 'package:dio/dio.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:habit/config/legal_config.dart';
 import 'package:habit/core/network/api_client.dart';
 import 'package:habit/core/storage/account_store.dart';
 import 'package:habit/data/app_database.dart';
 import 'package:habit/services/auth_service.dart';
 
 import '../core/api_client_test.dart' show MemoryTokenStore;
+import '../support/contract_fixtures.dart';
 import '../support/route_adapter.dart';
 
 class MemoryAccountStore implements AccountStore {
@@ -94,6 +96,29 @@ void main() {
     expect(
       (state.userId, state.deviceId, state.calendarTimezone),
       (_alice, accounts.device, 'America/Los_Angeles'),
+    );
+  });
+
+  test('A33: register sends the body in contract-fixtures/auth/register_request.json', () async {
+    http.on('POST /auth/register', Reply(201, _session(_alice, 'tok-1')));
+    final fixture = contractFixture('auth/register_request.json');
+    expect(fixture['suites'], contains('dart'));
+    final expected = fixture['request'] as Map<String, dynamic>;
+
+    await auth.register(
+      name: expected['name'] as String,
+      email: expected['email'] as String,
+      password: expected['password'] as String,
+      timezone: expected['timezone'] as String,
+    );
+
+    final body = Map<String, dynamic>.from(http.sent('POST /auth/register').single.data as Map);
+    // The device name is the platform's; every other field matches the fixture exactly.
+    expect(body['device_name'], isA<String>());
+    expectContract({...expected, 'device_name': body['device_name']}, body);
+    expect(
+      (body['terms_version'], body['privacy_version']),
+      (LegalVersions.terms, LegalVersions.privacy),
     );
   });
 
