@@ -2,6 +2,7 @@ import '../data/account_calendar.dart';
 import '../data/local_mutation_service.dart';
 import '../data/local_view.dart';
 import '../domain/calendar/local_date.dart';
+import '../domain/habit_draft.dart';
 import '../domain/provisional_type_rules.dart';
 
 /// What the screens ask for, in domain terms. Pure Dart: every write goes through
@@ -129,6 +130,24 @@ class HabitActions {
 
   Future<void> removeReminder(String reminderId) async {
     await writer.deleteReminder(reminderId);
+    onLocalWrite();
+  }
+
+  /// A34: habit.update (screen 09, 4.2b). Throws HabitEditFailure without writing.
+  Future<void> updateHabit(String habitId, HabitDraft draft) async {
+    await writer.updateHabit(habitId, draft, types: types);
+    onLocalWrite();
+  }
+
+  /// A34: habit.archive (screens 07 / 09, 4.2b).
+  Future<void> archiveHabit(String habitId) async {
+    await writer.archiveHabit(habitId);
+    onLocalWrite();
+  }
+
+  /// A34: habit.restore (screen 22, 4.2b).
+  Future<void> restoreHabit(String habitId) async {
+    await writer.restoreHabit(habitId);
     onLocalWrite();
   }
 

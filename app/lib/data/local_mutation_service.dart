@@ -6,9 +6,12 @@ import 'package:uuid/uuid.dart';
 import '../domain/calendar/day_resolver.dart';
 import '../domain/calendar/local_date.dart';
 import '../domain/calendar/timezone_timeline.dart' show DayResolutionException;
+import '../domain/habit_draft.dart';
+import '../domain/provisional_type_rules.dart';
 import '../sync/outbox_states.dart';
 import 'account_calendar.dart';
 import 'app_database.dart';
+import 'entity_codec.dart';
 
 /// The only way the app writes domain data locally (A23, invariant 16). Pure Dart: no Flutter
 /// imports, so the UI, notification actions, widgets and background isolates share it.
@@ -64,6 +67,132 @@ class LocalMutationService {
       return id;
     });
   }
+
+  /// habit.update (A34): the whole editable state (six keys, never `type`), validated as the
+  /// server would. Writes nothing when [draft] equals what the habit shows. While the habit's
+  /// habit.create is unsent, the create's payload is patched instead; a second unsent update
+  /// coalesces into the first. Throws [HabitEditFailure] without writing.
+  Future<void> updateHabit(String habitId, HabitDraft draft, {ProvisionalTypeRegistry? types}) {
+    return db.transaction(() async {
+      final state = await _habitState(habitId);
+      final rules = (types ?? ProvisionalTypeRegistry.builtins()).lookup(state.type);
+      final problems = draft.problems(rules);
+      if (problems.isNotEmpty) throw HabitEditFailure.invalid(problems);
+      if (draft.sameAs(HabitDraft.fromWire(state.shown), rules)) return;
+      final payload = draft.toPayload();
+
+      final create = state.unsentCreate;
+      if (create != null) {
+        final merged = (jsonDecode(create.payload) as Map).cast<String, Object?>()..addAll(payload);
+        await _rewrite(create, merged);
+        return;
+      }
+      final last = state.rows.isEmpty ? null : state.rows.last;
+      if (last != null && last.operation == 'habit.update' && last.state == OutboxState.pending) {
+        await _rewrite(last, payload);
+        return;
+      }
+      await _append(
+        entity: 'habit',
+        entityId: habitId,
+        operation: 'habit.update',
+        baseVersion: state.baseVersion,
+        calendar: await _calendar(),
+        localDate: null,
+        habitId: habitId,
+        payload: payload,
+      );
+    });
+  }
+
+  /// habit.archive (A34). Writes nothing when the habit already shows as archived; never
+  /// coalesces.
+  Future<void> archiveHabit(String habitId) => _archiveOrRestore(habitId, archive: true);
+
+  /// habit.restore (A34). Writes nothing when the habit already shows as active.
+  Future<void> restoreHabit(String habitId) => _archiveOrRestore(habitId, archive: false);
+
+  Future<void> _archiveOrRestore(String habitId, {required bool archive}) {
+    return db.transaction(() async {
+      final state = await _habitState(habitId);
+      if (state.archived == archive) return;
+      await _append(
+        entity: 'habit',
+        entityId: habitId,
+        operation: archive ? 'habit.archive' : 'habit.restore',
+        baseVersion: state.baseVersion,
+        calendar: await _calendar(),
+        localDate: null,
+        habitId: habitId,
+        payload: const {},
+      );
+    });
+  }
+
+  /// What one habit looks like from this device: confirmed row, queued rows (oldest first),
+  /// the editable state it shows and the base version a new row gets.
+  Future<_HabitState> _habitState(String habitId) async {
+    final confirmed = await (db.select(
+      db.habits,
+    )..where((h) => h.id.equals(habitId))).getSingleOrNull();
+    final rows =
+        await (db.select(db.outbox)
+              ..where(
+                (o) =>
+                    o.entity.equals('habit') &
+                    o.entityId.equals(habitId) &
+                    o.state.isIn([...OutboxState.unacked, OutboxState.acked]),
+              )
+              ..orderBy([(o) => OrderingTerm.asc(o.seq)]))
+            .get();
+    final create = rows.where((r) => r.operation == 'habit.create').firstOrNull;
+    if (confirmed == null && create == null) throw const HabitEditFailure.unknownHabit();
+    final unacked = rows.where((r) => OutboxState.unacked.contains(r.state)).toList();
+    if (unacked.isNotEmpty && unacked.last.state == OutboxState.needsAttention) {
+      // Never queue behind a change the person still has to look at (screen 18 / 19).
+      throw const HabitEditFailure.needsAttention();
+    }
+
+    final base = confirmed == null
+        ? (jsonDecode(create!.payload) as Map).cast<String, dynamic>()
+        : EntityCodec.habitPayload(confirmed);
+    final shown = <String, dynamic>{...base};
+    var archived = confirmed?.archivedAt != null || shown['archived_at'] != null;
+    for (final row in unacked) {
+      if (row.operation == 'habit.update') {
+        shown.addAll((jsonDecode(row.payload) as Map).cast<String, dynamic>());
+      } else if (row.operation == 'habit.archive') {
+        archived = true;
+      } else if (row.operation == 'habit.restore') {
+        archived = false;
+      }
+    }
+
+    // The newest version this device has seen; a row queued behind an unacknowledged one
+    // carries it as a placeholder and the engine rebases it from that row's ack (F4). Behind a
+    // create still in flight there is no version yet: null, filled by the rebase.
+    int? baseVersion = confirmed?.version;
+    for (final row in rows) {
+      if (row.state == OutboxState.acked && (row.ackVersion ?? 0) > (baseVersion ?? 0)) {
+        baseVersion = row.ackVersion;
+      }
+    }
+    return _HabitState(
+      type: (confirmed?.type ?? shown['type']) as String? ?? '',
+      rows: rows,
+      shown: shown,
+      archived: archived,
+      baseVersion: baseVersion,
+      unsentCreate: create != null && create.state == OutboxState.pending && confirmed == null
+          ? create
+          : null,
+    );
+  }
+
+  Future<void> _rewrite(OutboxRow row, Map<String, Object?> payload) =>
+      (db.update(db.outbox)..where((o) => o.seq.equals(row.seq))).write(
+        OutboxCompanion(payload: Value(jsonEncode(payload))),
+      );
 
   /// log.set_value for the habit-day of [at] (default: now on the server's clock, F10) in the
   /// server's calendar.
@@ -497,6 +626,50 @@ class LocalMutationService {
     final base = utc.toIso8601String().split('.').first;
     return ms == 0 ? '${base}Z' : '$base.${ms.toString().padLeft(3, '0')}Z';
   }
+}
+
+class _HabitState {
+  final String type;
+  final List<OutboxRow> rows;
+  final Map<String, dynamic> shown;
+  final bool archived;
+  final int? baseVersion;
+  final OutboxRow? unsentCreate;
+
+  const _HabitState({
+    required this.type,
+    required this.rows,
+    required this.shown,
+    required this.archived,
+    required this.baseVersion,
+    required this.unsentCreate,
+  });
+}
+
+/// A habit edit, archive or restore that was not written (A34); 4.2b shows it.
+class HabitEditFailure implements Exception {
+  final HabitEditFailureKind kind;
+  final List<HabitDraftProblem> problems;
+
+  const HabitEditFailure._(this.kind, this.problems);
+  const HabitEditFailure.invalid(List<HabitDraftProblem> problems)
+    : this._(HabitEditFailureKind.invalid, problems);
+  const HabitEditFailure.needsAttention() : this._(HabitEditFailureKind.needsAttention, const []);
+  const HabitEditFailure.unknownHabit() : this._(HabitEditFailureKind.unknownHabit, const []);
+
+  @override
+  String toString() => 'HabitEditFailure($kind, $problems)';
+}
+
+enum HabitEditFailureKind {
+  /// The draft breaks a rule the server would refuse ([HabitEditFailure.problems]).
+  invalid,
+
+  /// The habit's newest change needs a look first: open the resolve flow.
+  needsAttention,
+
+  /// No such habit on this device.
+  unknownHabit,
 }
 
 class LocalWrite {

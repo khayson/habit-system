@@ -23,6 +23,10 @@ abstract interface class ProvisionalTypeRules {
   /// Logged with one tap (check / undo) rather than an amount or a timer.
   bool get oneTap;
 
+  /// Whether a habit of this type carries a unit (A34 edit validation mirrors the server: a
+  /// quantity needs one, yes/no and duration take none).
+  bool get takesUnit;
+
   /// How screens present the type (icon, label, value field), so no widget names a type key.
   TypeDisplay get display;
 }
@@ -56,6 +60,9 @@ class BinaryRules implements ProvisionalTypeRules {
   String get key => 'binary';
 
   @override
+  bool get takesUnit => false;
+
+  @override
   int? parseValue(Object? wire) => (wire == 0 || wire == 1) ? wire as int : null;
 
   @override
@@ -86,6 +93,9 @@ class QuantityRules implements ProvisionalTypeRules {
 
   @override
   String get key => 'quantity';
+
+  @override
+  bool get takesUnit => true;
 
   @override
   int? parseValue(Object? wire) {
@@ -131,6 +141,9 @@ class DurationRules implements ProvisionalTypeRules {
 
   @override
   String get key => 'duration';
+
+  @override
+  bool get takesUnit => false;
 
   @override
   int? parseValue(Object? wire) => (wire is int && wire >= 0 && wire <= maxSeconds) ? wire : null;

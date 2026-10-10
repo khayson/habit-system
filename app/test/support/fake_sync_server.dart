@@ -195,6 +195,8 @@ class FakeSyncServer implements SyncTransport {
       'log.delete' => _delete(m),
       'profile.set_timezone' => _setTimezone(m),
       'profile.update' => _profileUpdate(m),
+      'habit.update' => _habitUpdate(m),
+      'habit.archive' || 'habit.restore' => _habitArchive(m),
       'reminder.create' || 'reminder.update' || 'reminder.delete' => _reminder(m),
       _ => _failed(m, 'rejected', {'code': 'unsupported_operation', 'message': 'x'}),
     };
@@ -397,11 +399,132 @@ class FakeSyncServer implements SyncTransport {
     return _accepted(m, id, 1);
   }
 
+  /// The local today of the fixed test calendar (A34 effective dates). Tests may move it.
+  String today = '2026-05-28';
+
+  String _nextDay(String date, int days) =>
+      DateTime.parse(date).add(Duration(days: days)).toIso8601String().substring(0, 10);
+
+  Map<String, dynamic>? _habitGuard(Map<String, dynamic> m) {
+    final habit = habits[m['entity_id']];
+    if (habit == null) {
+      return _failed(m, 'rejected', {'code': 'not_found', 'message': 'x'});
+    }
+    if (m['base_version'] != habit['version']) {
+      return _failed(m, 'conflict', {
+        'code': 'version_conflict',
+        'message': 'x',
+        'resource_id': habit['id'],
+        'expected_version': m['base_version'],
+        'current_version': habit['version'],
+        'current': _deepCopy(habit),
+      });
+    }
+    return null;
+  }
+
+  /// A34 habit.update, as the real HabitWrites answers it (daily/weekly effective dates; the
+  /// interval rule is pinned by the server's own tests).
+  Map<String, dynamic> _habitUpdate(Map<String, dynamic> m) {
+    final refused = _habitGuard(m);
+    if (refused != null) return refused;
+    final habit = habits[m['entity_id']]!;
+    if (habit['archived_at'] != null) {
+      return _failed(m, 'rejected', {'code': 'habit_archived', 'message': 'x'});
+    }
+    final p = (m['payload'] as Map).cast<String, dynamic>();
+    final defs = (habit['definitions'] as List).cast<Map<String, dynamic>>();
+    Map<String, Object?> fields(Map<String, dynamic> d) => {
+      'target_value': d['target_value'],
+      'unit': d['unit'],
+      'category': d['category'],
+      'frequency_type': d['frequency_type'],
+      'frequency_config': jsonEncode(d['frequency_config']),
+    };
+    final desired = fields(p);
+    final latest = defs.last;
+    final pending = (latest['effective_date'] as String).compareTo(today) > 0;
+    final inForce = defs.lastWhere((d) => (d['effective_date'] as String).compareTo(today) <= 0);
+    var changed = false;
+    if (fields(latest).toString() != desired.toString()) {
+      changed = true;
+      final weekly =
+          latest['frequency_type'] == 'weekly_count' || p['frequency_type'] == 'weekly_count';
+      final weekday = DateTime.parse(today).weekday;
+      final effective = weekly ? _nextDay(today, 8 - weekday) : _nextDay(today, 1);
+      final next = {
+        ...latest,
+        'target_value': p['target_value'],
+        'unit': p['unit'],
+        'category': p['category'],
+        'frequency_type': p['frequency_type'],
+        'frequency_config': p['frequency_config'],
+      };
+      if (pending && fields(inForce).toString() == desired.toString()) {
+        defs.removeLast();
+      } else if (pending) {
+        defs[defs.length - 1] = {...next, 'effective_date': effective};
+      } else {
+        defs.add({...next, 'version': (latest['version'] as int) + 1, 'effective_date': effective});
+      }
+    }
+    if (!changed && p['name'] == habit['name']) {
+      return _accepted(m, habit['id'] as String, habit['version'] as int);
+    }
+    final top = defs.last;
+    habit
+      ..['name'] = p['name']
+      ..['target_value'] = top['target_value']
+      ..['unit'] = top['unit']
+      ..['category'] = top['category']
+      ..['frequency_type'] = top['frequency_type']
+      ..['frequency_config'] = top['frequency_config']
+      ..['definition_version'] = top['version']
+      ..['definitions'] = defs
+      ..['version'] = (habit['version'] as int) + 1;
+    _journal('habit', habit['id'] as String, 'upsert', habit['version'] as int, habit);
+    return _accepted(m, habit['id'] as String, habit['version'] as int);
+  }
+
+  /// A34 habit.archive / habit.restore: ranges close at the start of tomorrow and reopen at
+  /// max(today, previous end).
+  Map<String, dynamic> _habitArchive(Map<String, dynamic> m) {
+    final refused = _habitGuard(m);
+    if (refused != null) return refused;
+    final habit = habits[m['entity_id']]!;
+    final archive = m['operation'] == 'habit.archive';
+    if ((habit['archived_at'] != null) == archive) {
+      return _accepted(m, habit['id'] as String, habit['version'] as int);
+    }
+    final ranges = (habit['active_ranges'] as List).cast<Map<String, dynamic>>();
+    final tomorrow = _nextDay(today, 1);
+    if (archive) {
+      final open = ranges.lastWhere((r) => r['ends_before'] == null);
+      if ((open['starts_on'] as String).compareTo(tomorrow) < 0) {
+        open['ends_before'] = tomorrow;
+      } else {
+        ranges.remove(open);
+      }
+      habit['archived_at'] = '${today}T18:00:00Z';
+    } else {
+      final end = ranges.isEmpty ? null : ranges.last['ends_before'] as String?;
+      final start = end != null && end.compareTo(today) > 0 ? end : today;
+      ranges.add({'starts_on': start, 'ends_before': null});
+      habit['archived_at'] = null;
+    }
+    habit['version'] = (habit['version'] as int) + 1;
+    _journal('habit', habit['id'] as String, 'upsert', habit['version'] as int, habit);
+    return _accepted(m, habit['id'] as String, habit['version'] as int);
+  }
+
   Map<String, dynamic> _setValue(Map<String, dynamic> m) {
     final p = (m['payload'] as Map).cast<String, dynamic>();
     final habitId = p['habit_id'] as String;
     if (!habits.containsKey(habitId)) {
       return {'mutation_id': m['mutation_id'], 'status': 'dependency_pending', 'duplicate': false};
+    }
+    if (habits[habitId]!['archived_at'] != null) {
+      return _failed(m, 'rejected', {'code': 'habit_archived', 'message': 'x'});
     }
     final date = m['local_date_hint'] as String;
     final base = m['base_version'] as int?;
