@@ -39,7 +39,7 @@ enum AvatarFailure {
   /// 401: the session is over; never touch tokens here (G1).
   unauthorized,
 
-  /// 413, 422 and other 4xx: the server will never take this request.
+  /// 409, 413, 415, 422: the server will never take this photo.
   rejected,
 }
 

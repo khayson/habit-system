@@ -82,10 +82,12 @@ class HttpAvatarTransport implements AvatarTransport {
         retryAfter: _retryAfter(response.headers.value('retry-after')),
         code: code,
       ),
-      >= 400 && < 500 => AvatarTransportException(
-        AvatarFailure.rejected,
-        code: code ?? 'http_$status',
-      ),
+      // R2: only answers about the photo itself are final; anything else (a proxy's 404, a
+      // 403 from a gateway) is retried later like a 5xx.
+      409 ||
+      413 ||
+      415 ||
+      422 => AvatarTransportException(AvatarFailure.rejected, code: code ?? 'http_$status'),
       _ => AvatarTransportException(AvatarFailure.server, code: code),
     };
   }
