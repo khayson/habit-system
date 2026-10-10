@@ -36,11 +36,17 @@ you saw.
 | 12 | Airplane mode on. Create a reminder 5 minutes ahead and check a habit in. | The reminder appears with no network. The check-in shows "waiting to sync". |
 | 13 | Airplane mode off, app closed, wait 20 minutes (background sync, best effort). Then open the app on a second device signed in to the same account. | The second device shows the check-in. If it did not sync in the background, opening the first app syncs it at once. Record which happened. |
 | 14 | Turn off automatic time. Set the date to the day before a DST change in your zone (or set the zone to America/New_York and the date to 7 March 2026), with a reminder at 02:30. Advance the clock past the change. | One reminder, at 03:00 on the change day; no second one. Restore automatic time afterwards. |
-| 15 | Sign out. | No more reminders appear for that account. Sign in as another account on the same phone: its reminders appear; the first account's never do. |
+| 15 | Profile → **Sign out**. | No more reminders appear for that account. Sign in as another account on the same phone: its reminders appear; the first account's never do. |
 | 16 | On 12, open the habit's Reminder row and change the time to 5 minutes ahead; save. | The old time never fires; the new time fires once. |
 | 17 | On 12, open the Reminder row, turn **Reminder enabled** off; save. Wait past its time. | Nothing fires. |
 | 18 | On 12, open the Reminder row and remove the reminder. Wait past its time. | Nothing fires; Today is unaffected. |
 | 19 | On 12 for a habit that has no reminder, open the Reminder row and save a time 5 minutes ahead. | It fires. |
+| 20 | Profile → tap the photo → **Choose photo**; pick a photo and crop it square. | The photo shows on 20 at once. The system asks for no storage permission. |
+| 21 | Airplane mode on. Profile → tap the photo → choose a different photo. | The new photo shows at once, with "Waiting to upload". |
+| 22 | Airplane mode off; wait for a sync (or open the app). Then open Profile on a second device signed in to the same account. | "Waiting to upload" goes away. The second device shows the new photo after it syncs. |
+| 23 | Profile → **Edit profile**: change the name, type a city, pick a country; **Save**. Sync both devices. | 20 shows "City, Country" at once on the first device, and the same name, city and country on the second. |
+| 24 | Profile → tap the photo → **Remove photo**. Sync both devices. | Initials on both devices. |
+| 25 | Profile → **Reminders** → turn on **Hide habit names in notifications**. Set a reminder 5 minutes ahead; lock the phone. | The reminder that appears does not name the habit. Turning the setting off brings the names back on the next reminders. |
 
 ## Results
 
@@ -65,3 +71,9 @@ you saw.
 | 17 | | | | |
 | 18 | | | | |
 | 19 | | | | |
+| 20 | | | | |
+| 21 | | | | |
+| 22 | | | | |
+| 23 | | | | |
+| 24 | | | | |
+| 25 | | | | |
