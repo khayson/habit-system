@@ -364,6 +364,34 @@ void main() {
     });
   });
 
+  testWidgets('P2: when replacing scheduled reminders fails, the switch shows what is stored', (
+    tester,
+  ) async {
+    final a = await account(tester, FakeSyncServer());
+    await tester.runAsync(() async {
+      final habit = await a.actions.createOneTapHabit(name: 'Water', category: 'health');
+      await a.writer.createReminder(
+        habitId: habit,
+        localTime: '20:00',
+        daysOfWeek: [1, 2, 3, 4, 5, 6, 7],
+      );
+      await a.reminders.replan();
+    });
+    (a.notifications as FakeNotificationScheduler).failCancel = true;
+    await open(tester, a);
+    await tester.tap(find.text('Reminders'));
+    await settle(tester, rounds: 16);
+
+    await tester.tap(find.byType(Switch));
+    await settleUntil(tester, find.text("We couldn't save that. Try again."));
+
+    expect(find.text("We couldn't save that. Try again."), findsOneWidget);
+    // The setting was saved before the replan failed: the switch must not claim otherwise.
+    expect(tester.widget<Switch>(find.byType(Switch)).value, isTrue);
+    expect(tester.takeException(), isNull);
+    await tearDownApp(tester, a);
+  });
+
   group('sign out', () {
     late RouteAdapter http;
     late SessionProvider session;

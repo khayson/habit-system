@@ -465,10 +465,17 @@ class _RemindersState extends State<_Reminders> {
                   try {
                     await widget.account.reminders.setHideHabitNames(on);
                   } on Object {
-                    // R1: back to what is saved, with one plain line.
+                    // R1/P2: show what is actually stored (the setting may be saved even
+                    // though replacing the scheduled reminders failed), with one plain line.
+                    bool? stored;
+                    try {
+                      stored = await widget.account.reminders.hideHabitNames();
+                    } on Object {
+                      stored = null;
+                    }
                     if (mounted) {
                       setState(() {
-                        _hide = !on;
+                        _hide = stored ?? !on;
                         _failed = true;
                       });
                     }
