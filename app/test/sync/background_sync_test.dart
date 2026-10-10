@@ -10,6 +10,8 @@ import 'package:habit/data/app_database.dart';
 import 'package:habit/data/database_opener.dart';
 import 'package:habit/data/local_mutation_service.dart';
 import 'package:habit/domain/calendar/local_date.dart';
+import 'package:habit/sync/avatar_sync.dart';
+import 'package:habit/sync/avatar_transport.dart';
 import 'package:habit/sync/background_sync.dart';
 import 'package:habit/sync/outbox_states.dart';
 import 'package:habit/sync/sync_engine.dart';
@@ -19,6 +21,7 @@ import 'package:path/path.dart' as p;
 import 'package:sqlite3/sqlite3.dart' as sqlite;
 import 'package:timezone/data/latest_all.dart' as tzdata;
 
+import '../support/fake_avatar_transport.dart';
 import '../support/fake_sync_server.dart';
 import 'sync_harness.dart';
 
@@ -160,6 +163,51 @@ void main() {
       holder.close();
     },
   );
+
+  test('R3: plain state writes are retried when SQLite refuses the write at once', () async {
+    final server = FakeSyncServer();
+    final setup = independent(file.path);
+    await initAccountState(setup, userId: 'user-1', deviceId: 'd1', user: server.user);
+    await setup
+        .into(setup.pendingUploads)
+        .insert(
+          PendingUploadsCompanion.insert(
+            id: '0199b2c4-1a2b-7c3d-8e4f-5a6b7c8d9e0f',
+            op: 'delete',
+            state: 'pending',
+            createdAt: 0,
+          ),
+        );
+    await setup.close();
+    final impatient = AppDatabase(
+      NativeDatabase(
+        file,
+        setup: (db) {
+          configureConnection(db);
+          db.execute('PRAGMA busy_timeout = 0');
+        },
+      ),
+    );
+    await impatient.customSelect('SELECT 1').get(); // open before the lock matters
+    final avatars = FakeAvatarTransport(server)
+      ..failNext.add(const AvatarTransportException(AvatarFailure.network));
+    // Another connection holds the write lock when the failed attempt is recorded.
+    final holder = sqlite.sqlite3.open(file.path)..execute('BEGIN IMMEDIATE');
+    Future<void>.delayed(const Duration(milliseconds: 60), () => holder.execute('COMMIT'));
+
+    final run = await AvatarSync(
+      db: impatient,
+      transport: avatars,
+      filesRoot: dir.path,
+      clock: () => now,
+    ).upload();
+
+    expect(run, UploadRun.done);
+    final row = await impatient.select(impatient.pendingUploads).getSingle();
+    expect((row.attempts, row.nextAttemptAt), (1, now.millisecondsSinceEpoch + 5 * 60 * 1000));
+    await impatient.close();
+    holder.close();
+  });
 
   test('a second isolate writing during a sync run: no lost write, no SQLITE_BUSY', () async {
     final server = FakeSyncServer();

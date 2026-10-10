@@ -126,14 +126,15 @@ class AvatarSync {
     }
   });
 
-  Future<void> _defer(PendingUpload row, Duration wait, String code) =>
-      (db.update(db.pendingUploads)..where((u) => u.id.equals(row.id))).write(
-        PendingUploadsCompanion(
-          attempts: Value(row.attempts + 1),
-          nextAttemptAt: Value(_now + wait.inMilliseconds),
-          lastError: Value(jsonEncode({'code': code})),
-        ),
-      );
+  Future<void> _defer(PendingUpload row, Duration wait, String code) => db.writeRetrying(
+    () => (db.update(db.pendingUploads)..where((u) => u.id.equals(row.id))).write(
+      PendingUploadsCompanion(
+        attempts: Value(row.attempts + 1),
+        nextAttemptAt: Value(_now + wait.inMilliseconds),
+        lastError: Value(jsonEncode({'code': code})),
+      ),
+    ),
+  );
 
   /// 5, 10, 20 minutes … up to 6 hours; never under [minGap].
   static Duration _backoff(int attempts) {
@@ -222,5 +223,5 @@ class AvatarSync {
       (db.select(db.syncState)..where((s) => s.id.equals(1))).getSingle();
 
   Future<void> _updateState(SyncStateCompanion values) =>
-      (db.update(db.syncState)..where((s) => s.id.equals(1))).write(values);
+      db.writeRetrying(() => (db.update(db.syncState)..where((s) => s.id.equals(1))).write(values));
 }

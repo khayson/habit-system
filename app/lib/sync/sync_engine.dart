@@ -932,15 +932,18 @@ class SyncEngine {
       (db.select(db.syncState)..where((s) => s.id.equals(1))).getSingle();
 
   Future<void> _updateState(SyncStateCompanion values) =>
-      (db.update(db.syncState)..where((s) => s.id.equals(1))).write(values);
+      db.writeRetrying(() => (db.update(db.syncState)..where((s) => s.id.equals(1))).write(values));
 
-  Future<void> _update(OutboxRow row, OutboxCompanion values) =>
-      (db.update(db.outbox)..where((o) => o.seq.equals(row.seq))).write(values);
+  Future<void> _update(OutboxRow row, OutboxCompanion values) => db.writeRetrying(
+    () => (db.update(db.outbox)..where((o) => o.seq.equals(row.seq))).write(values),
+  );
 
   Future<void> _setState(List<OutboxRow> rows, String state) async {
     if (rows.isEmpty) return;
-    await (db.update(db.outbox)..where((o) => o.seq.isIn(rows.map((r) => r.seq)))).write(
-      OutboxCompanion(state: Value(state)),
+    await db.writeRetrying(
+      () => (db.update(db.outbox)..where((o) => o.seq.isIn(rows.map((r) => r.seq)))).write(
+        OutboxCompanion(state: Value(state)),
+      ),
     );
   }
 
@@ -955,7 +958,7 @@ class SyncEngine {
   /// Each lease statement runs in a transaction so a write SQLite refuses at once (BUSY from a
   /// stale WAL snapshot, without waiting on busy_timeout) is retried like any other (K2).
   Future<bool> _acquireLease() async {
-    final taken = await db.transaction(
+    final taken = await db.writeRetrying(
       () => db.customUpdate(
         'UPDATE sync_state SET lease_owner = ?, lease_until = ? '
         'WHERE id = 1 AND (lease_owner IS NULL OR lease_until < ?)',
@@ -972,7 +975,7 @@ class SyncEngine {
 
   /// Extends the lease, or stops the run if another engine has taken it over.
   Future<void> _renewLease() async {
-    final renewed = await db.transaction(
+    final renewed = await db.writeRetrying(
       () => db.customUpdate(
         'UPDATE sync_state SET lease_until = ? WHERE id = 1 AND lease_owner = ?',
         variables: [Variable(_now + leaseDuration.inMilliseconds), Variable(ownerId)],
@@ -982,7 +985,7 @@ class SyncEngine {
     if (renewed != 1) throw const _LeaseLost();
   }
 
-  Future<void> _releaseLease() => db.transaction(
+  Future<void> _releaseLease() => db.writeRetrying(
     () => db.customUpdate(
       'UPDATE sync_state SET lease_owner = NULL, lease_until = NULL WHERE id = 1 AND lease_owner = ?',
       variables: [Variable(ownerId)],

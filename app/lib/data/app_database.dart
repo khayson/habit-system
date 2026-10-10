@@ -357,6 +357,12 @@ class AppDatabase extends _$AppDatabase {
 
   static const busyRetries = 50;
 
+  /// R3: a plain write outside a transaction gets no BEGIN retry, and in WAL mode SQLite can
+  /// refuse it at once (a stale snapshot, without waiting on busy_timeout). Every such write
+  /// goes through here, so it runs in a transaction and the refusal is retried. Inside an open
+  /// transaction it simply joins it.
+  Future<T> writeRetrying<T>(Future<T> Function() write) => transaction(write);
+
   @override
   int get schemaVersion => 7;
 
