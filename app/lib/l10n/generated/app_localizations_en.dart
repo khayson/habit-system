@@ -1590,4 +1590,64 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get minutesUnit => 'min';
+
+  @override
+  String get amountTitleProgress => 'Add progress';
+
+  @override
+  String get amountTitleTime => 'Add time';
+
+  @override
+  String amountSubtitle(String habit, String progress) {
+    return '$habit · $progress saved today';
+  }
+
+  @override
+  String amountCustomIn(String unit) {
+    return 'Custom amount in $unit';
+  }
+
+  @override
+  String get amountCustomMinutes => 'Custom time in minutes';
+
+  @override
+  String get amountStepperLabel => 'Amount to add';
+
+  @override
+  String get amountLess => 'Less';
+
+  @override
+  String get amountMore => 'More';
+
+  @override
+  String get amountAfterSaving => 'After saving';
+
+  @override
+  String get amountNotComplete => 'Not complete yet';
+
+  @override
+  String get amountReached => 'Today\'s target is reached';
+
+  @override
+  String amountAdd(String amount) {
+    return 'Add $amount';
+  }
+
+  @override
+  String get amountCancel => 'Cancel · keep saved value';
+
+  @override
+  String get amountTimeIt => 'Time it instead';
+
+  @override
+  String get amountRequired => 'Add an amount.';
+
+  @override
+  String get amountTooMuch => 'Today can\'t hold that much.';
+
+  @override
+  String get amountOneTap => 'This habit is checked in with one tap on Today.';
+
+  @override
+  String get amountBack => 'Back';
 }

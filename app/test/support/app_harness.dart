@@ -64,6 +64,7 @@ Future<AccountContext> testAccount(
 /// app's redirect rule runs and the account comes from the session, as in production.
 Widget testApp({
   required String initial,
+  Object? initialExtra,
   AccountContext? account,
   SessionProvider? session,
   DateTime Function()? clock,
@@ -72,6 +73,7 @@ Widget testApp({
 }) {
   final router = GoRouter(
     initialLocation: initial,
+    initialExtra: initialExtra,
     refreshListenable: session,
     redirect: session == null
         ? null

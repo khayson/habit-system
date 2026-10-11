@@ -6,6 +6,7 @@ import '../core/url_launcher_opener.dart';
 import '../core/url_opener.dart';
 import '../providers/session_provider.dart';
 import '../services/photo_picker.dart';
+import '../screens/amount_entry_screen.dart';
 import '../screens/app_shell.dart';
 import '../screens/archived_habits_screen.dart';
 import '../screens/create_account_screen.dart';
@@ -35,6 +36,12 @@ abstract final class Routes {
 
   /// Screen 09 for one habit.
   static String editHabit(String id) => '/habits/$id/edit';
+
+  /// Screen 34 (4.3b): add an amount (extra: a prefilled amount in the type's units).
+  static String amount(String id) => '/habits/$id/add';
+
+  /// Screens 33 / 36 (4.3b): the habit's timer, running or paused.
+  static String timer(String id) => '/habits/$id/timer';
 
   /// Screen 22. Matched before '/habits/:id' (router test).
   static const archivedHabits = '/habits/archived';
@@ -121,6 +128,14 @@ List<RouteBase> appRoutes({
       key: ValueKey(state.uri.toString()),
       habitId: state.pathParameters['id'],
       reminderId: state.uri.queryParameters['reminder'],
+      clock: clock,
+    ),
+  ),
+  GoRoute(
+    path: '/habits/:id/add',
+    builder: (context, state) => AmountEntryScreen(
+      habitId: state.pathParameters['id']!,
+      prefill: state.extra is int ? state.extra! as int : null,
       clock: clock,
     ),
   ),

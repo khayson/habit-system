@@ -13,6 +13,7 @@ import 'account_calendar.dart';
 import 'app_database.dart';
 import 'entity_codec.dart';
 import 'log_overlay.dart';
+import 'timer_draft_view.dart';
 import 'timezone_view.dart';
 
 /// What the UI reads: the pending overlay (derived from outbox rows) over the confirmed rows.
@@ -196,6 +197,8 @@ class LocalView {
                 db.syncState,
                 db.calendarEntries,
                 db.localSettings,
+                // 4.3b C1: a timer started, paused or finished changes its card.
+                db.timerDrafts,
               },
             )
             .watch()
@@ -230,6 +233,9 @@ class LocalView {
         row.habitId ?? row.entityId: row,
     };
 
+    final timers = {
+      for (final d in await db.select(db.timerDrafts).get()) d.habitId: TimerDraftView(d),
+    };
     final items = <TodayItem>[];
     for (final habit in await habits()) {
       // A34: an archived habit (confirmed, or archived on this device) leaves Today.
@@ -242,12 +248,15 @@ class LocalView {
       if (!known && !schedule.isActive(date)) continue;
       final log = await this.log(habit.id, day);
       final rules = types.lookup(p['type'] as String? ?? '');
-      final complete = _complete(rules, log.value, schedule.targetOn(date) ?? p['target_value']);
+      final target = schedule.targetOn(date) ?? p['target_value'];
+      final complete = _complete(rules, log.value, target);
       items.add(
         TodayItem(
           habit: habit,
           log: log,
           rules: rules,
+          target: target,
+          timer: timers[habit.id],
           complete: complete,
           attention: attention[habit.id],
           week: await _week(habit, schedule, date),
@@ -351,6 +360,12 @@ class TodayItem {
   /// Null for a type this app version does not know (show the "update the app" card).
   final ProvisionalTypeRules? rules;
 
+  /// The target in force today (P3), in wire form.
+  final Object? target;
+
+  /// 4.3b: this habit's timer draft (A36), if one runs or waits paused.
+  final TimerDraftView? timer;
+
   /// Provisional when [pending]: computed locally from the overlay (invariant 9).
   final bool complete;
 
@@ -367,6 +382,8 @@ class TodayItem {
     required this.habit,
     required this.log,
     required this.rules,
+    this.target,
+    this.timer,
     required this.complete,
     required this.attention,
     this.week,

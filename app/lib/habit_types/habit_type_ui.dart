@@ -129,6 +129,11 @@ abstract class HabitTypeUi {
   /// The amount field's own text for [units] ("250", "1.5").
   String amountInput(int units) => '$units';
 
+  /// Screen 34's title and its field's label.
+  /// ASSUMPTION(4.3b-amount-title): a title per kind, not the design's one sample habit's.
+  String amountTitle(AppLocalizations l10n) => l10n.amountTitleProgress;
+  String amountFieldLabel(AppLocalizations l10n, String? unit) => l10n.amountCustomIn(unit ?? '');
+
   /// The target field(s). [amountError] / [unitError] are already worded.
   Widget buildTarget(
     BuildContext context,
@@ -370,6 +375,12 @@ class DurationTypeUi extends HabitTypeUi {
 
   @override
   String amountInput(int units) => _plain((units * 1000 / 60).round(), 3);
+
+  @override
+  String amountTitle(AppLocalizations l10n) => l10n.amountTitleTime;
+
+  @override
+  String amountFieldLabel(AppLocalizations l10n, String? unit) => l10n.amountCustomMinutes;
 
   @override
   Widget buildTarget(

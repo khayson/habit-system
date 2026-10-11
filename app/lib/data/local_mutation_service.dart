@@ -15,6 +15,9 @@ import 'conflicts.dart';
 import 'entity_codec.dart';
 import 'local_view.dart';
 import 'log_overlay.dart';
+import 'timer_draft_view.dart';
+
+export 'timer_draft_view.dart';
 
 /// The only way the app writes domain data locally (A23, invariant 16). Pure Dart: no Flutter
 /// imports, so the UI, notification actions, widgets and background isolates share it.
@@ -974,32 +977,6 @@ enum ResolveResult {
 
   /// No such row.
   gone,
-}
-
-/// A36: a timer draft as screens read it.
-class TimerDraftView {
-  static const running = 'running';
-  static const paused = 'paused';
-
-  final TimerDraft row;
-
-  const TimerDraftView(this.row);
-
-  String get habitId => row.habitId;
-  String get state => row.state;
-  int get elapsedMs => row.elapsedMs;
-  int? get runningSince => row.runningSince;
-  int get createdAt => row.createdAt;
-
-  /// Banked time plus the running span; a clock set backwards adds nothing (never shrinks).
-  int elapsedAt(int nowMs) {
-    final since = row.runningSince;
-    if (row.state != running || since == null) return row.elapsedMs;
-    final span = nowMs - since;
-    return row.elapsedMs + (span > 0 ? span : 0);
-  }
-
-  Duration elapsed(DateTime now) => Duration(milliseconds: elapsedAt(now.millisecondsSinceEpoch));
 }
 
 /// A timer action that was not done (A36).

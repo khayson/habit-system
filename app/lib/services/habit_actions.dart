@@ -155,6 +155,27 @@ class HabitActions {
     onLocalWrite();
   }
 
+  /// Screen 34 (4.3b): adds [delta] (wire form) to today. Throws LogFailure without writing.
+  Future<LocalWrite> addAmount(String habitId, Object delta) async {
+    final write = await writer.incrementLog(habitId: habitId, delta: delta, types: types);
+    onLocalWrite();
+    return write;
+  }
+
+  // Timers (A36, screens 33 / 36). Local drafts: nothing to sync until finish.
+  Future<TimerDraftView> startTimer(String habitId) => writer.startTimer(habitId);
+  Future<TimerDraftView> pauseTimer(String habitId) => writer.pauseTimer(habitId);
+  Future<TimerDraftView> resumeTimer(String habitId) => writer.resumeTimer(habitId);
+  Future<void> discardTimer(String habitId) => writer.discardTimer(habitId);
+  Stream<TimerDraftView?> watchTimer(String habitId) => writer.watchTimer(habitId);
+
+  /// Finishing writes the increment (A36): a sync is asked for when something was written.
+  Future<LocalWrite?> finishTimer(String habitId) async {
+    final write = await writer.finishTimer(habitId, types: types);
+    if (write != null) onLocalWrite();
+    return write;
+  }
+
   /// A34: habit.update (screen 09, 4.2b). Throws HabitEditFailure without writing.
   Future<void> updateHabit(String habitId, HabitDraft draft) async {
     await writer.updateHabit(habitId, draft, types: types);

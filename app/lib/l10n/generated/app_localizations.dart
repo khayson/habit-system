@@ -2695,6 +2695,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'min'**
   String get minutesUnit;
+
+  /// No description provided for @amountTitleProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Add progress'**
+  String get amountTitleProgress;
+
+  /// No description provided for @amountTitleTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Add time'**
+  String get amountTitleTime;
+
+  /// No description provided for @amountSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{habit} · {progress} saved today'**
+  String amountSubtitle(String habit, String progress);
+
+  /// No description provided for @amountCustomIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom amount in {unit}'**
+  String amountCustomIn(String unit);
+
+  /// No description provided for @amountCustomMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom time in minutes'**
+  String get amountCustomMinutes;
+
+  /// No description provided for @amountStepperLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount to add'**
+  String get amountStepperLabel;
+
+  /// No description provided for @amountLess.
+  ///
+  /// In en, this message translates to:
+  /// **'Less'**
+  String get amountLess;
+
+  /// No description provided for @amountMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get amountMore;
+
+  /// No description provided for @amountAfterSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'After saving'**
+  String get amountAfterSaving;
+
+  /// No description provided for @amountNotComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Not complete yet'**
+  String get amountNotComplete;
+
+  /// No description provided for @amountReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s target is reached'**
+  String get amountReached;
+
+  /// No description provided for @amountAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add {amount}'**
+  String amountAdd(String amount);
+
+  /// No description provided for @amountCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel · keep saved value'**
+  String get amountCancel;
+
+  /// No description provided for @amountTimeIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Time it instead'**
+  String get amountTimeIt;
+
+  /// No description provided for @amountRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an amount.'**
+  String get amountRequired;
+
+  /// No description provided for @amountTooMuch.
+  ///
+  /// In en, this message translates to:
+  /// **'Today can\'t hold that much.'**
+  String get amountTooMuch;
+
+  /// No description provided for @amountOneTap.
+  ///
+  /// In en, this message translates to:
+  /// **'This habit is checked in with one tap on Today.'**
+  String get amountOneTap;
+
+  /// No description provided for @amountBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get amountBack;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
