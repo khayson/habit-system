@@ -26,7 +26,7 @@ class LocalView {
   /// [deviceNow] gives each habit the local today it is shown on (P3: the definition in force).
   /// The library (07) leaves archived habits out (A34); screen 22 lists them (watchArchived).
   Stream<List<HabitView>> watchHabits({
-    DateTime Function() deviceNow = DateTime.now,
+    required DateTime Function() deviceNow,
     bool includeArchived = false,
   }) => db
       .customSelect('SELECT 1', readsFrom: {db.habits, db.outbox, db.calendarEntries})
@@ -485,11 +485,12 @@ class HabitView {
 
   HabitSchedule get schedule => HabitSchedule.fromWire(payload);
 
-  /// P3: the definition in force today (the first one before [today] is known).
+  /// P3: the definition in force today. I2: needs the clock ([today], from habits(deviceNow:));
+  /// without one there is no guess.
   ScheduleDefinition? get inForceToday {
-    final s = schedule;
     final date = today;
-    return date == null ? (s.versions.isEmpty ? null : s.versions.first) : s.inForce(date);
+    if (date == null) throw StateError('inForceToday needs habits(deviceNow:)');
+    return schedule.inForce(date);
   }
 
   bool get provisional => syncState != null;

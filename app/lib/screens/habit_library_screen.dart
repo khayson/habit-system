@@ -14,7 +14,10 @@ import '../widgets/habit_ui.dart';
 /// Screen 07: the habit library. Reads local data only (confirmed rows plus pending creates),
 /// so it works offline. Archived habits are counted, not listed, as in the design.
 class HabitLibraryScreen extends StatelessWidget {
-  const HabitLibraryScreen({super.key});
+  /// The device clock: today picks each habit's definition in force (I2). A seam for tests.
+  final DateTime Function() clock;
+
+  const HabitLibraryScreen({super.key, this.clock = DateTime.now});
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +25,8 @@ class HabitLibraryScreen extends StatelessWidget {
     if (account == null) return const SizedBox();
     return ChangeNotifierProvider(
       key: ValueKey(account.session.userId),
-      create: (_) => StreamModel<List<HabitView>>(Future.value(account.view.watchHabits())),
+      create: (_) =>
+          StreamModel<List<HabitView>>(Future.value(account.view.watchHabits(deviceNow: clock))),
       child: const _Library(),
     );
   }

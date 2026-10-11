@@ -29,7 +29,13 @@ class HabitActions {
     if (rules == null || !item.canToggle) {
       throw StateError('This habit-day cannot be toggled.');
     }
-    final target = rules.parseTarget(item.habit.payload['target_value']) ?? 1;
+    // I2: the target in force on the habit-day, not the latest definition's.
+    final date = LocalDate.parse(item.log.date);
+    final target =
+        rules.parseTarget(
+          item.habit.schedule.targetOn(date) ?? item.habit.payload['target_value'],
+        ) ??
+        1;
     await writer.setLogValue(
       habitId: item.habit.id,
       value: rules.formatValue(item.complete ? 0 : target),

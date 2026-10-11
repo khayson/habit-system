@@ -124,7 +124,10 @@ List<RouteBase> appRoutes({
         path: Routes.today,
         builder: (context, state) => TodayScreen(clock: clock),
       ),
-      GoRoute(path: Routes.habits, builder: (context, state) => const HabitLibraryScreen()),
+      GoRoute(
+        path: Routes.habits,
+        builder: (context, state) => HabitLibraryScreen(clock: clock),
+      ),
       GoRoute(
         path: Routes.profile,
         builder: (context, state) => ProfileScreen(
