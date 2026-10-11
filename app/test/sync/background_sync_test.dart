@@ -248,7 +248,7 @@ void main() {
     final server = FakeSyncServer();
     final main = independent(file.path);
     await initAccountState(main, userId: 'user-1', deviceId: 'd1', user: server.user);
-    final habit = await LocalMutationService(main, clock: () => now).createHabit(
+    final habit = await LocalMutationService(main, clock: () => now).createHabitUnchecked(
       name: 'Stretch',
       type: 'binary',
       target: 1,

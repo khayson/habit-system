@@ -7,6 +7,7 @@ import 'package:habit/data/local_mutation_service.dart';
 import 'package:habit/data/local_view.dart';
 import 'package:habit/domain/calendar/local_date.dart';
 import 'package:habit/domain/habit_draft.dart';
+import 'package:habit/domain/provisional_type_rules.dart';
 import 'package:habit/sync/outbox_states.dart';
 import 'package:habit/sync/sync_transport.dart';
 
@@ -26,7 +27,7 @@ void main() {
   });
   tearDown(() => phone.db.close());
 
-  Future<String> water() => phone.writer.createHabit(
+  Future<String> water() => phone.writer.createHabitUnchecked(
     name: 'Water',
     type: 'quantity',
     target: '2000.000',
@@ -316,6 +317,78 @@ void main() {
         'habit.restore',
         'habit.update',
       ]);
+    });
+  });
+
+  group('I1: checks as the server counts, and a validated create', () {
+    final quantity = ProvisionalTypeRegistry.builtins().lookup('quantity');
+
+    test('an anchor date must exist: parsed and formatted back to the same text', () {
+      HabitDraft every2(String anchor) =>
+          draft(frequencyType: 'interval', config: {'every_n_days': 2, 'anchor_date': anchor});
+      expect(every2('2026-02-31').problems(quantity), [HabitDraftProblem.intervalAnchor]);
+      expect(every2('2026-2-03').problems(quantity), [HabitDraftProblem.intervalAnchor]);
+      expect(every2('2028-02-29').problems(quantity), isEmpty, reason: 'a leap day');
+    });
+
+    test('name and unit lengths count characters, not UTF-16 units', () {
+      const smile = '\u{1F642}'; // one character, two UTF-16 units
+      expect(draft(name: smile * 100, unit: smile * 24).problems(quantity), isEmpty);
+      expect(draft(name: smile * 101, unit: smile * 25).problems(quantity), [
+        HabitDraftProblem.nameTooLong,
+        HabitDraftProblem.unitTooLong,
+      ]);
+    });
+
+    test('createHabit refuses an invalid draft with its problems and writes nothing', () async {
+      await expectLater(
+        phone.writer.createHabit(draft(name: ' ', unit: null), type: 'quantity'),
+        throwsA(
+          isA<HabitEditFailure>()
+              .having((f) => f.kind, 'kind', HabitEditFailureKind.invalid)
+              .having((f) => f.problems, 'problems', [
+                HabitDraftProblem.nameRequired,
+                HabitDraftProblem.unitRequired,
+              ]),
+        ),
+      );
+      await expectLater(
+        phone.writer.createHabit(draft(), type: 'stopwatch'),
+        throwsA(
+          isA<HabitEditFailure>().having((f) => f.problems, 'problems', [
+            HabitDraftProblem.unknownType,
+          ]),
+        ),
+      );
+      expect(await phone.outbox(), isEmpty);
+    });
+
+    test('createHabit writes the habit and its reminder together, starting today', () async {
+      final id = await phone.writer.createHabit(
+        draft(
+          name: ' Water ',
+          frequencyType: 'weekdays',
+          config: {
+            'days': [5, 1, 3],
+          },
+        ),
+        type: 'quantity',
+        reminder: const NewReminder(localTime: '08:00', daysOfWeek: [1, 3, 5]),
+      );
+      final rows = await phone.outbox();
+      expect(rows.map((r) => (r.operation, r.entityId == id || payload(r)['habit_id'] == id)), [
+        ('habit.create', true),
+        ('reminder.create', true),
+      ]);
+      final create = payload(rows.first);
+      expect(
+        (create['name'], create['type'], create['start_local_date']),
+        ('Water', 'quantity', '2026-05-28'),
+      );
+      expect(create['frequency_config'], {
+        'days': [1, 3, 5],
+      }, reason: 'weekdays sorted');
+      expect(payload(rows.last)['timezone_mode'], 'device_zone');
     });
   });
 }

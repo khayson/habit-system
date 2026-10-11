@@ -42,7 +42,7 @@ void main() {
   }
 
   Future<String> habitWithReminder(LocalMutationService writer, String time) async {
-    final habit = await writer.createHabit(
+    final habit = await writer.createHabitUnchecked(
       name: 'Stretch',
       type: 'binary',
       target: 1,
@@ -182,7 +182,7 @@ void main() {
   test('a reminder added to an existing habit schedules at once', () async {
     final os = FakeNotificationScheduler();
     final (db, writer, scheduling) = await account('user-1', os);
-    final habit = await writer.createHabit(
+    final habit = await writer.createHabitUnchecked(
       name: 'Stretch',
       type: 'binary',
       target: 1,

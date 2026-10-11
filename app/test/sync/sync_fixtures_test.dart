@@ -88,7 +88,7 @@ void main() {
     expect(fixture['suites'], contains('dart'));
     final phone = await Device(FakeSyncServer()).init();
     phone.now = DateTime.parse(fixture['now'] as String);
-    final habit = await phone.writer.createHabit(
+    final habit = await phone.writer.createHabitUnchecked(
       name: 'Meditation',
       type: 'binary',
       target: 1,

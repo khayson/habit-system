@@ -45,7 +45,7 @@ void main() {
 
   /// A habit with an every-day reminder at [time], synced to both devices.
   Future<(String, String)> habitWithReminder({String time = '20:00'}) async {
-    final habit = await phone.writer.createHabit(
+    final habit = await phone.writer.createHabitUnchecked(
       name: 'Water',
       type: 'quantity',
       target: '2000.000',
@@ -144,7 +144,7 @@ void main() {
     () async {
       // Wednesday 27 May 2026, 10:00 in Los Angeles.
       phone.now = DateTime.utc(2026, 5, 27, 17);
-      final habit = await phone.writer.createHabit(
+      final habit = await phone.writer.createHabitUnchecked(
         name: 'Run',
         type: 'binary',
         target: 1,

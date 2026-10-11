@@ -24,7 +24,7 @@ void main() {
   setUp(() async {
     server = FakeSyncServer();
     phone = await Device(server).init();
-    water = await phone.writer.createHabit(
+    water = await phone.writer.createHabitUnchecked(
       name: 'Water',
       type: 'quantity',
       target: '2000.000',

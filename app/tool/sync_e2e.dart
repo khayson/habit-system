@@ -86,7 +86,7 @@ Future<void> main(List<String> args) async {
   await _scenario('setup', () async {
     await a.sync();
     today = await a.today();
-    habit = await a.writer.createHabit(
+    habit = await a.writer.createHabitUnchecked(
       name: 'Stretch',
       type: 'binary',
       target: 1,
@@ -186,7 +186,7 @@ Future<void> main(List<String> args) async {
     // A32 on real data: a habit backdated two days, checked in yesterday; after the closer
     // runs, the other device receives habit_progress and period_evaluation. This client has no
     // tables for them yet, so they must arrive as opaque entities (A31, invariant 13).
-    final derived = await a.writer.createHabit(
+    final derived = await a.writer.createHabitUnchecked(
       name: 'Read',
       type: 'binary',
       target: 1,
@@ -226,7 +226,7 @@ Future<void> main(List<String> args) async {
   await _scenario('dependency_pending', () async {
     // The habit and its first check-in travel in one request while the habit is not yet on
     // the server: the log must never be lost behind its parent.
-    final fresh = await a.writer.createHabit(
+    final fresh = await a.writer.createHabitUnchecked(
       name: 'Breathe',
       type: 'binary',
       target: 1,
@@ -378,7 +378,7 @@ Future<void> main(List<String> args) async {
     frequencyType: 'daily',
     frequencyConfig: const {},
   );
-  Future<String> water(_Device d) => d.writer.createHabit(
+  Future<String> water(_Device d) => d.writer.createHabitUnchecked(
     name: 'Water',
     type: 'quantity',
     target: '2000.000',

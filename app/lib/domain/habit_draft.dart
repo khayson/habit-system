@@ -76,7 +76,8 @@ class HabitDraft {
     final out = <HabitDraftProblem>[];
     final trimmed = name.trim();
     if (trimmed.isEmpty) out.add(HabitDraftProblem.nameRequired);
-    if (trimmed.length > nameMax) out.add(HabitDraftProblem.nameTooLong);
+    // I1: the server counts characters; one emoji is one, not two UTF-16 units.
+    if (trimmed.runes.length > nameMax) out.add(HabitDraftProblem.nameTooLong);
     if (!categories.contains(category)) out.add(HabitDraftProblem.category);
     if (rules == null) {
       out.add(HabitDraftProblem.unknownType);
@@ -86,7 +87,7 @@ class HabitDraft {
     final u = unit?.trim() ?? '';
     if (rules.takesUnit) {
       if (u.isEmpty) out.add(HabitDraftProblem.unitRequired);
-      if (u.length > unitMax) out.add(HabitDraftProblem.unitTooLong);
+      if (u.runes.length > unitMax) out.add(HabitDraftProblem.unitTooLong);
     } else if (u.isNotEmpty) {
       out.add(HabitDraftProblem.unitNotAllowed);
     }
@@ -115,15 +116,23 @@ class HabitDraft {
       case 'interval':
         final every = c['every_n_days'];
         final anchor = c['anchor_date'];
-        final anchorValid =
-            anchor is String &&
-            RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(anchor) &&
-            DateTime.tryParse(anchor) != null;
+        final anchorValid = anchor is String && isCalendarDate(anchor);
         if (every is! int || every < 1 || every > 365) return HabitDraftProblem.interval;
         return anchorValid ? null : HabitDraftProblem.intervalAnchor;
       default:
         return HabitDraftProblem.frequencyType;
     }
+  }
+
+  /// I1: "YYYY-MM-DD" naming a real day: parsed and formatted back, it must read the same
+  /// ("2026-02-31" would roll over to 3 March).
+  static bool isCalendarDate(String text) {
+    if (!RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(text)) return false;
+    final parsed = DateTime.tryParse('${text}T00:00:00Z');
+    if (parsed == null) return false;
+    String two(int n) => n.toString().padLeft(2, '0');
+    return '${parsed.year.toString().padLeft(4, '0')}-${two(parsed.month)}-${two(parsed.day)}' ==
+        text;
   }
 
   static bool _sameConfig(Map<dynamic, dynamic> a, Map<dynamic, dynamic> b) {

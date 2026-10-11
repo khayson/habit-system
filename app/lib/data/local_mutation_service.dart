@@ -29,8 +29,47 @@ class LocalMutationService {
     : clock = clock ?? (() => DateTime.now().toUtc()),
       _uuid = uuid ?? const Uuid();
 
-  /// habit.create with a client-generated UUIDv7 id (spec 05). Returns the habit id.
-  Future<String> createHabit({
+  /// Screen 08: habit.create from a [draft] of [type], validated as the server would (I1), with
+  /// an optional first reminder in the same transaction. Starts on [startLocalDate] (default:
+  /// today in the account calendar). Throws [HabitEditFailure.invalid] without writing.
+  Future<String> createHabit(
+    HabitDraft draft, {
+    required String type,
+    NewReminder? reminder,
+    LocalDate? startLocalDate,
+    ProvisionalTypeRegistry? types,
+  }) {
+    final problems = draft.problems((types ?? ProvisionalTypeRegistry.builtins()).lookup(type));
+    if (problems.isNotEmpty) return Future.error(HabitEditFailure.invalid(problems));
+    return db.transaction(() async {
+      final p = draft.toPayload();
+      final id = await createHabitUnchecked(
+        name: p['name']! as String,
+        type: type,
+        target: p['target_value']!,
+        unit: p['unit'] as String?,
+        category: p['category']! as String,
+        frequencyType: p['frequency_type']! as String,
+        frequencyConfig: (p['frequency_config']! as Map).cast<String, Object?>(),
+        startLocalDate: startLocalDate ?? (await _calendar()).today(clock()),
+      );
+      if (reminder != null) {
+        await createReminder(
+          habitId: id,
+          localTime: reminder.localTime,
+          daysOfWeek: reminder.daysOfWeek,
+          timezoneMode: 'device_zone',
+          enabled: reminder.enabled,
+        );
+      }
+      return id;
+    });
+  }
+
+  /// habit.create with a client-generated UUIDv7 id (spec 05), as given: no validation. The app
+  /// creates through [createHabit]; tests and tools use this to set up any state, including
+  /// what the server would refuse. Returns the habit id.
+  Future<String> createHabitUnchecked({
     required String name,
     required String type,
     required Object target,
@@ -653,7 +692,21 @@ class _HabitState {
   });
 }
 
-/// A habit edit, archive or restore that was not written (A34); 4.2b shows it.
+/// The first reminder of a habit created on screen 08. It follows the device's local time, as
+/// the design's row says.
+class NewReminder {
+  final String localTime;
+  final List<int> daysOfWeek;
+  final bool enabled;
+
+  const NewReminder({
+    required this.localTime,
+    this.daysOfWeek = const [1, 2, 3, 4, 5, 6, 7],
+    this.enabled = true,
+  });
+}
+
+/// A habit create, edit, archive or restore that was not written (A34, I1); 4.2b shows it.
 class HabitEditFailure implements Exception {
   final HabitEditFailureKind kind;
   final List<HabitDraftProblem> problems;

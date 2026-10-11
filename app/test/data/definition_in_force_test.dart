@@ -13,7 +13,7 @@ void main() {
   test('a version starting tomorrow changes nothing today, and applies on its date', () async {
     final server = FakeSyncServer();
     final phone = await Device(server).init();
-    final water = await phone.writer.createHabit(
+    final water = await phone.writer.createHabitUnchecked(
       name: 'Water',
       type: 'quantity',
       target: '2000.000',

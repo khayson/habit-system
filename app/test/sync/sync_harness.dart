@@ -63,7 +63,7 @@ class Device {
 
   Future<SyncOutcome> sync({bool force = false}) => engine().run(force: force);
 
-  Future<String> habit({String type = 'binary', Object target = 1}) => writer.createHabit(
+  Future<String> habit({String type = 'binary', Object target = 1}) => writer.createHabitUnchecked(
     name: 'Stretch',
     type: type,
     target: target,
