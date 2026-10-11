@@ -296,6 +296,27 @@ class DiscardedMutations extends Table {
   Set<Column> get primaryKey => {mutationId};
 }
 
+/// A36: a running or paused timer for a duration habit. A local draft only: never in the outbox,
+/// never synced, never leaves the device. One per habit; the database is per account.
+@DataClassName('TimerDraft')
+class TimerDrafts extends Table {
+  TextColumn get habitId => text()();
+
+  /// running or paused.
+  TextColumn get state => text()();
+
+  /// Time banked while not running.
+  IntColumn get elapsedMs => integer()();
+
+  /// UTC epoch ms of the last start or resume; null while paused.
+  IntColumn get runningSince => integer().nullable()();
+  IntColumn get createdAt => integer()();
+  IntColumn get updatedAt => integer()();
+
+  @override
+  Set<Column> get primaryKey => {habitId};
+}
+
 /// The per-account local working copy (one file per user id, see database_opener.dart).
 @DriftDatabase(
   tables: [
@@ -312,6 +333,7 @@ class DiscardedMutations extends Table {
     Reminders,
     ScheduledNotifications,
     PendingUploads,
+    TimerDrafts,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -369,7 +391,7 @@ class AppDatabase extends _$AppDatabase {
   Future<T> writeRetrying<T>(Future<T> Function() write) => transaction(write);
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -428,6 +450,10 @@ class AppDatabase extends _$AppDatabase {
       if (from < 8 && from >= 6) {
         // Phase 4.2a: the text key of each scheduled notification (B3).
         await m.addColumn(scheduledNotifications, scheduledNotifications.contentKey);
+      }
+      if (from < 9) {
+        // Phase 4.3a: timer drafts (A36).
+        await m.createTable(timerDrafts);
       }
     },
     beforeOpen: (details) async {

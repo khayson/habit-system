@@ -8244,6 +8244,437 @@ class PendingUploadsCompanion extends UpdateCompanion<PendingUpload> {
   }
 }
 
+class $TimerDraftsTable extends TimerDrafts
+    with TableInfo<$TimerDraftsTable, TimerDraft> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TimerDraftsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _habitIdMeta = const VerificationMeta(
+    'habitId',
+  );
+  @override
+  late final GeneratedColumn<String> habitId = GeneratedColumn<String>(
+    'habit_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _stateMeta = const VerificationMeta('state');
+  @override
+  late final GeneratedColumn<String> state = GeneratedColumn<String>(
+    'state',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _elapsedMsMeta = const VerificationMeta(
+    'elapsedMs',
+  );
+  @override
+  late final GeneratedColumn<int> elapsedMs = GeneratedColumn<int>(
+    'elapsed_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _runningSinceMeta = const VerificationMeta(
+    'runningSince',
+  );
+  @override
+  late final GeneratedColumn<int> runningSince = GeneratedColumn<int>(
+    'running_since',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    habitId,
+    state,
+    elapsedMs,
+    runningSince,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'timer_drafts';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TimerDraft> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('habit_id')) {
+      context.handle(
+        _habitIdMeta,
+        habitId.isAcceptableOrUnknown(data['habit_id']!, _habitIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_habitIdMeta);
+    }
+    if (data.containsKey('state')) {
+      context.handle(
+        _stateMeta,
+        state.isAcceptableOrUnknown(data['state']!, _stateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_stateMeta);
+    }
+    if (data.containsKey('elapsed_ms')) {
+      context.handle(
+        _elapsedMsMeta,
+        elapsedMs.isAcceptableOrUnknown(data['elapsed_ms']!, _elapsedMsMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_elapsedMsMeta);
+    }
+    if (data.containsKey('running_since')) {
+      context.handle(
+        _runningSinceMeta,
+        runningSince.isAcceptableOrUnknown(
+          data['running_since']!,
+          _runningSinceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {habitId};
+  @override
+  TimerDraft map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TimerDraft(
+      habitId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}habit_id'],
+      )!,
+      state: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}state'],
+      )!,
+      elapsedMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}elapsed_ms'],
+      )!,
+      runningSince: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}running_since'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $TimerDraftsTable createAlias(String alias) {
+    return $TimerDraftsTable(attachedDatabase, alias);
+  }
+}
+
+class TimerDraft extends DataClass implements Insertable<TimerDraft> {
+  final String habitId;
+
+  /// running or paused.
+  final String state;
+
+  /// Time banked while not running.
+  final int elapsedMs;
+
+  /// UTC epoch ms of the last start or resume; null while paused.
+  final int? runningSince;
+  final int createdAt;
+  final int updatedAt;
+  const TimerDraft({
+    required this.habitId,
+    required this.state,
+    required this.elapsedMs,
+    this.runningSince,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['habit_id'] = Variable<String>(habitId);
+    map['state'] = Variable<String>(state);
+    map['elapsed_ms'] = Variable<int>(elapsedMs);
+    if (!nullToAbsent || runningSince != null) {
+      map['running_since'] = Variable<int>(runningSince);
+    }
+    map['created_at'] = Variable<int>(createdAt);
+    map['updated_at'] = Variable<int>(updatedAt);
+    return map;
+  }
+
+  TimerDraftsCompanion toCompanion(bool nullToAbsent) {
+    return TimerDraftsCompanion(
+      habitId: Value(habitId),
+      state: Value(state),
+      elapsedMs: Value(elapsedMs),
+      runningSince: runningSince == null && nullToAbsent
+          ? const Value.absent()
+          : Value(runningSince),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory TimerDraft.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TimerDraft(
+      habitId: serializer.fromJson<String>(json['habitId']),
+      state: serializer.fromJson<String>(json['state']),
+      elapsedMs: serializer.fromJson<int>(json['elapsedMs']),
+      runningSince: serializer.fromJson<int?>(json['runningSince']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      updatedAt: serializer.fromJson<int>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'habitId': serializer.toJson<String>(habitId),
+      'state': serializer.toJson<String>(state),
+      'elapsedMs': serializer.toJson<int>(elapsedMs),
+      'runningSince': serializer.toJson<int?>(runningSince),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'updatedAt': serializer.toJson<int>(updatedAt),
+    };
+  }
+
+  TimerDraft copyWith({
+    String? habitId,
+    String? state,
+    int? elapsedMs,
+    Value<int?> runningSince = const Value.absent(),
+    int? createdAt,
+    int? updatedAt,
+  }) => TimerDraft(
+    habitId: habitId ?? this.habitId,
+    state: state ?? this.state,
+    elapsedMs: elapsedMs ?? this.elapsedMs,
+    runningSince: runningSince.present ? runningSince.value : this.runningSince,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  TimerDraft copyWithCompanion(TimerDraftsCompanion data) {
+    return TimerDraft(
+      habitId: data.habitId.present ? data.habitId.value : this.habitId,
+      state: data.state.present ? data.state.value : this.state,
+      elapsedMs: data.elapsedMs.present ? data.elapsedMs.value : this.elapsedMs,
+      runningSince: data.runningSince.present
+          ? data.runningSince.value
+          : this.runningSince,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TimerDraft(')
+          ..write('habitId: $habitId, ')
+          ..write('state: $state, ')
+          ..write('elapsedMs: $elapsedMs, ')
+          ..write('runningSince: $runningSince, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    habitId,
+    state,
+    elapsedMs,
+    runningSince,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TimerDraft &&
+          other.habitId == this.habitId &&
+          other.state == this.state &&
+          other.elapsedMs == this.elapsedMs &&
+          other.runningSince == this.runningSince &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class TimerDraftsCompanion extends UpdateCompanion<TimerDraft> {
+  final Value<String> habitId;
+  final Value<String> state;
+  final Value<int> elapsedMs;
+  final Value<int?> runningSince;
+  final Value<int> createdAt;
+  final Value<int> updatedAt;
+  final Value<int> rowid;
+  const TimerDraftsCompanion({
+    this.habitId = const Value.absent(),
+    this.state = const Value.absent(),
+    this.elapsedMs = const Value.absent(),
+    this.runningSince = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TimerDraftsCompanion.insert({
+    required String habitId,
+    required String state,
+    required int elapsedMs,
+    this.runningSince = const Value.absent(),
+    required int createdAt,
+    required int updatedAt,
+    this.rowid = const Value.absent(),
+  }) : habitId = Value(habitId),
+       state = Value(state),
+       elapsedMs = Value(elapsedMs),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<TimerDraft> custom({
+    Expression<String>? habitId,
+    Expression<String>? state,
+    Expression<int>? elapsedMs,
+    Expression<int>? runningSince,
+    Expression<int>? createdAt,
+    Expression<int>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (habitId != null) 'habit_id': habitId,
+      if (state != null) 'state': state,
+      if (elapsedMs != null) 'elapsed_ms': elapsedMs,
+      if (runningSince != null) 'running_since': runningSince,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TimerDraftsCompanion copyWith({
+    Value<String>? habitId,
+    Value<String>? state,
+    Value<int>? elapsedMs,
+    Value<int?>? runningSince,
+    Value<int>? createdAt,
+    Value<int>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return TimerDraftsCompanion(
+      habitId: habitId ?? this.habitId,
+      state: state ?? this.state,
+      elapsedMs: elapsedMs ?? this.elapsedMs,
+      runningSince: runningSince ?? this.runningSince,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (habitId.present) {
+      map['habit_id'] = Variable<String>(habitId.value);
+    }
+    if (state.present) {
+      map['state'] = Variable<String>(state.value);
+    }
+    if (elapsedMs.present) {
+      map['elapsed_ms'] = Variable<int>(elapsedMs.value);
+    }
+    if (runningSince.present) {
+      map['running_since'] = Variable<int>(runningSince.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TimerDraftsCompanion(')
+          ..write('habitId: $habitId, ')
+          ..write('state: $state, ')
+          ..write('elapsedMs: $elapsedMs, ')
+          ..write('runningSince: $runningSince, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -8265,6 +8696,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ScheduledNotificationsTable scheduledNotifications =
       $ScheduledNotificationsTable(this);
   late final $PendingUploadsTable pendingUploads = $PendingUploadsTable(this);
+  late final $TimerDraftsTable timerDrafts = $TimerDraftsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -8283,6 +8715,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     reminders,
     scheduledNotifications,
     pendingUploads,
+    timerDrafts,
   ];
 }
 
@@ -12384,6 +12817,236 @@ typedef $$PendingUploadsTableProcessedTableManager =
       PendingUpload,
       PrefetchHooks Function()
     >;
+typedef $$TimerDraftsTableCreateCompanionBuilder =
+    TimerDraftsCompanion Function({
+      required String habitId,
+      required String state,
+      required int elapsedMs,
+      Value<int?> runningSince,
+      required int createdAt,
+      required int updatedAt,
+      Value<int> rowid,
+    });
+typedef $$TimerDraftsTableUpdateCompanionBuilder =
+    TimerDraftsCompanion Function({
+      Value<String> habitId,
+      Value<String> state,
+      Value<int> elapsedMs,
+      Value<int?> runningSince,
+      Value<int> createdAt,
+      Value<int> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$TimerDraftsTableFilterComposer
+    extends Composer<_$AppDatabase, $TimerDraftsTable> {
+  $$TimerDraftsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get habitId => $composableBuilder(
+    column: $table.habitId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get state => $composableBuilder(
+    column: $table.state,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get elapsedMs => $composableBuilder(
+    column: $table.elapsedMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get runningSince => $composableBuilder(
+    column: $table.runningSince,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$TimerDraftsTableOrderingComposer
+    extends Composer<_$AppDatabase, $TimerDraftsTable> {
+  $$TimerDraftsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get habitId => $composableBuilder(
+    column: $table.habitId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get state => $composableBuilder(
+    column: $table.state,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get elapsedMs => $composableBuilder(
+    column: $table.elapsedMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get runningSince => $composableBuilder(
+    column: $table.runningSince,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$TimerDraftsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TimerDraftsTable> {
+  $$TimerDraftsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get habitId =>
+      $composableBuilder(column: $table.habitId, builder: (column) => column);
+
+  GeneratedColumn<String> get state =>
+      $composableBuilder(column: $table.state, builder: (column) => column);
+
+  GeneratedColumn<int> get elapsedMs =>
+      $composableBuilder(column: $table.elapsedMs, builder: (column) => column);
+
+  GeneratedColumn<int> get runningSince => $composableBuilder(
+    column: $table.runningSince,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$TimerDraftsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TimerDraftsTable,
+          TimerDraft,
+          $$TimerDraftsTableFilterComposer,
+          $$TimerDraftsTableOrderingComposer,
+          $$TimerDraftsTableAnnotationComposer,
+          $$TimerDraftsTableCreateCompanionBuilder,
+          $$TimerDraftsTableUpdateCompanionBuilder,
+          (
+            TimerDraft,
+            BaseReferences<_$AppDatabase, $TimerDraftsTable, TimerDraft>,
+          ),
+          TimerDraft,
+          PrefetchHooks Function()
+        > {
+  $$TimerDraftsTableTableManager(_$AppDatabase db, $TimerDraftsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TimerDraftsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TimerDraftsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TimerDraftsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> habitId = const Value.absent(),
+                Value<String> state = const Value.absent(),
+                Value<int> elapsedMs = const Value.absent(),
+                Value<int?> runningSince = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TimerDraftsCompanion(
+                habitId: habitId,
+                state: state,
+                elapsedMs: elapsedMs,
+                runningSince: runningSince,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String habitId,
+                required String state,
+                required int elapsedMs,
+                Value<int?> runningSince = const Value.absent(),
+                required int createdAt,
+                required int updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => TimerDraftsCompanion.insert(
+                habitId: habitId,
+                state: state,
+                elapsedMs: elapsedMs,
+                runningSince: runningSince,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$TimerDraftsTable, TimerDraft>(table),
+                  BaseReferences<_$AppDatabase, $TimerDraftsTable, TimerDraft>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$TimerDraftsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TimerDraftsTable,
+      TimerDraft,
+      $$TimerDraftsTableFilterComposer,
+      $$TimerDraftsTableOrderingComposer,
+      $$TimerDraftsTableAnnotationComposer,
+      $$TimerDraftsTableCreateCompanionBuilder,
+      $$TimerDraftsTableUpdateCompanionBuilder,
+      (
+        TimerDraft,
+        BaseReferences<_$AppDatabase, $TimerDraftsTable, TimerDraft>,
+      ),
+      TimerDraft,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -12417,4 +13080,6 @@ class $AppDatabaseManager {
       );
   $$PendingUploadsTableTableManager get pendingUploads =>
       $$PendingUploadsTableTableManager(_db, _db.pendingUploads);
+  $$TimerDraftsTableTableManager get timerDrafts =>
+      $$TimerDraftsTableTableManager(_db, _db.timerDrafts);
 }

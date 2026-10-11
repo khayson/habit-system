@@ -24,6 +24,44 @@ void main() {
     }
   });
 
+  test('v8 -> v9 adds timer drafts; outbox, scheduled rows and the cursor survive', () async {
+    final v9 = AppDatabase(NativeDatabase(file));
+    await v9.customStatement(
+      "INSERT INTO sync_state (id, user_id, device_id, cursor) VALUES (1, 'u', 'd', 'c:12')",
+    );
+    await v9.customStatement(
+      'INSERT INTO outbox (mutation_id, entity, entity_id, operation, occurred_at, payload, '
+      "state, created_at) VALUES ('m1', 'habit_log', 'l1', 'log.increment', "
+      "'2026-05-28T00:00:00Z', '{}', 'pending', 0)",
+    );
+    await v9.customStatement(
+      'INSERT INTO scheduled_notifications (platform_id, reminder_id, habit_id, slot_date, '
+      "fire_at, content_key) VALUES (7, 'r1', 'h1', '2026-05-29', 1780000000000, 'k')",
+    );
+    await dropV9(v9);
+    await v9.customStatement('PRAGMA user_version = 8');
+    await v9.close();
+
+    final upgraded = AppDatabase(NativeDatabase(file));
+    expect(await upgraded.select(upgraded.timerDrafts).get(), isEmpty);
+    await upgraded
+        .into(upgraded.timerDrafts)
+        .insert(
+          TimerDraftsCompanion.insert(
+            habitId: 'h1',
+            state: 'paused',
+            elapsedMs: 5000,
+            createdAt: 1,
+            updatedAt: 1,
+          ),
+        );
+    expect((await upgraded.select(upgraded.timerDrafts).getSingle()).elapsedMs, 5000);
+    expect((await upgraded.select(upgraded.outbox).getSingle()).operation, 'log.increment');
+    expect((await upgraded.select(upgraded.scheduledNotifications).getSingle()).contentKey, 'k');
+    expect((await upgraded.select(upgraded.syncState).getSingle()).cursor, 'c:12');
+    await upgraded.close();
+  });
+
   test(
     'v7 -> v8 adds the notification text key; scheduled rows, outbox and data survive',
     () async {
@@ -281,8 +319,14 @@ void main() {
   });
 }
 
-/// Takes a current database back to v7: drops what v8 added.
+/// Takes a current database back to v8: drops what v9 added.
+Future<void> dropV9(AppDatabase db) async {
+  await db.customStatement('DROP TABLE timer_drafts');
+}
+
+/// Takes a current database back to v7: drops what v8 and v9 added.
 Future<void> dropV8(AppDatabase db) async {
+  await dropV9(db);
   await db.customStatement('ALTER TABLE scheduled_notifications DROP COLUMN content_key');
 }
 
