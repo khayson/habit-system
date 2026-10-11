@@ -4,9 +4,11 @@ import 'package:drift/drift.dart' show Value;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:habit/data/app_database.dart';
 import 'package:habit/data/local_mutation_service.dart';
+import 'package:habit/data/local_view.dart';
 import 'package:habit/domain/calendar/local_date.dart';
 import 'package:habit/domain/habit_draft.dart';
 import 'package:habit/sync/outbox_states.dart';
+import 'package:habit/sync/sync_transport.dart';
 
 import '../support/fake_sync_server.dart';
 import '../sync/sync_harness.dart';
@@ -251,4 +253,69 @@ void main() {
       expect(await phone.outbox(), isEmpty);
     },
   );
+
+  test(
+    'L1: an edit after a queued update never folds into a create that went back to pending',
+    () async {
+      final id = await water();
+      // The create is on its way when the first edit is made: that edit is its own row.
+      await (phone.db.update(phone.db.outbox))
+          .write(const OutboxCompanion(state: Value(OutboxState.inFlight)));
+      await phone.writer.updateHabit(id, draft(name: 'Water daily'));
+      // The send fails: the create returns to pending, ahead of the queued update.
+      server.failNextSync.add(const SyncTransportException(SyncFailure.network));
+      await phone.sync(force: true);
+      expect((await habitRows(id)).map((r) => (r.operation, r.state)), [
+        ('habit.create', OutboxState.pending),
+        ('habit.update', OutboxState.pending),
+      ]);
+      final update = (await habitRows(id)).last;
+
+      await phone.writer.updateHabit(id, draft(name: 'Water, every day'));
+      final rows = await habitRows(id);
+      expect(rows.map((r) => r.operation), ['habit.create', 'habit.update']);
+      expect(payload(rows[0])['name'], 'Water', reason: 'the create is untouched');
+      expect(
+        (rows[1].mutationId, rows[1].baseVersion, payload(rows[1])['name']),
+        (update.mutationId, update.baseVersion, 'Water, every day'),
+        reason: 'the queued update is rewritten in place',
+      );
+      final shown = (await LocalView(phone.db).habits(deviceNow: phone.now)).single;
+      expect(shown.payload['name'], 'Water, every day');
+
+      await phone.sync(force: true);
+      expect(server.habits[id]!['name'], 'Water, every day');
+      expect(await phone.outbox(), isEmpty);
+    },
+  );
+
+  group('L2: an archived habit cannot be edited', () {
+    Matcher archived() => throwsA(
+      isA<HabitEditFailure>().having((f) => f.kind, 'kind', HabitEditFailureKind.archived),
+    );
+
+    test('a confirmed archive', () async {
+      final id = await water();
+      await phone.writer.archiveHabit(id);
+      await phone.sync(force: true);
+      await expectLater(phone.writer.updateHabit(id, draft(name: 'Water daily')), archived());
+      expect(await habitRows(id), isEmpty);
+    });
+
+    test('a queued archive, until a later restore undoes it', () async {
+      final id = await water();
+      await phone.sync(force: true);
+      await phone.writer.archiveHabit(id);
+      await expectLater(phone.writer.updateHabit(id, draft(name: 'Water daily')), archived());
+      expect((await habitRows(id)).map((r) => r.operation), ['habit.archive']);
+
+      await phone.writer.restoreHabit(id);
+      await phone.writer.updateHabit(id, draft(name: 'Water daily'));
+      expect((await habitRows(id)).map((r) => r.operation), [
+        'habit.archive',
+        'habit.restore',
+        'habit.update',
+      ]);
+    });
+  });
 }

@@ -71,25 +71,32 @@ class LocalMutationService {
   /// habit.update (A34): the whole editable state (six keys, never `type`), validated as the
   /// server would. Writes nothing when [draft] equals what the habit shows. While the habit's
   /// habit.create is unsent, the create's payload is patched instead; a second unsent update
-  /// coalesces into the first. Throws [HabitEditFailure] without writing.
+  /// coalesces into the first. Throws [HabitEditFailure] without writing (also while the habit
+  /// shows as archived, L2).
   Future<void> updateHabit(String habitId, HabitDraft draft, {ProvisionalTypeRegistry? types}) {
     return db.transaction(() async {
       final state = await _habitState(habitId);
+      if (state.archived) throw const HabitEditFailure.archived();
       final rules = (types ?? ProvisionalTypeRegistry.builtins()).lookup(state.type);
       final problems = draft.problems(rules);
       if (problems.isNotEmpty) throw HabitEditFailure.invalid(problems);
       if (draft.sameAs(HabitDraft.fromWire(state.shown), rules)) return;
       final payload = draft.toPayload();
 
+      // L1: fold into the unsent create only while it is the newest queued row for the habit; a
+      // row queued after it (an update made while the create was in flight) would replay over it.
+      final unacked = state.rows.where((r) => OutboxState.unacked.contains(r.state)).toList();
       final create = state.unsentCreate;
-      if (create != null) {
+      if (create != null && unacked.last.seq == create.seq) {
         final merged = (jsonDecode(create.payload) as Map).cast<String, Object?>()..addAll(payload);
         await _rewrite(create, merged);
         return;
       }
-      final last = state.rows.isEmpty ? null : state.rows.last;
-      if (last != null && last.operation == 'habit.update' && last.state == OutboxState.pending) {
-        await _rewrite(last, payload);
+      // Otherwise the newest queued update, while unsent, takes the whole new state (same
+      // mutation id and base version); archive and restore rows after it carry no fields.
+      final update = unacked.where((r) => r.operation == 'habit.update').lastOrNull;
+      if (update != null && update.state == OutboxState.pending) {
+        await _rewrite(update, payload);
         return;
       }
       await _append(
@@ -656,6 +663,7 @@ class HabitEditFailure implements Exception {
     : this._(HabitEditFailureKind.invalid, problems);
   const HabitEditFailure.needsAttention() : this._(HabitEditFailureKind.needsAttention, const []);
   const HabitEditFailure.unknownHabit() : this._(HabitEditFailureKind.unknownHabit, const []);
+  const HabitEditFailure.archived() : this._(HabitEditFailureKind.archived, const []);
 
   @override
   String toString() => 'HabitEditFailure($kind, $problems)';
@@ -670,6 +678,10 @@ enum HabitEditFailureKind {
 
   /// No such habit on this device.
   unknownHabit,
+
+  /// The habit shows as archived (confirmed, or a queued archive not undone by a restore):
+  /// restore it first (L2).
+  archived,
 }
 
 class LocalWrite {
