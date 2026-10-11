@@ -230,11 +230,14 @@ class _TimerState extends State<_Timer> {
       ),
       child: Text(label),
     );
+    // Design 33 / 36: the secondary action is a light green button with green text.
     Widget tonal(String label, VoidCallback? onPressed) => SizedBox(
       width: double.infinity,
-      child: FilledButton.tonal(
+      child: FilledButton(
         onPressed: onPressed,
         style: FilledButton.styleFrom(
+          backgroundColor: tokens.positiveBg,
+          foregroundColor: tokens.positiveInk,
           minimumSize: const Size(HabitSize.minTarget, HabitSize.control),
         ),
         child: Text(label, textAlign: TextAlign.center),
