@@ -16,7 +16,6 @@ import '../l10n/generated/app_localizations.dart';
 import '../providers/account_context.dart';
 import '../providers/stream_model.dart';
 import '../widgets/habit_form.dart';
-import '../widgets/habit_form_text.dart';
 import '../widgets/habit_format.dart';
 import '../widgets/habit_ui.dart';
 import '../widgets/schedule_text.dart';
@@ -120,10 +119,7 @@ class _EditState extends State<_Edit> {
       if (!mounted) return;
       switch (e.kind) {
         case HabitEditFailureKind.invalid:
-          final words = HabitFormText(l10n);
-          setState(
-            () => _errors = HabitFormErrors(name: e.problems.map(words.problem).firstOrNull),
-          );
+          setState(() => _errors = HabitFormErrors.fromProblems(l10n, e.problems));
         case HabitEditFailureKind.needsAttention:
           // The app's place for changes that need a look: the sync queue (screen 18).
           context.push(Routes.queue);

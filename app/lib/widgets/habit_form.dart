@@ -20,6 +20,34 @@ class HabitFormErrors {
 
   static const none = HabitFormErrors();
 
+  /// Each problem under its own field, the first per field (4.2b I2); nothing lands under the
+  /// name by default.
+  factory HabitFormErrors.fromProblems(AppLocalizations l10n, List<HabitDraftProblem> problems) {
+    final words = HabitFormText(l10n);
+    String? first(Iterable<HabitDraftProblem> of) {
+      final p = problems.where(of.contains).firstOrNull;
+      return p == null ? null : words.problem(p);
+    }
+
+    return HabitFormErrors(
+      name: first(const [HabitDraftProblem.nameRequired, HabitDraftProblem.nameTooLong]),
+      amount: first(const [HabitDraftProblem.target, HabitDraftProblem.unknownType]),
+      unit: first(const [
+        HabitDraftProblem.unitRequired,
+        HabitDraftProblem.unitTooLong,
+        HabitDraftProblem.unitNotAllowed,
+      ]),
+      category: first(const [HabitDraftProblem.category]),
+      schedule: first(const [
+        HabitDraftProblem.frequencyType,
+        HabitDraftProblem.weekdays,
+        HabitDraftProblem.weeklyCount,
+        HabitDraftProblem.interval,
+        HabitDraftProblem.intervalAnchor,
+      ]),
+    );
+  }
+
   bool get any =>
       name != null || amount != null || unit != null || category != null || schedule != null;
 
@@ -53,37 +81,19 @@ class HabitFormErrors {
     frequencyType: frequency.type,
     frequencyConfig: frequency.config,
   );
-  final problems = draft.problems(type.rules);
-  String? first(Iterable<HabitDraftProblem> of) {
-    final p = problems.where(of.contains).firstOrNull;
-    return p == null ? null : words.problem(p);
-  }
-
-  final name0 = first(const [HabitDraftProblem.nameRequired, HabitDraftProblem.nameTooLong]);
-  final amount = parsed.amountError != null
-      ? words.target(parsed.amountError!)
-      : (parsed.ok ? first(const [HabitDraftProblem.target]) : null);
-  final unit = parsed.unitError != null
-      ? words.target(parsed.unitError!)
-      : (parsed.ok
-            ? first(const [
-                HabitDraftProblem.unitRequired,
-                HabitDraftProblem.unitTooLong,
-                HabitDraftProblem.unitNotAllowed,
-              ])
-            : null);
+  final byField = HabitFormErrors.fromProblems(l10n, draft.problems(type.rules));
+  // The registry's own message wins for the target fields; a refused parse leaves the draft's
+  // target empty, so its "target" problem is not shown twice.
   final errors = HabitFormErrors(
-    name: name0,
-    amount: amount,
-    unit: unit,
-    category: first(const [HabitDraftProblem.category]),
-    schedule: first(const [
-      HabitDraftProblem.frequencyType,
-      HabitDraftProblem.weekdays,
-      HabitDraftProblem.weeklyCount,
-      HabitDraftProblem.interval,
-      HabitDraftProblem.intervalAnchor,
-    ]),
+    name: byField.name,
+    amount: parsed.amountError != null
+        ? words.target(parsed.amountError!)
+        : (parsed.ok ? byField.amount : null),
+    unit: parsed.unitError != null
+        ? words.target(parsed.unitError!)
+        : (parsed.ok ? byField.unit : null),
+    category: byField.category,
+    schedule: byField.schedule,
   );
   return (draft: errors.any ? null : draft, errors: errors);
 }

@@ -13,7 +13,6 @@ import '../habit_types/habit_type_ui.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../providers/account_context.dart';
 import '../widgets/habit_form.dart';
-import '../widgets/habit_form_text.dart';
 import '../widgets/habit_format.dart';
 import '../widgets/habit_ui.dart';
 import '../widgets/schedule_text.dart';
@@ -97,11 +96,7 @@ class _CreateHabitScreenState extends State<CreateHabitScreen> {
     } on HabitEditFailure catch (e) {
       // The same rules ran above; kept so a refusal is never silent.
       if (mounted) {
-        setState(
-          () => _errors = HabitFormErrors(
-            name: e.problems.map(HabitFormText(l10n).problem).firstOrNull,
-          ),
-        );
+        setState(() => _errors = HabitFormErrors.fromProblems(l10n, e.problems));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
