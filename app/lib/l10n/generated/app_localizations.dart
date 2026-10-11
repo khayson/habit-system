@@ -2221,6 +2221,198 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose a start date.'**
   String get problemIntervalAnchor;
+
+  /// No description provided for @freqTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A flexible schedule'**
+  String get freqTitle;
+
+  /// No description provided for @freqSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose how often {habit} fits your week.'**
+  String freqSubtitle(String habit);
+
+  /// No description provided for @freqSubtitleNoName.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose how often this habit fits your week.'**
+  String get freqSubtitleNoName;
+
+  /// No description provided for @freqDailyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Every day'**
+  String get freqDailyTitle;
+
+  /// No description provided for @freqDailyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A daily routine'**
+  String get freqDailyBody;
+
+  /// No description provided for @freqWeekdaysTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Specific weekdays'**
+  String get freqWeekdaysTitle;
+
+  /// No description provided for @freqWeekdaysBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick the days that work for you'**
+  String get freqWeekdaysBody;
+
+  /// No description provided for @freqWeeklyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Times per week'**
+  String get freqWeeklyTitle;
+
+  /// No description provided for @freqWeeklyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Any 1 day in a local week} other{Any {count} distinct days in a local week}}'**
+  String freqWeeklyBody(int count);
+
+  /// No description provided for @freqIntervalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom interval'**
+  String get freqIntervalTitle;
+
+  /// No description provided for @freqIntervalBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Every N days from a start date'**
+  String get freqIntervalBody;
+
+  /// No description provided for @freqUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Use this schedule'**
+  String get freqUse;
+
+  /// No description provided for @freqSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected'**
+  String get freqSelected;
+
+  /// No description provided for @freqNotSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Not selected'**
+  String get freqNotSelected;
+
+  /// No description provided for @freqDailyDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Each local day counts once'**
+  String get freqDailyDetail;
+
+  /// No description provided for @freqWeekdaysDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No days chosen yet} =1{1 day each week} other{{count} days each week}}'**
+  String freqWeekdaysDetail(int count);
+
+  /// No description provided for @freqWeeklySummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Once each week} other{{count} times each week}}'**
+  String freqWeeklySummary(int count);
+
+  /// No description provided for @freqWeeklyDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Monday–Sunday · each day counts once'**
+  String get freqWeeklyDetail;
+
+  /// No description provided for @freqIntervalSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{Every day} other{Every {days} days}}'**
+  String freqIntervalSummary(int days);
+
+  /// No description provided for @freqIntervalDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting {date}'**
+  String freqIntervalDetail(String date);
+
+  /// No description provided for @freqIntervalFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'{schedule} from {date}'**
+  String freqIntervalFrom(String schedule, String date);
+
+  /// No description provided for @freqWeekInfoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The week is still yours'**
+  String get freqWeekInfoTitle;
+
+  /// No description provided for @freqWeekInfoBody.
+  ///
+  /// In en, this message translates to:
+  /// **'An unfinished week is pending, not missed.'**
+  String get freqWeekInfoBody;
+
+  /// No description provided for @freqDaysLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Days'**
+  String get freqDaysLabel;
+
+  /// No description provided for @freqTimesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Times per week'**
+  String get freqTimesLabel;
+
+  /// No description provided for @freqEveryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat every'**
+  String get freqEveryLabel;
+
+  /// No description provided for @freqEveryValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{1 day} other{{days} days}}'**
+  String freqEveryValue(int days);
+
+  /// No description provided for @freqStartDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Start date'**
+  String get freqStartDate;
+
+  /// No description provided for @freqChooseStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the start date'**
+  String get freqChooseStart;
+
+  /// No description provided for @freqFewer.
+  ///
+  /// In en, this message translates to:
+  /// **'Fewer'**
+  String get freqFewer;
+
+  /// No description provided for @freqMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get freqMore;
+
+  /// No description provided for @listAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'{head} and {last}'**
+  String listAnd(String head, String last);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

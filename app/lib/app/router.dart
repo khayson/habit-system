@@ -9,6 +9,7 @@ import '../services/photo_picker.dart';
 import '../screens/app_shell.dart';
 import '../screens/create_account_screen.dart';
 import '../screens/create_habit_screen.dart';
+import '../screens/frequency_screen.dart';
 import '../screens/habit_detail_screen.dart';
 import '../screens/habit_library_screen.dart';
 import '../screens/profile_screen.dart';
@@ -36,6 +37,9 @@ abstract final class Routes {
     queryParameters: date == null ? null : {'date': date},
   ).toString();
   static const queue = '/sync';
+
+  /// Screen 10 for 08 and 09 (extra: FrequencyRequest); pops a FrequencyChoice.
+  static const frequency = '/frequency';
 
   /// Screen 11 for 08's reminder draft (extra: (ReminderDraft?, habit name)).
   static const reminderEditor = '/reminders/edit';
@@ -151,6 +155,10 @@ List<RouteBase> appRoutes({
           : (null, '');
       return ReminderEditorScreen(draft: draft, habitName: name, clock: clock);
     },
+  ),
+  GoRoute(
+    path: Routes.frequency,
+    builder: (context, state) => FrequencyScreen(request: state.extra! as FrequencyRequest),
   ),
   GoRoute(path: Routes.queue, builder: (context, state) => const SyncQueueScreen()),
   GoRoute(path: Routes.status, builder: (context, state) => const ServerStatusScreen()),

@@ -410,3 +410,72 @@ class FieldErrorText extends StatelessWidget {
     );
   }
 }
+
+/// A labelled whole-number stepper (10's times per week and interval): two 44 px buttons and the
+/// value in words. Screen readers get one adjustable control with its value.
+class CountStepper extends StatelessWidget {
+  final String label;
+  final int value;
+  final String valueText;
+  final int min;
+  final int max;
+  final ValueChanged<int> onChanged;
+
+  const CountStepper({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.valueText,
+    required this.min,
+    required this.max,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final text = Theme.of(context).textTheme;
+    final tokens = HabitTokens.of(context);
+    final canLower = value > min;
+    final canRaise = value < max;
+    Widget button(IconData icon, String tooltip, bool enabled, int to) => IconButton.outlined(
+      onPressed: enabled ? () => onChanged(to) : null,
+      tooltip: tooltip,
+      icon: Icon(icon),
+      constraints: const BoxConstraints(
+        minWidth: HabitSize.minTarget,
+        minHeight: HabitSize.minTarget,
+      ),
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        FieldLabel(label),
+        Semantics(
+          container: true,
+          label: label,
+          value: valueText,
+          increasedValue: canRaise ? '${value + 1}' : null,
+          decreasedValue: canLower ? '${value - 1}' : null,
+          onIncrease: canRaise ? () => onChanged(value + 1) : null,
+          onDecrease: canLower ? () => onChanged(value - 1) : null,
+          child: Row(
+            children: [
+              button(Icons.remove, l10n.freqFewer, canLower, value - 1),
+              Expanded(
+                child: ExcludeSemantics(
+                  child: Text(
+                    valueText,
+                    textAlign: TextAlign.center,
+                    style: text.titleMedium?.copyWith(color: tokens.ink),
+                  ),
+                ),
+              ),
+              button(Icons.add, l10n.freqMore, canRaise, value + 1),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}

@@ -1238,4 +1238,149 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get problemIntervalAnchor => 'Choose a start date.';
+
+  @override
+  String get freqTitle => 'A flexible schedule';
+
+  @override
+  String freqSubtitle(String habit) {
+    return 'Choose how often $habit fits your week.';
+  }
+
+  @override
+  String get freqSubtitleNoName => 'Choose how often this habit fits your week.';
+
+  @override
+  String get freqDailyTitle => 'Every day';
+
+  @override
+  String get freqDailyBody => 'A daily routine';
+
+  @override
+  String get freqWeekdaysTitle => 'Specific weekdays';
+
+  @override
+  String get freqWeekdaysBody => 'Pick the days that work for you';
+
+  @override
+  String get freqWeeklyTitle => 'Times per week';
+
+  @override
+  String freqWeeklyBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Any $count distinct days in a local week',
+      one: 'Any 1 day in a local week',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get freqIntervalTitle => 'Custom interval';
+
+  @override
+  String get freqIntervalBody => 'Every N days from a start date';
+
+  @override
+  String get freqUse => 'Use this schedule';
+
+  @override
+  String get freqSelected => 'Selected';
+
+  @override
+  String get freqNotSelected => 'Not selected';
+
+  @override
+  String get freqDailyDetail => 'Each local day counts once';
+
+  @override
+  String freqWeekdaysDetail(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days each week',
+      one: '1 day each week',
+      zero: 'No days chosen yet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String freqWeeklySummary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count times each week',
+      one: 'Once each week',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get freqWeeklyDetail => 'Monday–Sunday · each day counts once';
+
+  @override
+  String freqIntervalSummary(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Every $days days',
+      one: 'Every day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String freqIntervalDetail(String date) {
+    return 'Starting $date';
+  }
+
+  @override
+  String freqIntervalFrom(String schedule, String date) {
+    return '$schedule from $date';
+  }
+
+  @override
+  String get freqWeekInfoTitle => 'The week is still yours';
+
+  @override
+  String get freqWeekInfoBody => 'An unfinished week is pending, not missed.';
+
+  @override
+  String get freqDaysLabel => 'Days';
+
+  @override
+  String get freqTimesLabel => 'Times per week';
+
+  @override
+  String get freqEveryLabel => 'Repeat every';
+
+  @override
+  String freqEveryValue(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days',
+      one: '1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get freqStartDate => 'Start date';
+
+  @override
+  String get freqChooseStart => 'Choose the start date';
+
+  @override
+  String get freqFewer => 'Fewer';
+
+  @override
+  String get freqMore => 'More';
+
+  @override
+  String listAnd(String head, String last) {
+    return '$head and $last';
+  }
 }
