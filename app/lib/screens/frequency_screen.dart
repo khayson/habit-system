@@ -178,23 +178,36 @@ class _FrequencyScreenState extends State<FrequencyScreen> {
           if (_type == FrequencyChoice.weekdaysType) ...[
             const SizedBox(height: HabitSpace.s16),
             FieldLabel(l10n.freqDaysLabel),
-            Wrap(
-              spacing: HabitSpace.s4,
-              runSpacing: HabitSpace.s8,
-              children: [
-                for (var d = 1; d <= 7; d++)
-                  _DayToggle(
-                    letter: schedule.dayLetter(d),
-                    name: schedule.dayName(d),
-                    selected: _days.contains(d),
-                    onTap: () => setState(() {
-                      final day = d;
-                      _days.contains(day) ? _days.remove(day) : _days.add(day);
-                      if (_days.isNotEmpty) _daysMissing = false;
-                    }),
-                  ),
-              ],
-            ),
+            // 4.2b I3: a deliberate 4 + 3 grid (Monday to Thursday, Friday to Sunday), each cell
+            // at least 44 px, so no day is ever left alone on a row; the empty fourth cell keeps
+            // the columns aligned.
+            for (final week in const [
+              [1, 2, 3, 4],
+              [5, 6, 7, null],
+            ]) ...[
+              Row(
+                children: [
+                  for (final d in week)
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: HabitSpace.s4 / 2),
+                        child: d == null
+                            ? const SizedBox.shrink()
+                            : _DayToggle(
+                                letter: schedule.dayLetter(d),
+                                name: schedule.dayName(d),
+                                selected: _days.contains(d),
+                                onTap: () => setState(() {
+                                  _days.contains(d) ? _days.remove(d) : _days.add(d);
+                                  if (_days.isNotEmpty) _daysMissing = false;
+                                }),
+                              ),
+                      ),
+                    ),
+                ],
+              ),
+              if (week.first == 1) const SizedBox(height: HabitSpace.s8),
+            ],
             if (_daysMissing) ...[
               const SizedBox(height: HabitSpace.s8),
               FieldErrorText(HabitFormText(l10n).problem(HabitDraftProblem.weekdays)),
@@ -347,10 +360,16 @@ class _DayToggle extends StatelessWidget {
                         fontWeight: selected ? FontWeight.w600 : null,
                       ),
                     ),
-                    Icon(
-                      selected ? Icons.check : Icons.circle_outlined,
-                      size: selected ? 14 : 8,
-                      color: selected ? tokens.primary : tokens.muted,
+                    // A fixed slot, so a chosen day is never taller than the others.
+                    SizedBox.square(
+                      dimension: 14,
+                      child: Center(
+                        child: Icon(
+                          selected ? Icons.check : Icons.circle_outlined,
+                          size: selected ? 14 : 8,
+                          color: selected ? tokens.primary : tokens.muted,
+                        ),
+                      ),
                     ),
                   ],
                 ),

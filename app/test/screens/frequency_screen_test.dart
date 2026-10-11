@@ -17,9 +17,10 @@ void main() {
     WidgetTester tester, {
     FrequencyChoice current = FrequencyChoice.daily,
     double textScale = 1,
+    double width = 400,
   }) async {
     // A phone-shaped, tall view: the whole screen is built at 100% text.
-    tester.view.physicalSize = const Size(400, 1400);
+    tester.view.physicalSize = Size(width, 1400);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     FrequencyChoice? popped;
@@ -272,6 +273,37 @@ void main() {
     expect(find.byType(FrequencyScreen), findsNothing);
     expect(find.text('today'), findsOneWidget);
   });
+
+  for (final scale in [1.0, 2.0]) {
+    testWidgets('I3: at 360 dp and ${scale * 100}% text the weekdays sit 4 + 3, each 44 px', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await open(
+        tester,
+        width: 360,
+        textScale: scale,
+        current: FrequencyChoice.weekdays(const [1]),
+      );
+      const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      await reveal(tester, find.bySemanticsLabel('Sunday'));
+      final rects = [for (final d in days) tester.getRect(find.bySemanticsLabel(d))];
+      for (var i = 0; i < 7; i++) {
+        expect(
+          rects[i].width >= 44 && rects[i].height >= 44,
+          isTrue,
+          reason: '${days[i]} ${rects[i]}',
+        );
+      }
+      final rows = <double, int>{};
+      for (final r in rects) {
+        rows.update(r.top.roundToDouble(), (n) => n + 1, ifAbsent: () => 1);
+      }
+      expect(rows.values.toList(), [4, 3], reason: 'Monday to Thursday, then Friday to Sunday');
+      expect(tester.takeException(), isNull);
+      handle.dispose();
+    });
+  }
 
   testWidgets('at 200% text every option and control renders without overflow', (tester) async {
     await open(tester, textScale: 2);
