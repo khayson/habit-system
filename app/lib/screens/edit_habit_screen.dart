@@ -108,10 +108,13 @@ class _EditState extends State<_Edit> {
       }
       return;
     }
+    // L1: a change pulled while the form was open is kept where the person did not edit.
+    final current = context.read<StreamModel<HabitDetail?>>().value?.habit.editable;
+    final toSave = current == null ? draft : HabitDraft.merged(_start!, current, draft, type.rules);
     setState(() => _busy = true);
     try {
       // Unchanged: the writer writes nothing; the screen just closes.
-      await account.actions.updateHabit(widget.habitId, draft);
+      await account.actions.updateHabit(widget.habitId, toSave);
       if (mounted) _leave();
     } on HabitEditFailure catch (e) {
       if (!mounted) return;

@@ -52,6 +52,37 @@ class HabitDraft {
         : frequencyConfig,
   };
 
+  /// 4.2b review L1: what 09 saves when the habit changed under the form (a pull from another
+  /// device). Per field: where [edited] still equals [start] the person did not touch it, so the
+  /// habit's [current] value wins; otherwise the person's. frequency_config travels with
+  /// frequency_type as one field. [rules] compares targets by value ("2000" = "2000.000").
+  static HabitDraft merged(
+    HabitDraft start,
+    HabitDraft current,
+    HabitDraft edited, [
+    ProvisionalTypeRules? rules,
+  ]) {
+    final s = start.toPayload();
+    final e = edited.toPayload();
+    final targetTouched = rules == null
+        ? '${s['target_value']}' != '${e['target_value']}'
+        : rules.parseTarget(s['target_value']) != rules.parseTarget(e['target_value']);
+    final frequencyTouched =
+        s['frequency_type'] != e['frequency_type'] ||
+        !_sameConfig(
+          s['frequency_config'] as Map<dynamic, dynamic>,
+          e['frequency_config'] as Map<dynamic, dynamic>,
+        );
+    return HabitDraft(
+      name: s['name'] == e['name'] ? current.name : edited.name,
+      category: s['category'] == e['category'] ? current.category : edited.category,
+      targetValue: targetTouched ? edited.targetValue : current.targetValue,
+      unit: s['unit'] == e['unit'] ? current.unit : edited.unit,
+      frequencyType: frequencyTouched ? edited.frequencyType : current.frequencyType,
+      frequencyConfig: frequencyTouched ? edited.frequencyConfig : current.frequencyConfig,
+    );
+  }
+
   /// Same editable state as [other], as the server would compare it (A34 identical update).
   bool sameAs(HabitDraft other, ProvisionalTypeRules? rules) {
     final a = toPayload();

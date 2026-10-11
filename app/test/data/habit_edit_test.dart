@@ -391,4 +391,35 @@ void main() {
       expect(payload(rows.last)['timezone_mode'], 'device_zone');
     });
   });
+
+  test('L1 (4.2b review): merged keeps the current value where the form was not touched', () {
+    final quantity = ProvisionalTypeRegistry.builtins().lookup('quantity');
+    final start = draft();
+    final current = draft(name: 'Water daily', category: 'learning');
+    final edited = draft(
+      target: '2500.000',
+      frequencyType: 'weekdays',
+      config: {
+        'days': [1, 3],
+      },
+    );
+    final m = HabitDraft.merged(start, current, edited, quantity);
+    expect(
+      (m.name, m.category, m.targetValue, m.unit, m.frequencyType),
+      ('Water daily', 'learning', '2500.000', 'ml', 'weekdays'),
+    );
+    expect(m.frequencyConfig, {
+      'days': [1, 3],
+    });
+    // "2000" typed back over "2000.000" is untouched: the current value stays.
+    expect(
+      HabitDraft.merged(
+        start,
+        draft(target: '3000.000'),
+        draft(target: '2000'),
+        quantity,
+      ).targetValue,
+      '3000.000',
+    );
+  });
 }

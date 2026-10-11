@@ -336,4 +336,36 @@ void main() {
     expect(tester.takeException(), isNull, reason: 'the archive sheet');
     await tearDownApp(tester, account);
   });
+
+  /// Another device renames the habit while 09 is open; the pull lands under the form.
+  Future<void> pullRename(WidgetTester tester, String name) async {
+    server.failNextSync.clear();
+    server.serverEditHabit(habitId, (h) => h['name'] = name);
+    await syncNow(tester, account);
+    server.failNextSync.addAll(List.filled(50, const SyncTransportException(SyncFailure.network)));
+    await settle(tester);
+  }
+
+  testWidgets('L1: a rename pulled while 09 is open survives a target change', (tester) async {
+    await seed(tester);
+    await show(tester, '/habits/$habitId/edit');
+    await pullRename(tester, 'Water daily');
+    expect(find.text('Water'), findsOneWidget, reason: 'the form keeps what it opened with');
+    await tester.enterText(field('target-amount'), '2500');
+    await save(tester);
+    final sent = payload((await outbox(tester)).single);
+    expect((sent['name'], sent['target_value']), ('Water daily', '2500.000'));
+    await tearDownApp(tester, account);
+  });
+
+  testWidgets('L1: a rename pulled while 09 is open, then an untouched save, writes nothing', (
+    tester,
+  ) async {
+    await seed(tester);
+    await show(tester, '/habits/$habitId/edit');
+    await pullRename(tester, 'Water daily');
+    await save(tester);
+    expect(await outbox(tester), isEmpty, reason: 'no revert of the other device\'s rename');
+    await tearDownApp(tester, account);
+  });
 }
