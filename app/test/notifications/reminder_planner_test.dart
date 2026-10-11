@@ -78,25 +78,26 @@ void main() {
       'frequency_config': <String, dynamic>{},
       'archived_at': null,
     });
-    List<PlannedNotification> plan(int reminders, {int? max}) => ReminderPlanner('user-1').plan(
-      reminders: [
-        for (var i = 0; i < reminders; i++)
-          PlannerReminder(
-            id: 'r$i',
-            habitId: 'h1',
-            minuteOfDay: 8 * 60 + i,
-            daysOfWeek: const {1, 2, 3, 4, 5, 6, 7},
-            timezoneMode: 'device_zone',
-            timezone: null,
-            enabled: true,
-          ),
-      ],
-      schedules: {'h1': habit},
-      timeline: timeline(),
-      deviceZone: 'America/Los_Angeles',
-      now: DateTime.utc(2026, 5, 28, 12),
-      maxScheduled: max,
-    );
+    List<PlannedNotification> plan(int reminders, {int? max}) =>
+        const ReminderPlanner('user-1').plan(
+          reminders: [
+            for (var i = 0; i < reminders; i++)
+              PlannerReminder(
+                id: 'r$i',
+                habitId: 'h1',
+                minuteOfDay: 8 * 60 + i,
+                daysOfWeek: const {1, 2, 3, 4, 5, 6, 7},
+                timezoneMode: 'device_zone',
+                timezone: null,
+                enabled: true,
+              ),
+          ],
+          schedules: {'h1': habit},
+          timeline: timeline(),
+          deviceZone: 'America/Los_Angeles',
+          now: DateTime.utc(2026, 5, 28, 12),
+          maxScheduled: max,
+        );
 
     test('the platform limits are named in one place', () {
       expect((NotificationCaps.ios, NotificationCaps.android), (60, 450));
@@ -116,7 +117,7 @@ void main() {
     });
 
     test('ties at the same instant are broken by id', () {
-      final twins = ReminderPlanner('user-1').plan(
+      final twins = const ReminderPlanner('user-1').plan(
         reminders: [
           for (final id in ['b', 'a', 'c'])
             PlannerReminder(
