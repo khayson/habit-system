@@ -10,7 +10,7 @@ class HabitFormText {
   const HabitFormText(this.l10n);
 
   String problem(HabitDraftProblem p) => switch (p) {
-    HabitDraftProblem.nameRequired => l10n.problemNameRequired,
+    HabitDraftProblem.nameRequired => l10n.errorRequired,
     HabitDraftProblem.nameTooLong => l10n.newHabitNameTooLong,
     HabitDraftProblem.category => l10n.problemCategory,
     HabitDraftProblem.unknownType => l10n.unknownTypeTitle,

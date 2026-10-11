@@ -2174,12 +2174,6 @@ abstract class AppLocalizations {
   /// **'Use 24 characters or fewer.'**
   String get targetErrorUnitTooLong;
 
-  /// No description provided for @problemNameRequired.
-  ///
-  /// In en, this message translates to:
-  /// **'Add a name for this habit.'**
-  String get problemNameRequired;
-
   /// No description provided for @problemCategory.
   ///
   /// In en, this message translates to:
@@ -2413,6 +2407,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{head} and {last}'**
   String listAnd(String head, String last);
+
+  /// No description provided for @newHabitTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily target'**
+  String get newHabitTarget;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -99,7 +99,8 @@ void main() {
     await tester.enterText(find.byType(TextField).first, 'Evening stretch');
     expect(find.text('Not set'), findsOneWidget);
 
-    await tester.tap(find.text('Edit'));
+    // 08 now has two Edit actions (Schedule, then Reminder): the Reminder row's.
+    await tester.tap(find.text('Edit').last);
     await settle(tester);
     expect(find.text('Gentle reminders'), findsOneWidget);
     expect(find.text('Evening stretch · notifications stay on your device.'), findsOneWidget);

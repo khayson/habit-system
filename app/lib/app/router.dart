@@ -102,7 +102,7 @@ List<RouteBase> appRoutes({
     path: Routes.setup,
     builder: (context, state) => TimezoneScreen(clock: clock),
   ),
-  GoRoute(path: Routes.newHabit, builder: (context, state) => const CreateHabitScreen()),
+  GoRoute(path: Routes.newHabit, builder: (context, state) => CreateHabitScreen(clock: clock)),
   GoRoute(
     path: '/habits/:id/reminder',
     builder: (context, state) => ReminderEditorScreen(

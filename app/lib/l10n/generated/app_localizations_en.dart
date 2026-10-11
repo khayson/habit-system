@@ -1216,9 +1216,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get targetErrorUnitTooLong => 'Use 24 characters or fewer.';
 
   @override
-  String get problemNameRequired => 'Add a name for this habit.';
-
-  @override
   String get problemCategory => 'Choose a category.';
 
   @override
@@ -1383,4 +1380,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String listAnd(String head, String last) {
     return '$head and $last';
   }
+
+  @override
+  String get newHabitTarget => 'Daily target';
 }

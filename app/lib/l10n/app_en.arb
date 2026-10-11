@@ -417,7 +417,6 @@
   "targetErrorTooLarge": "Use a smaller number.",
   "targetErrorUnitRequired": "Add a unit, such as ml or pages.",
   "targetErrorUnitTooLong": "Use 24 characters or fewer.",
-  "problemNameRequired": "Add a name for this habit.",
   "problemCategory": "Choose a category.",
   "problemUnitNotAllowed": "This habit type doesn't use a unit.",
   "problemFrequencyType": "Choose a schedule.",
@@ -465,5 +464,6 @@
   "freqFewer": "Fewer",
   "freqMore": "More",
   "listAnd": "{head} and {last}",
-  "@listAnd": {"placeholders": {"head": {"type": "String"}, "last": {"type": "String"}}}
+  "@listAnd": {"placeholders": {"head": {"type": "String"}, "last": {"type": "String"}}},
+  "newHabitTarget": "Daily target"
 }
