@@ -522,5 +522,12 @@
   "weekdayDate": "{date}",
   "@weekdayDate": {"description": "Today's header (design 05: \"Thursday, 28 May 2026\").", "placeholders": {"date": {"type": "DateTime", "format": "EEEE, d MMMM y", "isCustomDateFormat": "true"}}},
   "dayMonthTime": "{date}, {time}",
-  "@dayMonthTime": {"description": "A day-month with the locale's time (\"28 May, 10:15 AM\").", "placeholders": {"date": {"type": "DateTime", "format": "d MMM", "isCustomDateFormat": "true"}, "time": {"type": "DateTime", "format": "jm"}}}
+  "@dayMonthTime": {"description": "A day-month with the locale's time (\"28 May, 10:15 AM\").", "placeholders": {"date": {"type": "DateTime", "format": "d MMM", "isCustomDateFormat": "true"}, "time": {"type": "DateTime", "format": "jm"}}},
+  "progressOf": "{value} / {target} {unit}",
+  "@progressOf": {"placeholders": {"value": {"type": "String"}, "target": {"type": "String"}, "unit": {"type": "String"}}},
+  "plusAmount": "+{amount}",
+  "@plusAmount": {"placeholders": {"amount": {"type": "String"}}},
+  "minutesSeconds": "{minutes} min {seconds} s",
+  "@minutesSeconds": {"placeholders": {"minutes": {"type": "int"}, "seconds": {"type": "int"}}},
+  "minutesUnit": "min"
 }

@@ -35,6 +35,16 @@ enum TargetFieldError {
   unitTooLong,
 }
 
+/// [HabitTypeUi.parseAmount]'s result (4.3b): the delta in wire form, or why not.
+class AmountParse {
+  final Object? delta;
+  final TargetFieldError? error;
+
+  const AmountParse({this.delta, this.error});
+
+  bool get ok => error == null;
+}
+
 /// What the person typed (or what an existing habit starts with).
 class TargetInput {
   final String amount;
@@ -96,6 +106,28 @@ abstract class HabitTypeUi {
 
   /// Display text ("2000 ml", "10 min", "Yes / no").
   String format(HabitFormat format, Object? target, String? unit);
+
+  /// 4.3b: progress is added by an amount (screen 34, the Today quick-add). Yes / no is not.
+  bool get hasAmountEntry => false;
+
+  /// The delta (wire form) from what was typed on 34, or a field error.
+  AmountParse parseAmount(String text) => const AmountParse(error: TargetFieldError.notNumber);
+
+  /// One step of the stepper and the Today quick-add, in the type's units.
+  int suggestStep(Object? target, String? unit) => 1;
+
+  /// "1.25 / 2 L", "6 / 10 min": the day's value over the target in force.
+  String progress(HabitFormat format, Object? value, Object? target, String? unit) =>
+      format.typeLabel(rules);
+
+  /// "+250 ml", "+1 min": an amount in the type's units as an addition.
+  String plusAmount(HabitFormat format, int units, String? unit) => '+$units';
+
+  /// "250 ml", "1 min": an amount in the type's units.
+  String amountText(HabitFormat format, int units, String? unit) => '$units';
+
+  /// The amount field's own text for [units] ("250", "1.5").
+  String amountInput(int units) => '$units';
 
   /// The target field(s). [amountError] / [unitError] are already worded.
   Widget buildTarget(
@@ -171,6 +203,46 @@ class QuantityTypeUi extends HabitTypeUi {
   @override
   String format(HabitFormat format, Object? target, String? unit) =>
       format.amount(rules, target, unit) ?? format.typeLabel(rules);
+
+  @override
+  bool get hasAmountEntry => true;
+
+  @override
+  AmountParse parseAmount(String text) {
+    final amount = _decimal(text, maxFraction: 3);
+    if (amount.error != null) return AmountParse(error: amount.error);
+    // A decimal string with three places ("250" -> "250.000"), never a double.
+    final wire = rules.formatValue(amount.thousandths!);
+    if (rules.parseValue(wire) == null) return const AmountParse(error: TargetFieldError.tooLarge);
+    return AmountParse(delta: wire);
+  }
+
+  /// ASSUMPTION(4.3b-step): the "nice" number (1, 2, 2.5 or 5 times a power of ten, never below
+  /// 0.001) nearest by ratio to an eighth of the target.
+  @override
+  int suggestStep(Object? target, String? unit) {
+    final t = rules.parseTarget(target);
+    if (t == null) return 1000;
+    return niceStep(t / 8);
+  }
+
+  @override
+  String progress(HabitFormat format, Object? value, Object? target, String? unit) {
+    final v = rules.parseValue(value) ?? 0;
+    final t = rules.parseTarget(target) ?? 0;
+    return format.l10n.progressOf(format.decimal(v), format.decimal(t), unit ?? '').trim();
+  }
+
+  @override
+  String plusAmount(HabitFormat format, int units, String? unit) =>
+      format.l10n.plusAmount(amountText(format, units, unit));
+
+  @override
+  String amountText(HabitFormat format, int units, String? unit) =>
+      [format.decimal(units), if (unit != null && unit.isNotEmpty) unit].join(' ');
+
+  @override
+  String amountInput(int units) => _plain(units, 3);
 
   @override
   Widget buildTarget(
@@ -261,6 +333,45 @@ class DurationTypeUi extends HabitTypeUi {
       format.amount(rules, target, null) ?? format.typeLabel(rules);
 
   @override
+  bool get hasAmountEntry => true;
+
+  @override
+  AmountParse parseAmount(String text) {
+    final minutes = _decimal(text, maxFraction: 3);
+    if (minutes.error != null) return AmountParse(error: minutes.error);
+    // Whole seconds, an integer, never a double.
+    final seconds = (minutes.thousandths! * 60 / 1000).round();
+    if (seconds <= 0) return const AmountParse(error: TargetFieldError.notPositive);
+    final wire = rules.formatValue(seconds);
+    if (rules.parseValue(wire) == null) return const AmountParse(error: TargetFieldError.tooLarge);
+    return AmountParse(delta: wire);
+  }
+
+  /// ASSUMPTION(4.3b-step): one minute, as design 05's "+1 min".
+  @override
+  int suggestStep(Object? target, String? unit) => 60;
+
+  /// Minutes; seconds only when the value is not whole minutes ("6 min 30 s / 10 min").
+  @override
+  String progress(HabitFormat format, Object? value, Object? target, String? unit) {
+    final v = rules.parseValue(value) ?? 0;
+    final t = rules.parseTarget(target) ?? 0;
+    final shown = v % 60 == 0 ? '${v ~/ 60}' : format.l10n.minutesSeconds(v ~/ 60, v % 60);
+    return format.l10n.progressOf(shown, format.minutes(t), format.l10n.minutesUnit);
+  }
+
+  @override
+  String plusAmount(HabitFormat format, int units, String? unit) =>
+      format.l10n.plusAmount(amountText(format, units, unit));
+
+  @override
+  String amountText(HabitFormat format, int units, String? unit) =>
+      format.l10n.minutesShort(format.minutes(units));
+
+  @override
+  String amountInput(int units) => _plain((units * 1000 / 60).round(), 3);
+
+  @override
   Widget buildTarget(
     BuildContext context,
     TargetFields fields, {
@@ -300,6 +411,35 @@ class DurationTypeUi extends HabitTypeUi {
     return (thousandths: null, error: TargetFieldError.notPositive);
   }
   return (thousandths: value, error: null);
+}
+
+/// The "nice" step (1, 2, 2.5 or 5 times a power of ten, in thousandths, at least 1) nearest
+/// to [ideal] by ratio; a tie goes to the smaller step.
+int niceStep(double ideal) {
+  int? best;
+  var bestScore = double.infinity;
+  for (var power = 1; power <= 1000000000000; power *= 10) {
+    for (final m in const [10, 20, 25, 50]) {
+      if ((m * power) % 10 != 0) continue;
+      final step = m * power ~/ 10;
+      if (step < 1) continue;
+      final ratio = ideal <= 0 ? double.infinity : (step > ideal ? step / ideal : ideal / step);
+      if (ratio < bestScore) {
+        best = step;
+        bestScore = ratio;
+      }
+    }
+  }
+  return best ?? 1;
+}
+
+/// "06:00", "1:02:05": a timer's elapsed time (h:mm:ss from one hour).
+String timerClock(Duration d) {
+  String two(int n) => n.toString().padLeft(2, '0');
+  final h = d.inHours;
+  final m = d.inMinutes % 60;
+  final s = d.inSeconds % 60;
+  return h > 0 ? '$h:${two(m)}:${two(s)}' : '${two(d.inMinutes)}:${two(s)}';
 }
 
 /// Thousandths as plain text with no grouping and no trailing zeros: 2000000 -> "2000".

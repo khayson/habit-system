@@ -2671,6 +2671,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{date}, {time}'**
   String dayMonthTime(DateTime date, DateTime time);
+
+  /// No description provided for @progressOf.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} / {target} {unit}'**
+  String progressOf(String value, String target, String unit);
+
+  /// No description provided for @plusAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'+{amount}'**
+  String plusAmount(String amount);
+
+  /// No description provided for @minutesSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min {seconds} s'**
+  String minutesSeconds(int minutes, int seconds);
+
+  /// No description provided for @minutesUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'min'**
+  String get minutesUnit;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

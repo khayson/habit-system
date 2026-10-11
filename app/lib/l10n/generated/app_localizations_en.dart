@@ -1572,4 +1572,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
     return '$dateString, $timeString';
   }
+
+  @override
+  String progressOf(String value, String target, String unit) {
+    return '$value / $target $unit';
+  }
+
+  @override
+  String plusAmount(String amount) {
+    return '+$amount';
+  }
+
+  @override
+  String minutesSeconds(int minutes, int seconds) {
+    return '$minutes min $seconds s';
+  }
+
+  @override
+  String get minutesUnit => 'min';
 }

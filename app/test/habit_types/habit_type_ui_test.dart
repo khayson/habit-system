@@ -152,4 +152,85 @@ void main() {
     expect(find.byType(TextField), findsNothing);
     expect(find.byType(ButtonStyleButton), findsNothing);
   });
+
+  group('4.3b: amount entry, steps and progress text', () {
+    test('only quantity and duration take an amount', () {
+      expect(
+        {for (final e in registry.all) e.key: e.hasAmountEntry},
+        {'binary': false, 'quantity': true, 'duration': true},
+      );
+    });
+
+    test('parseAmount: quantity is a thousandths string, duration whole seconds', () {
+      final q = ui('quantity');
+      final d = ui('duration');
+      expect(
+        [
+          for (final t in ['250', '0.25', '1.5']) q.parseAmount(t).delta,
+        ],
+        ['250.000', '0.250', '1.500'],
+      );
+      expect(
+        [
+          for (final t in ['1', '1.5', '0.25']) d.parseAmount(t).delta,
+        ],
+        [60, 90, 15],
+      );
+      for (final e in [q, d]) {
+        for (final (typed, error) in [
+          ('', TargetFieldError.required),
+          ('0', TargetFieldError.notPositive),
+          ('-2', TargetFieldError.notPositive),
+          ('1.2345', TargetFieldError.tooPrecise),
+          ('ten', TargetFieldError.notNumber),
+          ('9999999999', TargetFieldError.tooLarge),
+        ]) {
+          expect(e.parseAmount(typed).error, error, reason: '${e.key} "$typed"');
+        }
+      }
+    });
+
+    test('suggestStep: the nice number nearest an eighth of the target', () {
+      final q = ui('quantity');
+      expect(
+        [
+          for (final t in ['2000.000', '2.000', '20.000', '8.000', '10000.000', '0.003'])
+            q.suggestStep(t, null),
+        ],
+        [250000, 250, 2500, 1000, 1000000, 1],
+        reason: '250 ml, 0.25 L, 2.5 pages, 1 glass, 1000 steps, 0.001',
+      );
+      expect(ui('duration').suggestStep(600, null), 60);
+    });
+
+    testWidgets('progress, the plus label and the timer clock', (tester) async {
+      late HabitFormat format;
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Builder(
+            builder: (context) {
+              format = HabitFormat(context);
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+      final q = ui('quantity');
+      final d = ui('duration');
+      expect(q.progress(format, '1.250', '2.000', 'L'), '1.25 / 2 L');
+      expect(q.plusAmount(format, 250000, 'mL'), '+250 mL');
+      expect(d.progress(format, 360, 600, null), '6 / 10 min');
+      expect(d.progress(format, 390, 600, null), '6 min 30 s / 10 min');
+      expect(d.plusAmount(format, 60, null), '+1 min');
+      expect((q.amountInput(250000), d.amountInput(60), d.amountInput(90)), ('250', '1', '1.5'));
+      expect(
+        [
+          for (final s in [0, 360, 3599, 3725]) timerClock(Duration(seconds: s)),
+        ],
+        ['00:00', '06:00', '59:59', '1:02:05'],
+      );
+    });
+  });
 }
