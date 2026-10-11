@@ -150,7 +150,8 @@ jobs:
           composer install --no-interaction --prefer-dist --no-progress
           cp .env.example .env && php artisan key:generate
           php artisan migrate --force
-          php artisan serve --host=127.0.0.1 --port=8000 > ../api-serve.log 2>&1 &
+          # One e2e account runs every scenario: lift the per-user sync limit (default 60/min).
+          RATE_LIMIT_SYNC_PER_MINUTE=600 php artisan serve --host=127.0.0.1 --port=8000 > ../api-serve.log 2>&1 &
           for i in $(seq 1 30); do
             curl -sf http://127.0.0.1:8000/api/v1/health && exit 0
             sleep 1
