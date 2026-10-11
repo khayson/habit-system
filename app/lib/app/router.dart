@@ -9,6 +9,7 @@ import '../services/photo_picker.dart';
 import '../screens/app_shell.dart';
 import '../screens/create_account_screen.dart';
 import '../screens/create_habit_screen.dart';
+import '../screens/edit_habit_screen.dart';
 import '../screens/frequency_screen.dart';
 import '../screens/habit_detail_screen.dart';
 import '../screens/habit_library_screen.dart';
@@ -30,6 +31,12 @@ abstract final class Routes {
   static const profile = '/profile';
   static const newHabit = '/habits/new';
   static String habit(String id) => '/habits/$id';
+
+  /// Screen 09 for one habit.
+  static String editHabit(String id) => '/habits/$id/edit';
+
+  /// Screen 22. Matched before '/habits/:id' (router test).
+  static const archivedHabits = '/habits/archived';
 
   /// Screen 13 for one habit, optionally with a chosen local date (from 12's calendar).
   static String history(String id, {String? date}) => Uri(
@@ -102,7 +109,10 @@ List<RouteBase> appRoutes({
     path: Routes.setup,
     builder: (context, state) => TimezoneScreen(clock: clock),
   ),
-  GoRoute(path: Routes.newHabit, builder: (context, state) => CreateHabitScreen(clock: clock)),
+  GoRoute(
+    path: Routes.newHabit,
+    builder: (context, state) => CreateHabitScreen(clock: clock),
+  ),
   GoRoute(
     path: '/habits/:id/reminder',
     builder: (context, state) => ReminderEditorScreen(
@@ -112,6 +122,11 @@ List<RouteBase> appRoutes({
       reminderId: state.uri.queryParameters['reminder'],
       clock: clock,
     ),
+  ),
+  GoRoute(
+    path: '/habits/:id/edit',
+    builder: (context, state) =>
+        EditHabitScreen(habitId: state.pathParameters['id']!, clock: clock),
   ),
   GoRoute(
     path: '/habits/:id/history',

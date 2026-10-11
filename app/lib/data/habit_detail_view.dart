@@ -63,7 +63,7 @@ extension HabitDetailQueries on LocalView {
   Future<HabitDetail?> detail(String habitId, DateTime deviceNow) async {
     final calendar = await AccountCalendar.load(db, deviceNow: deviceNow);
     if (calendar == null) return null;
-    final habit = (await habits()).where((h) => h.id == habitId).firstOrNull;
+    final habit = (await habits(deviceNow: deviceNow)).where((h) => h.id == habitId).firstOrNull;
     if (habit == null) return null;
     final today = calendar.today(deviceNow);
     final progress = await (db.select(

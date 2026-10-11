@@ -17,6 +17,7 @@ import '../providers/account_context.dart';
 import '../providers/stream_model.dart';
 import '../widgets/habit_format.dart';
 import '../widgets/habit_ui.dart';
+import 'edit_habit_screen.dart';
 
 /// Screen 12: habit detail with the month heatmap. Offline-first: closed days from the server's
 /// period_evaluations, today and open days from local logs (provisional), not-due from the
@@ -84,7 +85,22 @@ class _DetailState extends State<_Detail> {
             title: detail.name,
             subtitle: l10n.detailSubtitle(schedule, format.category(detail.category, long: true)),
             onBack: () => context.canPop() ? context.pop() : context.go(Routes.habits),
+            // 4.2b: the way to 09 (a design gap: 12 shows no edit control). Offered only when
+            // the habit can be edited here; otherwise the reason, in words, below.
+            trailing: detail.habit.editable == null
+                ? null
+                : TextButton(
+                    onPressed: () => context.push(Routes.editHabit(detail.habit.id)),
+                    style: TextButton.styleFrom(
+                      minimumSize: const Size(HabitSize.minTarget, HabitSize.minTarget),
+                    ),
+                    child: Text(l10n.setupEdit),
+                  ),
           ),
+          if (detail.habit.editBlocked != null) ...[
+            EditBlockedNote(habit: detail.habit),
+            const SizedBox(height: HabitSpace.s24),
+          ],
           _Stats(detail: detail),
           const SizedBox(height: HabitSpace.s32),
           Semantics(

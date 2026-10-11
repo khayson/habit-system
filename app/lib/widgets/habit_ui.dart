@@ -75,17 +75,11 @@ class ScreenHeader extends StatelessWidget {
 /// The tinted message card ("Private by default", "Waiting for a connection", ...).
 class InfoCard extends StatelessWidget {
   final String title;
-  final String body;
+  final String? body;
   final Tone tone;
   final IconData? icon;
 
-  const InfoCard({
-    super.key,
-    required this.title,
-    required this.body,
-    this.tone = Tone.positive,
-    this.icon,
-  });
+  const InfoCard({super.key, required this.title, this.body, this.tone = Tone.positive, this.icon});
 
   @override
   Widget build(BuildContext context) {
@@ -110,8 +104,10 @@ class InfoCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title, style: text.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
-                const SizedBox(height: HabitSpace.s4),
-                Text(body, style: text.bodySmall?.copyWith(color: tokens.muted)),
+                if (body != null) ...[
+                  const SizedBox(height: HabitSpace.s4),
+                  Text(body!, style: text.bodySmall?.copyWith(color: tokens.muted)),
+                ],
               ],
             ),
           ),

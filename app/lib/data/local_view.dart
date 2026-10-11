@@ -471,6 +471,16 @@ class HabitView {
   /// when the habit cannot be edited here ([editBlocked] says why).
   HabitDraft? get editable => editBlocked == null ? HabitDraft.fromWire(payload) : null;
 
+  /// 09's "Waiting to sync": an unsent edit that changes the definition (category, target,
+  /// unit or schedule), not only the name.
+  bool get definitionEditQueued {
+    if (!editQueued) return false;
+    final versions = schedule.versions;
+    if (versions.isEmpty) return true;
+    final latest = HabitDraft.fromWire({...versions.last.wire, 'name': payload['name']});
+    return !latest.sameAs(HabitDraft.fromWire(payload), null);
+  }
+
   /// Why screen 09 is not offered, else null.
   HabitEditBlock? get editBlocked {
     if (!knownType) return HabitEditBlock.unknownType;

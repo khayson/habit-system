@@ -1383,4 +1383,95 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get newHabitTarget => 'Daily target';
+
+  @override
+  String editTitle(String name) {
+    return 'Edit $name';
+  }
+
+  @override
+  String get editSubtitle => 'Adjust your routine without losing history.';
+
+  @override
+  String get editTargetUnit => 'Target and unit';
+
+  @override
+  String editTypeLine(String type) {
+    return 'Type: $type';
+  }
+
+  @override
+  String get editTypeNote =>
+      'A habit\'s type can\'t be changed. Start a new habit to try a different one.';
+
+  @override
+  String get editCategory => 'Category';
+
+  @override
+  String get editReminders => 'Reminders';
+
+  @override
+  String editRemindersSummary(int count, String times) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count reminders · $times',
+      one: '$times',
+      zero: 'Not set',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get editHistoryTitle => 'History stays unchanged';
+
+  @override
+  String get editHistoryBody =>
+      'New targets apply from the next eligible period. Past check-ins keep their original target.';
+
+  @override
+  String get editSave => 'Save changes';
+
+  @override
+  String get editWaiting => 'Waiting to sync';
+
+  @override
+  String editStarts(String date) {
+    return 'New target starts $date';
+  }
+
+  @override
+  String get editArchive => 'Archive this habit';
+
+  @override
+  String get archiveTitle => 'Archive this habit?';
+
+  @override
+  String get archiveBody =>
+      'Your history stays. It leaves Today and sends no reminders. You can restore it from Archived routines.';
+
+  @override
+  String get archiveConfirm => 'Archive';
+
+  @override
+  String get archiveNotNow => 'Not now';
+
+  @override
+  String get editBlockedAttention => 'A change to this habit needs a look before you can edit it.';
+
+  @override
+  String get editBlockedArchived =>
+      'This habit is archived. Restore it from Archived routines to make changes.';
+
+  @override
+  String get editReview => 'Review the change';
+
+  @override
+  String get editGone => 'This habit is no longer on this device.';
+
+  @override
+  String get chooseCategory => 'Choose a category';
+
+  @override
+  String get archivedTitle => 'Archived routines';
 }

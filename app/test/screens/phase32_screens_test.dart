@@ -143,7 +143,13 @@ void main() {
         r"at risk|don.t break|\blos(e|ing|t)\b|\bfail(ed)?\b",
         caseSensitive: false,
       );
-      expect(values.where(threat.hasMatch).toList(), isEmpty);
+      // Reassurance the design file prints verbatim (09's subtitle), not a loss threat. Exact
+      // strings only: any other wording with these words still fails (4.2b, listed in the packet).
+      const designReassurance = {'Adjust your routine without losing history.'};
+      expect(
+        values.where(threat.hasMatch).where((v) => !designReassurance.contains(v)).toList(),
+        isEmpty,
+      );
     });
 
     testWidgets('ask-on-change shows once per zone; Not now is remembered', (tester) async {

@@ -2413,6 +2413,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Daily target'**
   String get newHabitTarget;
+
+  /// No description provided for @editTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit {name}'**
+  String editTitle(String name);
+
+  /// No description provided for @editSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust your routine without losing history.'**
+  String get editSubtitle;
+
+  /// No description provided for @editTargetUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'Target and unit'**
+  String get editTargetUnit;
+
+  /// No description provided for @editTypeLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Type: {type}'**
+  String editTypeLine(String type);
+
+  /// No description provided for @editTypeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'A habit\'s type can\'t be changed. Start a new habit to try a different one.'**
+  String get editTypeNote;
+
+  /// No description provided for @editCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get editCategory;
+
+  /// No description provided for @editReminders.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders'**
+  String get editReminders;
+
+  /// No description provided for @editRemindersSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Not set} =1{{times}} other{{count} reminders · {times}}}'**
+  String editRemindersSummary(int count, String times);
+
+  /// No description provided for @editHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'History stays unchanged'**
+  String get editHistoryTitle;
+
+  /// No description provided for @editHistoryBody.
+  ///
+  /// In en, this message translates to:
+  /// **'New targets apply from the next eligible period. Past check-ins keep their original target.'**
+  String get editHistoryBody;
+
+  /// No description provided for @editSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes'**
+  String get editSave;
+
+  /// No description provided for @editWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting to sync'**
+  String get editWaiting;
+
+  /// No description provided for @editStarts.
+  ///
+  /// In en, this message translates to:
+  /// **'New target starts {date}'**
+  String editStarts(String date);
+
+  /// No description provided for @editArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive this habit'**
+  String get editArchive;
+
+  /// No description provided for @archiveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive this habit?'**
+  String get archiveTitle;
+
+  /// No description provided for @archiveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your history stays. It leaves Today and sends no reminders. You can restore it from Archived routines.'**
+  String get archiveBody;
+
+  /// No description provided for @archiveConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive'**
+  String get archiveConfirm;
+
+  /// No description provided for @archiveNotNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get archiveNotNow;
+
+  /// No description provided for @editBlockedAttention.
+  ///
+  /// In en, this message translates to:
+  /// **'A change to this habit needs a look before you can edit it.'**
+  String get editBlockedAttention;
+
+  /// No description provided for @editBlockedArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'This habit is archived. Restore it from Archived routines to make changes.'**
+  String get editBlockedArchived;
+
+  /// No description provided for @editReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Review the change'**
+  String get editReview;
+
+  /// No description provided for @editGone.
+  ///
+  /// In en, this message translates to:
+  /// **'This habit is no longer on this device.'**
+  String get editGone;
+
+  /// No description provided for @chooseCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a category'**
+  String get chooseCategory;
+
+  /// No description provided for @archivedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived routines'**
+  String get archivedTitle;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
