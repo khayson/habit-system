@@ -49,26 +49,23 @@ void main() {
     ],
   };
 
-  test(
-    'I2 / 4.2b L2: without a clock inForceToday is null (no guess, no throw), not the first version',
-    () {
-      final unclocked = HabitView(
-        payload: payload,
-        confirmedVersion: 2,
-        syncState: null,
-        knownType: true,
-      );
-      expect(unclocked.inForceToday, isNull);
-      final clocked = HabitView(
-        payload: payload,
-        confirmedVersion: 2,
-        syncState: null,
-        knownType: true,
-        today: LocalDate.parse('2026-05-28'),
-      );
-      expect(clocked.inForceToday!.wire['target_value'], '1.000');
-    },
-  );
+  test('I2 / 4.2b L2: without a clock inForceToday is null (no guess, no throw), not the first version', () {
+    final unclocked = HabitView(
+      payload: payload,
+      confirmedVersion: 2,
+      syncState: null,
+      knownType: true,
+    );
+    expect(unclocked.inForceToday, isNull);
+    final clocked = HabitView(
+      payload: payload,
+      confirmedVersion: 2,
+      syncState: null,
+      knownType: true,
+      today: LocalDate.parse('2026-05-28'),
+    );
+    expect(clocked.inForceToday!.wire['target_value'], '1.000');
+  });
 
   test('I2: a tap writes the target in force on that day, not the latest one', () async {
     final phone = await Device(FakeSyncServer()).init();
