@@ -53,6 +53,12 @@ you saw.
 | 29 | Archive a habit with a reminder, then restore it. | The reminder stops on archive and returns on restore; the habit shows on screen 22 while archived. |
 | 30 | Create an "every 2 days from today" habit. | Today shows it only on due days, and reminders match. |
 | 31 | At 200% text size, open screens 08, 09, 10 and 22. | Nothing is clipped and every control is reachable. |
+| 32 | Today: tap "+{step}" on a quantity habit, then Add. | The card's progress updates at once, also offline, and shows synced after reconnecting. |
+| 33 | Two devices add to the same quantity habit while offline; reconnect both. | The total is the sum on both devices. |
+| 34 | Start a timer from a duration habit ("+1 min", then "Time it instead"); lock the phone for a minute; open it. Pause, leave the app, return. | The elapsed time includes the locked minute. After pausing: still paused with the same time. |
+| 35 | Kill the app while a timer runs; reopen. | The timer is still running and the time is right. |
+| 36 | Finish a timer offline; reconnect. | One entry of whole seconds, the same on a second device. |
+| 37 | At 200% text size, open 34, 33, 36 and Today with both card kinds. | Nothing is clipped and every control is reachable. |
 
 ## Results
 
@@ -89,3 +95,9 @@ you saw.
 | 29 | | | | |
 | 30 | | | | |
 | 31 | | | | |
+| 32 | | | | |
+| 33 | | | | |
+| 34 | | | | |
+| 35 | | | | |
+| 36 | | | | |
+| 37 | | | | |

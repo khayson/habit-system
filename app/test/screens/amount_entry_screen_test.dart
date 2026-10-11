@@ -6,6 +6,7 @@ import 'package:habit/data/app_database.dart';
 import 'package:habit/domain/calendar/local_date.dart';
 import 'package:habit/providers/account_context.dart';
 import 'package:habit/screens/amount_entry_screen.dart';
+import 'package:habit/screens/timer_screen.dart';
 import 'package:habit/sync/sync_transport.dart';
 
 import '../support/app_harness.dart';
@@ -205,6 +206,28 @@ void main() {
     await tester.pump();
     await add(tester);
     expect(jsonDecode((await outbox(tester)).single.payload), {'habit_id': id, 'delta': 90});
+    await tearDownApp(tester, account);
+  });
+
+  testWidgets('Time it instead starts the timer and replaces 34 with it', (tester) async {
+    final id = await seed(
+      tester,
+      type: 'duration',
+      target: 600,
+      unit: null,
+      saved: 360,
+      name: 'Yoga',
+    );
+    await open(tester, id);
+    await tester.tap(find.text('Time it instead'));
+    await settle(tester);
+    expect(find.byType(TimerScreen), findsOneWidget);
+    expect(find.byType(AmountEntryScreen), findsNothing);
+    final drafts = (await tester.runAsync(
+      () => account.session.db.select(account.session.db.timerDrafts).get(),
+    ))!;
+    expect(drafts.single.habitId, id);
+    expect(await outbox(tester), isEmpty, reason: 'a draft is local only');
     await tearDownApp(tester, account);
   });
 
