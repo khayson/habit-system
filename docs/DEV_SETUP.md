@@ -172,7 +172,7 @@ md; another account gets 404; removal clears it on B). It prints PASS/FAIL per s
 
 ```powershell
 scripts\db-up.ps1
-scripts\api-serve.ps1                     # in another terminal
+scripts\api-serve.ps1 -E2E                # in another terminal; -E2E lifts the sync rate limit
 cd app
 $env:E2E_DATABASE_URL = 'postgresql://habit:habit@127.0.0.1:5432/habit'
 $env:E2E_PSQL = "$env:USERPROFILE\tools\pgsql-17\bin\psql.exe"   # if psql is not on PATH
