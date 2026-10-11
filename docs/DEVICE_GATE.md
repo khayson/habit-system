@@ -48,6 +48,11 @@ you saw.
 | 24 | Profile → tap the photo → **Remove photo**. Sync both devices. | Initials on both devices. |
 | 25 | Profile → **Reminders** → turn on **Hide habit names in notifications**. Set a reminder 5 minutes ahead; lock the phone. | The reminder that appears does not name the habit. Turning the setting off brings the names back on the next reminders. |
 | 26 | Take a portrait photo with the phone camera, choose it as the profile photo, crop it. | It shows upright on this phone, and upright on a second device after sync. Result: ___. |
+| 27 | Offline, create a duration habit on Monday, Wednesday and Friday. Reconnect. | It appears with the same schedule after a fresh sign-in on the same account. |
+| 28 | Offline, raise a habit's target. Reconnect. | Before reconnecting the screen shows "Waiting to sync". After, it shows "starts {date}", and today's check-in still uses the old target. |
+| 29 | Archive a habit with a reminder, then restore it. | The reminder stops on archive and returns on restore; the habit shows on screen 22 while archived. |
+| 30 | Create an "every 2 days from today" habit. | Today shows it only on due days, and reminders match. |
+| 31 | At 200% text size, open screens 08, 09, 10 and 22. | Nothing is clipped and every control is reachable. |
 
 ## Results
 
@@ -79,3 +84,8 @@ you saw.
 | 24 | | | | |
 | 25 | | | | |
 | 26 | | | | |
+| 27 | | | | |
+| 28 | | | | |
+| 29 | | | | |
+| 30 | | | | |
+| 31 | | | | |
