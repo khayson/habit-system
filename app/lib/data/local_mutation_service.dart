@@ -12,6 +12,7 @@ import '../sync/outbox_states.dart';
 import 'account_calendar.dart';
 import 'app_database.dart';
 import 'entity_codec.dart';
+import 'log_overlay.dart';
 
 /// The only way the app writes domain data locally (A23, invariant 16). Pure Dart: no Flutter
 /// imports, so the UI, notification actions, widgets and background isolates share it.
@@ -292,6 +293,104 @@ class LocalMutationService {
       );
       return LocalWrite(mutationId, date, coalesced: false);
     });
+  }
+
+  /// log.increment (A35): adds [delta] to the habit-day of [at] (or the backdated [logDate]),
+  /// with setLogValue's day rules. Validated by the habit's type rules on the day's value as
+  /// this device shows it; a refused delta throws [LogFailure] and writes nothing. No base
+  /// version: increments merge on the server and never conflict with each other.
+  ///
+  /// A2: folds into the newest row for the habit-day only when that row is a PENDING increment
+  /// (the deltas added by the type rule; it keeps its id and takes the newer occurred_at).
+  /// A3: on a day that shows deleted, the write is a log.set_value of the delta on the
+  /// tombstone's version, an explicit restore (A29), as setLogValue does.
+  Future<LocalWrite> incrementLog({
+    required String habitId,
+    required Object delta,
+    DateTime? at,
+    LocalDate? logDate,
+    ProvisionalTypeRegistry? types,
+  }) {
+    return db.transaction(() async {
+      final rules = (types ?? ProvisionalTypeRegistry.builtins()).lookup(await _habitType(habitId) ?? '');
+      final calendar = await _calendar();
+      final occurredAt = (at ?? calendar.now(clock())).toUtc();
+      if (logDate != null) {
+        DayResolver(calendar.timeline, () => occurredAt).validateBackdate(logDate);
+      }
+      final date = logDate ?? calendar.timeline.localDateAt(occurredAt);
+      final rows = await _rowsFor(habitId, date);
+      final confirmed = await _confirmedLog(habitId, date);
+      final day = applyLogRows(confirmed: confirmed, rows: rows, rules: rules);
+
+      final units = rules?.parseValue(delta);
+      final current = rules?.parseValue(day.value) ?? 0;
+      if (rules == null ||
+          units == null ||
+          rules.increment(day.deleted ? 0 : current, delta) == null) {
+        throw const LogFailure(LogFailureKind.invalidDelta);
+      }
+      final wire = rules.formatValue(units);
+
+      if (day.deleted) {
+        // ASSUMPTION(4.3a-increment-deleted-day): the person adding to a day this device shows
+        // as deleted means to bring it back with that amount.
+        return setLogValue(habitId: habitId, value: wire, at: occurredAt, logDate: logDate);
+      }
+
+      final last = rows.isEmpty ? null : rows.last;
+      if (last != null && last.state == OutboxState.pending && last.operation == 'log.increment') {
+        final payload = (jsonDecode(last.payload) as Map).cast<String, Object?>();
+        final folded = rules.increment(rules.parseValue(payload['delta']) ?? 0, wire);
+        if (folded != null) {
+          payload['delta'] = rules.formatValue(folded);
+          await (db.update(db.outbox)..where((o) => o.seq.equals(last.seq))).write(
+            OutboxCompanion(
+              payload: Value(jsonEncode(payload)),
+              occurredAt: Value(_iso(occurredAt)),
+            ),
+          );
+          return LocalWrite(last.mutationId, date, coalesced: true);
+        }
+      }
+
+      final mutationId = await _append(
+        entity: 'habit_log',
+        entityId: confirmed?.id ?? last?.entityId ?? _uuid.v7(),
+        operation: 'log.increment',
+        baseVersion: null,
+        calendar: calendar,
+        localDate: date,
+        habitId: habitId,
+        occurredAt: occurredAt,
+        payload: {
+          'habit_id': habitId,
+          'delta': wire,
+          if (logDate != null) ...{'date_mode': 'backdate', 'log_date': logDate.toString()},
+        },
+      );
+      return LocalWrite(mutationId, date, coalesced: false);
+    });
+  }
+
+  /// The habit's type key: the confirmed row's, else its queued habit.create's.
+  Future<String?> _habitType(String habitId) async {
+    final confirmed = await (db.select(
+      db.habits,
+    )..where((h) => h.id.equals(habitId))).getSingleOrNull();
+    if (confirmed != null) return confirmed.type;
+    final create =
+        await (db.select(db.outbox)
+              ..where(
+                (o) =>
+                    o.entity.equals('habit') &
+                    o.entityId.equals(habitId) &
+                    o.operation.equals('habit.create'),
+              )
+              ..limit(1))
+            .getSingleOrNull();
+    if (create == null) return null;
+    return (jsonDecode(create.payload) as Map)['type'] as String?;
   }
 
   /// profile.set_timezone (screen 04): entity user, id = the user id, base_version = the
@@ -690,6 +789,22 @@ class _HabitState {
     required this.baseVersion,
     required this.unsentCreate,
   });
+}
+
+/// A log write that was not made (4.3a).
+class LogFailure implements Exception {
+  final LogFailureKind kind;
+
+  const LogFailure(this.kind);
+
+  @override
+  String toString() => 'LogFailure($kind)';
+}
+
+enum LogFailureKind {
+  /// The delta breaks the habit's type rules (not positive, too precise, over a day's limit, a
+  /// type without increments such as yes / no, or a type this app does not know).
+  invalidDelta,
 }
 
 /// The first reminder of a habit created on screen 08. It follows the device's local time, as

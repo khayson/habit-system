@@ -48,6 +48,9 @@ class FakeSyncServer implements SyncTransport {
   int bootstrapCalls = 0;
   final List<List<String>> sentMutationIds = [];
 
+  /// Sees every mutation as it arrives, before it is applied (4.3a).
+  void Function(Map<String, Object?> mutation)? onMutation;
+
   int get seq => journal.length;
 
   /// The user entity version; profile.set_timezone bumps it (and so can a test, as another
@@ -138,6 +141,9 @@ class FakeSyncServer implements SyncTransport {
     }
     final after = _seqOf(cursor);
     sentMutationIds.add([for (final m in mutations) m['mutation_id'] as String]);
+    for (final m in mutations) {
+      onMutation?.call(m);
+    }
 
     final acks = [for (final m in mutations) _future(m) ?? apply(_deepCopy(m))];
     if (crashAfterCommit) {
@@ -205,6 +211,7 @@ class FakeSyncServer implements SyncTransport {
     final ack = switch (m['operation']) {
       'habit.create' => _habitCreate(m),
       'log.set_value' || 'log.set_binary' => _setValue(m),
+      'log.increment' => _increment(m),
       'log.delete' => _delete(m),
       'profile.set_timezone' => _setTimezone(m),
       'profile.update' => _profileUpdate(m),
@@ -599,6 +606,57 @@ class FakeSyncServer implements SyncTransport {
         ? 'srv-${logs.length + 1}'
         : m['entity_id'] as String;
     return _writeLog(id, habitId, date, p['value'], 1, m);
+  }
+
+  /// A35, as the API: an additive merge with no base version; concurrent increments commute.
+  /// A deleted day is refused with the tombstone as `current`; a yes / no habit has no increment.
+  Map<String, dynamic> _increment(Map<String, dynamic> m) {
+    final p = (m['payload'] as Map).cast<String, dynamic>();
+    final habitId = p['habit_id'] as String;
+    final habit = habits[habitId];
+    if (habit == null) {
+      return {'mutation_id': m['mutation_id'], 'status': 'dependency_pending', 'duplicate': false};
+    }
+    if (habit['archived_at'] != null) {
+      return _failed(m, 'rejected', {'code': 'habit_archived', 'message': 'x'});
+    }
+    final delta = p['delta'];
+    final decimal = delta is String;
+    if (habit['type'] == 'binary' || !(decimal || delta is int)) {
+      return _failed(m, 'rejected', {'code': 'unsupported_operation', 'message': 'x'});
+    }
+    int units(Object? v) => v == null
+        ? 0
+        : v is int
+        ? v
+        : (double.parse(v as String) * 1000).round();
+    Object wire(int u) => decimal ? '${u ~/ 1000}.${(u % 1000).toString().padLeft(3, '0')}' : u;
+    final date = m['local_date_hint'] as String;
+    final existing = _byNaturalKey(habitId, date);
+    if (existing != null && existing['deleted_at'] != null) {
+      return _failed(m, 'conflict', {
+        'code': 'resource_deleted',
+        'message': 'x',
+        'entity': 'habit_log',
+        'resource_id': existing['id'],
+        'current_version': existing['version'],
+        'current': existing,
+      }, entityId: existing['id'] as String);
+    }
+    if (existing != null) {
+      return _writeLog(
+        existing['id'] as String,
+        habitId,
+        date,
+        wire(units(existing['value']) + units(delta)),
+        (existing['version'] as int) + 1,
+        m,
+      );
+    }
+    final id = logs.containsKey(m['entity_id'])
+        ? 'srv-${logs.length + 1}'
+        : m['entity_id'] as String;
+    return _writeLog(id, habitId, date, wire(units(delta)), 1, m);
   }
 
   Map<String, dynamic> _writeLog(

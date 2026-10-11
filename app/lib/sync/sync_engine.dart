@@ -608,10 +608,11 @@ class SyncEngine {
 
   /// The client never predicts versions (F4): once a row is acked, the entity's later unsent
   /// rows are based on the version the server actually holds. An identical-state write is
-  /// acked without a bump, and this keeps the next write from a false conflict.
+  /// acked without a bump, and this keeps the next write from a false conflict. A35: a
+  /// log.increment never carries a base version, so it is never rebased.
   Future<void> _rebase(OutboxRow row, String entityId, int version) => db.customUpdate(
     '''UPDATE outbox SET base_version = ?
-       WHERE seq > ? AND state IN (?, ?, ?) AND (
+       WHERE seq > ? AND state IN (?, ?, ?) AND operation <> 'log.increment' AND (
          (entity = 'habit_log' AND ? = 'habit_log' AND habit_id = ? AND local_date_hint = ?)
          OR (entity = ? AND entity <> 'habit_log' AND entity_id = ?))''',
     variables: [
