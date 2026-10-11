@@ -11,7 +11,9 @@ import '../domain/provisional_type_rules.dart';
 import '../sync/outbox_states.dart';
 import 'account_calendar.dart';
 import 'app_database.dart';
+import 'conflicts.dart';
 import 'entity_codec.dart';
+import 'local_view.dart';
 import 'log_overlay.dart';
 
 /// The only way the app writes domain data locally (A23, invariant 16). Pure Dart: no Flutter
@@ -784,6 +786,54 @@ class LocalMutationService {
     });
   }
 
+  /// A37 KEEP SYNCED: the existing discard (the row moves to discarded_mutations; nothing is
+  /// sent, and the server's value stays).
+  Future<ResolveResult> keepSynced(String mutationId) async {
+    final row = await (db.select(
+      db.outbox,
+    )..where((o) => o.mutationId.equals(mutationId))).getSingleOrNull();
+    if (row == null) return ResolveResult.gone;
+    return await discard(mutationId) ? ResolveResult.done : ResolveResult.notAllowed;
+  }
+
+  /// A37 USE MINE, in one transaction: the row moves to discarded_mutations (the discard above)
+  /// and a NEW mutation is queued with the same entity, operation and payload (exceptions in
+  /// [UseMinePlan]), the original occurred_at, no error, and the server's current version as its
+  /// base. A new id, because the server keeps a receipt for the old one. A second conflict
+  /// returns the new row to needs_attention for another look.
+  Future<ResolveResult> useMine(String mutationId) => db.transaction(() async {
+    final row = await (db.select(
+      db.outbox,
+    )..where((o) => o.mutationId.equals(mutationId))).getSingleOrNull();
+    if (row == null) return ResolveResult.gone;
+    final habitId = row.entity == 'habit_log' ? row.habitId : row.entityId;
+    final habit = habitId == null
+        ? null
+        : (await LocalView(db).habits()).where((h) => h.id == habitId).firstOrNull;
+    final plan = UseMinePlan.of(row, habitActive: habit != null && !habit.archived);
+    if (plan == null) return ResolveResult.notAllowed;
+    if (!await discard(mutationId)) return ResolveResult.notAllowed;
+    await db
+        .into(db.outbox)
+        .insert(
+          OutboxCompanion.insert(
+            mutationId: _uuid.v7(),
+            entity: row.entity,
+            entityId: plan.entityId,
+            operation: plan.operation,
+            baseVersion: Value(plan.baseVersion),
+            occurredAt: row.occurredAt,
+            capturedTimezone: Value(row.capturedTimezone),
+            localDateHint: Value(row.localDateHint),
+            payload: jsonEncode(plan.payload),
+            habitId: Value(row.habitId),
+            state: OutboxState.pending,
+            createdAt: clock().toUtc().millisecondsSinceEpoch,
+          ),
+        );
+    return ResolveResult.done;
+  });
+
   /// Screen 18 "Try again": a blocked row becomes due now instead of after its backoff.
   Future<bool> retryNow(String mutationId) async {
     final updated =
@@ -894,6 +944,18 @@ class _HabitState {
     required this.baseVersion,
     required this.unsentCreate,
   });
+}
+
+/// A37: what a resolution did.
+enum ResolveResult {
+  done,
+
+  /// The row cannot be resolved that way (its code allows discarding only, the habit is still
+  /// archived, or the row no longer needs a look).
+  notAllowed,
+
+  /// No such row.
+  gone,
 }
 
 /// A36: a timer draft as screens read it.
