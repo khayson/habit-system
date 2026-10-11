@@ -33,6 +33,14 @@
 //             30-minute duration (1800 s). Every ack is accepted; the canonical schedule B
 //             pulls equals what A shows (weekdays sorted).
 //   habit-archived A archives a habit; B's later check-in is habit_archived, kept for review.
+//   log-increment  A and B add to the same habit-day offline (A35); both sync: the total is the
+//             sum on both devices and the server, nothing needs a look.
+//   log-conflict   B writes a stale value: keep synced converges on the server's value; then A
+//             writes a stale value and uses its own (A37): both converge on A's, a higher version.
+//   log-deleted    A deletes the day, B adds to it: kept with `current`; use mine restores the
+//             day with B's amount.
+//   timer-draft    A times a duration habit offline (start, pause, resume, finish, A36): one
+//             increment of whole seconds; after sync both devices agree.
 // Exits non-zero at the first failed check, or unless both databases end identical.
 import 'dart:convert';
 import 'dart:io';
@@ -42,6 +50,7 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:habit/data/account_calendar.dart';
 import 'package:habit/data/app_database.dart';
+import 'package:habit/data/conflicts.dart';
 import 'package:habit/data/entity_codec.dart';
 import 'package:habit/data/local_mutation_service.dart';
 import 'package:habit/data/local_view.dart';
@@ -521,6 +530,112 @@ Future<void> main(List<String> args) async {
     _check(pulledB[ids['Pilates']]!['target_value'] == 1800, '30 minutes is 1800 seconds');
   });
 
+  Future<OutboxRow> attention(_Device d) async =>
+      (await d.outbox()).singleWhere((r) => r.state == OutboxState.needsAttention);
+  Future<Object?> valueOn(_Device d, String id) async {
+    final log = await d.log(id, today);
+    return log.deletedAt == null ? jsonDecode(log.value!) : null;
+  }
+
+  late String cups;
+  await _scenario('log-increment', () async {
+    cups = await water(a);
+    await a.sync();
+    await b.sync();
+    await a.writer.incrementLog(habitId: cups, delta: '250');
+    await a.writer.incrementLog(habitId: cups, delta: '0.5');
+    await b.writer.incrementLog(habitId: cups, delta: '500');
+    _check((await a.outbox()).length == 1, 'A folded its two additions into one row');
+    await a.sync();
+    await b.sync();
+    await a.sync();
+    final onA = await valueOn(a, cups);
+    final onB = await valueOn(b, cups);
+    _check(onA == '750.500' && onB == '750.500', 'the sum on both devices ($onA, $onB)');
+    _check((await a.outbox()).isEmpty && (await b.outbox()).isEmpty, 'nothing needs a look');
+  });
+
+  await _scenario('log-conflict', () async {
+    await a.writer.setLogValue(habitId: cups, value: '1100.000');
+    await a.sync();
+    await b.writer.setLogValue(habitId: cups, value: '1200.000');
+    await b.sync();
+    final stale = await attention(b);
+    _check(jsonDecode(stale.lastError!)['code'] == 'version_conflict', 'B is stale');
+    _check(await b.writer.keepSynced(stale.mutationId) == ResolveResult.done, 'kept synced');
+    await b.sync();
+    _check(await valueOn(b, cups) == '1100.000', "B shows the server's value");
+
+    final before = (await b.log(cups, today)).version;
+    await b.writer.setLogValue(habitId: cups, value: '1400.000');
+    await b.sync();
+    await a.writer.setLogValue(habitId: cups, value: '1500.000');
+    await a.sync();
+    final mine = await attention(a);
+    final view = (await LocalView(a.db).conflict(mine.mutationId))!;
+    _check(
+      view.canUseMine && view.serverValue == '1400.000',
+      "A sees B's value and may use its own",
+    );
+    _check(await a.writer.useMine(mine.mutationId) == ResolveResult.done, 'used mine');
+    await a.sync();
+    await b.sync();
+    final onA = await valueOn(a, cups);
+    final onB = await valueOn(b, cups);
+    final version = (await b.log(cups, today)).version;
+    _check(onA == '1500.000' && onB == '1500.000', "both converge on A's value ($onA, $onB)");
+    _check(version > before + 1, 'a higher version ($before -> $version)');
+  });
+
+  await _scenario('log-deleted', () async {
+    await a.writer.deleteLog(habitId: cups, date: today);
+    await a.sync();
+    await b.writer.incrementLog(habitId: cups, delta: '100');
+    await b.sync();
+    final kept = await attention(b);
+    final error = jsonDecode(kept.lastError!) as Map;
+    _check(error['code'] == 'resource_deleted', 'resource_deleted (${error['code']})');
+    _check((error['current'] as Map?)?['deleted_at'] != null, 'current is the tombstone');
+    _check(await b.writer.useMine(kept.mutationId) == ResolveResult.done, 'used mine');
+    await b.sync();
+    await a.sync();
+    final onA = await valueOn(a, cups);
+    final onB = await valueOn(b, cups);
+    _check(onA == '100.000' && onB == '100.000', "the day is back with B's amount ($onA, $onB)");
+  });
+
+  await _scenario('timer-draft', () async {
+    final yoga = await a.writer.createHabitUnchecked(
+      name: 'Yoga',
+      type: 'duration',
+      target: 900,
+      category: 'health',
+      startLocalDate: today,
+    );
+    await a.sync();
+    await b.sync();
+    // Real time, replayed: started 3 minutes ago, paused for a minute, finished now.
+    final t0 = DateTime.now().toUtc();
+    var clock = t0.subtract(const Duration(minutes: 3));
+    final timer = LocalMutationService(a.db, clock: () => clock);
+    await timer.startTimer(yoga);
+    clock = t0.subtract(const Duration(minutes: 1, seconds: 59, milliseconds: 500));
+    await timer.pauseTimer(yoga);
+    clock = t0.subtract(const Duration(minutes: 1));
+    await timer.resumeTimer(yoga);
+    clock = t0;
+    await timer.finishTimer(yoga);
+    final queued = (await a.outbox()).single;
+    _check(queued.operation == 'log.increment', 'one increment (${queued.operation})');
+    _check(jsonDecode(queued.payload)['delta'] == 120, 'whole seconds: 60.5 s + 60 s = 120 s');
+    _check(await a.db.select(a.db.timerDrafts).get().then((d) => d.isEmpty), 'the draft is gone');
+    await a.sync();
+    await b.sync();
+    final onA = await valueOn(a, yoga);
+    final onB = await valueOn(b, yoga);
+    _check(onA == 120 && onB == 120, 'both devices agree ($onA, $onB)');
+  });
+
   await a.sync();
   await b.sync();
   final stateA = await a.snapshot();
@@ -705,7 +820,18 @@ class _Device {
   }
 
   Future<void> sync() async {
-    final outcome = await engine.run(force: true);
+    var outcome = await engine.run(force: true);
+    // One account, two devices and many scenarios share the API's per-user sync limit (60 a
+    // minute by default, as in CI): a 429 waits out its Retry-After and runs again.
+    for (var attempt = 0; outcome == SyncOutcome.rateLimited && attempt < 3; attempt++) {
+      final until = (await (db.select(db.syncState)).getSingle()).backoffUntil;
+      final wait = until == null
+          ? const Duration(seconds: 30)
+          : Duration(milliseconds: until - DateTime.now().millisecondsSinceEpoch);
+      _say('  $name sync: rate limited, waiting ${wait.inSeconds} s');
+      await Future<void>.delayed(wait.isNegative ? Duration.zero : wait);
+      outcome = await engine.run(force: true);
+    }
     final rows = await outbox();
     _say('  $name sync: ${outcome.name} (outbox ${rows.map((r) => r.state).join(', ')})');
     if (outcome != SyncOutcome.completed) {
