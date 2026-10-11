@@ -29,6 +29,9 @@ abstract interface class ProvisionalTypeRules {
 
   /// How screens present the type (icon, label, value field), so no widget names a type key.
   TypeDisplay get display;
+
+  /// A36: a habit of this type can be timed (a local timer draft that finishes as an increment).
+  bool get supportsTimer;
 }
 
 /// The design file's three presentations: "Yes / no", "Quantity" (an amount in a unit) and
@@ -83,6 +86,9 @@ class BinaryRules implements ProvisionalTypeRules {
 
   @override
   TypeDisplay get display => TypeDisplay.yesNo;
+
+  @override
+  bool get supportsTimer => false;
 }
 
 class QuantityRules implements ProvisionalTypeRules {
@@ -131,6 +137,9 @@ class QuantityRules implements ProvisionalTypeRules {
 
   @override
   TypeDisplay get display => TypeDisplay.quantity;
+
+  @override
+  bool get supportsTimer => false;
 }
 
 class DurationRules implements ProvisionalTypeRules {
@@ -172,4 +181,7 @@ class DurationRules implements ProvisionalTypeRules {
 
   @override
   TypeDisplay get display => TypeDisplay.duration;
+
+  @override
+  bool get supportsTimer => true;
 }

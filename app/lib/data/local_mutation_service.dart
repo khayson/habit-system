@@ -375,6 +375,129 @@ class LocalMutationService {
     });
   }
 
+  // A36: timer drafts. Local only: never in the outbox, never synced. Each call is one
+  // transaction; the clock is the injected one, and no platform timer runs here.
+
+  /// Starts a timer for [habitId]; a habit that already has a draft gets it back unchanged.
+  Future<TimerDraftView> startTimer(String habitId) => db.transaction(() async {
+    await _timerAllowed(habitId);
+    final existing = await _draft(habitId);
+    if (existing != null) return TimerDraftView(existing);
+    final now = clock().millisecondsSinceEpoch;
+    await db
+        .into(db.timerDrafts)
+        .insert(
+          TimerDraftsCompanion.insert(
+            habitId: habitId,
+            state: TimerDraftView.running,
+            elapsedMs: 0,
+            runningSince: Value(now),
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+    return TimerDraftView((await _draft(habitId))!);
+  });
+
+  /// Banks the running span; a paused draft stays as it is.
+  Future<TimerDraftView> pauseTimer(String habitId) => db.transaction(() async {
+    await _timerAllowed(habitId);
+    final draft = await _requireDraft(habitId);
+    if (draft.state != TimerDraftView.running) return TimerDraftView(draft);
+    final now = clock().millisecondsSinceEpoch;
+    return _writeDraft(
+      draft,
+      TimerDraftsCompanion(
+        state: const Value(TimerDraftView.paused),
+        elapsedMs: Value(TimerDraftView(draft).elapsedAt(now)),
+        runningSince: const Value(null),
+        updatedAt: Value(now),
+      ),
+    );
+  });
+
+  /// Runs a paused draft again from now; a running draft stays as it is.
+  Future<TimerDraftView> resumeTimer(String habitId) => db.transaction(() async {
+    await _timerAllowed(habitId);
+    final draft = await _requireDraft(habitId);
+    if (draft.state == TimerDraftView.running) return TimerDraftView(draft);
+    final now = clock().millisecondsSinceEpoch;
+    return _writeDraft(
+      draft,
+      TimerDraftsCompanion(
+        state: const Value(TimerDraftView.running),
+        runningSince: Value(now),
+        updatedAt: Value(now),
+      ),
+    );
+  });
+
+  /// A36 finish: whole seconds of the elapsed time. Zero removes the draft and writes nothing
+  /// (null). Otherwise the draft is removed and a log.increment of the seconds is queued, filed
+  /// under the habit-day of this moment, in ONE transaction (invariant 8): a refused increment
+  /// ([LogFailure]) leaves the draft. More than a day can hold throws [TimerFailureKind.tooLong]
+  /// and leaves the draft.
+  Future<LocalWrite?> finishTimer(String habitId, {ProvisionalTypeRegistry? types}) =>
+      db.transaction(() async {
+        final rules = await _timerAllowed(habitId, types: types);
+        final draft = await _requireDraft(habitId);
+        final seconds = TimerDraftView(draft).elapsedAt(clock().millisecondsSinceEpoch) ~/ 1000;
+        await (db.delete(db.timerDrafts)..where((t) => t.habitId.equals(habitId))).go();
+        if (seconds == 0) return null;
+        if (rules.parseValue(rules.formatValue(seconds)) == null) {
+          throw const TimerFailure(TimerFailureKind.tooLong);
+        }
+        return incrementLog(habitId: habitId, delta: rules.formatValue(seconds), types: types);
+      });
+
+  /// Throws the draft away; nothing is written.
+  Future<void> discardTimer(String habitId) => db.transaction(() async {
+    await (db.delete(db.timerDrafts)..where((t) => t.habitId.equals(habitId))).go();
+  });
+
+  /// The habit's draft as it changes; null without one.
+  Stream<TimerDraftView?> watchTimer(String habitId) =>
+      (db.select(db.timerDrafts)..where((t) => t.habitId.equals(habitId))).watchSingleOrNull().map(
+        (d) => d == null ? null : TimerDraftView(d),
+      );
+
+  Future<TimerDraft?> _draft(String habitId) =>
+      (db.select(db.timerDrafts)..where((t) => t.habitId.equals(habitId))).getSingleOrNull();
+
+  Future<TimerDraft> _requireDraft(String habitId) async =>
+      await _draft(habitId) ?? (throw const TimerFailure(TimerFailureKind.noDraft));
+
+  Future<TimerDraftView> _writeDraft(TimerDraft draft, TimerDraftsCompanion change) async {
+    await (db.update(db.timerDrafts)..where((t) => t.habitId.equals(draft.habitId))).write(change);
+    return TimerDraftView((await _draft(draft.habitId))!);
+  }
+
+  /// The habit's rules when it may be timed: a type whose rules support a timer (B2), and not
+  /// archived on this device.
+  Future<ProvisionalTypeRules> _timerAllowed(
+    String habitId, {
+    ProvisionalTypeRegistry? types,
+  }) async {
+    final rules = (types ?? ProvisionalTypeRegistry.builtins()).lookup(
+      await habitTypeOf(db, habitId) ?? '',
+    );
+    if (rules == null || !rules.supportsTimer) {
+      throw const TimerFailure(TimerFailureKind.notSupported);
+    }
+    bool archived;
+    try {
+      archived = (await _habitState(habitId)).archived;
+    } on HabitEditFailure catch (e) {
+      if (e.kind == HabitEditFailureKind.unknownHabit) {
+        throw const TimerFailure(TimerFailureKind.notSupported);
+      }
+      // A change that needs a look does not stop a timer; its check-in queues behind it.
+      archived = false;
+    }
+    if (archived) throw const TimerFailure(TimerFailureKind.archived);
+    return rules;
+  }
+
   /// profile.set_timezone (screen 04): entity user, id = the user id, base_version = the
   /// confirmed user version. The server applies it from the start of the next day (A26), or
   /// cancels a pending change when [timezone] is the zone in force. Unsent rows coalesce: the
@@ -771,6 +894,56 @@ class _HabitState {
     required this.baseVersion,
     required this.unsentCreate,
   });
+}
+
+/// A36: a timer draft as screens read it.
+class TimerDraftView {
+  static const running = 'running';
+  static const paused = 'paused';
+
+  final TimerDraft row;
+
+  const TimerDraftView(this.row);
+
+  String get habitId => row.habitId;
+  String get state => row.state;
+  int get elapsedMs => row.elapsedMs;
+  int? get runningSince => row.runningSince;
+  int get createdAt => row.createdAt;
+
+  /// Banked time plus the running span; a clock set backwards adds nothing (never shrinks).
+  int elapsedAt(int nowMs) {
+    final since = row.runningSince;
+    if (row.state != running || since == null) return row.elapsedMs;
+    final span = nowMs - since;
+    return row.elapsedMs + (span > 0 ? span : 0);
+  }
+
+  Duration elapsed(DateTime now) => Duration(milliseconds: elapsedAt(now.millisecondsSinceEpoch));
+}
+
+/// A timer action that was not done (A36).
+class TimerFailure implements Exception {
+  final TimerFailureKind kind;
+
+  const TimerFailure(this.kind);
+
+  @override
+  String toString() => 'TimerFailure($kind)';
+}
+
+enum TimerFailureKind {
+  /// The habit's type has no timer (or the habit is unknown here).
+  notSupported,
+
+  /// The habit shows as archived.
+  archived,
+
+  /// No draft for this habit.
+  noDraft,
+
+  /// More time than one habit-day can hold.
+  tooLong,
 }
 
 /// A log write that was not made (4.3a).
