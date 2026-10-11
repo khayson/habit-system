@@ -2803,6 +2803,246 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Back'**
   String get amountBack;
+
+  /// No description provided for @progressOfSpoken.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} of {target} {unit}'**
+  String progressOfSpoken(String value, String target, String unit);
+
+  /// No description provided for @todayProgressDone.
+  ///
+  /// In en, this message translates to:
+  /// **'{progress} · done'**
+  String todayProgressDone(String progress);
+
+  /// No description provided for @todayTimerRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Timer running · {time}'**
+  String todayTimerRunning(String time);
+
+  /// No description provided for @todayTimerPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Timer paused · {time}'**
+  String todayTimerPaused(String time);
+
+  /// No description provided for @todayTimerRunningSpoken.
+  ///
+  /// In en, this message translates to:
+  /// **'Timer running, {minutes, plural, =1{1 minute} other{{minutes} minutes}} so far'**
+  String todayTimerRunningSpoken(int minutes);
+
+  /// No description provided for @todayTimerPausedSpoken.
+  ///
+  /// In en, this message translates to:
+  /// **'Timer paused at {minutes, plural, =1{1 minute} other{{minutes} minutes}}'**
+  String todayTimerPausedSpoken(int minutes);
+
+  /// No description provided for @todayOpenTimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Open timer'**
+  String get todayOpenTimer;
+
+  /// No description provided for @todayAmountSpoken.
+  ///
+  /// In en, this message translates to:
+  /// **'{habit}: {progress}'**
+  String todayAmountSpoken(String habit, String progress);
+
+  /// No description provided for @todayAddSpoken.
+  ///
+  /// In en, this message translates to:
+  /// **'Add {amount}'**
+  String todayAddSpoken(String amount);
+
+  /// No description provided for @detailStartTimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Start timer'**
+  String get detailStartTimer;
+
+  /// No description provided for @timerRunningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A moment to breathe'**
+  String get timerRunningTitle;
+
+  /// No description provided for @timerRunningSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{habit} · {minutes}-minute daily target'**
+  String timerRunningSubtitle(String habit, String minutes);
+
+  /// No description provided for @timerPausedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause at your pace'**
+  String get timerPausedTitle;
+
+  /// No description provided for @timerPausedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{habit} · your elapsed time is preserved'**
+  String timerPausedSubtitle(String habit);
+
+  /// No description provided for @timerOver.
+  ///
+  /// In en, this message translates to:
+  /// **'{elapsed} / {target}'**
+  String timerOver(String elapsed, String target);
+
+  /// No description provided for @timerSpoken.
+  ///
+  /// In en, this message translates to:
+  /// **'{elapsed, plural, =1{1 minute} other{{elapsed} minutes}} of {target} minutes'**
+  String timerSpoken(int elapsed, String target);
+
+  /// No description provided for @timerPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get timerPause;
+
+  /// No description provided for @timerResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get timerResume;
+
+  /// No description provided for @timerTodayTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes, plural, =1{1 minute today} other{{minutes} minutes today}}'**
+  String timerTodayTotal(int minutes);
+
+  /// No description provided for @timerKeepGoing.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep going if you like. You can save partial time without pretending the habit is complete.'**
+  String get timerKeepGoing;
+
+  /// No description provided for @timerPauseButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause timer'**
+  String get timerPauseButton;
+
+  /// No description provided for @timerResumeButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume timer'**
+  String get timerResumeButton;
+
+  /// No description provided for @timerFinish.
+  ///
+  /// In en, this message translates to:
+  /// **'Save progress and finish'**
+  String get timerFinish;
+
+  /// No description provided for @timerRunningNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The timer continues locally without network access.'**
+  String get timerRunningNote;
+
+  /// No description provided for @timerPausedNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Returning to Today keeps partial progress.'**
+  String get timerPausedNote;
+
+  /// No description provided for @timerPausedCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Timer paused'**
+  String get timerPausedCardTitle;
+
+  /// No description provided for @timerPausedCardBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes, plural, =1{1 minute is saved in the draft.} other{{minutes} minutes are saved in the draft.}} Nothing is logged until you finish and save.'**
+  String timerPausedCardBody(int minutes);
+
+  /// No description provided for @timerSavedMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {minutes} min.'**
+  String timerSavedMinutes(int minutes);
+
+  /// No description provided for @timerSavedSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {seconds} s.'**
+  String timerSavedSeconds(int seconds);
+
+  /// No description provided for @timerNothingToSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to save yet.'**
+  String get timerNothingToSave;
+
+  /// No description provided for @timerGone.
+  ///
+  /// In en, this message translates to:
+  /// **'This timer is no longer here.'**
+  String get timerGone;
+
+  /// No description provided for @timerTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'This timer ran longer than a day can hold.'**
+  String get timerTooLong;
+
+  /// No description provided for @timerTooLongHint.
+  ///
+  /// In en, this message translates to:
+  /// **'You can add time yourself from Today.'**
+  String get timerTooLongHint;
+
+  /// No description provided for @timerTooMuchToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today can\'t hold that much time.'**
+  String get timerTooMuchToday;
+
+  /// No description provided for @timerArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'This habit is archived. Restore it to save this time.'**
+  String get timerArchived;
+
+  /// No description provided for @timerDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard timer'**
+  String get timerDiscard;
+
+  /// No description provided for @timerDiscardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard this timer?'**
+  String get timerDiscardTitle;
+
+  /// No description provided for @timerDiscardBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The time so far won\'t be saved.'**
+  String get timerDiscardBody;
+
+  /// No description provided for @timerDiscardConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get timerDiscardConfirm;
+
+  /// No description provided for @timerKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep timer'**
+  String get timerKeep;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

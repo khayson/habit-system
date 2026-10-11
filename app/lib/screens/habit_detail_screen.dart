@@ -12,6 +12,7 @@ import '../core/time_zones.dart';
 import '../data/habit_detail_view.dart';
 import '../domain/calendar/local_date.dart';
 import '../domain/provisional_type_rules.dart';
+import '../habit_types/habit_type_ui.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../providers/account_context.dart';
 import '../providers/stream_model.dart';
@@ -109,6 +110,7 @@ class _DetailState extends State<_Detail> {
             EditBlockedNote(habit: detail.habit),
             const SizedBox(height: HabitSpace.s24),
           ],
+          _LogActions(detail: detail),
           _Stats(detail: detail),
           const SizedBox(height: HabitSpace.s32),
           Semantics(
@@ -201,6 +203,62 @@ class _DetailState extends State<_Detail> {
         : detail.schedule.versions.first.effectiveDate;
     final d = DateTime.fromMillisecondsSinceEpoch(start.midnightMillis, isUtc: true);
     return LocalDate.ofWallClockMillis(DateTime.utc(d.year, d.month).millisecondsSinceEpoch);
+  }
+}
+
+/// 4.3b C5 (a design gap: 12 shows no logging controls): "Add progress" opens 34; a type whose
+/// rules support a timer also gets "Start timer" (or "Open timer" while a draft exists).
+class _LogActions extends StatelessWidget {
+  final HabitDetail detail;
+
+  static final _types = HabitTypeUiRegistry.builtins();
+
+  const _LogActions({required this.detail});
+
+  @override
+  Widget build(BuildContext context) {
+    final type = _types.lookup(detail.habit.payload['type'] as String?);
+    final account = context.read<AccountContext?>();
+    if (account == null || type == null || !type.hasAmountEntry || detail.habit.archived) {
+      return const SizedBox.shrink();
+    }
+    final l10n = AppLocalizations.of(context);
+    final id = detail.habit.id;
+    Widget button(String label, VoidCallback onPressed, {bool primary = false}) => primary
+        ? FilledButton(
+            onPressed: onPressed,
+            style: FilledButton.styleFrom(
+              minimumSize: const Size(HabitSize.minTarget, HabitSize.minTarget),
+            ),
+            child: Text(label),
+          )
+        : OutlinedButton(
+            onPressed: onPressed,
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(HabitSize.minTarget, HabitSize.minTarget),
+            ),
+            child: Text(label),
+          );
+    return Padding(
+      padding: const EdgeInsets.only(bottom: HabitSpace.s24),
+      child: Wrap(
+        spacing: HabitSpace.s12,
+        runSpacing: HabitSpace.s8,
+        children: [
+          button(l10n.amountTitleProgress, () => context.push(Routes.amount(id)), primary: true),
+          if (type.rules.supportsTimer)
+            StreamBuilder(
+              stream: account.actions.watchTimer(id),
+              builder: (context, snapshot) => snapshot.data == null
+                  ? button(l10n.detailStartTimer, () async {
+                      await account.actions.startTimer(id);
+                      if (context.mounted) context.push(Routes.timer(id));
+                    })
+                  : button(l10n.todayOpenTimer, () => context.push(Routes.timer(id))),
+            ),
+        ],
+      ),
+    );
   }
 }
 

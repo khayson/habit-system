@@ -116,9 +116,15 @@ abstract class HabitTypeUi {
   /// One step of the stepper and the Today quick-add, in the type's units.
   int suggestStep(Object? target, String? unit) => 1;
 
-  /// "1.25 / 2 L", "6 / 10 min": the day's value over the target in force.
-  String progress(HabitFormat format, Object? value, Object? target, String? unit) =>
-      format.typeLabel(rules);
+  /// "1.25 / 2 L", "6 / 10 min": the day's value over the target in force; [spoken] reads
+  /// "1.25 of 2 L" for screen readers.
+  String progress(
+    HabitFormat format,
+    Object? value,
+    Object? target,
+    String? unit, {
+    bool spoken = false,
+  }) => format.typeLabel(rules);
 
   /// "+250 ml", "+1 min": an amount in the type's units as an addition.
   String plusAmount(HabitFormat format, int units, String? unit) => '+$units';
@@ -232,10 +238,17 @@ class QuantityTypeUi extends HabitTypeUi {
   }
 
   @override
-  String progress(HabitFormat format, Object? value, Object? target, String? unit) {
+  String progress(
+    HabitFormat format,
+    Object? value,
+    Object? target,
+    String? unit, {
+    bool spoken = false,
+  }) {
     final v = rules.parseValue(value) ?? 0;
     final t = rules.parseTarget(target) ?? 0;
-    return format.l10n.progressOf(format.decimal(v), format.decimal(t), unit ?? '').trim();
+    final of = spoken ? format.l10n.progressOfSpoken : format.l10n.progressOf;
+    return of(format.decimal(v), format.decimal(t), unit ?? '').trim();
   }
 
   @override
@@ -358,11 +371,18 @@ class DurationTypeUi extends HabitTypeUi {
 
   /// Minutes; seconds only when the value is not whole minutes ("6 min 30 s / 10 min").
   @override
-  String progress(HabitFormat format, Object? value, Object? target, String? unit) {
+  String progress(
+    HabitFormat format,
+    Object? value,
+    Object? target,
+    String? unit, {
+    bool spoken = false,
+  }) {
     final v = rules.parseValue(value) ?? 0;
     final t = rules.parseTarget(target) ?? 0;
     final shown = v % 60 == 0 ? '${v ~/ 60}' : format.l10n.minutesSeconds(v ~/ 60, v % 60);
-    return format.l10n.progressOf(shown, format.minutes(t), format.l10n.minutesUnit);
+    final of = spoken ? format.l10n.progressOfSpoken : format.l10n.progressOf;
+    return of(shown, format.minutes(t), format.l10n.minutesUnit);
   }
 
   @override

@@ -1650,4 +1650,187 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get amountBack => 'Back';
+
+  @override
+  String progressOfSpoken(String value, String target, String unit) {
+    return '$value of $target $unit';
+  }
+
+  @override
+  String todayProgressDone(String progress) {
+    return '$progress · done';
+  }
+
+  @override
+  String todayTimerRunning(String time) {
+    return 'Timer running · $time';
+  }
+
+  @override
+  String todayTimerPaused(String time) {
+    return 'Timer paused · $time';
+  }
+
+  @override
+  String todayTimerRunningSpoken(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes minutes',
+      one: '1 minute',
+    );
+    return 'Timer running, $_temp0 so far';
+  }
+
+  @override
+  String todayTimerPausedSpoken(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes minutes',
+      one: '1 minute',
+    );
+    return 'Timer paused at $_temp0';
+  }
+
+  @override
+  String get todayOpenTimer => 'Open timer';
+
+  @override
+  String todayAmountSpoken(String habit, String progress) {
+    return '$habit: $progress';
+  }
+
+  @override
+  String todayAddSpoken(String amount) {
+    return 'Add $amount';
+  }
+
+  @override
+  String get detailStartTimer => 'Start timer';
+
+  @override
+  String get timerRunningTitle => 'A moment to breathe';
+
+  @override
+  String timerRunningSubtitle(String habit, String minutes) {
+    return '$habit · $minutes-minute daily target';
+  }
+
+  @override
+  String get timerPausedTitle => 'Pause at your pace';
+
+  @override
+  String timerPausedSubtitle(String habit) {
+    return '$habit · your elapsed time is preserved';
+  }
+
+  @override
+  String timerOver(String elapsed, String target) {
+    return '$elapsed / $target';
+  }
+
+  @override
+  String timerSpoken(int elapsed, String target) {
+    String _temp0 = intl.Intl.pluralLogic(
+      elapsed,
+      locale: localeName,
+      other: '$elapsed minutes',
+      one: '1 minute',
+    );
+    return '$_temp0 of $target minutes';
+  }
+
+  @override
+  String get timerPause => 'Pause';
+
+  @override
+  String get timerResume => 'Resume';
+
+  @override
+  String timerTodayTotal(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes minutes today',
+      one: '1 minute today',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get timerKeepGoing =>
+      'Keep going if you like. You can save partial time without pretending the habit is complete.';
+
+  @override
+  String get timerPauseButton => 'Pause timer';
+
+  @override
+  String get timerResumeButton => 'Resume timer';
+
+  @override
+  String get timerFinish => 'Save progress and finish';
+
+  @override
+  String get timerRunningNote => 'The timer continues locally without network access.';
+
+  @override
+  String get timerPausedNote => 'Returning to Today keeps partial progress.';
+
+  @override
+  String get timerPausedCardTitle => 'Timer paused';
+
+  @override
+  String timerPausedCardBody(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes minutes are saved in the draft.',
+      one: '1 minute is saved in the draft.',
+    );
+    return '$_temp0 Nothing is logged until you finish and save.';
+  }
+
+  @override
+  String timerSavedMinutes(int minutes) {
+    return 'Saved $minutes min.';
+  }
+
+  @override
+  String timerSavedSeconds(int seconds) {
+    return 'Saved $seconds s.';
+  }
+
+  @override
+  String get timerNothingToSave => 'Nothing to save yet.';
+
+  @override
+  String get timerGone => 'This timer is no longer here.';
+
+  @override
+  String get timerTooLong => 'This timer ran longer than a day can hold.';
+
+  @override
+  String get timerTooLongHint => 'You can add time yourself from Today.';
+
+  @override
+  String get timerTooMuchToday => 'Today can\'t hold that much time.';
+
+  @override
+  String get timerArchived => 'This habit is archived. Restore it to save this time.';
+
+  @override
+  String get timerDiscard => 'Discard timer';
+
+  @override
+  String get timerDiscardTitle => 'Discard this timer?';
+
+  @override
+  String get timerDiscardBody => 'The time so far won\'t be saved.';
+
+  @override
+  String get timerDiscardConfirm => 'Discard';
+
+  @override
+  String get timerKeep => 'Keep timer';
 }
