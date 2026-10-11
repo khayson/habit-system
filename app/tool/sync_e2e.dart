@@ -28,6 +28,10 @@
 //   habit-pending  A raises a synced habit's target: the server dates the new version after
 //             today, and Today keeps the old target (the definition in force).
 //   habit-stale    B edits a habit A already changed: version_conflict, kept with `current`.
+//   habit-schedules A creates five habits offline through the validated draft (4.2b, the first
+//             non-daily schedules the app sends): daily, weekdays, 3 a week, every 2 days and a
+//             30-minute duration (1800 s). Every ack is accepted; the canonical schedule B
+//             pulls equals what A shows (weekdays sorted).
 //   habit-archived A archives a habit; B's later check-in is habit_archived, kept for review.
 // Exits non-zero at the first failed check, or unless both databases end identical.
 import 'dart:convert';
@@ -461,6 +465,60 @@ Future<void> main(List<String> args) async {
     _check((jsonDecode(row.lastError!) as Map)['code'] == 'habit_archived', 'habit_archived');
     _check(jsonDecode(row.payload)['value'] == '100.000', 'the check-in is kept');
     _check(await b.writer.discard(row.mutationId), 'discarded');
+  });
+
+  await _scenario('habit-schedules', () async {
+    HabitDraft every(String name, String type, Object target, Map<String, dynamic> config) =>
+        HabitDraft(
+          name: name,
+          category: 'health',
+          targetValue: target,
+          unit: null,
+          frequencyType: type,
+          frequencyConfig: config,
+        );
+    final drafts = {
+      'Daily stretch': every('Daily stretch', 'daily', 1, const {}),
+      'Gym': every('Gym', 'weekdays', 1, {
+        'days': [5, 1, 3],
+      }),
+      'Swim': every('Swim', 'weekly_count', 1, {'count': 3}),
+      'Plants': every('Plants', 'interval', 1, {
+        'every_n_days': 2,
+        'anchor_date': today.toString(),
+      }),
+    };
+    final ids = <String, String>{};
+    for (final d in drafts.values) {
+      ids[d.name] = await a.writer.createHabit(d, type: 'binary');
+    }
+    ids['Pilates'] = await a.writer.createHabit(
+      every('Pilates', 'daily', 1800, const {}),
+      type: 'duration',
+    );
+    _check((await a.outbox()).length == 5, 'five creates queued offline');
+    await a.sync();
+    _check((await a.outbox()).isEmpty, 'every ack accepted (nothing left in the outbox)');
+    await b.sync();
+    final shownA = {for (final h in await LocalView(a.db).habits()) h.id: h.payload};
+    final pulledB = {
+      for (final h in await b.db.select(b.db.habits).get()) h.id: EntityCodec.habitPayload(h),
+    };
+    for (final MapEntry(key: name, value: id) in ids.entries) {
+      final shown = shownA[id]!;
+      final pulled = pulledB[id]!;
+      _check(
+        jsonEncode(pulled['frequency_config']) == jsonEncode(shown['frequency_config']) &&
+            pulled['frequency_type'] == shown['frequency_type'],
+        '$name: B pulled ${pulled['frequency_type']} ${jsonEncode(pulled['frequency_config'])}, '
+        'A shows ${shown['frequency_type']} ${jsonEncode(shown['frequency_config'])}',
+      );
+    }
+    _check(
+      jsonEncode(pulledB[ids['Gym']]!['frequency_config']) == '{"days":[1,3,5]}',
+      'weekdays sorted: ${jsonEncode(pulledB[ids['Gym']]!['frequency_config'])}',
+    );
+    _check(pulledB[ids['Pilates']]!['target_value'] == 1800, '30 minutes is 1800 seconds');
   });
 
   await a.sync();
