@@ -223,6 +223,56 @@ void main() {
     expect((day(picker.firstDate), day(picker.lastDate)), ('2026-5-1', '2027-5-28'));
   });
 
+  String day(DateTime d) => '${d.year}-${d.month}-${d.day}';
+  Future<CalendarDatePicker> openPicker(WidgetTester tester, String label) async {
+    await reveal(tester, find.text(label));
+    await tester.tap(find.text(label));
+    await tester.pumpAndSettle();
+    return tester.widget<CalendarDatePicker>(find.byType(CalendarDatePicker));
+  }
+
+  testWidgets('I1: after a pick, the range still reaches back to the anchor it opened with', (
+    tester,
+  ) async {
+    await open(tester, current: FrequencyChoice.interval(2, LocalDate.parse('2026-05-01')));
+    await openPicker(tester, '1 May');
+    await tester.tap(find.text('30'));
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
+    final picker = await openPicker(tester, '30 May');
+    expect((day(picker.firstDate), day(picker.lastDate)), ('2026-5-1', '2027-5-28'));
+  });
+
+  testWidgets('I1: an anchor beyond today + 365 stays inside the range', (tester) async {
+    await open(tester, current: FrequencyChoice.interval(2, LocalDate.parse('2027-12-01')));
+    final picker = await openPicker(tester, '1 Dec');
+    expect(tester.takeException(), isNull);
+    expect((day(picker.firstDate), day(picker.lastDate)), ('2026-5-28', '2027-12-1'));
+  });
+
+  testWidgets('I1: /frequency without its request goes back instead of throwing', (tester) async {
+    final router = GoRouter(
+      initialLocation: '/frequency',
+      routes: [
+        GoRoute(path: Routes.today, builder: (context, state) => const Text('today')),
+        ...appRoutes().where((r) => r is GoRoute && r.path == Routes.frequency),
+      ],
+    );
+    addTearDown(router.dispose);
+    await tester.pumpWidget(
+      MaterialApp.router(
+        theme: AppTheme.light,
+        routerConfig: router,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.byType(FrequencyScreen), findsNothing);
+    expect(find.text('today'), findsOneWidget);
+  });
+
   testWidgets('at 200% text every option and control renders without overflow', (tester) async {
     await open(tester, textScale: 2);
     for (final option in ['Specific weekdays', 'Times per week', 'Custom interval', 'Every day']) {

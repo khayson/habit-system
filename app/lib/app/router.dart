@@ -179,6 +179,8 @@ List<RouteBase> appRoutes({
   ),
   GoRoute(
     path: Routes.frequency,
+    // 4.2b I1: opened without its request (restored or deep-linked): back to Today.
+    redirect: (context, state) => state.extra is FrequencyRequest ? null : Routes.today,
     builder: (context, state) => FrequencyScreen(request: state.extra! as FrequencyRequest),
   ),
   GoRoute(path: Routes.queue, builder: (context, state) => const SyncQueueScreen()),

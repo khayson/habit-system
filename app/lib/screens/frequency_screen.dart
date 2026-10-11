@@ -36,6 +36,8 @@ class _FrequencyScreenState extends State<FrequencyScreen> {
   late int _count;
   late int _every;
   late LocalDate _anchor;
+  late final LocalDate _firstAnchor;
+  late final LocalDate _lastAnchor;
   bool _daysMissing = false;
 
   @override
@@ -49,11 +51,13 @@ class _FrequencyScreenState extends State<FrequencyScreen> {
     _count = (c.count ?? 3).clamp(1, 7);
     _every = (c.everyNDays ?? 2).clamp(1, 365);
     _anchor = c.anchor ?? widget.request.today;
+    // 4.2b I1: fixed from the anchor the screen opened with, so a pick never narrows it and an
+    // anchor beyond a year ahead (another client) stays inside it.
+    final today = widget.request.today;
+    final yearAhead = today.addDays(365);
+    _firstAnchor = _anchor.isBefore(today) ? _anchor : today;
+    _lastAnchor = _anchor.isAfter(yearAhead) ? _anchor : yearAhead;
   }
-
-  LocalDate get _today => widget.request.today;
-  LocalDate get _firstAnchor => _anchor.isBefore(_today) ? _anchor : _today;
-  LocalDate get _lastAnchor => _today.addDays(365);
 
   FrequencyChoice? get _choice => switch (_type) {
     FrequencyChoice.dailyType => FrequencyChoice.daily,
