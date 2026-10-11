@@ -43,14 +43,29 @@ void main() {
       expect(typeKey.hasMatch('final q = quantity;'), isFalse);
     });
 
-    test('type keys appear only in lib/domain/provisional_type_rules.dart', () {
-      final offenders = dartSources('lib').entries
-          .where((e) => e.key != 'lib/domain/provisional_type_rules.dart')
-          .where((e) => typeKey.hasMatch(e.value))
-          .map((e) => e.key)
-          .toList();
+    // The provisional rules and the type-widget registry (4.2b) may name a type; nothing else.
+    const allowed = {
+      'lib/domain/provisional_type_rules.dart',
+      'lib/habit_types/habit_type_ui.dart',
+    };
+    List<String> offenders(Map<String, String> sources) => sources.entries
+        .where((e) => !allowed.contains(e.key))
+        .where((e) => typeKey.hasMatch(e.value))
+        .map((e) => e.key)
+        .toList();
 
-      expect(offenders, isEmpty);
+    test('self-test: a planted literal outside the registry is caught', () {
+      expect(
+        offenders({
+          'lib/screens/edit_habit_screen.dart': "if (habit.type == 'duration') {}",
+          'lib/habit_types/habit_type_ui.dart': "const key = 'duration';",
+        }),
+        ['lib/screens/edit_habit_screen.dart'],
+      );
+    });
+
+    test('type keys appear only in the provisional rules and the type-widget registry', () {
+      expect(offenders(dartSources('lib')), isEmpty);
     });
   });
 

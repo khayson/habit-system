@@ -52,7 +52,7 @@ void main() {
 
     final habit = await shown();
     expect(
-      (habit.payload['name'], habit.editable.name, habit.editQueued),
+      (habit.payload['name'], habit.editable!.name, habit.editQueued),
       ('Water daily', 'Water daily', true),
     );
     final today = (await view.today(phone.now))!.items.single;
@@ -110,7 +110,7 @@ void main() {
     await phone.sync(force: true);
     final habit = await shown();
     expect(habit.pendingFrom, LocalDate.parse('2026-05-29'));
-    expect(habit.editable.targetValue, '2500.000', reason: 'the edit form starts from the latest');
+    expect(habit.editable!.targetValue, '2500.000', reason: 'the edit form starts from the latest');
     expect(habit.inForceToday!.wire['target_value'], '2000.000', reason: 'today keeps its target');
   });
 }

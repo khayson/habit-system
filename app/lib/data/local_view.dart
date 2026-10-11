@@ -467,8 +467,19 @@ class HabitView {
     editNeedsAttention: editNeedsAttention ?? this.editNeedsAttention,
   );
 
-  /// The edit form's starting point (4.2b): the latest definition with any unsent edit.
-  HabitDraft get editable => HabitDraft.fromWire(payload);
+  /// The edit form's starting point (4.2b): the latest definition with any unsent edit. Null
+  /// when the habit cannot be edited here ([editBlocked] says why).
+  HabitDraft? get editable => editBlocked == null ? HabitDraft.fromWire(payload) : null;
+
+  /// Why screen 09 is not offered, else null.
+  HabitEditBlock? get editBlocked {
+    if (!knownType) return HabitEditBlock.unknownType;
+    if (editNeedsAttention || syncState == OutboxState.needsAttention) {
+      return HabitEditBlock.needsAttention;
+    }
+    if (archived) return HabitEditBlock.archived;
+    return null;
+  }
 
   /// The effective date of a CONFIRMED version that starts after today, else null. The app
   /// never guesses the date: the server decides it (A34).
@@ -519,6 +530,18 @@ class LogView {
   });
 
   bool get provisional => syncState != null;
+}
+
+/// Why a habit cannot be edited on this device right now (4.2b).
+enum HabitEditBlock {
+  /// A type this app version does not know (A21): read-only.
+  unknownType,
+
+  /// A change to it needs a look first (screen 18).
+  needsAttention,
+
+  /// Restore it first (screen 22).
+  archived,
 }
 
 /// Screen 22's row (A34).

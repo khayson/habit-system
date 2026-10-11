@@ -1172,4 +1172,70 @@ class AppLocalizationsEn extends AppLocalizations {
   String reminderRowSet(String time) {
     return '$time · local device time';
   }
+
+  @override
+  String get targetAmount => 'Amount';
+
+  @override
+  String get targetUnit => 'Unit';
+
+  @override
+  String get targetUnitHint => 'ml, pages';
+
+  @override
+  String get targetMinutes => 'Minutes';
+
+  @override
+  String get targetMinutesSuffix => 'minutes';
+
+  @override
+  String get unknownTypeTitle => 'This habit needs a newer version of the app';
+
+  @override
+  String get unknownTypeBody => 'Its history is safe. Update the app to change it.';
+
+  @override
+  String get targetErrorRequired => 'Add a daily target.';
+
+  @override
+  String get targetErrorNotNumber => 'Use a number, such as 250 or 1.5.';
+
+  @override
+  String get targetErrorTooPrecise => 'Use up to 3 decimal places.';
+
+  @override
+  String get targetErrorNotPositive => 'Use a number above zero.';
+
+  @override
+  String get targetErrorTooLarge => 'Use a smaller number.';
+
+  @override
+  String get targetErrorUnitRequired => 'Add a unit, such as ml or pages.';
+
+  @override
+  String get targetErrorUnitTooLong => 'Use 24 characters or fewer.';
+
+  @override
+  String get problemNameRequired => 'Add a name for this habit.';
+
+  @override
+  String get problemCategory => 'Choose a category.';
+
+  @override
+  String get problemUnitNotAllowed => 'This habit type doesn\'t use a unit.';
+
+  @override
+  String get problemFrequencyType => 'Choose a schedule.';
+
+  @override
+  String get problemWeekdays => 'Choose at least one day.';
+
+  @override
+  String get problemWeeklyCount => 'Choose between 1 and 7 times.';
+
+  @override
+  String get problemInterval => 'Choose every 1 to 365 days.';
+
+  @override
+  String get problemIntervalAnchor => 'Choose a start date.';
 }

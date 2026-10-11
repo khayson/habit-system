@@ -383,3 +383,30 @@ class SegmentedTabs extends StatelessWidget {
     );
   }
 }
+
+/// An inline field message: a symbol and words, never colour alone (4.2b).
+class FieldErrorText extends StatelessWidget {
+  final String message;
+
+  const FieldErrorText(this.message, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = HabitTokens.of(context);
+    final style = Theme.of(context).textTheme.bodySmall?.copyWith(color: tokens.errorInk);
+    return Semantics(
+      liveRegion: true,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 1),
+            child: Icon(Icons.info_outline, size: 16, color: tokens.errorInk),
+          ),
+          const SizedBox(width: HabitSpace.s4),
+          Flexible(child: Text(message, style: style)),
+        ],
+      ),
+    );
+  }
+}

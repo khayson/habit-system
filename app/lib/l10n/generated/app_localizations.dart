@@ -2089,6 +2089,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{time} · local device time'**
   String reminderRowSet(String time);
+
+  /// No description provided for @targetAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get targetAmount;
+
+  /// No description provided for @targetUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit'**
+  String get targetUnit;
+
+  /// No description provided for @targetUnitHint.
+  ///
+  /// In en, this message translates to:
+  /// **'ml, pages'**
+  String get targetUnitHint;
+
+  /// No description provided for @targetMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Minutes'**
+  String get targetMinutes;
+
+  /// No description provided for @targetMinutesSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'minutes'**
+  String get targetMinutesSuffix;
+
+  /// No description provided for @unknownTypeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This habit needs a newer version of the app'**
+  String get unknownTypeTitle;
+
+  /// No description provided for @unknownTypeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Its history is safe. Update the app to change it.'**
+  String get unknownTypeBody;
+
+  /// No description provided for @targetErrorRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a daily target.'**
+  String get targetErrorRequired;
+
+  /// No description provided for @targetErrorNotNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a number, such as 250 or 1.5.'**
+  String get targetErrorNotNumber;
+
+  /// No description provided for @targetErrorTooPrecise.
+  ///
+  /// In en, this message translates to:
+  /// **'Use up to 3 decimal places.'**
+  String get targetErrorTooPrecise;
+
+  /// No description provided for @targetErrorNotPositive.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a number above zero.'**
+  String get targetErrorNotPositive;
+
+  /// No description provided for @targetErrorTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a smaller number.'**
+  String get targetErrorTooLarge;
+
+  /// No description provided for @targetErrorUnitRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a unit, such as ml or pages.'**
+  String get targetErrorUnitRequired;
+
+  /// No description provided for @targetErrorUnitTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Use 24 characters or fewer.'**
+  String get targetErrorUnitTooLong;
+
+  /// No description provided for @problemNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a name for this habit.'**
+  String get problemNameRequired;
+
+  /// No description provided for @problemCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a category.'**
+  String get problemCategory;
+
+  /// No description provided for @problemUnitNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'This habit type doesn\'t use a unit.'**
+  String get problemUnitNotAllowed;
+
+  /// No description provided for @problemFrequencyType.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a schedule.'**
+  String get problemFrequencyType;
+
+  /// No description provided for @problemWeekdays.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose at least one day.'**
+  String get problemWeekdays;
+
+  /// No description provided for @problemWeeklyCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose between 1 and 7 times.'**
+  String get problemWeeklyCount;
+
+  /// No description provided for @problemInterval.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose every 1 to 365 days.'**
+  String get problemInterval;
+
+  /// No description provided for @problemIntervalAnchor.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a start date.'**
+  String get problemIntervalAnchor;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
