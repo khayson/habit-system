@@ -1546,4 +1546,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String detailEditLabel(String name) {
     return 'Edit $name';
   }
+
+  @override
+  String fullDate(DateTime date) {
+    final intl.DateFormat dateDateFormat = intl.DateFormat('d MMM y', localeName);
+    final String dateString = dateDateFormat.format(date);
+
+    return '$dateString';
+  }
+
+  @override
+  String weekdayDate(DateTime date) {
+    final intl.DateFormat dateDateFormat = intl.DateFormat('EEEE, d MMMM y', localeName);
+    final String dateString = dateDateFormat.format(date);
+
+    return '$dateString';
+  }
+
+  @override
+  String dayMonthTime(DateTime date, DateTime time) {
+    final intl.DateFormat dateDateFormat = intl.DateFormat('d MMM', localeName);
+    final String dateString = dateDateFormat.format(date);
+    final intl.DateFormat timeDateFormat = intl.DateFormat.jm(localeName);
+    final String timeString = timeDateFormat.format(time);
+
+    return '$dateString, $timeString';
+  }
 }

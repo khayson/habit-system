@@ -2653,6 +2653,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit {name}'**
   String detailEditLabel(String name);
+
+  /// Day-first full date (design: "25 May 2026").
+  ///
+  /// In en, this message translates to:
+  /// **'{date}'**
+  String fullDate(DateTime date);
+
+  /// Today's header (design 05: "Thursday, 28 May 2026").
+  ///
+  /// In en, this message translates to:
+  /// **'{date}'**
+  String weekdayDate(DateTime date);
+
+  /// A day-month with the locale's time ("28 May, 10:15 AM").
+  ///
+  /// In en, this message translates to:
+  /// **'{date}, {time}'**
+  String dayMonthTime(DateTime date, DateTime time);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

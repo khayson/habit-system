@@ -149,9 +149,8 @@ class _QueueRow extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final tokens = HabitTokens.of(context);
     final row = item.row;
-    final locale = Localizations.localeOf(context).toLanguageTag();
     final at = DateTime.tryParse(row.occurredAt)?.toLocal();
-    final when = at == null ? '' : DateFormat.MMMd(locale).add_jm().format(at);
+    final when = at == null ? '' : l10n.dayMonthTime(at, at);
 
     final (stateLabel, tone) = switch (row.state) {
       OutboxState.inFlight => (l10n.queueStateSending, Tone.info),

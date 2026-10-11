@@ -254,7 +254,7 @@ class _ReminderEditorScreenState extends State<ReminderEditorScreen> with Widget
         _draft.minuteOfDay % 60,
       );
       if (at.isAfter(now)) {
-        return '${DateFormat.MMMEd(locale).format(at)} · ${DateFormat.jm(locale).format(at)}';
+        return AppLocalizations.of(context).dayMonthTime(at, at);
       }
     }
     return null;

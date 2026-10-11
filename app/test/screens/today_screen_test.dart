@@ -34,7 +34,7 @@ void main() {
     await settle(tester);
 
     expect(find.text('Good morning, Maya'), findsOneWidget, reason: '10:22 in Los Angeles');
-    expect(find.text('Thursday, May 28, 2026'), findsOneWidget);
+    expect(find.text('Thursday, 28 May 2026'), findsOneWidget);
     expect(find.text('0 of 1 habits complete'), findsOneWidget);
     expect(find.text('New · waiting to sync'), findsOneWidget);
     expect(find.text('1 waiting'), findsOneWidget);

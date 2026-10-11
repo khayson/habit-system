@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../app/router.dart';
@@ -72,9 +71,10 @@ class _TodayList extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final text = Theme.of(context).textTheme;
     final tokens = HabitTokens.of(context);
-    final locale = Localizations.localeOf(context).toLanguageTag();
-    final date = DateFormat.yMMMMEEEEd(locale)
-        .format(DateTime.fromMillisecondsSinceEpoch(today.date.midnightMillis, isUtc: true));
+    // Design 05: "Thursday, 28 May 2026", day first (ARB weekdayDate).
+    final date = l10n.weekdayDate(
+      DateTime.fromMillisecondsSinceEpoch(today.date.midnightMillis, isUtc: true),
+    );
     final total = today.items.length;
     final done = today.completeCount;
 

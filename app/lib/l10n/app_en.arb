@@ -516,5 +516,11 @@
   "dayMonth": "{date}",
   "@dayMonth": {"description": "The app's one day-month date, day first (design: \"29 May\").", "placeholders": {"date": {"type": "DateTime", "format": "d MMM", "isCustomDateFormat": "true"}}},
   "detailEditLabel": "Edit {name}",
-  "@detailEditLabel": {"description": "Screen reader label of 12's Edit button.", "placeholders": {"name": {"type": "String"}}}
+  "@detailEditLabel": {"description": "Screen reader label of 12's Edit button.", "placeholders": {"name": {"type": "String"}}},
+  "fullDate": "{date}",
+  "@fullDate": {"description": "Day-first full date (design: \"25 May 2026\").", "placeholders": {"date": {"type": "DateTime", "format": "d MMM y", "isCustomDateFormat": "true"}}},
+  "weekdayDate": "{date}",
+  "@weekdayDate": {"description": "Today's header (design 05: \"Thursday, 28 May 2026\").", "placeholders": {"date": {"type": "DateTime", "format": "EEEE, d MMMM y", "isCustomDateFormat": "true"}}},
+  "dayMonthTime": "{date}, {time}",
+  "@dayMonthTime": {"description": "A day-month with the locale's time (\"28 May, 10:15 AM\").", "placeholders": {"date": {"type": "DateTime", "format": "d MMM", "isCustomDateFormat": "true"}, "time": {"type": "DateTime", "format": "jm"}}}
 }

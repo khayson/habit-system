@@ -92,7 +92,8 @@ class _StatusCard extends StatelessWidget {
         ],
       );
     } else if (status != null) {
-      final local = DateFormat.yMMMd().add_jms().format(status.serverTime.toLocal());
+      final at = status.serverTime.toLocal();
+      final local = '${l10n.fullDate(at)}, ${DateFormat.jms().format(at)}';
       body = Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

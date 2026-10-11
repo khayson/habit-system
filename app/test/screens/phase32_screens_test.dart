@@ -270,11 +270,11 @@ void main() {
       for (final legend in ['Complete', 'Protected', 'Missed (–)', 'Not due (outline)']) {
         expect(find.text(legend), findsOneWidget);
       }
-      expect(find.bySemanticsLabel('May 26, 2026, Complete'), findsOneWidget);
-      expect(find.bySemanticsLabel('May 25, 2026, Protected'), findsOneWidget);
-      expect(find.bySemanticsLabel('May 24, 2026, Missed'), findsOneWidget);
-      expect(find.bySemanticsLabel('May 28, 2026, Pending, saved on this device'), findsOneWidget);
-      expect(find.bySemanticsLabel('May 29, 2026, Upcoming'), findsOneWidget);
+      expect(find.bySemanticsLabel('26 May 2026, Complete'), findsOneWidget);
+      expect(find.bySemanticsLabel('25 May 2026, Protected'), findsOneWidget);
+      expect(find.bySemanticsLabel('24 May 2026, Missed'), findsOneWidget);
+      expect(find.bySemanticsLabel('28 May 2026, Pending, saved on this device'), findsOneWidget);
+      expect(find.bySemanticsLabel('29 May 2026, Upcoming'), findsOneWidget);
       expect(
         find.text('Some days are counted on this device and are confirmed after syncing.'),
         findsOneWidget,
@@ -367,7 +367,7 @@ void main() {
       );
       await settle(tester);
       expect(find.text('Your history'), findsOneWidget);
-      expect(find.text('May 20, 2026'), findsOneWidget);
+      expect(find.text('20 May 2026'), findsOneWidget);
 
       await tester.tap(find.text('Save past check-in'));
       await settle(tester);

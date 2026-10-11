@@ -93,8 +93,8 @@ class HabitFormat {
   /// pattern lives in the ARB (dayMonth).
   String dayMonth(LocalDate date) => l10n.dayMonth(_utc(date));
 
-  /// "May 25, 2026" (the locale's full date).
-  String fullDate(LocalDate date) => DateFormat.yMMMd(locale).format(_utc(date));
+  /// "25 May 2026": day first, as the design reads (4.3a L2); the pattern lives in the ARB.
+  String fullDate(LocalDate date) => l10n.fullDate(_utc(date));
 
   /// "May 2026".
   String month(LocalDate date) => DateFormat.yMMMM(locale).format(_utc(date));
