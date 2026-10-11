@@ -1474,4 +1474,63 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get archivedTitle => 'Archived routines';
+
+  @override
+  String libraryActive(int active) {
+    String _temp0 = intl.Intl.pluralLogic(
+      active,
+      locale: localeName,
+      other: '$active active routines',
+      one: '1 active routine',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String libraryArchivedLink(int archived) {
+    return '$archived archived';
+  }
+
+  @override
+  String get libraryArchivedLinkHint => 'Opens Archived routines';
+
+  @override
+  String get archivedSubtitle => 'Taking a pause keeps your past progress.';
+
+  @override
+  String archivedRow(String date, String category) {
+    return 'Archived $date · $category';
+  }
+
+  @override
+  String archivedRowNoDate(String category) {
+    return 'Archived · $category';
+  }
+
+  @override
+  String get archivedRestore => 'Restore';
+
+  @override
+  String archivedRestoreLabel(String name) {
+    return 'Restore $name';
+  }
+
+  @override
+  String get restoreInfoTitle => 'Restore from today';
+
+  @override
+  String get restoreInfoBody =>
+      'A new active schedule begins today. Archived dates never become missed days.';
+
+  @override
+  String get startAgainTitle => 'Start again, gently';
+
+  @override
+  String get startAgainBody => 'You can begin with a tiny routine. No streak needs to be perfect.';
+
+  @override
+  String get startAgainLink => 'Create a new habit';
+
+  @override
+  String get restoredMessage => 'Restored. A new schedule begins today.';
 }

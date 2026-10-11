@@ -2557,6 +2557,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Archived routines'**
   String get archivedTitle;
+
+  /// No description provided for @libraryActive.
+  ///
+  /// In en, this message translates to:
+  /// **'{active, plural, =1{1 active routine} other{{active} active routines}}'**
+  String libraryActive(int active);
+
+  /// No description provided for @libraryArchivedLink.
+  ///
+  /// In en, this message translates to:
+  /// **'{archived} archived'**
+  String libraryArchivedLink(int archived);
+
+  /// No description provided for @libraryArchivedLinkHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens Archived routines'**
+  String get libraryArchivedLinkHint;
+
+  /// No description provided for @archivedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Taking a pause keeps your past progress.'**
+  String get archivedSubtitle;
+
+  /// No description provided for @archivedRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived {date} · {category}'**
+  String archivedRow(String date, String category);
+
+  /// No description provided for @archivedRowNoDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived · {category}'**
+  String archivedRowNoDate(String category);
+
+  /// No description provided for @archivedRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get archivedRestore;
+
+  /// No description provided for @archivedRestoreLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore {name}'**
+  String archivedRestoreLabel(String name);
+
+  /// No description provided for @restoreInfoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore from today'**
+  String get restoreInfoTitle;
+
+  /// No description provided for @restoreInfoBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A new active schedule begins today. Archived dates never become missed days.'**
+  String get restoreInfoBody;
+
+  /// No description provided for @startAgainTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start again, gently'**
+  String get startAgainTitle;
+
+  /// No description provided for @startAgainBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You can begin with a tiny routine. No streak needs to be perfect.'**
+  String get startAgainBody;
+
+  /// No description provided for @startAgainLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a new habit'**
+  String get startAgainLink;
+
+  /// No description provided for @restoredMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Restored. A new schedule begins today.'**
+  String get restoredMessage;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

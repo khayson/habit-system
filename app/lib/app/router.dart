@@ -7,6 +7,7 @@ import '../core/url_opener.dart';
 import '../providers/session_provider.dart';
 import '../services/photo_picker.dart';
 import '../screens/app_shell.dart';
+import '../screens/archived_habits_screen.dart';
 import '../screens/create_account_screen.dart';
 import '../screens/create_habit_screen.dart';
 import '../screens/edit_habit_screen.dart';
@@ -154,6 +155,11 @@ List<RouteBase> appRoutes({
           urlOpener: urlOpener ?? const UrlLauncherOpener(),
           clock: clock,
         ),
+      ),
+      // Before '/habits/:id', so "archived" is never read as a habit id.
+      GoRoute(
+        path: Routes.archivedHabits,
+        builder: (context, state) => ArchivedHabitsScreen(clock: clock),
       ),
       GoRoute(
         path: '/habits/:id',

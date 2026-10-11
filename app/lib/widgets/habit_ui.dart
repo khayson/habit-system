@@ -34,7 +34,17 @@ class ScreenHeader extends StatelessWidget {
   final VoidCallback? onBack;
   final Widget? trailing;
 
-  const ScreenHeader({super.key, required this.title, this.subtitle, this.onBack, this.trailing});
+  /// Used instead of [subtitle] when part of the line is a link (07's "2 archived").
+  final Widget? subtitleWidget;
+
+  const ScreenHeader({
+    super.key,
+    required this.title,
+    this.subtitle,
+    this.onBack,
+    this.trailing,
+    this.subtitleWidget,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +72,10 @@ class ScreenHeader extends StatelessWidget {
           ),
         const SizedBox(height: HabitSpace.s16),
         Semantics(header: true, child: Text(title, style: text.headlineMedium)),
-        if (subtitle != null) ...[
+        if (subtitleWidget != null) ...[
+          const SizedBox(height: HabitSpace.s4),
+          subtitleWidget!,
+        ] else if (subtitle != null) ...[
           const SizedBox(height: HabitSpace.s4),
           Text(subtitle!, style: text.bodyLarge?.copyWith(color: tokens.muted)),
         ],

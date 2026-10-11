@@ -25,8 +25,9 @@ class HabitLibraryScreen extends StatelessWidget {
     if (account == null) return const SizedBox();
     return ChangeNotifierProvider(
       key: ValueKey(account.session.userId),
-      create: (_) =>
-          StreamModel<List<HabitView>>(Future.value(account.view.watchHabits(deviceNow: clock))),
+      create: (_) => StreamModel<List<HabitView>>(
+        Future.value(account.view.watchHabits(deviceNow: clock, includeArchived: true)),
+      ),
       child: const _Library(),
     );
   }
@@ -57,8 +58,8 @@ class _LibraryState extends State<_Library> {
     final tokens = HabitTokens.of(context);
     final format = HabitFormat(context);
     final all = context.watch<StreamModel<List<HabitView>>>().value ?? const <HabitView>[];
-    bool archived(HabitView h) => h.payload['archived_at'] != null;
-    final active = all.where((h) => !archived(h)).toList()
+    // The overlay's state (A34): a queued archive or restore counts at once.
+    final active = all.where((h) => !h.archived).toList()
       ..sort((a, b) => a.id.compareTo(b.id)); // creation order (UUIDv7)
     final query = _search.text.trim().toLowerCase();
     final shown = active.where((h) {
@@ -74,6 +75,9 @@ class _LibraryState extends State<_Library> {
           ScreenHeader(
             title: l10n.libraryTitle,
             subtitle: l10n.librarySubtitle(active.length, all.length - active.length),
+            subtitleWidget: all.length == active.length
+                ? null
+                : _ArchivedLink(active: active.length, archived: all.length - active.length),
           ),
           TextField(
             controller: _search,
@@ -162,6 +166,48 @@ class _HabitRow extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// 07's subtitle with "N archived" as a 44 px link to screen 22 (4.2b). With nothing archived
+/// the plain subtitle stays.
+class _ArchivedLink extends StatelessWidget {
+  final int active;
+  final int archived;
+
+  const _ArchivedLink({required this.active, required this.archived});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final style = Theme.of(context).textTheme.bodyLarge;
+    final tokens = HabitTokens.of(context);
+    return Wrap(
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        Text('${l10n.libraryActive(active)} · ', style: style?.copyWith(color: tokens.muted)),
+        Semantics(
+          container: true,
+          link: true,
+          label: l10n.libraryArchivedLink(archived),
+          hint: l10n.libraryArchivedLinkHint,
+          excludeSemantics: true,
+          onTap: () => context.push(Routes.archivedHabits),
+          child: TextButton(
+            onPressed: () => context.push(Routes.archivedHabits),
+            style: TextButton.styleFrom(
+              minimumSize: const Size(HabitSize.minTarget, HabitSize.minTarget),
+              padding: const EdgeInsets.symmetric(horizontal: HabitSpace.s4),
+              textStyle: style,
+            ),
+            child: Text(
+              l10n.libraryArchivedLink(archived),
+              style: style?.copyWith(color: tokens.primary, decoration: TextDecoration.underline),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
