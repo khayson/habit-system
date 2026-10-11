@@ -50,7 +50,7 @@ void main() {
   };
 
   test(
-    'I2: inForceToday has no default: without a clock it is an error, not the first version',
+    'I2 / 4.2b L2: without a clock inForceToday is null (no guess, no throw), not the first version',
     () {
       final unclocked = HabitView(
         payload: payload,
@@ -58,7 +58,7 @@ void main() {
         syncState: null,
         knownType: true,
       );
-      expect(() => unclocked.inForceToday, throwsStateError);
+      expect(unclocked.inForceToday, isNull);
       final clocked = HabitView(
         payload: payload,
         confirmedVersion: 2,

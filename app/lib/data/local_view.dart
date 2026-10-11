@@ -506,12 +506,12 @@ class HabitView {
 
   HabitSchedule get schedule => HabitSchedule.fromWire(payload);
 
-  /// P3: the definition in force today. I2: needs the clock ([today], from habits(deviceNow:));
-  /// without one there is no guess.
+  /// P3: the definition in force today. Needs the clock ([today], from habits(deviceNow:)):
+  /// without one (or before the account calendar is known) it is null, never a guess and never
+  /// a throw (4.2b L2); callers fall back to the habit's own values.
   ScheduleDefinition? get inForceToday {
     final date = today;
-    if (date == null) throw StateError('inForceToday needs habits(deviceNow:)');
-    return schedule.inForce(date);
+    return date == null ? null : schedule.inForce(date);
   }
 
   bool get provisional => syncState != null;
