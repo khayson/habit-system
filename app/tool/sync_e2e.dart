@@ -23,6 +23,12 @@
 //             a real multipart PUT; sm/md/lg are WebP 96/160/320; B fetches md; another
 //             account never gets the bytes (404); removing it clears has_avatar and B's copy.
 //             Needs PHP with GD to make the test JPEG (E2E_PHP, default `php`).
+//   habit-offline  A creates, edits, archives and restores a habit offline, then syncs: one
+//             create (the edit folded in), the server's definitions, two adjacent ranges (A34).
+//   habit-pending  A raises a synced habit's target: the server dates the new version after
+//             today, and Today keeps the old target (the definition in force).
+//   habit-stale    B edits a habit A already changed: version_conflict, kept with `current`.
+//   habit-archived A archives a habit; B's later check-in is habit_archived, kept for review.
 // Exits non-zero at the first failed check, or unless both databases end identical.
 import 'dart:convert';
 import 'dart:io';
@@ -32,11 +38,15 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:habit/data/account_calendar.dart';
 import 'package:habit/data/app_database.dart';
+import 'package:habit/data/entity_codec.dart';
 import 'package:habit/data/local_mutation_service.dart';
+import 'package:habit/data/local_view.dart';
 import 'package:habit/data/photo_service.dart';
 import 'package:habit/data/profile_view.dart';
 import 'package:habit/domain/calendar/local_date.dart';
 import 'package:habit/domain/calendar/timezone_timeline.dart';
+import 'package:habit/domain/habit_draft.dart';
+import 'package:habit/domain/habit_schedule.dart';
 import 'package:habit/domain/provisional_type_rules.dart';
 import 'package:habit/sync/avatar_sync.dart';
 import 'package:habit/sync/http_avatar_transport.dart';
@@ -358,6 +368,99 @@ Future<void> main(List<String> args) async {
     final bAfter = (await b.profile.load())!;
     _check(!bAfter.hasAvatar && bAfter.photoPath == null, 'B shows initials');
     _check(!File(bCopy).existsSync(), 'the cached copy on B is deleted');
+  });
+
+  HabitDraft drink(String name, {String target = '2000.000'}) => HabitDraft(
+    name: name,
+    category: 'health',
+    targetValue: target,
+    unit: 'ml',
+    frequencyType: 'daily',
+    frequencyConfig: const {},
+  );
+  Future<String> water(_Device d) => d.writer.createHabit(
+    name: 'Water',
+    type: 'quantity',
+    target: '2000.000',
+    unit: 'ml',
+    category: 'health',
+    startLocalDate: today,
+  );
+  Future<Map<String, dynamic>> confirmedHabit(_Device d, String id) async {
+    final row = await (d.db.select(d.db.habits)..where((h) => h.id.equals(id))).getSingle();
+    return EntityCodec.habitPayload(row);
+  }
+
+  await _scenario('habit-offline', () async {
+    final id = await water(a);
+    await a.writer.updateHabit(id, drink('Water daily'));
+    await a.writer.archiveHabit(id);
+    await a.writer.restoreHabit(id);
+    _check(
+      (await a.outbox()).map((r) => r.operation).join(',') ==
+          'habit.create,habit.archive,habit.restore',
+      'the edit folded into the unsent create',
+    );
+    await a.sync();
+    final habit = await confirmedHabit(a, id);
+    _check(habit['name'] == 'Water daily', 'the folded edit reached the server');
+    final ranges = (habit['active_ranges'] as List).cast<Map<String, dynamic>>();
+    _check(ranges.length == 2, 'two active ranges (${ranges.length})');
+    _check(
+      ranges[0]['ends_before'] == ranges[1]['starts_on'] && ranges[1]['ends_before'] == null,
+      'adjacent, the second open ($ranges)',
+    );
+    _check((habit['definitions'] as List).length == 1, "the server's single definition");
+    await b.sync();
+  });
+
+  late String pendingHabit;
+  await _scenario('habit-pending', () async {
+    pendingHabit = await water(a);
+    await a.sync();
+    await a.writer.setLogValue(habitId: pendingHabit, value: '2200.000');
+    await a.writer.updateHabit(pendingHabit, drink('Water', target: '2500.000'));
+    await a.sync();
+    final habit = await confirmedHabit(a, pendingHabit);
+    final versions = HabitSchedule.fromWire(habit).versions;
+    _check(versions.length == 2, 'a pending version (${versions.length})');
+    _check(
+      versions.last.effectiveDate.isAfter(today),
+      'dated after today: ${versions.last.effectiveDate}',
+    );
+    final item = (await LocalView(a.db).today(DateTime.now()))!.items
+        .singleWhere((i) => i.habit.id == pendingHabit);
+    _check(item.complete, "today keeps the 2000 in force: 2200 completes it");
+    await b.sync();
+  });
+
+  await _scenario('habit-stale', () async {
+    await b.sync();
+    await a.writer.updateHabit(pendingHabit, drink('Water (A)', target: '2500.000'));
+    await a.sync();
+    await b.writer.updateHabit(pendingHabit, drink('Water (B)', target: '2500.000'));
+    await b.sync();
+    final row = (await b.outbox()).single;
+    final error = jsonDecode(row.lastError!) as Map;
+    _check(row.state == OutboxState.needsAttention, 'kept for review (${row.state})');
+    _check(error['code'] == 'version_conflict', 'version_conflict (${error['code']})');
+    _check((error['current'] as Map)['name'] == 'Water (A)', "`current` is A's habit");
+    _check(await b.writer.discard(row.mutationId), 'discarded');
+    await b.sync();
+  });
+
+  await _scenario('habit-archived', () async {
+    await b.sync();
+    await a.writer.archiveHabit(pendingHabit);
+    await a.sync();
+    // B has not synced since: its check-in goes to a habit the server has archived.
+    await b.writer.setLogValue(habitId: pendingHabit, value: '100.000');
+    await b.sync();
+    final row = (await b.outbox()).single;
+    _check(row.state == OutboxState.needsAttention, 'kept for review (${row.state})');
+    _check((jsonDecode(row.lastError!) as Map)['code'] == 'habit_archived', 'habit_archived');
+    _check(jsonDecode(row.payload)['value'] == '100.000', 'the check-in is kept');
+    _check(await b.writer.discard(row.mutationId), 'discarded');
   });
 
   await a.sync();
