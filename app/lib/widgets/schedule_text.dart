@@ -26,8 +26,7 @@ class ScheduleText {
 
   /// "28 May".
   String date(LocalDate d) =>
-      DateFormat.MMMd(locale)
-          .format(DateTime.fromMillisecondsSinceEpoch(d.midnightMillis, isUtc: true));
+      l10n.dayMonth(DateTime.fromMillisecondsSinceEpoch(d.midnightMillis, isUtc: true));
 
   /// "Monday, Wednesday and Friday".
   String days(List<int> isoDays) {

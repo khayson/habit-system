@@ -89,10 +89,11 @@ class HabitFormat {
     _ => l10n.categoryOther,
   };
 
-  /// "27 May".
-  String dayMonth(LocalDate date) => DateFormat.MMMd(locale).format(_utc(date));
+  /// "27 May": the app's one day-month format, day first as the design reads (4.2b L3). The
+  /// pattern lives in the ARB (dayMonth).
+  String dayMonth(LocalDate date) => l10n.dayMonth(_utc(date));
 
-  /// "25 May 2026".
+  /// "May 25, 2026" (the locale's full date).
   String fullDate(LocalDate date) => DateFormat.yMMMd(locale).format(_utc(date));
 
   /// "May 2026".

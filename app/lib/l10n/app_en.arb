@@ -512,5 +512,7 @@
   "startAgainTitle": "Start again, gently",
   "startAgainBody": "You can begin with a tiny routine. No streak needs to be perfect.",
   "startAgainLink": "Create a new habit",
-  "restoredMessage": "Restored. A new schedule begins today."
+  "restoredMessage": "Restored. A new schedule begins today.",
+  "dayMonth": "{date}",
+  "@dayMonth": {"description": "The app's one day-month date, day first (design: \"29 May\").", "placeholders": {"date": {"type": "DateTime", "format": "d MMM", "isCustomDateFormat": "true"}}}
 }

@@ -308,7 +308,7 @@ void main() {
         'computed_through': '2026-05-20',
       });
       await offscreen(tester, account, '/habits/$id', () => account.sync.sync(force: true));
-      expect(find.text('Current streak · as of May 20'), findsOneWidget);
+      expect(find.text('Current streak · as of 20 May'), findsOneWidget);
       await tearDownApp(tester, account);
     });
 
@@ -382,7 +382,7 @@ void main() {
         'date_mode': 'backdate',
         'log_date': '2026-05-20',
       });
-      expect(find.text('May 20 · Stretch'), findsOneWidget);
+      expect(find.text('20 May · Stretch'), findsOneWidget);
       expect(find.text('Done · waiting to sync'), findsOneWidget);
       await tearDownApp(tester, account);
     });

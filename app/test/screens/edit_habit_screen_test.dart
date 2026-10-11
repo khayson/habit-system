@@ -105,7 +105,7 @@ void main() {
       'Not set',
       'History stays unchanged',
       'New targets apply from the next eligible period. Past check-ins keep their original target.',
-      'New target starts May 29',
+      'New target starts 29 May',
       'Archive this habit',
     ]) {
       expect(find.text(t), findsOneWidget, reason: t);

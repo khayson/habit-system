@@ -2641,6 +2641,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Restored. A new schedule begins today.'**
   String get restoredMessage;
+
+  /// The app's one day-month date, day first (design: "29 May").
+  ///
+  /// In en, this message translates to:
+  /// **'{date}'**
+  String dayMonth(DateTime date);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

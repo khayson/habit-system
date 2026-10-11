@@ -1533,4 +1533,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get restoredMessage => 'Restored. A new schedule begins today.';
+
+  @override
+  String dayMonth(DateTime date) {
+    final intl.DateFormat dateDateFormat = intl.DateFormat('d MMM', localeName);
+    final String dateString = dateDateFormat.format(date);
+
+    return '$dateString';
+  }
 }

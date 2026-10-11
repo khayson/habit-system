@@ -201,7 +201,7 @@ void main() {
     final popped = await open(tester);
     await choose(tester, 'Custom interval');
     expect(find.text('Every 2 days'), findsOneWidget);
-    expect(find.text('Starting May 28'), findsOneWidget);
+    expect(find.text('Starting 28 May'), findsOneWidget);
     await tester.tap(find.byTooltip('Fewer'));
     await tester.pump();
     expect(find.text('Every day'), findsWidgets);
@@ -215,8 +215,8 @@ void main() {
 
   testWidgets('the start date picker runs from the earlier anchor to today + 365', (tester) async {
     await open(tester, current: FrequencyChoice.interval(2, LocalDate.parse('2026-05-01')));
-    await reveal(tester, find.text('May 1'));
-    await tester.tap(find.text('May 1'));
+    await reveal(tester, find.text('1 May'));
+    await tester.tap(find.text('1 May'));
     await tester.pumpAndSettle();
     final picker = tester.widget<CalendarDatePicker>(find.byType(CalendarDatePicker));
     String day(DateTime d) => '${d.year}-${d.month}-${d.day}';

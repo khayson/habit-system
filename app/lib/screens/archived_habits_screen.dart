@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../app/router.dart';
@@ -67,7 +66,6 @@ class _ArchivedState extends State<_Archived> {
     final text = Theme.of(context).textTheme;
     final tokens = HabitTokens.of(context);
     final format = HabitFormat(context);
-    final locale = Localizations.localeOf(context).toLanguageTag();
     final habits =
         context.watch<StreamModel<List<ArchivedHabit>>>().value ?? const <ArchivedHabit>[];
 
@@ -113,7 +111,7 @@ class _ArchivedState extends State<_Archived> {
                         Text(habit.name, style: text.titleMedium ?? text.bodyLarge),
                         const SizedBox(height: HabitSpace.s4),
                         Text(
-                          _detail(l10n, format, locale, habit),
+                          _detail(l10n, format, habit),
                           style: text.bodySmall?.copyWith(color: tokens.muted),
                         ),
                       ],
@@ -185,19 +183,10 @@ class _ArchivedState extends State<_Archived> {
   }
 
   /// "Archived 12 May · Mindfulness"; an archive not yet sent has no date: "Archived · ...".
-  static String _detail(
-    AppLocalizations l10n,
-    HabitFormat format,
-    String locale,
-    ArchivedHabit habit,
-  ) {
+  static String _detail(AppLocalizations l10n, HabitFormat format, ArchivedHabit habit) {
     final category = format.category(habit.category, long: true);
     final on = habit.archivedOn;
     if (on == null) return l10n.archivedRowNoDate(category);
-    final date = DateFormat(
-      'd MMM',
-      locale,
-    ).format(DateTime.fromMillisecondsSinceEpoch(on.midnightMillis, isUtc: true));
-    return l10n.archivedRow(date, category);
+    return l10n.archivedRow(format.dayMonth(on), category);
   }
 }
