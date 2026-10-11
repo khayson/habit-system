@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:drift/drift.dart';
+
 import '../domain/provisional_type_rules.dart';
 import '../sync/outbox_states.dart';
 import 'app_database.dart';
@@ -69,4 +71,25 @@ LogOverlay applyLogRows({
     syncState: state,
     changedAt: changedAt,
   );
+}
+
+/// A habit's type key as this device knows it: the confirmed row's, else its queued
+/// habit.create's; null for a habit it has never seen.
+Future<String?> habitTypeOf(AppDatabase db, String habitId) async {
+  final confirmed = await (db.select(
+    db.habits,
+  )..where((h) => h.id.equals(habitId))).getSingleOrNull();
+  if (confirmed != null) return confirmed.type;
+  final create =
+      await (db.select(db.outbox)
+            ..where(
+              (o) =>
+                  o.entity.equals('habit') &
+                  o.entityId.equals(habitId) &
+                  o.operation.equals('habit.create'),
+            )
+            ..limit(1))
+          .getSingleOrNull();
+  if (create == null) return null;
+  return (jsonDecode(create.payload) as Map)['type'] as String?;
 }

@@ -12,6 +12,7 @@ import '../sync/outbox_states.dart';
 import 'account_calendar.dart';
 import 'app_database.dart';
 import 'entity_codec.dart';
+import 'log_overlay.dart';
 import 'timezone_view.dart';
 
 /// What the UI reads: the pending overlay (derived from outbox rows) over the confirmed rows.
@@ -149,33 +150,20 @@ class LocalView {
               ..orderBy([(o) => OrderingTerm.asc(o.seq)]))
             .get();
 
-    Object? value = EntityCodec.decodeJson(confirmed?.value);
-    var deleted = confirmed?.deletedAt != null;
-    String? state;
-    var changedAt = DateTime.tryParse(confirmed?.completedAt ?? confirmed?.occurredAt ?? '');
-    for (final row in rows) {
-      final reflected =
-          row.state == OutboxState.acked && (row.ackVersion ?? 0) <= (confirmed?.version ?? 0);
-      if (reflected) continue;
-      final payload = (jsonDecode(row.payload) as Map).cast<String, dynamic>();
-      if (row.operation == 'log.set_value') {
-        value = payload['value'];
-        deleted = false;
-      } else if (row.operation == 'log.delete') {
-        deleted = true;
-      }
-      state = row.state;
-      changedAt = DateTime.tryParse(row.occurredAt);
-    }
-
+    // 4.3a A4: the one shared apply step (log.increment by the habit's type rules).
+    final day = applyLogRows(
+      confirmed: confirmed,
+      rows: rows,
+      rules: types.lookup(await habitTypeOf(db, habitId) ?? ''),
+    );
     return LogView(
       habitId: habitId,
       date: date,
-      value: deleted ? null : value,
-      deleted: deleted,
+      value: day.value,
+      deleted: day.deleted,
       confirmedVersion: confirmed?.version,
-      syncState: state,
-      changedAt: changedAt,
+      syncState: day.syncState,
+      changedAt: day.changedAt,
     );
   }
 

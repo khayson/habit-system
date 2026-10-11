@@ -312,7 +312,9 @@ class LocalMutationService {
     ProvisionalTypeRegistry? types,
   }) {
     return db.transaction(() async {
-      final rules = (types ?? ProvisionalTypeRegistry.builtins()).lookup(await _habitType(habitId) ?? '');
+      final rules = (types ?? ProvisionalTypeRegistry.builtins()).lookup(
+        await habitTypeOf(db, habitId) ?? '',
+      );
       final calendar = await _calendar();
       final occurredAt = (at ?? calendar.now(clock())).toUtc();
       if (logDate != null) {
@@ -371,26 +373,6 @@ class LocalMutationService {
       );
       return LocalWrite(mutationId, date, coalesced: false);
     });
-  }
-
-  /// The habit's type key: the confirmed row's, else its queued habit.create's.
-  Future<String?> _habitType(String habitId) async {
-    final confirmed = await (db.select(
-      db.habits,
-    )..where((h) => h.id.equals(habitId))).getSingleOrNull();
-    if (confirmed != null) return confirmed.type;
-    final create =
-        await (db.select(db.outbox)
-              ..where(
-                (o) =>
-                    o.entity.equals('habit') &
-                    o.entityId.equals(habitId) &
-                    o.operation.equals('habit.create'),
-              )
-              ..limit(1))
-            .getSingleOrNull();
-    if (create == null) return null;
-    return (jsonDecode(create.payload) as Map)['type'] as String?;
   }
 
   /// profile.set_timezone (screen 04): entity user, id = the user id, base_version = the

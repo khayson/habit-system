@@ -3,9 +3,11 @@ import 'dart:convert';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:habit/data/app_database.dart';
+import 'package:habit/data/habit_detail_view.dart';
 import 'package:habit/data/local_mutation_service.dart';
 import 'package:habit/domain/calendar/local_date.dart';
 import 'package:habit/sync/outbox_states.dart';
+import 'package:habit/sync/sync_transport.dart';
 
 import '../support/fake_sync_server.dart';
 import '../sync/sync_harness.dart';
@@ -224,4 +226,55 @@ void main() {
       expect((error['current'] as Map)['deleted_at'], isNotNull);
     },
   );
+
+  group('A4: every reader applies queued rows through the one shared step', () {
+    Future<String> sequence() async {
+      // Target 3.5 L: only the increments make the day complete.
+      final id = await phone.writer.createHabitUnchecked(
+        name: 'Water',
+        type: 'quantity',
+        target: '3.500',
+        unit: 'L',
+        category: 'health',
+        startLocalDate: LocalDate.parse('2026-05-01'),
+        backdate: true,
+      );
+      await phone.writer.setLogValue(habitId: id, value: '1.000');
+      await phone.sync(force: true);
+      server.failNextSync.addAll(List.filled(5, const SyncTransportException(SyncFailure.network)));
+      await phone.writer.incrementLog(habitId: id, delta: '0.250');
+      await phone.writer.setLogValue(habitId: id, value: '3.000');
+      await phone.writer.incrementLog(habitId: id, delta: '0.500');
+      return id;
+    }
+
+    test('confirmed 1.000, +0.250, set 3.000, +0.500: every reader shows 3.500', () async {
+      final id = await sequence();
+      final log = await phone.view.log(id, '2026-05-28');
+      final item = (await phone.view.today(phone.now))!.items.single;
+      final detail = (await phone.view.detail(id, phone.now))!;
+      expect(
+        (log.value, item.log.value, item.complete, detail.logOn(today)!.value),
+        ('3.500', '3.500', true, '3.500'),
+      );
+      expect(log.syncState, OutboxState.pending);
+    });
+
+    test('an increment in needs_attention still shows, marked', () async {
+      final id = await sequence();
+      await (phone.db.update(phone.db.outbox)..where((o) => o.operation.equals('log.increment')))
+          .write(const OutboxCompanion(state: Value(OutboxState.needsAttention)));
+      final log = await phone.view.log(id, '2026-05-28');
+      expect((log.value, log.syncState), ('3.500', OutboxState.needsAttention));
+    });
+
+    test('a delta the rules refuse is ignored in the overlay', () async {
+      final id = await sequence();
+      final row = (await logRows()).last;
+      await (phone.db.update(phone.db.outbox)..where((o) => o.seq.equals(row.seq))).write(
+        OutboxCompanion(payload: Value(jsonEncode({'habit_id': id, 'delta': '-9.000'}))),
+      );
+      expect((await phone.view.log(id, '2026-05-28')).value, '3.000');
+    });
+  });
 }
