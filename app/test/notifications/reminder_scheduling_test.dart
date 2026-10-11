@@ -53,6 +53,27 @@ void main() {
     return habit;
   }
 
+  test('a debounced replan the OS refuses never escapes as an uncaught error', () async {
+    final os = FakeNotificationScheduler();
+    final (db, writer, scheduling) = await account('user-1', os);
+    await habitWithReminder(writer, '18:00');
+    await scheduling.replan();
+    final reminder = (await LocalView(db).reminders()).single;
+    await writer.updateReminder(
+      reminderId: reminder.id,
+      localTime: '19:30',
+      daysOfWeek: [1, 2, 3, 4, 5, 6, 7],
+    );
+    os.failCancel = true;
+    scheduling.schedule();
+    await Future<void>.delayed(scheduling.debounce + const Duration(milliseconds: 500));
+    // A later trigger retries: once the OS answers again, the plan is whole.
+    os.failCancel = false;
+    await scheduling.replan();
+    expect(os.pending.values.every((p) => p.$1.fireAt.toUtc().minute == 30), isTrue);
+    await db.close();
+  });
+
   test('a replan schedules the horizon once; an edit replaces, never duplicates', () async {
     final os = FakeNotificationScheduler();
     final (db, writer, scheduling) = await account('user-1', os);

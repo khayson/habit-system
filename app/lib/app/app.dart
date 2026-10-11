@@ -49,7 +49,7 @@ class _ForegroundState extends State<_Foreground> {
   late final AppLifecycleListener _lifecycle = AppLifecycleListener(
     onResume: () {
       widget.account?.sync.onForeground();
-      widget.account?.reminders.replan();
+      widget.account?.reminders.replanInBackground();
     },
   );
 
@@ -57,7 +57,7 @@ class _ForegroundState extends State<_Foreground> {
   void initState() {
     super.initState();
     _lifecycle; // start listening
-    widget.account?.reminders.replan(); // app start
+    widget.account?.reminders.replanInBackground(); // app start
     widget.account?.registerBackground();
   }
 
@@ -66,7 +66,7 @@ class _ForegroundState extends State<_Foreground> {
     super.didUpdateWidget(old);
     // Sign-in or account switch: this account's reminders are planned again.
     if (old.account != widget.account) {
-      widget.account?.reminders.replan();
+      widget.account?.reminders.replanInBackground();
       widget.account?.registerBackground();
     }
   }

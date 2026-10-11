@@ -84,7 +84,14 @@ class ReminderScheduling {
   void schedule() {
     if (_stopped) return;
     _timer?.cancel();
-    _timer = Timer(debounce, () => replan());
+    _timer = Timer(debounce, replanInBackground);
+  }
+
+  /// A replan nobody waits for (the debounce, app start and resume). A refusal from the OS is
+  /// not an error anyone can act on here: the next change or resume plans again. Callers that
+  /// show the person a result (the hide-names switch) await [replan] and see the failure.
+  void replanInBackground() {
+    unawaited(replan().catchError((Object _) {}));
   }
 
   /// One replan at a time; a request during a run runs once more afterwards.

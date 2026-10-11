@@ -10,6 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:habit/app/router.dart';
 import 'package:habit/core/network/api_client.dart';
 import 'package:habit/data/app_database.dart';
+import 'package:habit/domain/calendar/local_date.dart';
 import 'package:habit/providers/account_context.dart';
 import 'package:habit/providers/session_provider.dart';
 import 'package:habit/services/auth_service.dart';
@@ -226,7 +227,15 @@ void main() {
   ) async {
     final a = await account(tester, FakeSyncServer());
     await tester.runAsync(() async {
-      final habit = await a.actions.createOneTapHabit(name: 'Water', category: 'health');
+      // Through the writer: a habit with a reminder is the setup, and the actions' debounced
+      // sync (a real-clock timer) could fire during teardown under load.
+      final habit = await a.writer.createHabitUnchecked(
+        name: 'Water',
+        type: 'binary',
+        target: 1,
+        category: 'health',
+        startLocalDate: LocalDate.parse('2026-05-28'),
+      );
       await a.writer.createReminder(habitId: habit, localTime: '08:00', daysOfWeek: [1, 2, 3]);
     });
     (a.notifications as FakeNotificationScheduler).grantOnRequest = true;
@@ -369,7 +378,15 @@ void main() {
   ) async {
     final a = await account(tester, FakeSyncServer());
     await tester.runAsync(() async {
-      final habit = await a.actions.createOneTapHabit(name: 'Water', category: 'health');
+      // Through the writer: a habit with a reminder is the setup, and the actions' debounced
+      // sync (a real-clock timer) could fire during teardown under load.
+      final habit = await a.writer.createHabitUnchecked(
+        name: 'Water',
+        type: 'binary',
+        target: 1,
+        category: 'health',
+        startLocalDate: LocalDate.parse('2026-05-28'),
+      );
       await a.writer.createReminder(
         habitId: habit,
         localTime: '20:00',
