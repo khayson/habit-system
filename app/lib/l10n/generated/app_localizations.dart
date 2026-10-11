@@ -2647,6 +2647,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{date}'**
   String dayMonth(DateTime date);
+
+  /// Screen reader label of 12's Edit button.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit {name}'**
+  String detailEditLabel(String name);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

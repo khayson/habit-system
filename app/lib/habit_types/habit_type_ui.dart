@@ -313,6 +313,7 @@ String _plain(int thousandths, int places) {
 }
 
 /// A21: a habit of a type this app version does not know. Read-only; no edit controls.
+// ASSUMPTION(4.2b-unknown-card-copy): the title is the prompt's; the body line is ours.
 class UnknownTypeCard extends StatelessWidget {
   const UnknownTypeCard({super.key});
 

@@ -390,6 +390,8 @@ class _EditState extends State<_Edit> {
     );
   }
 
+  // ASSUMPTION(4.2b-reminders-summary): the design shows times and a count; the row reads the
+  // times, with the count in words when there is more than one.
   static String _reminderSummary(BuildContext context, HabitDetail detail) {
     final l10n = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context).toLanguageTag();
@@ -406,6 +408,7 @@ class _EditState extends State<_Edit> {
 }
 
 /// Why a habit cannot be edited here, in words, with the way forward (09 and 12).
+// ASSUMPTION(4.2b-blocked-note-copy): no design for these notes; the wording is ours.
 class EditBlockedNote extends StatelessWidget {
   final HabitView habit;
 

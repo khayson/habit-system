@@ -146,6 +146,8 @@ class _FrequencyScreenState extends State<FrequencyScreen> {
 
   /// The selected option's summary card, holding its controls (a design gap: 10 shows only the
   /// summary; weekday toggles, steppers and the start date sit inside it).
+  // ASSUMPTION(4.2b-summary-copy): the design shows only the times-per-week summary ("3 times
+  // each week / Monday-Sunday · each day counts once"); the other options' summaries are ours.
   Widget _summary(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final schedule = ScheduleText(context);

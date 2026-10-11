@@ -1541,4 +1541,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
     return '$dateString';
   }
+
+  @override
+  String detailEditLabel(String name) {
+    return 'Edit $name';
+  }
 }

@@ -514,5 +514,7 @@
   "startAgainLink": "Create a new habit",
   "restoredMessage": "Restored. A new schedule begins today.",
   "dayMonth": "{date}",
-  "@dayMonth": {"description": "The app's one day-month date, day first (design: \"29 May\").", "placeholders": {"date": {"type": "DateTime", "format": "d MMM", "isCustomDateFormat": "true"}}}
+  "@dayMonth": {"description": "The app's one day-month date, day first (design: \"29 May\").", "placeholders": {"date": {"type": "DateTime", "format": "d MMM", "isCustomDateFormat": "true"}}},
+  "detailEditLabel": "Edit {name}",
+  "@detailEditLabel": {"description": "Screen reader label of 12's Edit button.", "placeholders": {"name": {"type": "String"}}}
 }

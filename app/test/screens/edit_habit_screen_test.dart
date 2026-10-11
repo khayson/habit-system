@@ -254,9 +254,16 @@ void main() {
   });
 
   testWidgets('12: Edit opens 09', (tester) async {
+    final handle = tester.ensureSemantics();
     await seed(tester);
     await show(tester, '/habits/$habitId');
     final edit = find.text('Edit').first;
+    expect(
+      tester.getSemantics(edit),
+      isSemantics(label: 'Edit Water', isButton: true, hasTapAction: true),
+      reason: '4.2b I4: announced with the habit name',
+    );
+    handle.dispose();
     expect(
       tester.getSize(find.ancestor(of: edit, matching: find.byType(TextButton))).height,
       greaterThanOrEqualTo(44),

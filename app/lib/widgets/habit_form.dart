@@ -108,6 +108,9 @@ class SettingRow extends StatelessWidget {
   final VoidCallback? onAction;
   final String? message;
 
+  /// Finds the action in tests without depending on the order of the rows.
+  final Key? actionKey;
+
   const SettingRow({
     super.key,
     required this.icon,
@@ -116,6 +119,7 @@ class SettingRow extends StatelessWidget {
     this.action,
     this.onAction,
     this.message,
+    this.actionKey,
   });
 
   @override
@@ -149,6 +153,7 @@ class SettingRow extends StatelessWidget {
               excludeSemantics: true,
               onTap: onAction,
               child: TextButton(
+                key: actionKey,
                 onPressed: onAction,
                 style: TextButton.styleFrom(
                   minimumSize: const Size(HabitSize.minTarget, HabitSize.minTarget),

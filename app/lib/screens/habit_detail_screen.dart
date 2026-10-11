@@ -89,12 +89,20 @@ class _DetailState extends State<_Detail> {
             // the habit can be edited here; otherwise the reason, in words, below.
             trailing: detail.habit.editable == null
                 ? null
-                : TextButton(
-                    onPressed: () => context.push(Routes.editHabit(detail.habit.id)),
-                    style: TextButton.styleFrom(
-                      minimumSize: const Size(HabitSize.minTarget, HabitSize.minTarget),
+                // 4.2b I4: announced with the habit's name ("Edit Water").
+                : Semantics(
+                    container: true,
+                    button: true,
+                    label: l10n.detailEditLabel(detail.name),
+                    excludeSemantics: true,
+                    onTap: () => context.push(Routes.editHabit(detail.habit.id)),
+                    child: TextButton(
+                      onPressed: () => context.push(Routes.editHabit(detail.habit.id)),
+                      style: TextButton.styleFrom(
+                        minimumSize: const Size(HabitSize.minTarget, HabitSize.minTarget),
+                      ),
+                      child: Text(l10n.setupEdit),
                     ),
-                    child: Text(l10n.setupEdit),
                   ),
           ),
           if (detail.habit.editBlocked != null) ...[

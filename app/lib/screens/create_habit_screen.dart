@@ -38,6 +38,8 @@ class _CreateHabitScreenState extends State<CreateHabitScreen> {
   final _name = TextEditingController();
   final _nameFocus = FocusNode();
   final _target = TargetFields();
+  // ASSUMPTION(4.2b-default-type): 08 opens on Yes / no, the registry's first type (the design
+  // shows Duration selected in its mock-up; the smallest habit is the calmer default).
   late HabitTypeUi _type = _types.all.first;
   String _category = _categories.first;
   FrequencyChoice _frequency = FrequencyChoice.daily;
@@ -220,6 +222,7 @@ class _CreateHabitScreenState extends State<CreateHabitScreen> {
             SettingRow(
               icon: Icons.notifications_none,
               title: l10n.reminderRow,
+              actionKey: const ValueKey('reminder-row-edit'),
               summary: reminder == null
                   ? l10n.reminderRowNone
                   : l10n.reminderRowSet(
