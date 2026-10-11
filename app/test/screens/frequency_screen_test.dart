@@ -149,7 +149,7 @@ void main() {
     await use(tester);
     expect(
       popped(),
-      FrequencyChoice('weekdays', const {
+      const FrequencyChoice('weekdays', {
         'days': [1, 3, 5],
       }),
     );

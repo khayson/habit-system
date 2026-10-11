@@ -80,15 +80,15 @@ void main() {
     expect(find.text('Daily target'), findsNothing, reason: 'yes / no has no target field');
     expect(
       tester.getSemantics(find.text('Yes / no')),
-      containsSemantics(label: 'Yes / no', isButton: true, isSelected: true),
+      isSemantics(label: 'Yes / no', isButton: true, isSelected: true),
     );
     expect(
       tester.getSemantics(find.text('Quantity')),
-      containsSemantics(label: 'Quantity', isButton: true, isSelected: false),
+      isSemantics(label: 'Quantity', isButton: true, isSelected: false),
     );
     expect(
       tester.getSemantics(find.text('Edit').first),
-      containsSemantics(label: 'Edit Schedule', isButton: true),
+      isSemantics(label: 'Edit Schedule', isButton: true),
     );
     handle.dispose();
     await tearDownApp(tester, account);

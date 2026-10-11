@@ -199,7 +199,7 @@ void main() {
       tester.getSemantics(
         find.ancestor(of: find.text('Productivity').last, matching: find.byType(ListTile)),
       ),
-      containsSemantics(isSelected: true),
+      isSemantics(isSelected: true),
     );
     await tester.tap(find.text('Productivity').last);
     await settle(tester);

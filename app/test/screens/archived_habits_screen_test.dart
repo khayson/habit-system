@@ -66,7 +66,7 @@ void main() {
     expect(tester.getSize(link).height, greaterThanOrEqualTo(44));
     expect(
       tester.getSemantics(find.text('2 archived')),
-      containsSemantics(isLink: true, hint: 'Opens Archived routines'),
+      isSemantics(isLink: true, hint: 'Opens Archived routines'),
     );
     await tester.tap(link);
     await settle(tester);
@@ -105,7 +105,7 @@ void main() {
     expect(find.text('Walk'), findsNothing);
     for (final name in ['Tea', 'Water']) {
       final restore = find.bySemanticsLabel('Restore $name');
-      expect(tester.getSemantics(restore), containsSemantics(isButton: true, hasTapAction: true));
+      expect(tester.getSemantics(restore), isSemantics(isButton: true, hasTapAction: true));
       expect(tester.getSize(restore).height, greaterThanOrEqualTo(44));
     }
     handle.dispose();
