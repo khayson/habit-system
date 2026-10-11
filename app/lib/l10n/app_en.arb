@@ -158,6 +158,8 @@
   "categoryHealth": "Health",
   "categoryMindful": "Mindful",
   "categoryLearning": "Learning",
+  "categoryProductivity": "Productivity",
+  "categoryOther": "Other",
   "newHabitSchedule": "Schedule",
   "newHabitDaily": "Every day",
   "navToday": "Today",

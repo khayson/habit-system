@@ -83,7 +83,10 @@ class HabitFormat {
   String category(String? category, {bool long = false}) => switch (category) {
     'mindfulness' => long ? l10n.categoryMindfulness : l10n.categoryMindful,
     'learning' => l10n.categoryLearning,
-    _ => l10n.categoryHealth,
+    'health' => l10n.categoryHealth,
+    'productivity' => l10n.categoryProductivity,
+    // L3: the server's fifth category, and anything newer this app does not know.
+    _ => l10n.categoryOther,
   };
 
   /// "27 May".

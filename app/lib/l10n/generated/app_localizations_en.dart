@@ -446,6 +446,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get categoryLearning => 'Learning';
 
   @override
+  String get categoryProductivity => 'Productivity';
+
+  @override
+  String get categoryOther => 'Other';
+
+  @override
   String get newHabitSchedule => 'Schedule';
 
   @override

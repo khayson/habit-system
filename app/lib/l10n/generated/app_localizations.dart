@@ -908,6 +908,18 @@ abstract class AppLocalizations {
   /// **'Learning'**
   String get categoryLearning;
 
+  /// No description provided for @categoryProductivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Productivity'**
+  String get categoryProductivity;
+
+  /// No description provided for @categoryOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get categoryOther;
+
   /// No description provided for @newHabitSchedule.
   ///
   /// In en, this message translates to:
