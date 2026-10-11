@@ -21,6 +21,7 @@ import '../screens/reminder_editor_screen.dart';
 import '../screens/server_status_screen.dart';
 import '../screens/sign_in_screen.dart';
 import '../screens/sync_queue_screen.dart';
+import '../screens/timer_screen.dart';
 import '../screens/timezone_screen.dart';
 import '../screens/today_screen.dart';
 
@@ -138,6 +139,10 @@ List<RouteBase> appRoutes({
       prefill: state.extra is int ? state.extra! as int : null,
       clock: clock,
     ),
+  ),
+  GoRoute(
+    path: '/habits/:id/timer',
+    builder: (context, state) => TimerScreen(habitId: state.pathParameters['id']!, clock: clock),
   ),
   GoRoute(
     path: '/habits/:id/edit',
