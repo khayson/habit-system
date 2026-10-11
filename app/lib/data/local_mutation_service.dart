@@ -812,11 +812,29 @@ class LocalMutationService {
         : (await LocalView(db).habits()).where((h) => h.id == habitId).firstOrNull;
     final plan = UseMinePlan.of(row, habitActive: habit != null && !habit.archived);
     if (plan == null) return ResolveResult.notAllowed;
+    // ASSUMPTION(4.3b-use-mine-after-habit): a change to the habit itself queued after this row
+    // (the restore that makes habit_archived resolvable) must reach the server first, so then
+    // the new row goes behind it; otherwise it keeps its place.
+    final habitChangeAfter = habitId == null
+        ? null
+        : await (db.select(db.outbox)
+                ..where(
+                  (o) =>
+                      o.entity.equals('habit') &
+                      o.entityId.equals(habitId) &
+                      o.seq.isBiggerThanValue(row.seq) &
+                      o.state.isIn(OutboxState.unacked),
+                )
+                ..limit(1))
+              .getSingleOrNull();
     if (!await discard(mutationId)) return ResolveResult.notAllowed;
     await db
         .into(db.outbox)
         .insert(
           OutboxCompanion.insert(
+            // M1: the new mutation keeps the old row's place in the queue (its seq is free: the
+            // discard above deleted it), so changes queued behind it still follow it.
+            seq: habitChangeAfter == null ? Value(row.seq) : const Value.absent(),
             mutationId: _uuid.v7(),
             entity: row.entity,
             entityId: plan.entityId,

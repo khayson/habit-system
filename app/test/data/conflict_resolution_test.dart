@@ -167,7 +167,7 @@ void main() {
       view = (await phone.view.conflict(old.mutationId))!;
       expect(view.canUseMine, isTrue);
       expect(await phone.writer.useMine(old.mutationId), ResolveResult.done);
-      final fresh = (await phone.outbox()).last;
+      final fresh = (await phone.outbox()).singleWhere((r) => r.operation == 'log.set_value');
       expect((fresh.operation, fresh.baseVersion), ('log.set_value', old.baseVersion));
       await phone.sync(force: true);
       expect(await phone.outbox(), isEmpty);
@@ -252,5 +252,30 @@ void main() {
     await staleSetValue();
     final list = await phone.view.watchConflicts().first;
     expect(list.map((c) => c.kind), [ConflictKind.staleValue]);
+  });
+
+  group('M1 (4.3a review): use mine keeps the person\'s order of changes', () {
+    test('a stale value with an increment behind it: mine, then the increment', () async {
+      final old = await staleSetValue();
+      await phone.writer.incrementLog(habitId: water, delta: '0.5');
+      final before = (await phone.view.log(water, '2026-05-28')).value;
+      expect(await phone.writer.useMine(old.mutationId), ResolveResult.done);
+      expect((await phone.view.log(water, '2026-05-28')).value, before, reason: 'no jump');
+      final sent = <String>[];
+      server.onMutation = (m) => sent.add(m['operation']! as String);
+      await phone.sync(force: true);
+      expect(sent, ['log.set_value', 'log.increment']);
+      expect(server.logs.values.single['value'], '3.500');
+      expect(before, '3.500');
+    });
+
+    test('keep synced with an increment behind it adds to the server value', () async {
+      final old = await staleSetValue();
+      await phone.writer.incrementLog(habitId: water, delta: '0.5');
+      expect(await phone.writer.keepSynced(old.mutationId), ResolveResult.done);
+      await phone.sync(force: true);
+      expect(server.logs.values.single['value'], '2.500');
+      expect(await phone.outbox(), isEmpty);
+    });
   });
 }
