@@ -32,7 +32,6 @@ final readonly class EntityPresenter
     /** @return array<string, mixed> */
     public function user(stdClass $user): array
     {
-        $level = $this->xp->level((int) $user->xp);
         $inForce = UserCalendar::timeline((string) $user->id)->entryAt($this->clock->now());
         $recent = DB::table('user_timezone_history')->where('user_id', $user->id)
             ->orderByDesc('effective_at')->limit(self::CALENDAR_HISTORY_LIMIT)
@@ -54,13 +53,8 @@ final readonly class EntityPresenter
                 'effective_at' => UtcTime::format(WireTime::parse((string) $row->effective_at)),
             ])->all(),
             'version' => (int) ($user->version ?? 1),
+            // A39: the reward numbers live on reward_state; auto_freeze stays here (A42).
             'auto_freeze' => (bool) $user->auto_freeze,
-            // A9: level fields are server-computed; the client never evaluates the formula.
-            'xp' => $level->xp,
-            'level' => $level->level,
-            'progress_into_level' => $level->progressIntoLevel,
-            'next_level_threshold' => $level->nextLevelThreshold,
-            'freeze_balance' => (int) $user->freeze_balance,
             'created_at' => UtcTime::format(WireTime::parse((string) $user->created_at)),
             // A20: typed or picked labels (never GPS), and a counter of photo changes. The
             // avatar's storage key and hash are never exposed.
@@ -108,6 +102,25 @@ final readonly class EntityPresenter
     }
 
     /**
+     * A39 reward_state: the numbers that change with every check-in, off the user entity. Its id
+     * is the user id and its version users.reward_version. A9: level fields are server-computed.
+     *
+     * @return array<string, mixed>
+     */
+    public function rewardState(stdClass $user): array
+    {
+        $level = $this->xp->level((int) $user->xp);
+
+        return [
+            'xp' => $level->xp,
+            'level' => $level->level,
+            'progress_into_level' => $level->progressIntoLevel,
+            'next_level_threshold' => $level->nextLevelThreshold,
+            'freeze_balance' => (int) $user->freeze_balance,
+        ];
+    }
+
+    /**
      * A32 habit_progress: the streak cache row. Its version is the cache's version.
      *
      * @return array<string, mixed>
@@ -120,6 +133,8 @@ final readonly class EntityPresenter
             'longest' => (int) $cache->longest,
             'unit' => $cache->unit,
             'computed_through' => $cache->computed_through,
+            // A41: protected periods inside the current streak, so clients need no heuristic.
+            'protected_in_streak' => (int) ($cache->protected_in_streak ?? 0),
         ];
     }
 

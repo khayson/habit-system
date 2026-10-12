@@ -35,9 +35,10 @@ it('registers: 201, UUIDv7 user, token returned once, calendar entry and journal
         ->assertJsonPath('data.token_type', 'Bearer')
         ->assertJsonPath('data.user.email', 'maya.chen@example.com')
         ->assertJsonPath('data.user.timezone', 'America/Los_Angeles')
-        ->assertJsonPath('data.user.xp', 0)
-        ->assertJsonPath('data.user.level', 1)
-        ->assertJsonPath('data.user.next_level_threshold', 100)
+        // A39: the reward numbers live on reward_state, not on the user entity.
+        ->assertJsonMissingPath('data.user.xp')
+        ->assertJsonMissingPath('data.user.level')
+        ->assertJsonMissingPath('data.user.freeze_balance')
         ->assertJsonPath('meta.server_time', '2026-05-28T17:22:00Z');
     $userId = $response->json('data.user.id');
     expect($userId)->toMatch(UUID_V7_PATTERN)
@@ -55,7 +56,8 @@ it('registers: 201, UUIDv7 user, token returned once, calendar entry and journal
 it('ignores server-owned fields sent by a client (invariant 1)', function () {
     $response = $this->postJson('/api/v1/auth/register', registration(['xp' => 9999, 'freeze_balance' => 2, 'id' => (string) Str::uuid7(), 'change_seq' => 50]));
 
-    $response->assertCreated()->assertJsonPath('data.user.xp', 0)->assertJsonPath('data.user.freeze_balance', 0);
+    $response->assertCreated();
+    expect((int) DB::table('users')->value('xp'))->toBe(0);
     expect((int) DB::table('users')->value('change_seq'))->toBe(1);
 });
 
@@ -101,14 +103,14 @@ it('logs in with the same answer for an unknown email and a wrong password', fun
         ->assertJsonPath('meta.server_time', '2026-05-28T17:22:00Z');
 });
 
-it('authenticates UUID users with their token and returns A9 level fields on /me', function () {
+it('authenticates UUID users with their token; /me carries no reward numbers (A39)', function () {
     $user = $this->registerUser();
 
     $this->withToken($user['token'])->getJson('/api/v1/me')
         ->assertOk()
         ->assertJsonPath('data.id', $user['id'])
-        ->assertJsonPath('data.level', 1)
-        ->assertJsonPath('data.progress_into_level', 0)
+        ->assertJsonMissingPath('data.level')
+        ->assertJsonMissingPath('data.progress_into_level')
         ->assertJsonPath('data.day_start_offset_minutes', 0);
 });
 

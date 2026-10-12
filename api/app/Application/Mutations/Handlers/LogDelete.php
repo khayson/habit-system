@@ -6,6 +6,7 @@ use App\Application\Calendar\UserCalendar;
 use App\Application\Journal\ChangeJournal;
 use App\Application\Mutations\HandlerResult;
 use App\Application\Mutations\MutationContext;
+use App\Application\Rewards\XpAwarder;
 use App\Application\Periods\PeriodCloser;
 use App\Application\Presenters\EntityPresenter;
 use App\Domain\Clock;
@@ -28,6 +29,7 @@ final readonly class LogDelete
         private ChangeJournal $journal,
         private EntityPresenter $presenter,
         private PeriodCloser $closer,
+        private XpAwarder $xp,
         private Clock $clock,
     ) {}
 
@@ -70,6 +72,8 @@ final readonly class LogDelete
             'updated_at' => $now,
         ]);
         LogWrites::markStreakDirty((string) $log->habit_id, (string) $log->log_date, $now);
+        // A40: deleting a completed day reverses its XP; an incomplete one changes nothing.
+        $this->xp->award($ctx->userId, (string) $log->habit_id, (string) $log->log_date, $log->completed_at !== null, false, $m->mutationId);
         $row = DB::table('habit_logs')->where('id', $log->id)->first();
         $this->journal->append($ctx->userId, 'habit_log', (string) $log->id, 'delete', $version, $this->presenter->log($row ?? $log, $typeKey));
         $habit = DB::table('habits')->where('id', $log->habit_id)->first();

@@ -43,7 +43,7 @@ final readonly class MutationApplier
     public const int MAX_MUTATION_DEPTH = 8;
 
     /** A32: entities clients receive but never write. */
-    public const array READ_ONLY_ENTITIES = ['habit_progress', 'period_evaluation'];
+    public const array READ_ONLY_ENTITIES = ['habit_progress', 'period_evaluation', 'reward_state'];
 
     private const string OCCURRED_AT = '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?(Z|[+-]\d{2}:\d{2})$/';
 

@@ -67,7 +67,7 @@ it('closes finished days at the boundary and publishes them as derived entities'
     $latest = $changes->where('entity', 'habit_progress')->last();
     expect($latest['id'])->toBe($this->habit)
         ->and($latest['version'])->toBe((int) $progress->version)
-        ->and($latest['payload'])->toEqual(['habit_id' => $this->habit, 'current' => 0, 'longest' => 1, 'unit' => 'days', 'computed_through' => '2026-05-29']);
+        ->and($latest['payload'])->toEqual(['habit_id' => $this->habit, 'current' => 0, 'longest' => 1, 'unit' => 'days', 'computed_through' => '2026-05-29', 'protected_in_streak' => 0]);
     expect($changes->where('entity', 'period_evaluation')->pluck('payload.period_key')->unique()->values()->all())
         ->toBe(['d:2026-05-26', 'd:2026-05-27', 'd:2026-05-28', 'd:2026-05-29']);
 });
@@ -96,13 +96,15 @@ it('re-evaluates a closed day after a late offline log, with a new revision in t
     expect($ack['status'])->toBe('accepted')
         ->and(evaluationRows($this->habit)[1])->toBe(['d:2026-05-27', true, 2]);
     $evaluationId = DB::table('period_evaluations')->where('period_key', 'd:2026-05-27')->value('id');
-    // One commit, in order: the log, its period's new revision, the streak.
+    // One commit, in order: the completion's XP (A40), the log, its period's new revision, the
+    // streak.
     expect(journalRows($this->maya['id'], $before))->toBe([
-        [$before + 1, 'habit_log', 1],
-        [$before + 2, 'period_evaluation', 2],
-        [$before + 3, 'habit_progress', (int) DB::table('habit_streak_cache')->value('version')],
+        [$before + 1, 'reward_state', 1],
+        [$before + 2, 'habit_log', 1],
+        [$before + 3, 'period_evaluation', 2],
+        [$before + 4, 'habit_progress', (int) DB::table('habit_streak_cache')->value('version')],
     ]);
-    expect(DB::table('server_changes')->where('seq', $before + 2)->value('entity_id'))->toBe($evaluationId);
+    expect(DB::table('server_changes')->where('seq', $before + 3)->value('entity_id'))->toBe($evaluationId);
 });
 
 it('writes nothing at all when the derived write fails: the log and its entities share one transaction', function () {

@@ -7,6 +7,7 @@ use App\Application\Habits\HabitRepository;
 use App\Application\Journal\ChangeJournal;
 use App\Application\Mutations\HandlerResult;
 use App\Application\Mutations\MutationContext;
+use App\Application\Rewards\XpAwarder;
 use App\Application\Periods\PeriodCloser;
 use App\Application\Presenters\EntityPresenter;
 use App\Domain\Calendar\DayResolution;
@@ -37,6 +38,7 @@ final readonly class LogDay
         private ChangeJournal $journal,
         private EntityPresenter $presenter,
         private PeriodCloser $closer,
+        private XpAwarder $xp,
         private Clock $clock,
     ) {}
 
@@ -123,6 +125,10 @@ final readonly class LogDay
         }
 
         LogWrites::markStreakDirty((string) $habit->id, $date->toString(), $now);
+        // A40: completed_at is set exactly while the day meets its target (above), so it says
+        // whether the day was complete before this write.
+        $wasComplete = $existing !== null && ! $restoring && $existing->deleted_at === null && $existing->completed_at !== null;
+        $this->xp->award($ctx->userId, (string) $habit->id, $date->toString(), $wasComplete, $complete, $m->mutationId);
         $row = DB::table('habit_logs')->where('id', $id)->first();
         $this->journal->append($ctx->userId, 'habit_log', $id, 'upsert', $currentVersion + 1, $this->presenter->log($row ?? throw new LogicException('Log vanished inside its own transaction.'), (string) $habit->type));
         // A10/A32: a late log re-evaluates its closed period, and any log can move the streak;

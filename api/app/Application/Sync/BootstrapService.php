@@ -60,10 +60,17 @@ final readonly class BootstrapService
             $first = false;
         }
 
-        $user = $first ? $this->presenter->user(DB::table('users')->where('id', $userId)->first() ?? (object) []) : null;
+        $userRow = $first ? DB::table('users')->where('id', $userId)->first() : null;
+        $user = $userRow !== null ? $this->presenter->user($userRow) : null;
         $habits = [];
         $logs = [];
-        $entities = [];
+        // A39: the reward numbers travel as their own read-only entity, on the first page.
+        $entities = $userRow === null ? [] : [[
+            'entity' => 'reward_state',
+            'id' => $userId,
+            'version' => (int) $userRow->reward_version,
+            'payload' => $this->presenter->rewardState($userRow),
+        ]];
         $next = null;
 
         if ($state['phase'] === self::PHASE_HABITS) {
