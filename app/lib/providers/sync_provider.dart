@@ -55,16 +55,7 @@ class SyncProvider extends ChangeNotifier {
     _timer?.cancel();
     // 4.3b I3: nobody awaits this run, and the engine can throw (it reads and writes sync_state
     // outside its own handlers, e.g. a database closed at sign-out). The next trigger retries.
-    _timer = Timer(_debounce, () {
-      unawaited(
-        sync().then<void>(
-          (_) {},
-          onError: (Object error) {
-            if (kDebugMode) debugPrint('Debounced sync failed: ${error.runtimeType}');
-          },
-        ),
-      );
-    });
+    _timer = Timer(_debounce, () => _syncInBackground('Debounced sync'));
   }
 
   /// App start and resume (foreground only): refresh an old token while online, then sync.
@@ -83,7 +74,21 @@ class SyncProvider extends ChangeNotifier {
     final regained = connected && _connected == false;
     _connected = connected;
     notifyListeners();
-    if (regained) sync(force: true);
+    if (regained) _syncInBackground('Sync on reconnect', force: true);
+  }
+
+  /// A run nobody awaits (the debounce, a regained connection). The engine can throw (it reads
+  /// and writes sync_state outside its own handlers, e.g. a database closed at sign-out); the
+  /// next trigger retries, so the error is only printed in debug builds.
+  void _syncInBackground(String what, {bool force = false}) {
+    unawaited(
+      sync(force: force).then<void>(
+        (_) {},
+        onError: (Object error) {
+          if (kDebugMode) debugPrint('$what failed: ${error.runtimeType}');
+        },
+      ),
+    );
   }
 
   void _set({required bool syncing}) {

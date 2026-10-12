@@ -55,6 +55,25 @@ void main() {
     phone = await Device(server).init(); // for tearDown
   });
 
+  test('a sync on regained connectivity whose engine throws never escapes', () async {
+    final link = StreamController<bool>();
+    final broken = SyncProvider(
+      engine: phone.engine(),
+      refreshIfStale: () async {},
+      connectivity: link.stream,
+    );
+    addTearDown(() async {
+      broken.dispose();
+      await link.close();
+    });
+    await phone.db.close();
+    link.add(false);
+    link.add(true); // regained
+    await idle();
+    expect(broken.syncing, isFalse);
+    phone = await Device(server).init(); // for tearDown
+  });
+
   test('a burst of local writes makes one sync after the debounce', () async {
     final habit = await phone.habit();
     for (var i = 0; i < 5; i++) {
