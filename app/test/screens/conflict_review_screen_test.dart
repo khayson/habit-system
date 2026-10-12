@@ -126,6 +126,22 @@ void main() {
     await tearDownApp(tester, account);
   });
 
+  testWidgets('L1 (4.3c review): never the discard-only variant while the habit loads', (
+    tester,
+  ) async {
+    await seed(tester);
+    final row = await staleValue(tester);
+    await tester.pumpWidget(testApp(initial: '/sync/review/${row.mutationId}', account: account));
+    for (var i = 0; i < 12; i++) {
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 5)));
+      await tester.pump();
+      expect(find.text('Discard this change'), findsNothing, reason: 'frame $i');
+    }
+    await settle(tester);
+    expect(find.text('Keep synced value · 1.75 L'), findsOneWidget);
+    await tearDownApp(tester, account);
+  });
+
   testWidgets('keep synced removes the row, sends nothing, and says so', (tester) async {
     await seed(tester);
     final row = await staleValue(tester);

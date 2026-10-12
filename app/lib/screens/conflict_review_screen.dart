@@ -157,6 +157,9 @@ class _ReviewState extends State<_Review> {
       );
     }
     final detail = _habit(account, conflict.habitId);
+    // 4.3c review L1: until the habit has loaded, show nothing rather than the discard-only
+    // variant a missing habit gets.
+    if (conflict.habitId != null && _detail?.hasValue != true) return const Scaffold();
     final plan = _Plan.of(context, conflict, detail);
 
     return Scaffold(
