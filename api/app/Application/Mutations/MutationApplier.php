@@ -9,6 +9,7 @@ use App\Application\Mutations\Handlers\HabitWrites;
 use App\Application\Mutations\Handlers\LogDelete;
 use App\Application\Mutations\Handlers\LogIncrement;
 use App\Application\Mutations\Handlers\LogSetValue;
+use App\Application\Mutations\Handlers\ProfileSetAutoFreeze;
 use App\Application\Mutations\Handlers\ProfileSetTimezone;
 use App\Application\Mutations\Handlers\ProfileUpdate;
 use App\Application\Mutations\Handlers\ReminderWrites;
@@ -58,6 +59,7 @@ final readonly class MutationApplier
         private LogDelete $logDelete,
         private ProfileSetTimezone $profileSetTimezone,
         private ProfileUpdate $profileUpdate,
+        private ProfileSetAutoFreeze $profileSetAutoFreeze,
         private ReminderWrites $reminders,
         private Clock $clock,
     ) {}
@@ -168,6 +170,9 @@ final readonly class MutationApplier
         }
         if ($m->entity === 'user' && $m->operation === 'profile.update') {
             return [$m->operation, self::accepted($m, $this->profileUpdate->handle($ctx))];
+        }
+        if ($m->entity === 'user' && $m->operation === 'profile.set_auto_freeze') {
+            return [$m->operation, self::accepted($m, $this->profileSetAutoFreeze->handle($ctx))];
         }
         if ($m->entity === 'habit') {
             // A34: edit, archive and restore; there is no habit delete in v1.
