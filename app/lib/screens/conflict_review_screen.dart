@@ -62,6 +62,9 @@ class _ReviewState extends State<_Review> {
   StreamModel<HabitDetail?>? _detail;
   String? _detailFor;
   bool _busy = false;
+
+  /// The label of the button whose write runs, so its own spinner shows (4.3c review note b).
+  String? _pressed;
   bool _leaving = false;
 
   @override
@@ -119,11 +122,17 @@ class _ReviewState extends State<_Review> {
     final row = await account.view.outboxRow(widget.mutationId);
     if (row == null || !mounted) return;
     final done = await confirmDiscard(context, account, row);
-    if (done && mounted) _leave(AppLocalizations.of(context).reviewKeptSynced);
+    if (done && mounted) _leave(AppLocalizations.of(context).reviewDiscarded);
   });
 
-  Future<void> _restore(AccountContext account, String habitId) =>
-      _act(() => account.actions.restoreHabit(habitId));
+  Future<void> _restore(AccountContext account, String habitId) => _act(() async {
+    try {
+      await account.actions.restoreHabit(habitId);
+    } on HabitEditFailure {
+      // The habit is gone, or another change to it needs a look first (4.3c review note e).
+      if (mounted) _leave(AppLocalizations.of(context).reviewGone);
+    }
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -207,18 +216,32 @@ class _ReviewState extends State<_Review> {
   ) {
     final l10n = AppLocalizations.of(context);
     final tokens = HabitTokens.of(context);
-    Widget primary(String label, VoidCallback onPressed) =>
-        PrimaryButton(label: label, loading: _busy, onPressed: _busy ? null : onPressed);
+    VoidCallback? press(String label, VoidCallback onPressed) => _busy
+        ? null
+        : () {
+            _pressed = label;
+            onPressed();
+          };
+    Widget primary(String label, VoidCallback onPressed) => PrimaryButton(
+      label: label,
+      loading: _busy && _pressed == label,
+      onPressed: press(label, onPressed),
+    );
     Widget secondary(String label, VoidCallback onPressed) => SizedBox(
       width: double.infinity,
       child: FilledButton(
-        onPressed: _busy ? null : onPressed,
+        onPressed: press(label, onPressed),
         style: FilledButton.styleFrom(
           backgroundColor: tokens.positiveBg,
           foregroundColor: tokens.positiveInk,
           minimumSize: const Size(HabitSize.minTarget, HabitSize.control),
         ),
-        child: Text(label, textAlign: TextAlign.center),
+        child: _busy && _pressed == label
+            ? SizedBox.square(
+                dimension: 18,
+                child: CircularProgressIndicator(strokeWidth: 2, color: tokens.positiveInk),
+              )
+            : Text(label, textAlign: TextAlign.center),
       ),
     );
     const gap = SizedBox(height: HabitSpace.s12);
@@ -350,8 +373,15 @@ class _Plan {
 
     final base = c.baseVersion ?? 0;
     // An increment has no base version (A35): its line names the time only.
-    String edited() =>
-        c.baseVersion == null ? l10n.reviewEditedAtOnly(at()) : l10n.reviewEditedAt(at(), base);
+    // An increment has no base version (A35): "Added at"; a first entry of the day has base 0.
+    String edited() => switch (c.baseVersion) {
+      null when c.operation == 'log.increment' => l10n.reviewAddedAt(at()),
+      null => l10n.reviewEditedAtOnly(at()),
+      0 => l10n.reviewEditedAtFirst(at()),
+      final v => l10n.reviewEditedAt(at(), v),
+    };
+    String removed() =>
+        base == 0 ? l10n.reviewRemovedAtFirst(at()) : l10n.reviewRemovedAt(at(), base);
     final server = c.serverVersion ?? 0;
     final mineValue = entry(c.mineUnits);
     final syncedValue = entry(c.serverValueUnits);
@@ -375,7 +405,7 @@ class _Plan {
           subtitle: l10n.reviewStaleSubtitle(habit, date),
           safeTitle: l10n.reviewSafeTitle,
           safeBody: l10n.reviewSafeStaleBody,
-          mine: _Card([l10n.reviewEntryRemoved], l10n.reviewRemovedAt(at(), base)),
+          mine: _Card([l10n.reviewEntryRemoved], removed()),
           synced: _Card([syncedValue], l10n.reviewEditedElsewhere(server)),
           syncedTitle: l10n.reviewLatestEntry,
           note: l10n.reviewNote,
@@ -479,9 +509,10 @@ class _Plan {
           mine: _Card([
             for (final f in fields) l10n.reviewFieldLine(label(f.field), f.mine),
           ], edited()),
+          // Note c: with no field to compare, say only that it changed there.
           synced: _Card([
             for (final f in fields) l10n.reviewFieldLine(label(f.field), f.synced),
-          ], l10n.reviewEditedElsewhere(server)),
+          ], fields.isEmpty ? l10n.reviewChangedElsewhere : l10n.reviewEditedElsewhere(server)),
           syncedTitle: l10n.reviewLatestVersion,
           note: '${l10n.reviewNote} ${l10n.reviewNoteFields}',
         );

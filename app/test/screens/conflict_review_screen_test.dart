@@ -223,7 +223,7 @@ void main() {
       expect(find.text(t), findsOneWidget, reason: t);
     }
     expect(find.textContaining('based on version'), findsNothing, reason: 'an increment has none');
-    expect(find.textContaining(RegExp(r'^Edited at 10:22\sAM$')), findsOneWidget);
+    expect(find.textContaining(RegExp(r'^Added at 10:22\sAM$')), findsOneWidget);
     await tapText(tester, 'Keep it deleted');
     expect(await outbox(tester), isEmpty);
     await tearDownApp(tester, account);
@@ -299,6 +299,7 @@ void main() {
     await tester.tap(find.widgetWithText(TextButton, 'Discard'));
     await settle(tester);
     expect(await outbox(tester), isEmpty);
+    expect(find.text('Discarded this change.'), findsOneWidget, reason: 'note a');
     await tearDownApp(tester, account);
   });
 
@@ -310,6 +311,27 @@ void main() {
     frequencyType: 'daily',
     frequencyConfig: const {},
   );
+
+  testWidgets('note f: a first entry of the day reads "first entry of the day"', (tester) async {
+    await seed(tester);
+    await tester.runAsync(() async {
+      await tablet.writer.archiveHabit(habitId);
+      await tablet.sync(force: true);
+    });
+    await tester.runAsync(
+      () => account.writer.setLogValue(
+        habitId: habitId,
+        value: '0.500',
+        logDate: LocalDate.parse('2026-05-27'),
+      ),
+    );
+    await syncNow(tester, account);
+    final row = await attention(tester);
+    await open(tester, row.mutationId);
+    expect(find.textContaining(RegExp(r'^Edited at .* · first entry of the day$')), findsOneWidget);
+    expect(find.textContaining('based on version 0'), findsNothing);
+    await tearDownApp(tester, account);
+  });
 
   testWidgets('stale habit edit: every differing field, both ways', (tester) async {
     await seed(tester);

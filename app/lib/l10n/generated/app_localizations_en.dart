@@ -2066,4 +2066,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String reviewEditedAtOnly(String time) {
     return 'Edited at $time';
   }
+
+  @override
+  String get reviewDiscarded => 'Discarded this change.';
+
+  @override
+  String reviewAddedAt(String time) {
+    return 'Added at $time';
+  }
+
+  @override
+  String reviewEditedAtFirst(String time) {
+    return 'Edited at $time · first entry of the day';
+  }
+
+  @override
+  String reviewRemovedAtFirst(String time) {
+    return 'Removed at $time · first entry of the day';
+  }
 }

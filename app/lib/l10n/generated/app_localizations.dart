@@ -3421,6 +3421,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edited at {time}'**
   String reviewEditedAtOnly(String time);
+
+  /// No description provided for @reviewDiscarded.
+  ///
+  /// In en, this message translates to:
+  /// **'Discarded this change.'**
+  String get reviewDiscarded;
+
+  /// No description provided for @reviewAddedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Added at {time}'**
+  String reviewAddedAt(String time);
+
+  /// No description provided for @reviewEditedAtFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Edited at {time} · first entry of the day'**
+  String reviewEditedAtFirst(String time);
+
+  /// No description provided for @reviewRemovedAtFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed at {time} · first entry of the day'**
+  String reviewRemovedAtFirst(String time);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

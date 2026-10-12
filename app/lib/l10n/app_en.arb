@@ -687,5 +687,12 @@
   "queueChangeRestored": "Restored",
   "reasonHabitArchived": "This habit was archived on another device.",
   "reviewEditedAtOnly": "Edited at {time}",
-  "@reviewEditedAtOnly": {"description": "A change with no base version (an increment, A35).", "placeholders": {"time": {"type": "String"}}}
+  "@reviewEditedAtOnly": {"description": "A change with no base version (an increment, A35).", "placeholders": {"time": {"type": "String"}}},
+  "reviewDiscarded": "Discarded this change.",
+  "reviewAddedAt": "Added at {time}",
+  "@reviewAddedAt": {"placeholders": {"time": {"type": "String"}}},
+  "reviewEditedAtFirst": "Edited at {time} · first entry of the day",
+  "@reviewEditedAtFirst": {"placeholders": {"time": {"type": "String"}}},
+  "reviewRemovedAtFirst": "Removed at {time} · first entry of the day",
+  "@reviewRemovedAtFirst": {"placeholders": {"time": {"type": "String"}}}
 }
