@@ -59,6 +59,7 @@ you saw.
 | 35 | Kill the app while a timer runs; reopen. | The timer is still running and the time is right. |
 | 36 | Finish a timer offline; reconnect. | One entry of whole seconds, the same on a second device. |
 | 37 | At 200% text size, open 34, 33, 36 and Today with both card kinds. | Nothing is clipped and every control is reachable. |
+| 38 | A reminder is due with the screen on. Then open the app by hand. Then change that reminder's time. | It pops up as a banner and stays in the tray; after opening the app the fired reminder is still in the tray; the next one shows once, at the new time, never twice. |
 
 ## Results
 
@@ -101,3 +102,4 @@ you saw.
 | 35 | | | | |
 | 36 | | | | |
 | 37 | | | | |
+| 38 | | | | |
