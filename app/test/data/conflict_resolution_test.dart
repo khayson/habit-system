@@ -354,25 +354,25 @@ void main() {
     await tablet.sync(force: true);
     await tablet.writer.updateHabit(
       water,
-      HabitDraft(
+      const HabitDraft(
         name: 'Water (tablet)',
         category: 'health',
         targetValue: '2.000',
         unit: 'L',
         frequencyType: 'daily',
-        frequencyConfig: const {},
+        frequencyConfig: {},
       ),
     );
     await tablet.sync(force: true);
     await phone.writer.updateHabit(
       water,
-      HabitDraft(
+      const HabitDraft(
         name: 'Water (phone)',
         category: 'health',
         targetValue: '2.000',
         unit: 'L',
         frequencyType: 'daily',
-        frequencyConfig: const {},
+        frequencyConfig: {},
       ),
     );
     await phone.sync(force: true);
