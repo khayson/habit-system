@@ -61,6 +61,28 @@ it('closes stale periods before answering (lazy closer, A10)', function () {
         ->and(DB::table('period_evaluations')->where('period_key', 'd:2026-05-30')->exists())->toBeTrue();
 });
 
+it('shows a protected week once on each of its days, from its one stored row (A41)', function () {
+    // Monday 18 May, LA. Auto-freeze on before the week; one of two check-ins.
+    $this->freezeClock('2026-05-18T16:00:00Z');
+    $weekly = (string) Str::uuid7();
+    $version = (int) DB::table('users')->where('id', $this->maya['id'])->value('version');
+    $this->sync($this->maya['token'], [
+        M::setAutoFreeze($this->maya['id'], true, $version, '2026-05-18T16:00:00Z'),
+        M::habitCreate($weekly, overrides: ['frequency_type' => 'weekly_count', 'frequency_config' => ['count' => 2], 'start_local_date' => '2026-05-18'], occurredAt: '2026-05-18T16:00:00Z'),
+        M::setValue($weekly, 1, 0, '2026-05-19T17:00:00Z'),
+    ])->assertOk();
+    $this->freezeClock('2026-05-28T17:22:00Z');
+
+    $whole = heatmap($this, $this->maya['token'], $weekly, ['from' => '2026-05-18', 'to' => '2026-05-24'])->assertOk()->json('data.days');
+    // A window that starts mid-week still reads the week's row.
+    $part = heatmap($this, $this->maya['token'], $weekly, ['from' => '2026-05-21', 'to' => '2026-05-24'])->assertOk()->json('data.days');
+
+    expect(array_count_values(array_column($whole, 'status')))->toBe(['protected' => 7])
+        ->and(array_column($part, 'status'))->toBe(['protected', 'protected', 'protected', 'protected'])
+        ->and(DB::table('period_evaluations')->where('habit_id', $weekly)->where('period_key', 'w:2026-05-18')->count())->toBe(1)
+        ->and(DB::table('freeze_usage')->where('habit_id', $weekly)->count())->toBe(1);
+});
+
 it('validates the window', function (array $query) {
     heatmap($this, $this->maya['token'], $this->habit, $query)
         ->assertStatus(422)->assertJsonPath('error.code', 'validation_failed');

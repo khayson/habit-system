@@ -65,6 +65,24 @@ final class M
     }
 
     /**
+     * A42: profile.set_auto_freeze. The policy takes effect at the server clock, not occurred_at.
+     *
+     * @return array<string, mixed>
+     */
+    public static function setAutoFreeze(string $userId, bool $enabled, int $baseVersion, string $occurredAt = '2026-05-28T17:20:00Z', ?string $mutationId = null): array
+    {
+        return [
+            'mutation_id' => $mutationId ?? (string) Str::uuid7(),
+            'entity' => 'user',
+            'entity_id' => $userId,
+            'operation' => 'profile.set_auto_freeze',
+            'base_version' => $baseVersion,
+            'occurred_at' => $occurredAt,
+            'payload' => ['enabled' => $enabled],
+        ];
+    }
+
+    /**
      * Phase 3.2b: a reminder mutation from contract-fixtures/sync/reminder_mutations.json, with
      * real ids and optional payload overrides.
      *

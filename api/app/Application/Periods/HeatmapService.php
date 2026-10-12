@@ -9,14 +9,14 @@ use App\Domain\Clock;
 use App\Domain\Habit\HabitTypeRegistry;
 use App\Domain\Habit\LogState;
 use App\Domain\Period\PeriodEngine;
-use App\Domain\Period\PeriodKind;
 use App\Domain\Period\PeriodStatus;
 use Illuminate\Support\Facades\DB;
 use stdClass;
 
 /**
  * GET /habits/{id}/heatmap (spec 06): one status per local date in a window of at most 366 days.
- * Closed daily periods come from period_evaluations (the closer runs first, A10); open and future
+ * Closed periods (days and, since A41, weeks) come from period_evaluations, one row per period
+ * spread over its active dates (the closer runs first, A10); open and future
  * periods come from the engine. Dates that are not part of the grid are not_due: unscheduled,
  * inactive, before the start, or zero-length (A30). Every status has a text label (invariant 12).
  */
@@ -59,7 +59,8 @@ final readonly class HeatmapService
         $evaluations = $engine->evaluate($engine->periods($this->habits->schedule($habit), $from, $to, $timeline), $logs, $today);
 
         $stored = DB::table('period_evaluations')->where('habit_id', $habit->id)
-            ->whereBetween('start_date', [$from->toString(), $to->toString()])
+            // A week that starts up to six days before the window still covers it.
+            ->whereBetween('start_date', [$from->addDays(-6)->toString(), $to->toString()])
             ->get(['period_key', 'completed', 'protected'])->keyBy('period_key');
 
         $status = [];
@@ -67,7 +68,7 @@ final readonly class HeatmapService
             $period = $evaluation->period;
             $row = $stored->get($period->key);
             $value = match (true) {
-                $evaluation->closed && $period->kind === PeriodKind::Day && $row !== null => match (true) {
+                $evaluation->closed && $row !== null => match (true) {
                     (bool) $row->completed => 'complete',
                     (bool) $row->protected => 'protected',
                     default => 'missed',
