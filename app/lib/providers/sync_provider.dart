@@ -53,7 +53,18 @@ class SyncProvider extends ChangeNotifier {
   /// After a local write: wait for the burst to settle, then sync once.
   void scheduleAfterWrite() {
     _timer?.cancel();
-    _timer = Timer(_debounce, () => sync());
+    // 4.3b I3: nobody awaits this run, and the engine can throw (it reads and writes sync_state
+    // outside its own handlers, e.g. a database closed at sign-out). The next trigger retries.
+    _timer = Timer(_debounce, () {
+      unawaited(
+        sync().then<void>(
+          (_) {},
+          onError: (Object error) {
+            if (kDebugMode) debugPrint('Debounced sync failed: ${error.runtimeType}');
+          },
+        ),
+      );
+    });
   }
 
   /// App start and resume (foreground only): refresh an old token while online, then sync.

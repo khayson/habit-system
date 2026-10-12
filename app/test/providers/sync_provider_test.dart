@@ -39,6 +39,22 @@ void main() {
 
   Future<void> idle() => Future<void>.delayed(const Duration(milliseconds: 120));
 
+  test('I3 (4.3b review): a debounced sync whose engine throws never escapes', () async {
+    // The engine reads and writes sync_state outside its own try (e.g. a database closed at
+    // sign-out): here the database is closed under it.
+    final broken = SyncProvider(
+      engine: phone.engine(),
+      refreshIfStale: () async {},
+      debounce: const Duration(milliseconds: 10),
+    );
+    addTearDown(broken.dispose);
+    await phone.db.close();
+    broken.scheduleAfterWrite();
+    await idle();
+    expect(broken.syncing, isFalse);
+    phone = await Device(server).init(); // for tearDown
+  });
+
   test('a burst of local writes makes one sync after the debounce', () async {
     final habit = await phone.habit();
     for (var i = 0; i < 5; i++) {
