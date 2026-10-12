@@ -1849,4 +1849,216 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get entryNotDone => 'Not done';
+
+  @override
+  String get reviewTitle => 'Review one change';
+
+  @override
+  String reviewStaleSubtitle(String habit, String date) {
+    return 'Both devices edited the same $habit entry on $date.';
+  }
+
+  @override
+  String get reviewSafeTitle => 'Your check-in is safe';
+
+  @override
+  String get reviewSafeStaleBody =>
+      'This absolute edit needs your choice. Quantity increments normally merge automatically.';
+
+  @override
+  String get reviewOnDevice => 'On this device';
+
+  @override
+  String get reviewLatestEntry => 'Latest synced entry';
+
+  @override
+  String get reviewLatestVersion => 'Latest synced version';
+
+  @override
+  String reviewEditedAt(String time, int version) {
+    return 'Edited at $time · based on version $version';
+  }
+
+  @override
+  String reviewRemovedAt(String time, int version) {
+    return 'Removed at $time · based on version $version';
+  }
+
+  @override
+  String reviewEditedElsewhere(int version) {
+    return 'Edited on another device · version $version';
+  }
+
+  @override
+  String reviewDeletedElsewhere(int version) {
+    return 'Deleted on another device · version $version';
+  }
+
+  @override
+  String get reviewArchivedElsewhere => 'Archived on another device';
+
+  @override
+  String get reviewChangedElsewhere => 'Changed on another device';
+
+  @override
+  String get reviewNote =>
+      'Your choice becomes a reviewed edit against the latest version. If it changes again, you will review it again.';
+
+  @override
+  String get reviewNoteFields => 'Fields that differ take the values you choose.';
+
+  @override
+  String reviewKeepSynced(String value) {
+    return 'Keep synced value · $value';
+  }
+
+  @override
+  String reviewUseMine(String value) {
+    return 'Use my value · $value';
+  }
+
+  @override
+  String get reviewEntryRemoved => 'Entry removed';
+
+  @override
+  String get reviewRemoveEntry => 'Remove the entry';
+
+  @override
+  String reviewDeletedSubtitle(String habit) {
+    return 'This $habit entry was deleted on another device.';
+  }
+
+  @override
+  String get reviewDeletedBody =>
+      'The entry for this day was deleted on another device. Your change stays here until you choose.';
+
+  @override
+  String get reviewDeleted => 'Deleted';
+
+  @override
+  String get reviewKeepDeleted => 'Keep it deleted';
+
+  @override
+  String reviewBringBack(String value) {
+    return 'Bring it back · $value';
+  }
+
+  @override
+  String get reviewBothRemoved => 'Both devices removed this entry.';
+
+  @override
+  String get reviewDone => 'Done';
+
+  @override
+  String reviewArchivedSubtitle(String habit) {
+    return '$habit was archived on another device.';
+  }
+
+  @override
+  String reviewArchivedBody(String habit) {
+    return 'Restore $habit to save this check-in, or discard it.';
+  }
+
+  @override
+  String get reviewArchived => 'Archived';
+
+  @override
+  String get reviewActive => 'Active';
+
+  @override
+  String reviewRestore(String habit) {
+    return 'Restore $habit';
+  }
+
+  @override
+  String reviewSaveCheckIn(String value) {
+    return 'Save my check-in · $value';
+  }
+
+  @override
+  String get reviewDiscardCheckIn => 'Discard this check-in';
+
+  @override
+  String reviewHabitSubtitle(String habit) {
+    return 'Both devices edited $habit.';
+  }
+
+  @override
+  String get reviewEditSafeTitle => 'Your edit is safe';
+
+  @override
+  String get reviewEditSafeBody => 'Your edit needs your choice before it is saved.';
+
+  @override
+  String get reviewKeepSyncedVersion => 'Keep synced version';
+
+  @override
+  String get reviewUseMyVersion => 'Use my version';
+
+  @override
+  String get reviewUseMyChoice => 'Use my choice';
+
+  @override
+  String get reviewArchiveThis => 'Archive this habit';
+
+  @override
+  String get reviewRestoreThis => 'Restore this habit';
+
+  @override
+  String reviewFieldLine(String label, String value) {
+    return '$label: $value';
+  }
+
+  @override
+  String get reviewFieldName => 'Name';
+
+  @override
+  String get reviewFieldCategory => 'Category';
+
+  @override
+  String get reviewFieldTarget => 'Target';
+
+  @override
+  String get reviewFieldUnit => 'Unit';
+
+  @override
+  String get reviewFieldSchedule => 'Schedule';
+
+  @override
+  String get reviewNoUnit => 'No unit';
+
+  @override
+  String get reviewDiscardChange => 'Discard this change';
+
+  @override
+  String get reviewKeptSynced => 'Kept the synced value.';
+
+  @override
+  String get reviewUsedMine => 'Your choice is saved on this device and will sync.';
+
+  @override
+  String get reviewGone => 'This change no longer needs a look.';
+
+  @override
+  String reviewCardSpoken(String title, String value, String line) {
+    return '$title: $value. $line';
+  }
+
+  @override
+  String get queueReview => 'Review';
+
+  @override
+  String get queueChangeIncrement => 'Progress added';
+
+  @override
+  String get queueChangeHabitEdit => 'Habit edited';
+
+  @override
+  String get queueChangeArchived => 'Archived';
+
+  @override
+  String get queueChangeRestored => 'Restored';
+
+  @override
+  String get reasonHabitArchived => 'This habit was archived on another device.';
 }

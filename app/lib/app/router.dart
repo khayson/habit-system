@@ -10,6 +10,7 @@ import '../screens/amount_entry_screen.dart';
 import '../screens/app_shell.dart';
 import '../screens/archived_habits_screen.dart';
 import '../screens/create_account_screen.dart';
+import '../screens/conflict_review_screen.dart';
 import '../screens/create_habit_screen.dart';
 import '../screens/edit_habit_screen.dart';
 import '../screens/frequency_screen.dart';
@@ -53,6 +54,9 @@ abstract final class Routes {
     queryParameters: date == null ? null : {'date': date},
   ).toString();
   static const queue = '/sync';
+
+  /// Screen 19 (4.3c): review one change that needs a look.
+  static String review(String mutationId) => '/sync/review/$mutationId';
 
   /// Screen 10 for 08 and 09 (extra: FrequencyRequest); pops a FrequencyChoice.
   static const frequency = '/frequency';
@@ -204,5 +208,10 @@ List<RouteBase> appRoutes({
     builder: (context, state) => FrequencyScreen(request: state.extra! as FrequencyRequest),
   ),
   GoRoute(path: Routes.queue, builder: (context, state) => const SyncQueueScreen()),
+  GoRoute(
+    path: '/sync/review/:mutationId',
+    builder: (context, state) =>
+        ConflictReviewScreen(mutationId: state.pathParameters['mutationId']!, clock: clock),
+  ),
   GoRoute(path: Routes.status, builder: (context, state) => const ServerStatusScreen()),
 ];

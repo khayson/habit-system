@@ -32,6 +32,13 @@ enum ConflictKind {
 /// The three codes A37 allows "use mine" for.
 const resolvableCodes = {'version_conflict', 'resource_deleted', 'habit_archived'};
 
+/// 4.3c: a row screen 19 can review (its code is one A37 names); others can only be discarded.
+bool reviewable(OutboxRow row) {
+  if (row.state != OutboxState.needsAttention) return false;
+  final error = EntityCodec.decodeJson(row.lastError);
+  return error is Map && resolvableCodes.contains(error['code']);
+}
+
 /// A37 USE MINE, decided once for the read model and the writer: the new row's base version,
 /// entity id, operation and payload, or null when only discarding is allowed.
 class UseMinePlan {
@@ -119,7 +126,13 @@ class ConflictView {
   final int? serverVersion;
   final bool serverDeleted;
   final HabitDraft? serverHabit;
+
+  /// For a habit row: whether the server's habit is archived, when its answer says; else null.
+  final bool? serverArchived;
   final bool canUseMine;
+
+  /// The server's answer as stored (for the reason line of a change that can only be discarded).
+  final String? lastError;
 
   const ConflictView({
     required this.mutationId,
@@ -138,7 +151,9 @@ class ConflictView {
     required this.serverVersion,
     required this.serverDeleted,
     required this.serverHabit,
+    this.serverArchived,
     required this.canUseMine,
+    this.lastError,
   });
 }
 
@@ -222,7 +237,11 @@ extension ConflictQueries on LocalView {
       serverHabit: isHabit && current != null && current.containsKey('name')
           ? HabitDraft.fromWire(current)
           : null,
+      serverArchived: isHabit && current != null && current.containsKey('archived_at')
+          ? current['archived_at'] != null
+          : null,
       canUseMine: plan != null,
+      lastError: row.lastError,
     );
   }
 }

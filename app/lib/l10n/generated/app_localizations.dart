@@ -3061,6 +3061,360 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not done'**
   String get entryNotDone;
+
+  /// No description provided for @reviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review one change'**
+  String get reviewTitle;
+
+  /// No description provided for @reviewStaleSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Both devices edited the same {habit} entry on {date}.'**
+  String reviewStaleSubtitle(String habit, String date);
+
+  /// No description provided for @reviewSafeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your check-in is safe'**
+  String get reviewSafeTitle;
+
+  /// No description provided for @reviewSafeStaleBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This absolute edit needs your choice. Quantity increments normally merge automatically.'**
+  String get reviewSafeStaleBody;
+
+  /// No description provided for @reviewOnDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'On this device'**
+  String get reviewOnDevice;
+
+  /// No description provided for @reviewLatestEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest synced entry'**
+  String get reviewLatestEntry;
+
+  /// No description provided for @reviewLatestVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest synced version'**
+  String get reviewLatestVersion;
+
+  /// No description provided for @reviewEditedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Edited at {time} · based on version {version}'**
+  String reviewEditedAt(String time, int version);
+
+  /// No description provided for @reviewRemovedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed at {time} · based on version {version}'**
+  String reviewRemovedAt(String time, int version);
+
+  /// No description provided for @reviewEditedElsewhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Edited on another device · version {version}'**
+  String reviewEditedElsewhere(int version);
+
+  /// No description provided for @reviewDeletedElsewhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted on another device · version {version}'**
+  String reviewDeletedElsewhere(int version);
+
+  /// No description provided for @reviewArchivedElsewhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived on another device'**
+  String get reviewArchivedElsewhere;
+
+  /// No description provided for @reviewChangedElsewhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Changed on another device'**
+  String get reviewChangedElsewhere;
+
+  /// No description provided for @reviewNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your choice becomes a reviewed edit against the latest version. If it changes again, you will review it again.'**
+  String get reviewNote;
+
+  /// No description provided for @reviewNoteFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Fields that differ take the values you choose.'**
+  String get reviewNoteFields;
+
+  /// No description provided for @reviewKeepSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep synced value · {value}'**
+  String reviewKeepSynced(String value);
+
+  /// No description provided for @reviewUseMine.
+  ///
+  /// In en, this message translates to:
+  /// **'Use my value · {value}'**
+  String reviewUseMine(String value);
+
+  /// No description provided for @reviewEntryRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Entry removed'**
+  String get reviewEntryRemoved;
+
+  /// No description provided for @reviewRemoveEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the entry'**
+  String get reviewRemoveEntry;
+
+  /// No description provided for @reviewDeletedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This {habit} entry was deleted on another device.'**
+  String reviewDeletedSubtitle(String habit);
+
+  /// No description provided for @reviewDeletedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The entry for this day was deleted on another device. Your change stays here until you choose.'**
+  String get reviewDeletedBody;
+
+  /// No description provided for @reviewDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted'**
+  String get reviewDeleted;
+
+  /// No description provided for @reviewKeepDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep it deleted'**
+  String get reviewKeepDeleted;
+
+  /// No description provided for @reviewBringBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Bring it back · {value}'**
+  String reviewBringBack(String value);
+
+  /// No description provided for @reviewBothRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Both devices removed this entry.'**
+  String get reviewBothRemoved;
+
+  /// No description provided for @reviewDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get reviewDone;
+
+  /// No description provided for @reviewArchivedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{habit} was archived on another device.'**
+  String reviewArchivedSubtitle(String habit);
+
+  /// No description provided for @reviewArchivedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore {habit} to save this check-in, or discard it.'**
+  String reviewArchivedBody(String habit);
+
+  /// No description provided for @reviewArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived'**
+  String get reviewArchived;
+
+  /// No description provided for @reviewActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get reviewActive;
+
+  /// No description provided for @reviewRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore {habit}'**
+  String reviewRestore(String habit);
+
+  /// No description provided for @reviewSaveCheckIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Save my check-in · {value}'**
+  String reviewSaveCheckIn(String value);
+
+  /// No description provided for @reviewDiscardCheckIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard this check-in'**
+  String get reviewDiscardCheckIn;
+
+  /// No description provided for @reviewHabitSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Both devices edited {habit}.'**
+  String reviewHabitSubtitle(String habit);
+
+  /// No description provided for @reviewEditSafeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your edit is safe'**
+  String get reviewEditSafeTitle;
+
+  /// No description provided for @reviewEditSafeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your edit needs your choice before it is saved.'**
+  String get reviewEditSafeBody;
+
+  /// No description provided for @reviewKeepSyncedVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep synced version'**
+  String get reviewKeepSyncedVersion;
+
+  /// No description provided for @reviewUseMyVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Use my version'**
+  String get reviewUseMyVersion;
+
+  /// No description provided for @reviewUseMyChoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Use my choice'**
+  String get reviewUseMyChoice;
+
+  /// No description provided for @reviewArchiveThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive this habit'**
+  String get reviewArchiveThis;
+
+  /// No description provided for @reviewRestoreThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore this habit'**
+  String get reviewRestoreThis;
+
+  /// No description provided for @reviewFieldLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{label}: {value}'**
+  String reviewFieldLine(String label, String value);
+
+  /// No description provided for @reviewFieldName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get reviewFieldName;
+
+  /// No description provided for @reviewFieldCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get reviewFieldCategory;
+
+  /// No description provided for @reviewFieldTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Target'**
+  String get reviewFieldTarget;
+
+  /// No description provided for @reviewFieldUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit'**
+  String get reviewFieldUnit;
+
+  /// No description provided for @reviewFieldSchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule'**
+  String get reviewFieldSchedule;
+
+  /// No description provided for @reviewNoUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'No unit'**
+  String get reviewNoUnit;
+
+  /// No description provided for @reviewDiscardChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard this change'**
+  String get reviewDiscardChange;
+
+  /// No description provided for @reviewKeptSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'Kept the synced value.'**
+  String get reviewKeptSynced;
+
+  /// No description provided for @reviewUsedMine.
+  ///
+  /// In en, this message translates to:
+  /// **'Your choice is saved on this device and will sync.'**
+  String get reviewUsedMine;
+
+  /// No description provided for @reviewGone.
+  ///
+  /// In en, this message translates to:
+  /// **'This change no longer needs a look.'**
+  String get reviewGone;
+
+  /// No description provided for @reviewCardSpoken.
+  ///
+  /// In en, this message translates to:
+  /// **'{title}: {value}. {line}'**
+  String reviewCardSpoken(String title, String value, String line);
+
+  /// No description provided for @queueReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get queueReview;
+
+  /// No description provided for @queueChangeIncrement.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress added'**
+  String get queueChangeIncrement;
+
+  /// No description provided for @queueChangeHabitEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Habit edited'**
+  String get queueChangeHabitEdit;
+
+  /// No description provided for @queueChangeArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived'**
+  String get queueChangeArchived;
+
+  /// No description provided for @queueChangeRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'Restored'**
+  String get queueChangeRestored;
+
+  /// No description provided for @reasonHabitArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'This habit was archived on another device.'**
+  String get reasonHabitArchived;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
