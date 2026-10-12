@@ -685,5 +685,7 @@
   "queueChangeHabitEdit": "Habit edited",
   "queueChangeArchived": "Archived",
   "queueChangeRestored": "Restored",
-  "reasonHabitArchived": "This habit was archived on another device."
+  "reasonHabitArchived": "This habit was archived on another device.",
+  "reviewEditedAtOnly": "Edited at {time}",
+  "@reviewEditedAtOnly": {"description": "A change with no base version (an increment, A35).", "placeholders": {"time": {"type": "String"}}}
 }

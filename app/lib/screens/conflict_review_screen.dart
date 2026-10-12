@@ -348,6 +348,9 @@ class _Plan {
     }
 
     final base = c.baseVersion ?? 0;
+    // An increment has no base version (A35): its line names the time only.
+    String edited() =>
+        c.baseVersion == null ? l10n.reviewEditedAtOnly(at()) : l10n.reviewEditedAt(at(), base);
     final server = c.serverVersion ?? 0;
     final mineValue = entry(c.mineUnits);
     final syncedValue = entry(c.serverValueUnits);
@@ -385,7 +388,7 @@ class _Plan {
           subtitle: l10n.reviewStaleSubtitle(habit, date),
           safeTitle: l10n.reviewSafeTitle,
           safeBody: l10n.reviewSafeStaleBody,
-          mine: _Card([mineValue], l10n.reviewEditedAt(at(), base)),
+          mine: _Card([mineValue], edited()),
           synced: _Card([syncedValue], l10n.reviewEditedElsewhere(server)),
           syncedTitle: l10n.reviewLatestEntry,
           note: l10n.reviewNote,
@@ -408,7 +411,7 @@ class _Plan {
           subtitle: l10n.reviewDeletedSubtitle(habit),
           safeTitle: l10n.reviewSafeTitle,
           safeBody: l10n.reviewDeletedBody,
-          mine: _Card([mineValue], l10n.reviewEditedAt(at(), base)),
+          mine: _Card([mineValue], edited()),
           synced: _Card([l10n.reviewDeleted], l10n.reviewDeletedElsewhere(server)),
           syncedTitle: l10n.reviewLatestEntry,
           note: l10n.reviewNote,
@@ -422,7 +425,7 @@ class _Plan {
           subtitle: l10n.reviewArchivedSubtitle(habit),
           safeTitle: l10n.reviewSafeTitle,
           safeBody: l10n.reviewArchivedBody(habit),
-          mine: _Card([mineValue], l10n.reviewEditedAt(at(), base)),
+          mine: _Card([mineValue], edited()),
           synced: _Card([l10n.reviewArchived], l10n.reviewArchivedElsewhere),
           syncedTitle: l10n.reviewLatestEntry,
           mineValue: mineValue,
@@ -436,9 +439,7 @@ class _Plan {
           subtitle: l10n.reviewHabitSubtitle(habit),
           safeTitle: l10n.reviewEditSafeTitle,
           safeBody: l10n.reviewEditSafeBody,
-          mine: _Card([
-            archive ? l10n.reviewArchiveThis : l10n.reviewRestoreThis,
-          ], l10n.reviewEditedAt(at(), base)),
+          mine: _Card([archive ? l10n.reviewArchiveThis : l10n.reviewRestoreThis], edited()),
           synced: _Card([
             switch (c.serverArchived) {
               true => l10n.reviewArchived,
@@ -476,7 +477,7 @@ class _Plan {
           safeBody: l10n.reviewEditSafeBody,
           mine: _Card([
             for (final f in fields) l10n.reviewFieldLine(label(f.field), f.mine),
-          ], l10n.reviewEditedAt(at(), base)),
+          ], edited()),
           synced: _Card([
             for (final f in fields) l10n.reviewFieldLine(label(f.field), f.synced),
           ], l10n.reviewEditedElsewhere(server)),

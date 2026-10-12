@@ -206,6 +206,8 @@ void main() {
     ]) {
       expect(find.text(t), findsOneWidget, reason: t);
     }
+    expect(find.textContaining('based on version'), findsNothing, reason: 'an increment has none');
+    expect(find.textContaining(RegExp(r'^Edited at 10:22\sAM$')), findsOneWidget);
     await tapText(tester, 'Keep it deleted');
     expect(await outbox(tester), isEmpty);
     await tearDownApp(tester, account);

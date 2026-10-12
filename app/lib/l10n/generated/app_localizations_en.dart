@@ -2061,4 +2061,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reasonHabitArchived => 'This habit was archived on another device.';
+
+  @override
+  String reviewEditedAtOnly(String time) {
+    return 'Edited at $time';
+  }
 }

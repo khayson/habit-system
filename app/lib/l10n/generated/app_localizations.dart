@@ -3415,6 +3415,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This habit was archived on another device.'**
   String get reasonHabitArchived;
+
+  /// A change with no base version (an increment, A35).
+  ///
+  /// In en, this message translates to:
+  /// **'Edited at {time}'**
+  String reviewEditedAtOnly(String time);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
