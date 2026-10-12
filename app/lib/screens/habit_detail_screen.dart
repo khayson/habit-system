@@ -10,6 +10,7 @@ import '../app/router.dart';
 import '../config/habit_tokens.dart';
 import '../core/time_zones.dart';
 import '../data/habit_detail_view.dart';
+import '../data/local_mutation_service.dart' show TimerFailure;
 import '../domain/calendar/local_date.dart';
 import '../domain/provisional_type_rules.dart';
 import '../habit_types/habit_type_ui.dart';
@@ -251,7 +252,16 @@ class _LogActions extends StatelessWidget {
               stream: account.actions.watchTimer(id),
               builder: (context, snapshot) => snapshot.data == null
                   ? button(l10n.detailStartTimer, () async {
-                      await account.actions.startTimer(id);
+                      try {
+                        await account.actions.startTimer(id);
+                      } on TimerFailure {
+                        // Archived since this screen opened (4.3b L2): say so.
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context)
+                              .showSnackBar(SnackBar(content: Text(l10n.timerArchived)));
+                        }
+                        return;
+                      }
                       if (context.mounted) context.push(Routes.timer(id));
                     })
                   : button(l10n.todayOpenTimer, () => context.push(Routes.timer(id))),

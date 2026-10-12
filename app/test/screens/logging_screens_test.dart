@@ -210,6 +210,20 @@ void main() {
     });
   });
 
+  testWidgets('L2: Start timer on 12 for a habit archived after it opened says why', (
+    tester,
+  ) async {
+    await seed(tester);
+    await show(tester, '/habits/${ids['Meditation']}');
+    await tester.runAsync(() => account.writer.archiveHabit(ids['Meditation']!));
+    await tester.tap(find.text('Start timer'));
+    await settle(tester);
+    expect(tester.takeException(), isNull);
+    expect(find.text('This habit is archived. Restore it to save this time.'), findsOneWidget);
+    expect(await drafts(tester), 0);
+    await tearDownApp(tester, account);
+  });
+
   group('timer (33 running, 36 paused)', () {
     Future<void> openTimer(WidgetTester tester) =>
         show(tester, '/habits/${ids['Meditation']}/timer');
@@ -342,6 +356,28 @@ void main() {
         await tearDownApp(tester, account);
       });
     }
+
+    testWidgets('L2: archived after the screen opened: Pause works, Resume says why', (
+      tester,
+    ) async {
+      await seed(tester);
+      await startTimer(tester);
+      now = now.add(const Duration(seconds: 40));
+      await openTimer(tester);
+      await tester.runAsync(() => account.writer.archiveHabit(ids['Meditation']!));
+      await tester.tap(find.text('Pause timer'));
+      await settle(tester);
+      expect(tester.takeException(), isNull);
+      expect(find.text('Pause at your pace'), findsOneWidget);
+      final before = (await outbox(tester)).length;
+      await tester.tap(find.text('Resume timer'));
+      await settle(tester);
+      expect(tester.takeException(), isNull);
+      expect(find.text('This habit is archived. Restore it to save this time.'), findsOneWidget);
+      expect(find.text('Discard timer'), findsOneWidget);
+      expect((await outbox(tester)).length, before, reason: 'nothing written');
+      await tearDownApp(tester, account);
+    });
 
     testWidgets('discard asks first; back keeps the draft', (tester) async {
       await seed(tester);

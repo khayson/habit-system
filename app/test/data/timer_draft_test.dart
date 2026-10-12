@@ -173,4 +173,13 @@ void main() {
     expect(await other.writer.watchTimer(yoga).first, isNull);
     expect(await other.db.select(other.db.timerDrafts).get(), isEmpty);
   });
+
+  test('L2 (4.3b review): pause works on an archived habit and keeps the time', () async {
+    await phone.writer.startTimer(yoga);
+    advance(const Duration(seconds: 40));
+    await phone.writer.archiveHabit(yoga);
+    final paused = await phone.writer.pauseTimer(yoga);
+    expect((paused.state, paused.elapsedMs), ('paused', 40000));
+    await expectLater(phone.writer.resumeTimer(yoga), failure(TimerFailureKind.archived));
+  });
 }

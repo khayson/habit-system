@@ -101,6 +101,21 @@ class _TimerState extends State<_Timer> {
     }
   }
 
+  /// Pause and resume (4.3b L2): a refusal (the habit archived since the screen opened) shows
+  /// the failure card with Discard timer; nothing escapes, nothing is lost.
+  Future<void> _guarded(Future<Object?> Function() action) => _run(() async {
+    try {
+      await action();
+    } on TimerFailure catch (e) {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
+      setState(() {
+        _failure = e.kind == TimerFailureKind.archived ? l10n.timerArchived : l10n.timerGone;
+        _failureHint = false;
+      });
+    }
+  });
+
   Future<void> _finish(AccountContext account) => _run(() async {
     final l10n = AppLocalizations.of(context);
     final elapsed = context.read<StreamModel<TimerDraftView?>>().value?.elapsed(widget.clock());
@@ -243,8 +258,8 @@ class _TimerState extends State<_Timer> {
         child: Text(label, textAlign: TextAlign.center),
       ),
     );
-    final pause = _busy ? null : () => account.actions.pauseTimer(widget.habitId);
-    final resume = _busy ? null : () => account.actions.resumeTimer(widget.habitId);
+    final pause = _busy ? null : () => _guarded(() => account.actions.pauseTimer(widget.habitId));
+    final resume = _busy ? null : () => _guarded(() => account.actions.resumeTimer(widget.habitId));
     final finish = _busy ? null : () => _finish(account);
 
     return Scaffold(

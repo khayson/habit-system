@@ -123,7 +123,16 @@ class _AmountState extends State<_Amount> {
   }
 
   Future<void> _timeIt(AccountContext account) async {
-    await account.actions.startTimer(widget.habitId);
+    try {
+      await account.actions.startTimer(widget.habitId);
+    } on TimerFailure {
+      // Archived since this screen opened (4.3b L2): say so; nothing was written.
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).timerArchived)));
+      }
+      return;
+    }
     if (mounted) context.pushReplacement(Routes.timer(widget.habitId));
   }
 

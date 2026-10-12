@@ -405,8 +405,9 @@ class LocalMutationService {
   });
 
   /// Banks the running span; a paused draft stays as it is.
+  /// Allowed on an archived habit (A36): pausing only banks time.
   Future<TimerDraftView> pauseTimer(String habitId) => db.transaction(() async {
-    await _timerAllowed(habitId);
+    await _timerAllowed(habitId, allowArchived: true);
     final draft = await _requireDraft(habitId);
     if (draft.state != TimerDraftView.running) return TimerDraftView(draft);
     final now = clock().millisecondsSinceEpoch;
@@ -482,6 +483,7 @@ class LocalMutationService {
   Future<ProvisionalTypeRules> _timerAllowed(
     String habitId, {
     ProvisionalTypeRegistry? types,
+    bool allowArchived = false,
   }) async {
     final rules = (types ?? ProvisionalTypeRegistry.builtins()).lookup(
       await habitTypeOf(db, habitId) ?? '',
@@ -499,7 +501,7 @@ class LocalMutationService {
       // A change that needs a look does not stop a timer; its check-in queues behind it.
       archived = false;
     }
-    if (archived) throw const TimerFailure(TimerFailureKind.archived);
+    if (archived && !allowArchived) throw const TimerFailure(TimerFailureKind.archived);
     return rules;
   }
 
