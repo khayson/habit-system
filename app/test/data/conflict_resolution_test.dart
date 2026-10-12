@@ -278,4 +278,18 @@ void main() {
       expect(await phone.outbox(), isEmpty);
     });
   });
+
+  test('L1 (4.3b review): a stale value with an archive queued after it keeps its place', () async {
+    final old = await staleSetValue();
+    await phone.writer.archiveHabit(water);
+    expect(await phone.writer.useMine(old.mutationId), ResolveResult.done);
+    final rows = await phone.outbox();
+    final fresh = rows.singleWhere((r) => r.operation == 'log.set_value');
+    expect(fresh.seq, old.seq, reason: 'the old row\'s place');
+    expect(rows.map((r) => r.operation), ['log.set_value', 'habit.archive']);
+    await phone.sync(force: true);
+    expect(server.logs.values.single['value'], '3.000');
+    expect(server.habits[water]!['archived_at'], isNotNull);
+    expect(await phone.outbox(), isEmpty);
+  });
 }

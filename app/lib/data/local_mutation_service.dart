@@ -815,16 +815,19 @@ class LocalMutationService {
         : (await LocalView(db).habits()).where((h) => h.id == habitId).firstOrNull;
     final plan = UseMinePlan.of(row, habitActive: habit != null && !habit.archived);
     if (plan == null) return ResolveResult.notAllowed;
-    // ASSUMPTION(4.3b-use-mine-after-habit): a change to the habit itself queued after this row
-    // (the restore that makes habit_archived resolvable) must reach the server first, so then
-    // the new row goes behind it; otherwise it keeps its place.
-    final habitChangeAfter = habitId == null
+    // A37: a use-mine for habit_archived goes after the habit's queued restore (the restore must
+    // reach the server first, or the check-in is refused again); every other use-mine keeps the
+    // old row's place.
+    final error = EntityCodec.decodeJson(row.lastError);
+    final archivedRefusal = error is Map && error['code'] == 'habit_archived';
+    final habitChangeAfter = habitId == null || !archivedRefusal
         ? null
         : await (db.select(db.outbox)
                 ..where(
                   (o) =>
                       o.entity.equals('habit') &
                       o.entityId.equals(habitId) &
+                      o.operation.equals('habit.restore') &
                       o.seq.isBiggerThanValue(row.seq) &
                       o.state.isIn(OutboxState.unacked),
                 )
