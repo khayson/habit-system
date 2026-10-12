@@ -1,6 +1,7 @@
 <?php
 
 use App\Application\Periods\PeriodCloser;
+use App\Application\Rewards\RewardState;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -30,7 +31,7 @@ function rewardsGet(object $test, string $token, string $path, array $query = []
 
 /**
  * Completed habit-days from 1 Jan on, all written in the same instant so pages split on the id.
- * The cache moves with the ledger (invariant 7).
+ * The cache moves with the ledger and reward_state is journaled (invariant 7).
  */
 function seedXp(string $userId, string $habitId, int $days): void
 {
@@ -43,7 +44,7 @@ function seedXp(string $userId, string $habitId, int $days): void
         DB::table('xp_ledger')->insert(['id' => (string) Str::uuid7(), 'user_id' => $userId, 'entitlement_id' => $id,
             'entitlement_revision' => 1, 'delta' => 10, 'reason' => 'completion', 'mutation_id' => null, 'created_at' => $at]);
     }
-    DB::table('users')->where('id', $userId)->increment('xp', 10 * $days);
+    app(RewardState::class)->apply($userId, 10 * $days, 0);
 }
 
 it('answers GET /rewards in the contract shape, its numbers equal to reward_state', function () {
@@ -148,3 +149,18 @@ it('accepts the largest limit', function () {
     expect(rewardsGet($this, $this->maya['token'], 'rewards', ['limit' => 50])->assertOk()->json('data.ledger'))->toHaveCount(50)
         ->and(rewardsGet($this, $this->maya['token'], 'rewards')->json('data.ledger'))->toHaveCount(20);
 });
+
+it('reports the level numbers of contract-fixtures/domain/xp.json', function (array $case) {
+    seedXp($this->maya['id'], $this->habit, intdiv($case['xp'], 10));
+    if ($case['xp'] % 10 !== 0) {
+        // XP moves in tens; 99 is reachable only through the cache, so it skips the ledger check.
+        DB::table('users')->where('id', $this->maya['id'])->update(['xp' => $case['xp']]);
+    }
+
+    $data = rewardsGet($this, $this->maya['token'], 'rewards', ['limit' => 1])->assertOk()->json('data');
+
+    expect(array_intersect_key($data, $case))->toBe($case);
+    if ($case['xp'] % 10 === 0) {
+        assertLedgersMatchCaches($this->maya['id']);
+    }
+})->with(fn () => array_map(fn ($c) => [$c], contractFixture('domain/xp.json')['levels']));
