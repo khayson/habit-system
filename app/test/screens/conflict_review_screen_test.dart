@@ -428,6 +428,22 @@ void main() {
     await tearDownApp(tester, account);
   });
 
+  testWidgets('L2: a profile change refused with version_conflict shows Discard only', (
+    tester,
+  ) async {
+    await seed(tester);
+    server.forceErrorFor['profile.update'] = {'code': 'version_conflict', 'message': 'x'};
+    await tester.runAsync(
+      () => account.writer.updateProfile(name: 'Maya C', city: null, countryCode: null),
+    );
+    await syncNow(tester, account);
+    await tester.pumpWidget(testApp(initial: '/sync', account: account));
+    await settle(tester);
+    expect(find.text('Review'), findsNothing);
+    expect(find.text('Discard'), findsOneWidget);
+    await tearDownApp(tester, account);
+  });
+
   testWidgets('Today: the sheet of a reviewable change opens 19', (tester) async {
     await seed(tester);
     await staleValue(tester);

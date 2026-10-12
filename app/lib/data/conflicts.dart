@@ -32,11 +32,22 @@ enum ConflictKind {
 /// The three codes A37 allows "use mine" for.
 const resolvableCodes = {'version_conflict', 'resource_deleted', 'habit_archived'};
 
-/// 4.3c: a row screen 19 can review (its code is one A37 names); others can only be discarded.
+/// The kind of look a refused row needs, from the server's code and the row's entity alone
+/// (4.3c review L2). One function for the read model and [reviewable].
+ConflictKind conflictKindOf(Object? code, String entity) => switch ((code, entity)) {
+  ('version_conflict', 'habit_log') => ConflictKind.staleValue,
+  ('version_conflict', 'habit') => ConflictKind.staleHabitEdit,
+  ('resource_deleted', 'habit_log') => ConflictKind.deletedDay,
+  ('habit_archived', 'habit_log' || 'habit') => ConflictKind.archivedHabit,
+  _ => ConflictKind.other,
+};
+
+/// 4.3c: a row screen 19 can review; others (profile, time zone, reminders, anything else) can
+/// only be discarded.
 bool reviewable(OutboxRow row) {
   if (row.state != OutboxState.needsAttention) return false;
   final error = EntityCodec.decodeJson(row.lastError);
-  return error is Map && resolvableCodes.contains(error['code']);
+  return conflictKindOf(error is Map ? error['code'] : null, row.entity) != ConflictKind.other;
 }
 
 /// A37 USE MINE, decided once for the read model and the writer: the new row's base version,
@@ -199,13 +210,7 @@ extension ConflictQueries on LocalView {
         ? (row.operation == 'log.increment' ? payload['delta'] : payload['value'])
         : null;
 
-    var kind = switch ((code, row.entity)) {
-      ('version_conflict', 'habit_log') => ConflictKind.staleValue,
-      ('version_conflict', 'habit') => ConflictKind.staleHabitEdit,
-      ('resource_deleted', 'habit_log') => ConflictKind.deletedDay,
-      ('habit_archived', _) => ConflictKind.archivedHabit,
-      _ => ConflictKind.other,
-    };
+    var kind = conflictKindOf(code, row.entity);
     // An unknown type, or an answer the app cannot read, can only be discarded.
     if (habitId != null && rules == null && habit?.knownType != true) kind = ConflictKind.other;
     if (kind == ConflictKind.staleValue && current == null) kind = ConflictKind.other;

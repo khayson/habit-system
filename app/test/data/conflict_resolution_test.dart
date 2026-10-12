@@ -318,4 +318,31 @@ void main() {
       );
     });
   });
+
+  test(
+    'L2 (4.3c review): profile and reminder rows refused with version_conflict are not reviewable',
+    () async {
+      server.forceErrorFor['profile.update'] = {'code': 'version_conflict', 'message': 'x'};
+      await phone.writer.updateProfile(name: 'Maya C', city: null, countryCode: null);
+      final reminder = await phone.writer.createReminder(
+        habitId: water,
+        localTime: '08:00',
+        daysOfWeek: [1, 2, 3, 4, 5, 6, 7],
+      );
+      await phone.sync(force: true);
+      server.forceErrorFor['reminder.update'] = {'code': 'version_conflict', 'message': 'x'};
+      await phone.writer.updateReminder(
+        reminderId: reminder,
+        localTime: '09:00',
+        daysOfWeek: [1, 2, 3, 4, 5, 6, 7],
+      );
+      await phone.sync(force: true);
+      final rows = (await phone.outbox()).where((r) => r.state == OutboxState.needsAttention);
+      expect(rows.map((r) => r.operation).toSet(), {'profile.update', 'reminder.update'});
+      for (final row in rows) {
+        expect(reviewable(row), isFalse, reason: row.operation);
+        expect((await phone.view.conflict(row.mutationId))!.kind, ConflictKind.other);
+      }
+    },
+  );
 }
