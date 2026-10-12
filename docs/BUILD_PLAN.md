@@ -119,12 +119,14 @@ Four parts. Screen 35 (completion with XP and level) is Phase 5.
 - **4.2a:** the app's data layer and reminder planner: updateHabit / archiveHabit / restoreHabit in LocalMutationService with a pure validation class; the view shows edits, archived state and a pending-change date only from confirmed versions; Today and the library use the definition in force; the planner skips archived habits, replans on a rename (text compared, not only fire times) and on pulled changes, caps scheduled notifications (iOS 60, Android 450, nearest first) and skips the rest of a week once its goal is met.
 - **4.2b:** the type-widget registry (A21); create (08) with type, target, unit, category; frequency selection (10); edit habit (09) with a provisional overlay and a pending-change note; Habits library (07) and Archived routines (22) with archive/restore.
 - **4.3a:** logging data layer, no screens: `log.increment` in the app (A35) with folding and one shared provisional apply step; timer drafts (A36, schema v9); the conflict read model and resolution (A37: keep synced, use mine); e2e.
-- **4.3b:** screens 34 (amount entry) and 33/36 (timer running and paused); Today cards for quantity and duration (design 05); 12's logging actions; device-gate steps for logging; screenshots.
-- **4.3c:** the conflict review (19); the sync queue's wording for increments and habit edits; links to 19; device-gate steps for conflicts.
+- **4.3b (done):** screens 34 (amount entry) and 33/36 (timer running and paused); Today cards for quantity and duration (design 05); 12's logging actions; device-gate steps for logging; screenshots.
+- **4.3c (done):** the conflict review (19); the sync queue's wording for increments and habit edits; links to 19; device-gate steps for conflicts.
 
 - The server enforces "next eligible period" for new definition versions via `HabitSchedule::nextEffectiveDate(LocalDate $today, Frequency $old, Frequency $new)`, from the user's local today at apply time: next Monday when either frequency is weekly; for an interval old definition, its first scheduled day after today (its anchor when that is later); otherwise tomorrow. Never accept a client-chosen effective date.
 
 **Gate**: spec acceptance rows for concurrent increments, stale absolute edit and weekly distinct days.
+
+Phase 4 is built (4.1 to 4.3c); it awaits the device gate.
 
 ## Phase 4b — Tier-1 habit types · L (needs a design drop)
 

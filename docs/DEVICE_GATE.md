@@ -60,6 +60,13 @@ you saw.
 | 36 | Finish a timer offline; reconnect. | One entry of whole seconds, the same on a second device. |
 | 37 | At 200% text size, open 34, 33, 36 and Today with both card kinds. | Nothing is clipped and every control is reachable. |
 | 38 | A reminder is due with the screen on. Then open the app by hand. Then change that reminder's time. | It pops up as a banner and stays in the tray; after opening the app the fired reminder is still in the tray; the next one shows once, at the new time, never twice. |
+| 39 | Two devices on the same account (phone and emulator), both offline: edit the same quantity entry to different values; reconnect the first, then the second. | The second shows Needs a look on Today; Review opens 19 with both values and the version lines. |
+| 40 | In 19 choose Keep synced value. | Both devices show the synced value and the queue is empty. |
+| 41 | Repeat and choose Use my value. | Both devices end on it; if the other device changed it again before the sync, 19 asks again. |
+| 42 | Remove a day's entry on one device while the other adds to it; reconnect. | The deleted-day variant; Keep it deleted and Bring it back each work. |
+| 43 | Archive a habit on one device while the other checks in offline; reconnect. | The archived variant; Restore then Save my check-in works, and so does Discard this check-in. |
+| 44 | Edit the same habit's name on both devices. | The stale-habit variant lists the differing fields. |
+| 45 | At 200% text size and with a screen reader, open 19 in each variant. | Nothing is clipped and each card and button reads with its values. |
 
 ## Results
 
@@ -103,3 +110,10 @@ you saw.
 | 36 | | | | |
 | 37 | | | | |
 | 38 | | | | |
+| 39 | | | | |
+| 40 | | | | |
+| 41 | | | | |
+| 42 | | | | |
+| 43 | | | | |
+| 44 | | | | |
+| 45 | | | | |
