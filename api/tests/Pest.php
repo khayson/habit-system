@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Assert;
 use Tests\TestCase;
 
@@ -42,12 +43,17 @@ function assertMatchesContract(mixed $expected, mixed $actual, string $path = '$
         return;
     }
 
+    if ($expected === '{{cursor_or_null}}' && $actual === null) {
+        // A last page has no next cursor.
+        return;
+    }
+
     if (is_string($expected) && preg_match('/^\{\{(\w+)\}\}$/', $expected, $m)) {
         $pattern = match ($m[1]) {
             'uuid' => UUID_PATTERN,
-            'timestamp' => UTC_TIMESTAMP_PATTERN,
+            'timestamp', 'time' => UTC_TIMESTAMP_PATTERN,
             'int' => '/^[1-9]\d*$/',
-            'cursor' => CURSOR_PATTERN,
+            'cursor', 'cursor_or_null' => CURSOR_PATTERN,
             default => throw new InvalidArgumentException("Unknown placeholder {$expected} at {$path}"),
         };
         Assert::assertIsString($actual, "{$path} should be a string");
@@ -73,4 +79,42 @@ function assertMatchesContract(mixed $expected, mixed $actual, string $path = '$
 function syncFixtureFile(string $name): array
 {
     return json_decode((string) file_get_contents(contractFixturePath("sync/{$name}.json")), true, flags: JSON_THROW_ON_ERROR);
+}
+
+/**
+ * Invariant 7 (A39 to A41): the cached reward numbers are reconstructable from the append-only
+ * ledgers, each entitlement's ledger nets to its state with one row per revision, every usage
+ * points at its ledger rows, and the latest journaled reward_state carries the cached numbers at
+ * reward_version.
+ */
+function assertLedgersMatchCaches(string $userId): void
+{
+    $db = DB::table(...);
+    $user = $db('users')->where('id', $userId)->sole();
+    expect((int) $user->xp)->toBe((int) $db('xp_ledger')->where('user_id', $userId)->sum('delta'), 'xp = sum(xp_ledger)')
+        ->and((int) $user->freeze_balance)->toBe((int) $db('freeze_ledger')->where('user_id', $userId)->sum('delta'), 'freeze_balance = sum(freeze_ledger)')
+        ->and((int) $user->freeze_balance)->toBeGreaterThanOrEqual(0)->toBeLessThanOrEqual(2);
+
+    foreach ($db('xp_entitlements')->where('user_id', $userId)->get() as $e) {
+        $rows = $db('xp_ledger')->where('entitlement_id', $e->id)->orderBy('entitlement_revision')->get();
+        expect((int) $rows->sum('delta'))->toBe($e->state === 'active' ? 10 : 0, "entitlement {$e->log_date} nets to its state")
+            ->and($rows->pluck('entitlement_revision')->map(fn ($r) => (int) $r)->all())->toBe(range(1, (int) $e->revision), 'one row per revision');
+    }
+    foreach ($db('freeze_usage')->where('user_id', $userId)->get() as $u) {
+        expect($db('freeze_ledger')->where('id', $u->spend_ledger_id)->value('kind'))->toBe('spend');
+        if ($u->state === 'refunded') {
+            expect($db('freeze_ledger')->where('id', $u->refund_ledger_id)->value('kind'))->toBe('refund');
+        }
+    }
+
+    $journaled = $db('server_changes')->where('user_id', $userId)->where('entity_type', 'reward_state')->orderByDesc('seq')->first();
+    if ((int) $user->reward_version === 0) {
+        expect($journaled)->toBeNull();
+
+        return;
+    }
+    $payload = json_decode((string) $journaled->payload, true, flags: JSON_THROW_ON_ERROR);
+    expect((int) $journaled->version)->toBe((int) $user->reward_version)
+        ->and($payload['xp'])->toBe((int) $user->xp)
+        ->and($payload['freeze_balance'])->toBe((int) $user->freeze_balance);
 }
