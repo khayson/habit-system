@@ -3049,6 +3049,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{date}, {time}'**
   String weekdayDayMonthTime(DateTime date, DateTime time);
+
+  /// No description provided for @entryDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get entryDone;
+
+  /// No description provided for @entryNotDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Not done'**
+  String get entryNotDone;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

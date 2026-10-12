@@ -224,6 +224,11 @@ void main() {
       expect(d.progress(format, 360, 600, null), '6 / 10 min');
       expect(d.progress(format, 390, 600, null), '6 min 30 s / 10 min');
       expect(d.plusAmount(format, 60, null), '+1 min');
+      // 4.3c A1: how a logged value reads on 19.
+      expect(q.entryText(format, 1500, 'L'), '1.5 L');
+      expect(d.entryText(format, 360, null), '6 min');
+      expect(ui('binary').entryText(format, 1, null), 'Done');
+      expect(ui('binary').entryText(format, 0, null), 'Not done');
       expect((q.amountInput(250000), d.amountInput(60), d.amountInput(90)), ('250', '1', '1.5'));
       expect(
         [

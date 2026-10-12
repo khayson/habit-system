@@ -1843,4 +1843,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
     return '$dateString, $timeString';
   }
+
+  @override
+  String get entryDone => 'Done';
+
+  @override
+  String get entryNotDone => 'Not done';
 }

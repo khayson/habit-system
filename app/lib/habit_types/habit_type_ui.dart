@@ -135,6 +135,9 @@ abstract class HabitTypeUi {
   /// The amount field's own text for [units] ("250", "1.5").
   String amountInput(int units) => '$units';
 
+  /// 4.3c: how a logged value reads on screen 19 ("1.5 L", "6 min", "Done").
+  String entryText(HabitFormat format, int units, String? unit) => amountText(format, units, unit);
+
   /// Screen 34's title and its field's label.
   /// ASSUMPTION(4.3b-amount-title): a title per kind, not the design's one sample habit's.
   String amountTitle(AppLocalizations l10n) => l10n.amountTitleProgress;
@@ -164,6 +167,10 @@ class YesNoTypeUi extends HabitTypeUi {
 
   @override
   TargetParse parse(TargetInput input) => TargetParse(target: rules.formatValue(1));
+
+  @override
+  String entryText(HabitFormat format, int units, String? unit) =>
+      units >= 1 ? format.l10n.entryDone : format.l10n.entryNotDone;
 
   @override
   String format(HabitFormat format, Object? target, String? unit) => format.typeLabel(rules);
