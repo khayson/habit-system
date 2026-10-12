@@ -3,6 +3,10 @@ import 'package:habit/notifications/reminder_planner.dart';
 
 /// Stands in for the OS: what is scheduled, every call, and a settable permission.
 class FakeNotificationScheduler implements NotificationScheduler {
+  /// The OS presentation (Android channel); a test changes it to see every reminder replaced.
+  @override
+  String presentation = 'reminders_alert';
+
   NotificationPermission osState = NotificationPermission.unknown;
 
   /// What the OS would answer to the prompt.

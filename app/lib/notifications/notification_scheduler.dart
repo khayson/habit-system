@@ -11,6 +11,10 @@ enum NotificationPermission { unknown, authorized, provisional, denied }
 /// The device's notification scheduler. The app schedules through this seam only, so tests use
 /// a fake and nothing else imports the plugin.
 abstract interface class NotificationScheduler {
+  /// How reminders are shown on this platform (the Android channel). A change reschedules every
+  /// pending reminder, so none keeps showing the old way.
+  String get presentation;
+
   /// The OS state. [asked] is whether this device already showed the OS prompt.
   Future<NotificationPermission> permission({required bool asked});
 
@@ -34,13 +38,24 @@ class LocalNotificationsScheduler implements NotificationScheduler {
   final FlutterLocalNotificationsPlugin _plugin;
   Future<void>? _ready;
 
+  /// High importance: a reminder pops up over the screen as well as staying in the tray, like
+  /// other apps' alerts. Android fixes a channel's importance when it is first created, so this
+  /// is a new channel; the person can still lower it in the system settings.
+  static const _channelId = 'reminders_alert';
+
+  /// The first channel (default importance: tray only), removed so settings show one.
+  static const _oldChannelId = 'reminders';
+
   static const _channel = AndroidNotificationDetails(
-    'reminders',
+    _channelId,
     'Reminders',
     channelDescription: 'Your habit reminders',
-    importance: Importance.defaultImportance,
-    priority: Priority.defaultPriority,
+    importance: Importance.high,
+    priority: Priority.high,
   );
+
+  @override
+  String get presentation => _channelId;
 
   Future<void> _init() => _ready ??= _plugin
       .initialize(
@@ -48,7 +63,13 @@ class LocalNotificationsScheduler implements NotificationScheduler {
           android: AndroidInitializationSettings('@mipmap/ic_launcher'),
         ),
       )
-      .then((_) {});
+      .then((_) async {
+        try {
+          await _android?.deleteNotificationChannel(channelId: _oldChannelId);
+        } on Object {
+          // Not there (a new install) or not Android: nothing to remove.
+        }
+      });
 
   AndroidFlutterLocalNotificationsPlugin? get _android =>
       _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();

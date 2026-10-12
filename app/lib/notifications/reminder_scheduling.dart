@@ -227,7 +227,9 @@ class ReminderScheduling {
     String titleOf(PlannedNotification p) =>
         hideNames ? hiddenTitle : title(names[p.habitId] ?? '');
     // B3: what the person sees is part of the plan; a rename replaces, the ids stay.
-    String keyOf(PlannedNotification p) => _contentKey(titleOf(p), body);
+    // The presentation (the Android channel) is part of it too: a new channel reschedules all.
+    String keyOf(PlannedNotification p) =>
+        _contentKey('${titleOf(p)}${scheduler.presentation}', body);
     for (final row in existing.values) {
       final keep = wanted[row.platformId];
       if (keep == null ||

@@ -75,6 +75,19 @@ void main() {
     await db.close();
   });
 
+  test('a new presentation (Android channel) replaces every pending reminder', () async {
+    final os = FakeNotificationScheduler()..presentation = 'reminders';
+    final (db, writer, scheduling) = await account('user-1', os);
+    await habitWithReminder(writer, '18:00');
+    await scheduling.replan();
+    final before = os.calls.where((c) => c.startsWith('schedule')).length;
+    os.presentation = 'reminders_alert';
+    await scheduling.replan();
+    expect(os.calls.where((c) => c.startsWith('schedule')).length, before * 2);
+    expect(os.pending, hasLength(before), reason: 'replaced, never duplicated');
+    await db.close();
+  });
+
   test('a reminder that already fired is never cancelled: it stays in the tray', () async {
     final os = FakeNotificationScheduler();
     final (db, writer, scheduling) = await account('user-1', os);
