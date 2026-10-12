@@ -116,9 +116,7 @@ class _ReviewState extends State<_Review> {
   });
 
   Future<void> _discard(AccountContext account) => _act(() async {
-    final row = await (account.session.db.select(
-      account.session.db.outbox,
-    )..where((o) => o.mutationId.equals(widget.mutationId))).getSingleOrNull();
+    final row = await account.view.outboxRow(widget.mutationId);
     if (row == null || !mounted) return;
     final done = await confirmDiscard(context, account, row);
     if (done && mounted) _leave(AppLocalizations.of(context).reviewKeptSynced);

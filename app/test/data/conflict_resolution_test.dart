@@ -345,4 +345,39 @@ void main() {
       }
     },
   );
+
+  test('L3 (4.3c review): a habit\'s reviewable rows and one row by id', () async {
+    expect(await phone.view.reviewableFor(water), isEmpty);
+    final old = await staleSetValue();
+    expect(await phone.view.reviewableFor(water), [old.mutationId]);
+    // A second one: a stale habit edit for the same habit.
+    await tablet.sync(force: true);
+    await tablet.writer.updateHabit(
+      water,
+      HabitDraft(
+        name: 'Water (tablet)',
+        category: 'health',
+        targetValue: '2.000',
+        unit: 'L',
+        frequencyType: 'daily',
+        frequencyConfig: const {},
+      ),
+    );
+    await tablet.sync(force: true);
+    await phone.writer.updateHabit(
+      water,
+      HabitDraft(
+        name: 'Water (phone)',
+        category: 'health',
+        targetValue: '2.000',
+        unit: 'L',
+        frequencyType: 'daily',
+        frequencyConfig: const {},
+      ),
+    );
+    await phone.sync(force: true);
+    expect(await phone.view.reviewableFor(water), hasLength(2));
+    expect((await phone.view.outboxRow(old.mutationId))!.mutationId, old.mutationId);
+    expect(await phone.view.outboxRow('0199b2c4-1a2b-7c3d-8e4f-5a6b7c8d9e0f'), isNull);
+  });
 }

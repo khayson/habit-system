@@ -1,4 +1,3 @@
-import 'package:drift/drift.dart' show BooleanExpressionOperators;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -6,7 +5,6 @@ import 'package:provider/provider.dart';
 
 import '../app/router.dart';
 import '../data/conflicts.dart';
-import '../sync/outbox_states.dart';
 import '../config/habit_tokens.dart';
 import '../core/time_zones.dart';
 import '../data/habit_detail_view.dart';
@@ -421,17 +419,9 @@ class EditBlockedNote extends StatelessWidget {
   Future<void> _review(BuildContext context) async {
     final account = context.read<AccountContext?>();
     if (account == null) return;
-    final db = account.session.db;
-    final rows =
-        await (db.select(db.outbox)..where(
-              (o) =>
-                  o.state.equals(OutboxState.needsAttention) &
-                  (o.habitId.equals(habit.id) | o.entityId.equals(habit.id)),
-            ))
-            .get();
-    final open = rows.where(reviewable).toList();
+    final open = await account.view.reviewableFor(habit.id);
     if (!context.mounted) return;
-    context.push(open.length == 1 ? Routes.review(open.single.mutationId) : Routes.queue);
+    context.push(open.length == 1 ? Routes.review(open.single) : Routes.queue);
   }
 
   @override

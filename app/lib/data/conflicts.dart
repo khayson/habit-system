@@ -185,6 +185,24 @@ extension ConflictQueries on LocalView {
     return [for (final row in rows) await _conflictOf(row, habits)];
   }
 
+  /// The mutation ids of a habit's rows screen 19 can review, oldest first (4.3c review L3).
+  Future<List<String>> reviewableFor(String habitId) async {
+    final rows =
+        await (db.select(db.outbox)
+              ..where(
+                (o) =>
+                    o.state.equals(OutboxState.needsAttention) &
+                    (o.habitId.equals(habitId) | o.entityId.equals(habitId)),
+              )
+              ..orderBy([(o) => OrderingTerm.asc(o.seq)]))
+            .get();
+    return [for (final r in rows.where(reviewable)) r.mutationId];
+  }
+
+  /// One queued row by its mutation id.
+  Future<OutboxRow?> outboxRow(String mutationId) =>
+      (db.select(db.outbox)..where((o) => o.mutationId.equals(mutationId))).getSingleOrNull();
+
   Future<ConflictView?> conflict(String mutationId) async {
     final row = await (db.select(
       db.outbox,
