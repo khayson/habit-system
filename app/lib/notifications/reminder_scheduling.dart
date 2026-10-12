@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:drift/drift.dart';
+import 'package:flutter/foundation.dart';
 
 import '../data/account_calendar.dart';
 import '../data/app_database.dart';
@@ -91,7 +92,12 @@ class ReminderScheduling {
   /// not an error anyone can act on here: the next change or resume plans again. Callers that
   /// show the person a result (the hide-names switch) await [replan] and see the failure.
   void replanInBackground() {
-    unawaited(replan().catchError((Object _) {}));
+    unawaited(
+      replan().catchError((Object error) {
+        // 4.3b I2: visible to a developer, never shipped; the error type only, no names.
+        if (kDebugMode) debugPrint('Reminder replan failed: ${error.runtimeType}');
+      }),
+    );
   }
 
   /// One replan at a time; a request during a run runs once more afterwards.

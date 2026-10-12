@@ -210,6 +210,18 @@ void main() {
     });
   });
 
+  testWidgets('I1: 12 names the action by type: Add time for duration, Add progress for quantity', (
+    tester,
+  ) async {
+    await seed(tester);
+    await show(tester, '/habits/${ids['Meditation']}');
+    expect(find.text('Add time'), findsOneWidget);
+    expect(find.text('Add progress'), findsNothing);
+    await show(tester, '/habits/${ids['Water']}');
+    expect(find.text('Add progress'), findsOneWidget);
+    await tearDownApp(tester, account);
+  });
+
   testWidgets('L2: Start timer on 12 for a habit archived after it opened says why', (
     tester,
   ) async {

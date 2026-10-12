@@ -246,7 +246,7 @@ class _LogActions extends StatelessWidget {
         spacing: HabitSpace.s12,
         runSpacing: HabitSpace.s8,
         children: [
-          button(l10n.amountTitleProgress, () => context.push(Routes.amount(id)), primary: true),
+          button(type.amountTitle(l10n), () => context.push(Routes.amount(id)), primary: true),
           if (type.rules.supportsTimer)
             StreamBuilder(
               stream: account.actions.watchTimer(id),

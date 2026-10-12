@@ -1,4 +1,5 @@
 import 'package:drift/native.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:habit/data/app_database.dart';
 import 'package:habit/data/local_mutation_service.dart';
@@ -53,6 +54,29 @@ void main() {
     await writer.createReminder(habitId: habit, localTime: time, daysOfWeek: [1, 2, 3, 4, 5, 6, 7]);
     return habit;
   }
+
+  test('I2: a background replan that fails says so in debug builds, with no names in it', () async {
+    final logs = <String?>[];
+    final original = debugPrint;
+    debugPrint = (String? message, {int? wrapWidth}) => logs.add(message);
+    addTearDown(() => debugPrint = original);
+    final os = FakeNotificationScheduler();
+    final (db, writer, scheduling) = await account('user-1', os);
+    await habitWithReminder(writer, '18:00');
+    await scheduling.replan();
+    final reminder = (await LocalView(db).reminders()).single;
+    await writer.updateReminder(
+      reminderId: reminder.id,
+      localTime: '19:30',
+      daysOfWeek: [1, 2, 3, 4, 5, 6, 7],
+    );
+    os.failCancel = true;
+    scheduling.replanInBackground();
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+    expect(logs.where((m) => m!.startsWith('Reminder replan failed')), hasLength(1));
+    expect(logs.join(), isNot(contains('Stretch')));
+    await db.close();
+  });
 
   test('a debounced replan the OS refuses never escapes as an uncaught error', () async {
     final os = FakeNotificationScheduler();
