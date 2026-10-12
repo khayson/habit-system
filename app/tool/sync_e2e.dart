@@ -10,6 +10,7 @@
 // One fresh account, two devices with their own databases and tokens. Scenarios, in order:
 //   setup     A creates a habit; B bootstraps it.
 //   merged    both tick the same habit-day offline; B's log is merged into A's id.
+//   rewards   the merged tick earned 10 XP once; B holds reward_state as an opaque entity (A39).
 //   conflict  B edits a stale version after A's edit; kept as needs_attention, then discarded.
 //   restore   A deletes the day; B logs it again on the tombstone version and restores it.
 //   db-restore the server journal rolls back (restore from backup): 410, re-bootstrap, outbox kept.
@@ -125,6 +126,19 @@ Future<void> main(List<String> args) async {
     _check(la.id == aLocal && lb.id == aLocal, 'B was remapped to the canonical id ($aLocal)');
     _check(await b.outbox().then((r) => r.isEmpty), 'B queue drained');
     _check((la.value, lb.value) == ('1', '1'), 'both ticked');
+  });
+
+  await _scenario('rewards', () async {
+    // One completed habit-day, ticked on both devices: 10 XP once (A40). This client has no
+    // table for reward_state until Phase 5.3, so it is kept as an opaque entity (invariant 13).
+    await b.sync();
+    final held = await (b.db.select(
+      b.db.opaqueEntities,
+    )..where((o) => o.entityType.equals('reward_state'))).get();
+    _check(held.length == 1, 'B holds one reward_state (${held.length})');
+    final payload = jsonDecode(held.single.payload) as Map<String, dynamic>;
+    _check(payload['xp'] == 10, 'xp 10 (${payload['xp']})');
+    _check(payload['freeze_balance'] == 2, 'the signup grant (${payload['freeze_balance']})');
   });
 
   await _scenario('conflict', () async {
