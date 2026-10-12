@@ -3043,6 +3043,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Keep timer'**
   String get timerKeep;
+
+  /// The reminder editor's next-due line, day first with a short weekday ("Thu 28 May, 10:15 AM").
+  ///
+  /// In en, this message translates to:
+  /// **'{date}, {time}'**
+  String weekdayDayMonthTime(DateTime date, DateTime time);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

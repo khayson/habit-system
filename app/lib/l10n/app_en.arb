@@ -606,5 +606,7 @@
   "timerDiscardTitle": "Discard this timer?",
   "timerDiscardBody": "The time so far won't be saved.",
   "timerDiscardConfirm": "Discard",
-  "timerKeep": "Keep timer"
+  "timerKeep": "Keep timer",
+  "weekdayDayMonthTime": "{date}, {time}",
+  "@weekdayDayMonthTime": {"description": "The reminder editor's next-due line, day first with a short weekday (\"Thu 28 May, 10:15 AM\").", "placeholders": {"date": {"type": "DateTime", "format": "EEE d MMM", "isCustomDateFormat": "true"}, "time": {"type": "DateTime", "format": "jm"}}}
 }

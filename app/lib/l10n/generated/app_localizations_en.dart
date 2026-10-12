@@ -1833,4 +1833,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get timerKeep => 'Keep timer';
+
+  @override
+  String weekdayDayMonthTime(DateTime date, DateTime time) {
+    final intl.DateFormat dateDateFormat = intl.DateFormat('EEE d MMM', localeName);
+    final String dateString = dateDateFormat.format(date);
+    final intl.DateFormat timeDateFormat = intl.DateFormat.jm(localeName);
+    final String timeString = timeDateFormat.format(time);
+
+    return '$dateString, $timeString';
+  }
 }

@@ -78,7 +78,8 @@ void main() {
       find.text('Enable notifications in device settings before these reminders can appear.'),
       findsOneWidget,
     );
-    expect(find.textContaining('Next reminder: '), findsOneWidget);
+    // 4.3b L3: day first with a short weekday and the locale's time.
+    expect(find.textContaining(RegExp(r'^Next reminder: Thu 28 May, 8:30\sPM$')), findsOneWidget);
     expect(find.text('Ready when permission is allowed'), findsOneWidget);
     expect(
       find.text(
