@@ -18,7 +18,8 @@
           "current": 1,
           "longest": 1,
           "unit": "days",
-          "computed_through": "2026-05-27"
+          "computed_through": "2026-05-27",
+          "protected_in_streak": 0
         }
       }
     ],
@@ -58,6 +59,25 @@
   "rules": [
     "habit_progress: one per habit; id is the habit id; version is the streak cache version",
     "period_evaluation: only start_date within the last 400 days of the user's local today; version is the revision",
-    "the client stores both under their own entity names, exactly as a pull would"
-  ]
+    "the client stores both under their own entity names, exactly as a pull would",
+    "habit_progress.protected_in_streak: the number of protected periods inside the current streak (A41)",
+    "week_evaluation: a closed weekly_count period is stored like a day (A41): key w:<Monday>, start_date the Monday, end_date the Sunday"
+  ],
+  "week_evaluation": {
+    "entity": "period_evaluation",
+    "id": "{{uuid}}",
+    "version": 1,
+    "payload": {
+      "id": "{{uuid}}",
+      "habit_id": "{{uuid}}",
+      "period_key": "w:2026-05-18",
+      "start_date": "2026-05-18",
+      "end_date": "2026-05-24",
+      "completed": false,
+      "protected": true,
+      "definition_version": 1,
+      "timezone": "America/Los_Angeles",
+      "revision": 1
+    }
+  }
 }

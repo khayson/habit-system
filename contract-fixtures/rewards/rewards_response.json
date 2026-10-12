@@ -1,0 +1,30 @@
+{
+  "description": "A39 / A40: GET /rewards?limit&cursor. The numbers equal reward_state; the ledger is newest first, keyset on (created_at, id). limit default 20, max 50; cursor opaque; a bad cursor is 422 validation_failed. Owner-scoped (invariant 2). Read-only.",
+  "suites": [
+    "php"
+  ],
+  "response": {
+    "data": {
+      "xp": 1240,
+      "level": 13,
+      "progress_into_level": 40,
+      "next_level_threshold": 1300,
+      "ledger": [
+        {
+          "id": "{{uuid}}",
+          "delta": 10,
+          "reason": "completion",
+          "habit_id": "{{uuid}}",
+          "log_date": "2026-05-28",
+          "created_at": "{{time}}"
+        }
+      ],
+      "next_cursor": "{{cursor_or_null}}"
+    }
+  },
+  "reasons": [
+    "completion",
+    "reversal",
+    "recompletion"
+  ]
+}

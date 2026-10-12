@@ -33,6 +33,7 @@ the format and then treat them as equal.
   `app/assets/` ship) that the server validator and the app's picker share.
 - `habit/` — Phase 4.1 (A34, A35): `habit_mutations.json` (update, archive, restore),
   `log_increment.json` and `next_effective_date.json`, as step-by-step cases the PHP suite replays.
+- `rewards/` — Phase 5.1 (A39 to A42): `rewards_response.json` (GET /rewards) and `freezes_response.json` (GET /freezes). `sync/reward_state_entity.json` is the read-only reward entity.
 - `domain/` — business rules (Phase 1). Each file has `kind`, `suites` (which test suites must
   consume it: `php`, `dart`) and `description`. Cases inside may narrow `suites` further.
 

@@ -1,0 +1,54 @@
+{
+  "description": "A41 / A42: GET /freezes?limit&cursor. cap is 2; policy is the latest 20 opt-in versions, newest first; the ledger is newest first, keyset on (created_at, id), with habit_id and period_key null for grants. limit default 20, max 50; a bad cursor is 422. Owner-scoped. Read-only.",
+  "suites": [
+    "php"
+  ],
+  "response": {
+    "data": {
+      "freeze_balance": 1,
+      "cap": 2,
+      "auto_freeze": true,
+      "policy": [
+        {
+          "enabled": true,
+          "effective_at": "{{time}}"
+        }
+      ],
+      "ledger": [
+        {
+          "id": "{{uuid}}",
+          "kind": "spend",
+          "delta": -1,
+          "reason": "missed_period",
+          "habit_id": "{{uuid}}",
+          "period_key": "d:2026-05-27",
+          "created_at": "{{time}}"
+        },
+        {
+          "id": "{{uuid}}",
+          "kind": "grant",
+          "delta": 2,
+          "reason": "signup",
+          "habit_id": null,
+          "period_key": null,
+          "created_at": "{{time}}"
+        }
+      ],
+      "next_cursor": "{{cursor_or_null}}"
+    }
+  },
+  "kinds": {
+    "grant": [
+      "signup",
+      "monthly",
+      "cap_reached"
+    ],
+    "spend": [
+      "missed_period"
+    ],
+    "refund": [
+      "late_completion",
+      "cap_reached"
+    ]
+  }
+}
