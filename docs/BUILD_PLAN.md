@@ -137,8 +137,13 @@ Phase 4 is built (4.1 to 4.3c); it awaits the device gate.
 
 ## Phase 5 — Rewards and freezes · L
 
-- Decide in the packet: does logging a not-due day earn XP? Architect's default: allowed, same XP, never affects a streak (Khay Studios to confirm).
-- XP entitlements + ledger; freeze ledger / usage / policy versions; monthly job; late-completion reconciliation; screens 06, 16, 17, 35; insights 14/15; enable `rewards_enabled`.
+A not-due day earns the same XP and never affects a streak (A40; confirmed by Khay Studios on 2026-10-12). Three parts:
+
+- **5.1 (this phase):** server only: XP entitlements + ledger, the freeze ledger, usages and policy versions, the monthly grant, spends and late-completion refunds, `reward_state` (A39), `profile.set_auto_freeze` (A42), closed weekly periods stored, GET /rewards and GET /freezes.
+- **5.2:** insights: the server endpoint and screens 14 and 15.
+- **5.3:** app: screens 06, 16, 17 and 35, Today's XP chip and summary line, `rewards_enabled`, the 12 footer reading `protected_in_streak`, and removing the client heuristic.
+
+Screen 01 (Welcome) is Phase 7 and is still to be built.
 
 **Gate**: spec rows for XP toggling, level boundaries, two failures / one token, monthly refill retry, late protected completion with cap audit.
 
