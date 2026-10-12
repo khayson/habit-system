@@ -292,4 +292,30 @@ void main() {
     expect(server.habits[water]!['archived_at'], isNotNull);
     expect(await phone.outbox(), isEmpty);
   });
+
+  group('A2 (4.3c): a removed entry', () {
+    test('a log.delete refused because the day is gone has nothing to resolve', () async {
+      await tabletDeletesDay();
+      await phone.writer.deleteLog(habitId: water, date: today);
+      await phone.sync(force: true);
+      final row = (await phone.outbox()).single;
+      expect(row.state, OutboxState.needsAttention, reason: 'resource_deleted');
+      final view = (await phone.view.conflict(row.mutationId))!;
+      expect((view.kind, view.mineWire, view.canUseMine), (ConflictKind.deletedDay, null, false));
+      expect(await phone.writer.useMine(row.mutationId), ResolveResult.notAllowed);
+    });
+
+    test('a stale log.delete (version_conflict) reads without crashing and may be used', () async {
+      await tablet.writer.setLogValue(habitId: water, value: '2.000');
+      await tablet.sync(force: true);
+      await phone.writer.deleteLog(habitId: water, date: today);
+      await phone.sync(force: true);
+      final row = (await phone.outbox()).single;
+      final view = (await phone.view.conflict(row.mutationId))!;
+      expect(
+        (view.kind, view.mineWire, view.mineUnits, view.canUseMine),
+        (ConflictKind.staleValue, null, null, true),
+      );
+    });
+  });
 }

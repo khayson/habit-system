@@ -64,6 +64,8 @@ class UseMinePlan {
         payload: payload,
       );
     }
+    // 4.3c A2: removing a day that is already gone leaves nothing to decide.
+    if (code == 'resource_deleted' && row.operation == 'log.delete') return null;
     final current = error['current'];
     final version = (current is Map ? current['version'] : null) ?? error['current_version'];
     if (version is! int) return null;
