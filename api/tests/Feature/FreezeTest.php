@@ -181,3 +181,17 @@ it('refunds a protected day completed late: one at balance 1, a cap_reached audi
     expect(DB::table('freeze_ledger')->where('kind', 'refund')->count())->toBe(1);
     assertLedgersMatchCaches($this->maya['id']);
 })->with(['balance 1' => false, 'balance 2' => true]);
+
+it('never protects a miss that closed unprotected, even once a later grant refills the wallet', function () {
+    setAutoFreeze($this, $this->maya, true);
+    $habit = dailyHabit($this, $this->maya);
+    ($this->closeAt)('2026-05-22T17:00:00Z'); // 20 and 21 May spend both tokens
+    ($this->closeAt)('2026-05-23T17:00:00Z'); // 22 May closes at balance 0
+
+    ($this->closeAt)('2026-06-01T17:00:00Z'); // the June grant: only periods closed since 22 May
+
+    expect(DB::table('freeze_usage')->orderBy('period_key')->pluck('period_key')->all())
+        ->toBe(['d:2026-05-20', 'd:2026-05-21', 'd:2026-05-23', 'd:2026-05-24'])
+        ->and((bool) DB::table('period_evaluations')->where('habit_id', $habit)->where('period_key', 'd:2026-05-22')->value('protected'))->toBeFalse();
+    assertLedgersMatchCaches($this->maya['id']);
+});
