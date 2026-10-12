@@ -210,6 +210,16 @@ class HabitActions {
     onLocalWrite();
   }
 
+  /// A37 KEEP SYNCED (screen 19): the server's value stays; nothing is sent.
+  Future<ResolveResult> keepSynced(String mutationId) => writer.keepSynced(mutationId);
+
+  /// A37 USE MINE (screen 19): a new mutation is queued, so a sync is asked for.
+  Future<ResolveResult> useMine(String mutationId) async {
+    final result = await writer.useMine(mutationId);
+    if (result == ResolveResult.done) onLocalWrite();
+    return result;
+  }
+
   Future<bool> discard(String mutationId) async {
     final done = await writer.discard(mutationId);
     if (done) onLocalWrite();
