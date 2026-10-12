@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/router.dart';
+import '../../data/conflicts.dart';
 import '../../config/habit_tokens.dart';
 import '../../data/app_database.dart';
 import '../../data/entity_codec.dart';
@@ -17,6 +18,7 @@ String reasonText(AppLocalizations l10n, String? lastError) {
     'resource_deleted' => l10n.reasonResourceDeleted,
     'parent_rejected' => l10n.reasonParentRejected,
     'future_event' => l10n.reasonFutureEvent,
+    'habit_archived' => l10n.reasonHabitArchived,
     _ => l10n.reasonGeneric,
   };
 }
@@ -45,8 +47,8 @@ Future<bool> confirmDiscard(BuildContext context, AccountContext account, Outbox
   return account.actions.discard(row.mutationId);
 }
 
-/// The resolve sheet for a habit-day whose change needs a decision (Phase 2b.1 review §6). Full
-/// conflict review (screen 19) arrives in Phase 4.
+/// The resolve sheet for a habit-day whose change needs a decision (Phase 2b.1 review §6). A
+/// change screen 19 can review opens it (4.3c); other changes keep the queue and Discard.
 Future<void> showNeedsAttention(BuildContext context, AccountContext account, OutboxRow row) {
   final l10n = AppLocalizations.of(context);
   return showModalBottomSheet<void>(
@@ -74,13 +76,22 @@ Future<void> showNeedsAttention(BuildContext context, AccountContext account, Ou
                 style: text.bodyLarge?.copyWith(color: tokens.muted),
               ),
               const SizedBox(height: HabitSpace.s24),
-              OutlinedButton(
-                onPressed: () {
-                  Navigator.pop(sheet);
-                  context.push(Routes.queue);
-                },
-                child: Text(l10n.resolveOpenQueue),
-              ),
+              if (reviewable(row))
+                FilledButton(
+                  onPressed: () {
+                    Navigator.pop(sheet);
+                    context.push(Routes.review(row.mutationId));
+                  },
+                  child: Text(l10n.queueReview),
+                )
+              else
+                OutlinedButton(
+                  onPressed: () {
+                    Navigator.pop(sheet);
+                    context.push(Routes.queue);
+                  },
+                  child: Text(l10n.resolveOpenQueue),
+                ),
               const SizedBox(height: HabitSpace.s12),
               TextButton(
                 style: TextButton.styleFrom(foregroundColor: tokens.errorInk),

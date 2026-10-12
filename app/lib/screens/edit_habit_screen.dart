@@ -1,9 +1,12 @@
+import 'package:drift/drift.dart' show BooleanExpressionOperators;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../app/router.dart';
+import '../data/conflicts.dart';
+import '../sync/outbox_states.dart';
 import '../config/habit_tokens.dart';
 import '../core/time_zones.dart';
 import '../data/habit_detail_view.dart';
@@ -414,6 +417,23 @@ class EditBlockedNote extends StatelessWidget {
 
   const EditBlockedNote({super.key, required this.habit});
 
+  /// 4.3c: one reviewable change for this habit opens 19; otherwise the queue lists them.
+  Future<void> _review(BuildContext context) async {
+    final account = context.read<AccountContext?>();
+    if (account == null) return;
+    final db = account.session.db;
+    final rows =
+        await (db.select(db.outbox)..where(
+              (o) =>
+                  o.state.equals(OutboxState.needsAttention) &
+                  (o.habitId.equals(habit.id) | o.entityId.equals(habit.id)),
+            ))
+            .get();
+    final open = rows.where(reviewable).toList();
+    if (!context.mounted) return;
+    context.push(open.length == 1 ? Routes.review(open.single.mutationId) : Routes.queue);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -425,7 +445,7 @@ class EditBlockedNote extends StatelessWidget {
           InfoCard(title: l10n.editBlockedAttention, tone: Tone.warning, icon: Icons.error_outline),
           const SizedBox(height: HabitSpace.s8),
           TextButton(
-            onPressed: () => context.push(Routes.queue),
+            onPressed: () => _review(context),
             style: TextButton.styleFrom(
               minimumSize: const Size(HabitSize.minTarget, HabitSize.minTarget),
             ),

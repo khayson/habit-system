@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../app/router.dart';
+import '../data/conflicts.dart';
 import '../config/habit_tokens.dart';
 import '../data/local_view.dart';
 import '../domain/provisional_type_rules.dart';
@@ -192,13 +193,28 @@ class _QueueRow extends StatelessWidget {
             ],
           ),
           if (row.state == OutboxState.needsAttention)
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                style: TextButton.styleFrom(foregroundColor: tokens.errorInk),
-                onPressed: () => confirmDiscard(context, account, row),
-                child: Text(l10n.discardConfirm),
-              ),
+            Wrap(
+              alignment: WrapAlignment.end,
+              spacing: HabitSpace.s8,
+              children: [
+                // 4.3c: a change 19 can review gets Review beside Discard.
+                if (reviewable(row))
+                  TextButton(
+                    style: TextButton.styleFrom(
+                      minimumSize: const Size(HabitSize.minTarget, HabitSize.minTarget),
+                    ),
+                    onPressed: () => context.push(Routes.review(row.mutationId)),
+                    child: Text(l10n.queueReview),
+                  ),
+                TextButton(
+                  style: TextButton.styleFrom(
+                    foregroundColor: tokens.errorInk,
+                    minimumSize: const Size(HabitSize.minTarget, HabitSize.minTarget),
+                  ),
+                  onPressed: () => confirmDiscard(context, account, row),
+                  child: Text(l10n.discardConfirm),
+                ),
+              ],
             ),
           if (row.state == OutboxState.blocked)
             Align(
@@ -226,6 +242,10 @@ class _QueueRow extends StatelessWidget {
     if (row.operation == 'profile.set_timezone') return l10n.queueChangeTimezone;
     if (row.operation == 'habit.create') return l10n.queueChangeNewHabit;
     if (row.operation == 'log.delete') return l10n.queueChangeRemoved;
+    if (row.operation == 'log.increment') return l10n.queueChangeIncrement;
+    if (row.operation == 'habit.update') return l10n.queueChangeHabitEdit;
+    if (row.operation == 'habit.archive') return l10n.queueChangeArchived;
+    if (row.operation == 'habit.restore') return l10n.queueChangeRestored;
     if (row.operation == 'log.set_value') {
       final value = item.payload['value'];
       final zero = ProvisionalTypeRegistry.builtins().all.any((r) => r.parseValue(value) == 0);
