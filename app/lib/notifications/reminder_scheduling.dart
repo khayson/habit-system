@@ -233,7 +233,10 @@ class ReminderScheduling {
       if (keep == null ||
           keep.fireAt.millisecondsSinceEpoch != row.fireAt ||
           row.contentKey != keyOf(keep)) {
-        await scheduler.cancel(row.platformId);
+        // A slot whose time has passed has already fired: it may be showing in the tray, and
+        // cancelling it would take it away. Only its record goes.
+        final fired = row.fireAt <= _clock().millisecondsSinceEpoch;
+        if (!fired) await scheduler.cancel(row.platformId);
         await db.writeRetrying(
           () => (db.delete(
             db.scheduledNotifications,

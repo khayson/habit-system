@@ -18,7 +18,8 @@ void main() {
   setUpAll(Device.loadZones);
 
   // 28 May 2026, 10:22 in Los Angeles.
-  final now = DateTime.utc(2026, 5, 28, 17, 22);
+  var now = DateTime.utc(2026, 5, 28, 17, 22);
+  setUp(() => now = DateTime.utc(2026, 5, 28, 17, 22));
 
   Future<(AppDatabase, LocalMutationService, ReminderScheduling)> account(
     String userId,
@@ -71,6 +72,29 @@ void main() {
     os.failCancel = false;
     await scheduling.replan();
     expect(os.pending.values.every((p) => p.$1.fireAt.toUtc().minute == 30), isTrue);
+    await db.close();
+  });
+
+  test('a reminder that already fired is never cancelled: it stays in the tray', () async {
+    final os = FakeNotificationScheduler();
+    final (db, writer, scheduling) = await account('user-1', os);
+    await habitWithReminder(writer, '11:00'); // 10:22 now in Los Angeles: due in 38 minutes
+    await scheduling.replan();
+    final fired = (await db.select(db.scheduledNotifications).get()).reduce(
+      (a, b) => a.fireAt < b.fireAt ? a : b,
+    );
+    // The reminder fires; later the person opens the app (a replan).
+    now = DateTime.fromMillisecondsSinceEpoch(
+      fired.fireAt,
+      isUtc: true,
+    ).add(const Duration(minutes: 5));
+    await scheduling.replan();
+    expect(os.calls, isNot(contains('cancel ${fired.platformId}')));
+    expect(
+      (await db.select(db.scheduledNotifications).get()).map((r) => r.platformId),
+      isNot(contains(fired.platformId)),
+      reason: 'the record of a past slot is dropped',
+    );
     await db.close();
   });
 
