@@ -4,6 +4,7 @@ namespace App\Application\Accounts;
 
 use App\Application\Journal\ChangeJournal;
 use App\Application\Presenters\EntityPresenter;
+use App\Application\Rewards\FreezeWallet;
 use App\Domain\Clock;
 use App\Models\PersonalAccessToken;
 use App\Models\User;
@@ -22,6 +23,7 @@ final readonly class AccountService
     public function __construct(
         private ChangeJournal $journal,
         private EntityPresenter $presenter,
+        private FreezeWallet $wallet,
         private Clock $clock,
     ) {}
 
@@ -54,13 +56,11 @@ final readonly class AccountService
                 'effective_at' => $now,
                 'created_at' => $now,
             ]);
-            // ASSUMPTION(A2a-signup-grant): A11's signup freeze grant needs the freeze ledger
-            // (A18 migration 7, Phase 5); the balance stays 0 until then so it always matches
-            // the ledger.
-
             $this->journal->lockUser($id);
+            // A41 / A11: the signup grant tops the new wallet up to 2, in this transaction.
             $row = DB::table('users')->where('id', $id)->first();
             $this->journal->append($id, 'user', $id, 'upsert', 1, $this->presenter->user($row ?? (object) []));
+            $this->wallet->signupGrant($id);
 
             return User::query()->findOrFail($id);
         });

@@ -64,11 +64,20 @@ return new class extends Migration
         Schema::table('habit_streak_cache', function (Blueprint $table) {
             $table->smallInteger('protected_in_streak')->default(0);
         });
+        // The last local date whose closed periods were offered to the wallet (A41 "newly
+        // closed"). The streak cache's computed_through cannot say it: a log write refreshes the
+        // cache too, without a spend pass.
+        Schema::table('users', function (Blueprint $table) {
+            $table->date('freeze_closed_through')->nullable();
+        });
         DB::statement('ALTER TABLE habit_streak_cache ADD CONSTRAINT habit_streak_cache_protected_non_negative CHECK (protected_in_streak >= 0)');
     }
 
     public function down(): void
     {
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn('freeze_closed_through');
+        });
         DB::statement('ALTER TABLE habit_streak_cache DROP CONSTRAINT habit_streak_cache_protected_non_negative');
         Schema::table('habit_streak_cache', function (Blueprint $table) {
             $table->dropColumn('protected_in_streak');

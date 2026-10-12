@@ -230,7 +230,8 @@ it('stores and journals the canonical frequency_config, not the client object (S
     $response->assertJsonPath('data.acks.0.status', 'accepted');
     expect(json_decode((string) DB::table('habits')->value('frequency_config'), true))->toBe(['days' => [1, 3, 5]])
         ->and(json_decode((string) DB::table('habit_definition_versions')->value('frequency_config'), true))->toBe(['days' => [1, 3, 5]])
-        ->and($response->json('data.changes.1.payload.frequency_config'))->toBe(['days' => [1, 3, 5]]);
+        // changes: user, reward_state (the signup grant, A41), habit.
+        ->and($response->json('data.changes.2.payload.frequency_config'))->toBe(['days' => [1, 3, 5]]);
 });
 
 // S4 ------------------------------------------------------------------------------------------

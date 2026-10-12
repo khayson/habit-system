@@ -6,14 +6,15 @@ use App\Application\Calendar\UserCalendar;
 use App\Application\Habits\HabitRepository;
 use App\Application\Journal\ChangeJournal;
 use App\Application\Presenters\EntityPresenter;
+use App\Application\Rewards\FreezeWallet;
 use App\Domain\Calendar\LocalDate;
 use App\Domain\Calendar\TimezoneTimeline;
 use App\Domain\Clock;
+use App\Domain\Freeze\FreezeCandidate;
 use App\Domain\Habit\HabitTypeRegistry;
 use App\Domain\Habit\LogState;
 use App\Domain\Period\PeriodEngine;
 use App\Domain\Period\PeriodEvaluation;
-use App\Domain\Period\PeriodKind;
 use App\Domain\Period\PeriodStatus;
 use App\Domain\Streak\StreakCalculator;
 use App\Support\UtcTime;
@@ -42,6 +43,7 @@ final readonly class PeriodCloser
         private HabitTypeRegistry $types,
         private ChangeJournal $journal,
         private EntityPresenter $presenter,
+        private FreezeWallet $wallet,
         private Clock $clock,
     ) {}
 
@@ -57,7 +59,24 @@ final readonly class PeriodCloser
             $this->journal->lockUser($userId);
             $timeline = UserCalendar::timeline($userId);
             $changed = $this->journalCalendarInForce($userId);
+            $today = $timeline->localDateAt($this->clock->now());
             $habits = DB::table('habits')->where('user_id', $userId)->orderBy('id')->get();
+
+            // A41: the local month's grant, then one spend pass across all habits for the periods
+            // that closed since the wallet last looked; refreshHabit then sees the new usages.
+            $this->wallet->monthlyGrant($userId, substr($today->toString(), 0, 7));
+            $watermark = DB::table('users')->where('id', $userId)->value('freeze_closed_through');
+            $since = $watermark === null ? null : LocalDate::fromString((string) $watermark);
+            $candidates = [];
+            foreach ($habits as $habit) {
+                array_push($candidates, ...$this->candidates($habit, $timeline, $today, $since));
+            }
+            $this->wallet->spend($userId, $candidates);
+            $through = $today->addDays(-1)->toString();
+            if ($watermark === null || (string) $watermark !== $through) {
+                DB::table('users')->where('id', $userId)->update(['freeze_closed_through' => $through]);
+            }
+
             foreach ($habits as $habit) {
                 $changed += $this->refreshHabit($userId, $habit, $timeline);
                 $afterHabit?->__invoke((string) $habit->id);
@@ -89,7 +108,12 @@ final readonly class PeriodCloser
                 ->orWhere('habit_streak_cache.computed_through', '<', $yesterday))
             ->exists();
 
-        return $habitStale || $this->calendarChangedSinceJournal($userId);
+        // A41: the wallet has not looked at yesterday's closed periods yet.
+        $watermark = DB::table('users')->where('id', $userId)->value('freeze_closed_through');
+        $walletStale = ($watermark === null || (string) $watermark < $yesterday)
+            && DB::table('habits')->where('user_id', $userId)->exists();
+
+        return $habitStale || $walletStale || $this->calendarChangedSinceJournal($userId);
     }
 
     /**
@@ -99,6 +123,40 @@ final readonly class PeriodCloser
     public function refreshHabit(string $userId, stdClass $habit, TimezoneTimeline $timeline): int
     {
         $today = $timeline->localDateAt($this->clock->now());
+        $active = $this->wallet->activeKeys((string) $habit->id);
+        [$engine, $evaluations] = $this->evaluate($habit, $timeline, $today, $active);
+
+        // A41: a late or edited log made a protected period complete: refund it once. Its
+        // evaluation is complete either way, so nothing is re-evaluated.
+        foreach ($evaluations as $evaluation) {
+            if ($evaluation->status === PeriodStatus::Complete && in_array($evaluation->period->key, $active, true)) {
+                $this->wallet->refund($userId, (string) $habit->id, $evaluation->period->key);
+            }
+        }
+
+        // H2: one query for the habit's stored evaluations; unchanged periods cost nothing more.
+        // A41: closed weeks are stored like days, because tokens are spent on them.
+        $stored = DB::table('period_evaluations')->where('habit_id', $habit->id)->get()->keyBy('period_key')->all();
+        $changed = 0;
+        foreach ($evaluations as $evaluation) {
+            if ($evaluation->closed) {
+                $changed += $this->storeEvaluation($userId, (string) $habit->id, $evaluation, $engine, $timeline, $stored[$evaluation->period->key] ?? null);
+            }
+        }
+
+        $streak = (new StreakCalculator)->calculate($evaluations);
+
+        return $changed + $this->storeProgress($userId, (string) $habit->id, $streak->current, $streak->longest, $streak->unit, $today->addDays(-1), self::protectedInStreak($evaluations));
+    }
+
+    /**
+     * The habit's periods through today, evaluated with its active freeze usages as protected.
+     *
+     * @param  list<string>  $protectedKeys
+     * @return array{PeriodEngine, list<PeriodEvaluation>}
+     */
+    private function evaluate(stdClass $habit, TimezoneTimeline $timeline, LocalDate $today, array $protectedKeys): array
+    {
         $schedule = $this->habits->schedule($habit);
         $first = LocalDate::fromString((string) $habit->start_local_date);
         $type = $this->types->get((string) $habit->type);
@@ -106,23 +164,68 @@ final readonly class PeriodCloser
         foreach (DB::table('habit_logs')->where('habit_id', $habit->id)->whereNull('deleted_at')->get(['log_date', 'value', 'detail']) as $log) {
             $logs[(string) $log->log_date] = new LogState($type->fromStorage((string) $log->value), HabitRepository::json($log->detail));
         }
-
         $engine = new PeriodEngine($this->types);
         $periods = $first->isAfter($today) ? [] : $engine->periods($schedule, $first, $today, $timeline);
-        $evaluations = $engine->evaluate($periods, $logs, $today);
 
-        // H2: one query for the habit's stored evaluations; unchanged days cost nothing more.
-        $stored = DB::table('period_evaluations')->where('habit_id', $habit->id)->get()->keyBy('period_key')->all();
-        $changed = 0;
+        return [$engine, $engine->evaluate($periods, $logs, $today, $protectedKeys)];
+    }
+
+    /**
+     * A41: the habit's failed periods that closed after the wallet's watermark, each with the
+     * streak a miss would end (A8 order). Archived habits are skipped: nothing is due on them.
+     *
+     * @return list<FreezeCandidate>
+     */
+    private function candidates(stdClass $habit, TimezoneTimeline $timeline, LocalDate $today, ?LocalDate $since): array
+    {
+        if ($habit->archived_at !== null) {
+            return [];
+        }
+        [$engine, $evaluations] = $this->evaluate($habit, $timeline, $today, $this->wallet->activeKeys((string) $habit->id));
+        usort($evaluations, fn (PeriodEvaluation $a, PeriodEvaluation $b) => $a->period->startDate->compareTo($b->period->startDate));
+        $candidates = [];
+        $run = 0;
         foreach ($evaluations as $evaluation) {
-            if ($evaluation->closed && $evaluation->period->kind === PeriodKind::Day) {
-                $changed += $this->storeEvaluation($userId, (string) $habit->id, $evaluation, $engine, $timeline, $stored[$evaluation->period->key] ?? null);
+            if (! $evaluation->closed) {
+                continue;
+            }
+            if ($evaluation->status === PeriodStatus::Missed && ($since === null || $evaluation->period->endDate->isAfter($since))) {
+                $candidates[] = new FreezeCandidate(
+                    (string) $habit->id,
+                    $evaluation->period->key,
+                    $engine->bounds($evaluation->period, $timeline)[1],
+                    $run,
+                    $evaluation->period->definition->version,
+                );
+            }
+            $run = $evaluation->keepsStreak() ? $run + 1 : 0;
+        }
+
+        return $candidates;
+    }
+
+    /**
+     * A41: protected periods inside the current streak (the closed run of kept periods that ends
+     * last), so clients need no heuristic.
+     *
+     * @param  list<PeriodEvaluation>  $evaluations
+     */
+    private static function protectedInStreak(array $evaluations): int
+    {
+        usort($evaluations, fn (PeriodEvaluation $a, PeriodEvaluation $b) => $a->period->startDate->compareTo($b->period->startDate));
+        $protected = 0;
+        foreach ($evaluations as $evaluation) {
+            if (! $evaluation->closed) {
+                continue;
+            }
+            if (! $evaluation->keepsStreak()) {
+                $protected = 0;
+            } elseif ($evaluation->status === PeriodStatus::Protected) {
+                $protected++;
             }
         }
 
-        $streak = (new StreakCalculator)->calculate($evaluations);
-
-        return $changed + $this->storeProgress($userId, (string) $habit->id, $streak->current, $streak->longest, $streak->unit, $today->addDays(-1));
+        return $protected;
     }
 
     private function storeEvaluation(string $userId, string $habitId, PeriodEvaluation $evaluation, PeriodEngine $engine, TimezoneTimeline $timeline, ?stdClass $existing): int
@@ -170,7 +273,7 @@ final readonly class PeriodCloser
         return 1;
     }
 
-    private function storeProgress(string $userId, string $habitId, int $current, int $longest, string $unit, LocalDate $computedThrough): int
+    private function storeProgress(string $userId, string $habitId, int $current, int $longest, string $unit, LocalDate $computedThrough, int $protectedInStreak): int
     {
         $cache = DB::table('habit_streak_cache')->where('habit_id', $habitId)->lockForUpdate()->first();
         $now = UtcTime::format($this->clock->now());
@@ -179,7 +282,8 @@ final readonly class PeriodCloser
             && (int) $cache->current === $current
             && (int) $cache->longest === $longest
             && (string) $cache->unit === $unit
-            && (string) $cache->computed_through === $through;
+            && (string) $cache->computed_through === $through
+            && (int) $cache->protected_in_streak === $protectedInStreak;
 
         if ($unchanged) {
             if ($cache->dirty_from !== null) {
@@ -193,8 +297,9 @@ final readonly class PeriodCloser
         DB::table('habit_streak_cache')->upsert([[
             'habit_id' => $habitId, 'current' => $current, 'longest' => $longest, 'unit' => $unit,
             'computed_through' => $through, 'dirty_from' => null, 'version' => $version, 'updated_at' => $now,
+            'protected_in_streak' => $protectedInStreak,
         ]], ['habit_id']);
-        $row = (object) ['habit_id' => $habitId, 'current' => $current, 'longest' => $longest, 'unit' => $unit, 'computed_through' => $through];
+        $row = (object) ['habit_id' => $habitId, 'current' => $current, 'longest' => $longest, 'unit' => $unit, 'computed_through' => $through, 'protected_in_streak' => $protectedInStreak];
         $this->journal->append($userId, 'habit_progress', $habitId, 'upsert', $version, $this->presenter->habitProgress($row));
 
         return 1;

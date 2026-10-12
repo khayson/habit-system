@@ -62,7 +62,7 @@ it('never shows one owner\'s changes, habits or logs to another', function () {
     $bootstrap = $this->withToken($this->bob['token'])->getJson('/api/v1/sync/bootstrap?limit=500');
     $bootstrapLogs = $this->withToken($this->bob['token'])->getJson('/api/v1/sync/bootstrap?cursor='.urlencode((string) $bootstrap->json('data.next_cursor')));
 
-    expect(array_column($pull['changes'], 'entity'))->toBe(['user'])
+    expect(array_column($pull['changes'], 'entity'))->toBe(['user', 'reward_state'])
         ->and($pull['changes'][0]['id'])->toBe($this->bob['id'])
         ->and($bootstrap->json('data.habits'))->toBe([])
         ->and($bootstrapLogs->json('data.logs'))->toBe([])

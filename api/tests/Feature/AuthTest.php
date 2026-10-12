@@ -58,7 +58,9 @@ it('ignores server-owned fields sent by a client (invariant 1)', function () {
 
     $response->assertCreated();
     expect((int) DB::table('users')->value('xp'))->toBe(0);
-    expect((int) DB::table('users')->value('change_seq'))->toBe(1);
+    // The user row and the signup grant's reward_state (A41).
+    expect((int) DB::table('users')->value('change_seq'))->toBe(2)
+        ->and((int) DB::table('users')->value('freeze_balance'))->toBe(2);
 });
 
 it('validates registration', function (array $overrides, string $field) {

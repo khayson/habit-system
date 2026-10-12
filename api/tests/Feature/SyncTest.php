@@ -38,13 +38,15 @@ it('applies habit.create and log.set_value, then pulls the journal in seq order'
     $changes = $response->json('data.changes');
     // A32: the log's habit_progress is journaled in the same transaction, right after it; A39:
     // the completion's reward_state comes before them (the award runs inside the log write).
-    expect(array_column($changes, 'seq'))->toBe([1, 2, 3, 4, 5])
-        ->and(array_column($changes, 'entity'))->toBe(['user', 'habit', 'reward_state', 'habit_log', 'habit_progress'])
-        ->and($changes[1]['payload']['definitions'][0]['effective_date'])->toBe('2026-05-28')
-        ->and($changes[1]['payload']['active_ranges'][0])->toBe(['starts_on' => '2026-05-28', 'ends_before' => null])
-        ->and($changes[2]['payload']['xp'])->toBe(10)
-        ->and($changes[3]['payload']['value'])->toBe(1)
-        ->and($changes[3]['payload']['completed_at'])->toBe('2026-05-28T17:15:00Z');
+    // The signup grant's reward_state follows the user row (A41).
+    expect(array_column($changes, 'seq'))->toBe([1, 2, 3, 4, 5, 6])
+        ->and(array_column($changes, 'entity'))->toBe(['user', 'reward_state', 'habit', 'reward_state', 'habit_log', 'habit_progress'])
+        ->and($changes[2]['payload']['definitions'][0]['effective_date'])->toBe('2026-05-28')
+        ->and($changes[2]['payload']['active_ranges'][0])->toBe(['starts_on' => '2026-05-28', 'ends_before' => null])
+        ->and($changes[1]['payload']['freeze_balance'])->toBe(2)
+        ->and($changes[3]['payload']['xp'])->toBe(10)
+        ->and($changes[4]['payload']['value'])->toBe(1)
+        ->and($changes[4]['payload']['completed_at'])->toBe('2026-05-28T17:15:00Z');
 });
 
 it('keeps quantities exact and durations whole on the wire (invariant 10)', function () {
@@ -54,9 +56,10 @@ it('keeps quantities exact and durations whole on the wire (invariant 10)', func
         M::setValue($water, '1250.000', 0),
     ])->assertOk();
 
-    expect($response->json('data.changes.1.payload.target_value'))->toBe('2000.000')
-        ->and($response->json('data.changes.2.payload.value'))->toBe('1250.000')
-        ->and($response->json('data.changes.2.payload.completed_at'))->toBeNull()
+    // changes: user, reward_state (signup grant), habit, log (partial: no XP), progress.
+    expect($response->json('data.changes.2.payload.target_value'))->toBe('2000.000')
+        ->and($response->json('data.changes.3.payload.value'))->toBe('1250.000')
+        ->and($response->json('data.changes.3.payload.completed_at'))->toBeNull()
         ->and(DB::table('habit_logs')->value('value'))->toBe('1250.000');
 });
 

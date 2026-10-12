@@ -99,7 +99,7 @@ it('re-evaluates a closed day after a late offline log, with a new revision in t
     // One commit, in order: the completion's XP (A40), the log, its period's new revision, the
     // streak.
     expect(journalRows($this->maya['id'], $before))->toBe([
-        [$before + 1, 'reward_state', 1],
+        [$before + 1, 'reward_state', 2], // version 1 was the signup grant (A41)
         [$before + 2, 'habit_log', 1],
         [$before + 3, 'period_evaluation', 2],
         [$before + 4, 'habit_progress', (int) DB::table('habit_streak_cache')->value('version')],
@@ -230,8 +230,9 @@ it('refreshes a habit in a fixed number of queries, however long its history (H2
     $shortCount = $queries($short);
     $longCount = $queries($long);
 
+    // A41 adds one constant query (the habit's active freeze usages); still history-independent.
     expect($longCount)->toBe($shortCount)
-        ->and($shortCount)->toBeLessThanOrEqual(5);
+        ->and($shortCount)->toBeLessThanOrEqual(6);
 });
 
 it('never blocks a user for long when a worker dies (H3)', function () {
