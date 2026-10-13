@@ -336,4 +336,12 @@ PHP,
         'replace' => "->whereBetween('start_date', [\$from->toString(), \$to->toString()])",
         'tests' => 'tests/Feature/HeatmapTest.php',
     ],
+    // Phase 5.2a --------------------------------------------------------------------------
+    [
+        'name' => '5.2a: an accepted ack drops xp_delta (A43)',
+        'file' => 'app/Application/Mutations/MutationApplier.php',
+        'search' => ', xpDelta: $result->xpDelta);',
+        'replace' => ');',
+        'tests' => 'tests/Feature/AckXpDeltaTest.php',
+    ],
 ];
