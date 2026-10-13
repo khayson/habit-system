@@ -195,19 +195,9 @@ class HabitDetail {
     return _byKey[key] == null || (logOn(date)?.provisional ?? false);
   }
 
-  /// Protected periods inside the current streak: the newest `current` evaluations through
-  /// computed_through, read as the server confirmed them (never evaluated here).
-  int get protectedInStreak {
-    final current = progress?.current ?? 0;
-    final through = progress?.computedThrough;
-    if (current <= 0 || through == null) return 0;
-    return evaluations
-        .where((e) => e.endDate != null && e.endDate!.compareTo(through) <= 0)
-        .where((e) => e.completed == true || e.protected == true)
-        .take(current)
-        .where((e) => e.completed != true && e.protected == true)
-        .length;
-  }
+  /// Protected periods inside the current streak, as the server counted them (A41); 0 when the
+  /// server has not sent the count. Never worked out here (invariant 9).
+  int get protectedInStreak => progress?.protectedInStreak ?? 0;
 
   /// The streak is older than the local yesterday: show "as of" that date.
   LocalDate? get streakAsOf {

@@ -257,6 +257,7 @@ void main() {
           'longest': 21,
           'unit': 'days',
           'computed_through': '2026-05-27',
+          'protected_in_streak': 1,
         });
       await syncNow(tester, account);
       await tester.pumpWidget(testApp(initial: '/habits/$id', account: account));
@@ -289,6 +290,60 @@ void main() {
       handle.dispose();
       await tearDownApp(tester, account);
     });
+
+    // A41 / 5.2a: the footer reads the server's protected_in_streak; the evaluations no longer
+    // decide it.
+    for (final (count, protectedEvaluation, shown) in [
+      (1, false, true),
+      (0, true, false),
+      (null, true, false),
+    ]) {
+      testWidgets('the footer follows protected_in_streak $count, '
+          'not the evaluations (protected one: $protectedEvaluation)', (tester) async {
+        useTallPhone(tester);
+        final server = FakeSyncServer();
+        final id = habit('d9', 'Read')['id'] as String;
+        final account = await accountWith(tester, server, [habit('d9', 'Read')]);
+        server
+          ..journalEntity(
+            'period_evaluation',
+            'e-2026-05-26',
+            1,
+            evaluation(
+              id,
+              '2026-05-26',
+              protected: protectedEvaluation,
+              completed: !protectedEvaluation,
+            ),
+          )
+          ..journalEntity(
+            'period_evaluation',
+            'e-2026-05-27',
+            1,
+            evaluation(id, '2026-05-27', completed: true),
+          )
+          ..journalEntity('habit_progress', id, 1, {
+            'habit_id': id,
+            'current': 2,
+            'longest': 2,
+            'unit': 'days',
+            'computed_through': '2026-05-27',
+            'protected_in_streak': ?count,
+          });
+        await syncNow(tester, account);
+        await tester.pumpWidget(testApp(initial: '/habits/$id', account: account));
+        await settle(tester);
+
+        expect(
+          find.text(
+            'Your streak includes 1 protected day.\nA missed day is a pause, not a failure.',
+          ),
+          shown ? findsOneWidget : findsNothing,
+        );
+        if (!shown) expect(find.text('A missed day is a pause, not a failure.'), findsOneWidget);
+        await tearDownApp(tester, account);
+      });
+    }
 
     testWidgets('no progress yet; and an older streak says as of', (tester) async {
       useTallPhone(tester);
