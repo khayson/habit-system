@@ -79,3 +79,18 @@ it('adds the freeze tables; earlier rows survive with protected_in_streak 0', fu
     // The cached balance stays within 0..2.
     expect(fn () => DB::table('users')->where('id', $user)->update(['freeze_balance' => 3]))->toThrow(QueryException::class);
 });
+
+it('indexes both ledger links of freeze_usage; earlier usages survive (5.1 review L1)', function () {
+    [$user, $habit] = seedBefore('2026_10_12_100013_index_freeze_usage_ledger_links');
+    $now = '2026-05-28 17:22:00+00';
+    $spend = (string) Str::uuid7();
+    DB::table('freeze_ledger')->insert(['id' => $spend, 'user_id' => $user, 'kind' => 'spend', 'delta' => -1, 'reason' => 'missed_period', 'source_key' => "spend:{$habit}:d:2026-05-26", 'created_at' => $now]);
+    DB::table('freeze_usage')->insert(['id' => (string) Str::uuid7(), 'user_id' => $user, 'habit_id' => $habit, 'period_key' => 'd:2026-05-26', 'definition_version' => 1, 'used_on' => '2026-05-26', 'state' => 'active', 'spend_ledger_id' => $spend, 'created_at' => $now, 'updated_at' => $now]);
+    $indexed = fn () => collect(DB::select("select indexdef from pg_indexes where tablename = 'freeze_usage'"))->pluck('indexdef')->implode("\n");
+    expect($indexed())->not->toContain('(spend_ledger_id)');
+
+    migrateOne('2026_10_12_100013_index_freeze_usage_ledger_links');
+
+    expect($indexed())->toContain('(spend_ledger_id)')->toContain('(refund_ledger_id)')
+        ->and(DB::table('freeze_usage')->where('spend_ledger_id', $spend)->value('period_key'))->toBe('d:2026-05-26');
+});

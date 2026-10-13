@@ -60,7 +60,8 @@ final readonly class RewardsQuery
         $user = DB::table('users')->where('id', $userId)->first(['freeze_balance', 'auto_freeze']) ?? (object) ['freeze_balance' => 0, 'auto_freeze' => false];
         // A spend or refund row names its usage; a grant has none.
         $query = DB::table('freeze_ledger as l')
-            ->leftJoin('freeze_usage as u', fn ($j) => $j->on('u.spend_ledger_id', '=', 'l.id')->orOn('u.refund_ledger_id', '=', 'l.id'))
+            ->leftJoin('freeze_usage as u', fn ($j) => $j->on('u.user_id', '=', 'l.user_id')
+                ->where(fn ($k) => $k->whereColumn('u.spend_ledger_id', 'l.id')->orWhereColumn('u.refund_ledger_id', 'l.id')))
             ->where('l.user_id', $userId)
             ->select(['l.id', 'l.kind', 'l.delta', 'l.reason', 'u.habit_id', 'u.period_key', 'l.created_at']);
         [$rows, $next] = $this->page($query, $userId, 'fz', $cursor, $limit);
