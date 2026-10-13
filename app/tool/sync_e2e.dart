@@ -10,7 +10,7 @@
 // One fresh account, two devices with their own databases and tokens. Scenarios, in order:
 //   setup     A creates a habit; B bootstraps it.
 //   merged    both tick the same habit-day offline; B's log is merged into A's id.
-//   rewards   the merged tick earned 10 XP once; B holds reward_state as an opaque entity (A39).
+//   rewards   the merged tick earned 10 XP once; B holds it in the typed reward_state table (A39).
 //   conflict  B edits a stale version after A's edit; kept as needs_attention, then discarded.
 //   restore   A deletes the day; B logs it again on the tombstone version and restores it.
 //   db-restore the server journal rolls back (restore from backup): 410, re-bootstrap, outbox kept.
@@ -129,16 +129,17 @@ Future<void> main(List<String> args) async {
   });
 
   await _scenario('rewards', () async {
-    // One completed habit-day, ticked on both devices: 10 XP once (A40). This client has no
-    // table for reward_state until Phase 5.3, so it is kept as an opaque entity (invariant 13).
+    // One completed habit-day, ticked on both devices: 10 XP once (A40). Since 5.2a B keeps
+    // reward_state in its typed table, never opaque (A39).
     await b.sync();
-    final held = await (b.db.select(
+    final rewards = await b.db.select(b.db.rewardState).get();
+    _check(rewards.length == 1, 'B holds one reward_state (${rewards.length})');
+    _check(rewards.single.xp == 10, 'xp 10 (${rewards.single.xp})');
+    _check(rewards.single.freezeBalance == 2, 'the signup grant (${rewards.single.freezeBalance})');
+    final opaque = await (b.db.select(
       b.db.opaqueEntities,
-    )..where((o) => o.entityType.equals('reward_state'))).get();
-    _check(held.length == 1, 'B holds one reward_state (${held.length})');
-    final payload = jsonDecode(held.single.payload) as Map<String, dynamic>;
-    _check(payload['xp'] == 10, 'xp 10 (${payload['xp']})');
-    _check(payload['freeze_balance'] == 2, 'the signup grant (${payload['freeze_balance']})');
+    )..where((o) => o.entityType.like('%reward_state'))).get();
+    _check(opaque.isEmpty, 'no opaque reward_state (${opaque.length})');
   });
 
   await _scenario('conflict', () async {
