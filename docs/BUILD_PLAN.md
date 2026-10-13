@@ -139,9 +139,11 @@ Phase 4 is built (4.1 to 4.3c); it awaits the device gate.
 
 A not-due day earns the same XP and never affects a streak (A40; confirmed by Khay Studios on 2026-10-12). Three parts:
 
-- **5.1 (this phase):** server only: XP entitlements + ledger, the freeze ledger, usages and policy versions, the monthly grant, spends and late-completion refunds, `reward_state` (A39), `profile.set_auto_freeze` (A42), closed weekly periods stored, GET /rewards and GET /freezes.
-- **5.2:** insights: the server endpoint and screens 14 and 15.
-- **5.3:** app: screens 06, 16, 17 and 35, Today's XP chip and summary line, `rewards_enabled`, the 12 footer reading `protected_in_streak`, and removing the client heuristic.
+- **5.1 (done):** server only: XP entitlements + ledger, the freeze ledger, usages and policy versions, the monthly grant, spends and late-completion refunds, `reward_state` (A39), `profile.set_auto_freeze` (A42), closed weekly periods stored, GET /rewards and GET /freezes.
+- **5.2:** app side of rewards and freezes, in two parts.
+  - **5.2a:** the 5.1 follow-ups on the server (freeze_usage indexes, policy ordering, `xp_delta` in acks and `next_refill_on`, A43), the app's `reward_state` table and `protected_in_streak`, the XP line on Today and Profile, the queue note (A44), the 12 footer reading the server's count with the client heuristic removed.
+  - **5.2b:** screens 16, 17, 06 and 35, the auto-freeze switch, the completion flow.
+- **5.3:** insights: the server endpoint and screens 14 and 15.
 
 Screen 01 (Welcome) is Phase 7 and is still to be built.
 
