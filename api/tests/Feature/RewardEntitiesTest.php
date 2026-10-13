@@ -1,5 +1,8 @@
 <?php
 
+use App\Domain\Freeze\FreezePolicy;
+use App\Domain\Freeze\FreezePolicyVersion;
+use App\Support\WireTime;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -123,4 +126,21 @@ it('answers set_auto_freeze on another user like a missing one', function () {
     expect(array_column($acks, 'status'))->toBe(['rejected', 'rejected'])
         ->and(array_column(array_column($acks, 'error'), 'code'))->toBe(['not_found', 'not_found'])
         ->and((bool) DB::table('users')->where('id', $bob['id'])->value('auto_freeze'))->toBeFalse();
+});
+
+it('never ties two policy versions: on, off, on in one clock tick (5.1 review I3)', function () {
+    foreach ([true, false, true] as $enabled) {
+        $version = (int) DB::table('users')->where('id', $this->maya['id'])->value('version');
+        expect($this->sync($this->maya['token'], [M::setAutoFreeze($this->maya['id'], $enabled, $version)])->json('data.acks.0.status'))->toBe('accepted');
+    }
+
+    $rows = DB::table('user_freeze_policy_versions')->orderBy('effective_at')->orderBy('id')->get();
+    $times = $rows->map(fn ($r) => WireTime::parse((string) $r->effective_at)->getTimestamp())->all();
+    expect($times[1])->toBeGreaterThan($times[0])
+        ->and($times[2])->toBeGreaterThan($times[1])
+        ->and($rows->pluck('enabled')->map(fn ($e) => (bool) $e)->all())->toBe([true, false, true]);
+
+    // The policy in force at the last row's time is the last row's: on.
+    $policy = new FreezePolicy($rows->map(fn ($r) => new FreezePolicyVersion((bool) $r->enabled, WireTime::parse((string) $r->effective_at)))->values()->all());
+    expect($policy->enabledAt(WireTime::parse((string) $rows->last()->effective_at)))->toBeTrue();
 });

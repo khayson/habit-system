@@ -126,7 +126,7 @@ final readonly class FreezeWallet
 
     private function policy(string $userId): FreezePolicy
     {
-        return new FreezePolicy(array_values(DB::table('user_freeze_policy_versions')->where('user_id', $userId)->get()
+        return new FreezePolicy(array_values(DB::table('user_freeze_policy_versions')->where('user_id', $userId)->orderBy('effective_at')->orderBy('id')->get()
             ->map(fn ($v) => new FreezePolicyVersion((bool) $v->enabled, WireTime::parse((string) $v->effective_at)))->all()));
     }
 
