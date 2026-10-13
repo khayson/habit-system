@@ -711,6 +711,8 @@ class SyncEngine {
         await _upsertProgress(id, version, change['operation'] == 'delete', payload);
       case 'period_evaluation':
         await _upsertEvaluation(id, version, payload);
+      case 'reward_state':
+        await _upsertRewardState(id, version, payload);
       case 'reminder':
         await _upsertReminder(id, version, payload);
       default:
@@ -869,6 +871,19 @@ class SyncEngine {
         .insertOnConflictUpdate(
           EntityCodec.progressRow(payload, habitId: habitId, version: version),
         );
+  }
+
+  /// A39 reward_state, from pulls and bootstrap alike: server-confirmed only, version >= rule.
+  /// It may arrive before the log that moved it in the same commit (5.1 review I4); nothing here
+  /// depends on that order.
+  Future<void> _upsertRewardState(String id, int version, Map<String, dynamic> payload) async {
+    final existing = await (db.select(
+      db.rewardState,
+    )..where((r) => r.id.equals(id))).getSingleOrNull();
+    if (existing != null && version < existing.version) return;
+    await db
+        .into(db.rewardState)
+        .insertOnConflictUpdate(EntityCodec.rewardRow(payload, id: id, version: version));
   }
 
   /// A32 period_evaluation: version = revision; a late log's new revision replaces the old one.

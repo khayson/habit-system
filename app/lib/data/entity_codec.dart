@@ -64,7 +64,32 @@ abstract final class EntityCodec {
     );
   }
 
-  static const progressFields = {'habit_id', 'current', 'longest', 'unit', 'computed_through'};
+  static const progressFields = {
+    'habit_id', 'current', 'longest', 'unit', 'computed_through', 'protected_in_streak', //
+  };
+
+  static const rewardFields = {
+    'xp', 'level', 'progress_into_level', 'next_level_threshold', 'freeze_balance', //
+  };
+
+  /// A39 reward_state (version = users.reward_version). Decoding a wrong-typed known field throws
+  /// (the item is then kept raw, F2).
+  static RewardStateCompanion rewardRow(
+    Map<String, dynamic> p, {
+    required String id,
+    required int version,
+  }) {
+    return RewardStateCompanion(
+      id: Value(id),
+      xp: Value(_strictInt(p['xp'])),
+      level: Value(_strictInt(p['level'])),
+      progressIntoLevel: Value(_strictInt(p['progress_into_level'])),
+      nextLevelThreshold: Value(_strictInt(p['next_level_threshold'])),
+      freezeBalance: Value(_strictInt(p['freeze_balance'])),
+      version: Value(version),
+      extra: Value(_extra(p, rewardFields)),
+    );
+  }
 
   static const evaluationFields = {
     'id', 'habit_id', 'period_key', 'start_date', 'end_date', 'completed', 'protected', //
@@ -83,6 +108,7 @@ abstract final class EntityCodec {
       longest: Value(_strictInt(p['longest'])),
       unit: Value(_str(p['unit'])),
       computedThrough: Value(_str(p['computed_through'])),
+      protectedInStreak: Value(_strictInt(p['protected_in_streak'])),
       version: Value(version),
       extra: Value(_extra(p, progressFields)),
     );
@@ -155,6 +181,16 @@ abstract final class EntityCodec {
     'longest': r.longest,
     'unit': r.unit,
     'computed_through': r.computedThrough,
+    'protected_in_streak': r.protectedInStreak,
+  };
+
+  static Map<String, dynamic> rewardPayload(ConfirmedRewards r) => {
+    ..._decodeMap(r.extra),
+    'xp': r.xp,
+    'level': r.level,
+    'progress_into_level': r.progressIntoLevel,
+    'next_level_threshold': r.nextLevelThreshold,
+    'freeze_balance': r.freezeBalance,
   };
 
   static Map<String, dynamic> evaluationPayload(ConfirmedEvaluation r) => {

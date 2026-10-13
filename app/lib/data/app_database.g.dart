@@ -5379,6 +5379,17 @@ class $HabitProgressTable extends HabitProgress
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _protectedInStreakMeta = const VerificationMeta(
+    'protectedInStreak',
+  );
+  @override
+  late final GeneratedColumn<int> protectedInStreak = GeneratedColumn<int>(
+    'protected_in_streak',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _versionMeta = const VerificationMeta(
     'version',
   );
@@ -5407,6 +5418,7 @@ class $HabitProgressTable extends HabitProgress
     longest,
     unit,
     computedThrough,
+    protectedInStreak,
     version,
     extra,
   ];
@@ -5457,6 +5469,15 @@ class $HabitProgressTable extends HabitProgress
         ),
       );
     }
+    if (data.containsKey('protected_in_streak')) {
+      context.handle(
+        _protectedInStreakMeta,
+        protectedInStreak.isAcceptableOrUnknown(
+          data['protected_in_streak']!,
+          _protectedInStreakMeta,
+        ),
+      );
+    }
     if (data.containsKey('version')) {
       context.handle(
         _versionMeta,
@@ -5500,6 +5521,10 @@ class $HabitProgressTable extends HabitProgress
         DriftSqlType.string,
         data['${effectivePrefix}computed_through'],
       ),
+      protectedInStreak: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}protected_in_streak'],
+      ),
       version: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}version'],
@@ -5524,6 +5549,9 @@ class ConfirmedProgress extends DataClass
   final int? longest;
   final String? unit;
   final String? computedThrough;
+
+  /// A41: protected periods inside the current streak, as the server counted them.
+  final int? protectedInStreak;
   final int version;
   final String extra;
   const ConfirmedProgress({
@@ -5532,6 +5560,7 @@ class ConfirmedProgress extends DataClass
     this.longest,
     this.unit,
     this.computedThrough,
+    this.protectedInStreak,
     required this.version,
     required this.extra,
   });
@@ -5551,6 +5580,9 @@ class ConfirmedProgress extends DataClass
     if (!nullToAbsent || computedThrough != null) {
       map['computed_through'] = Variable<String>(computedThrough);
     }
+    if (!nullToAbsent || protectedInStreak != null) {
+      map['protected_in_streak'] = Variable<int>(protectedInStreak);
+    }
     map['version'] = Variable<int>(version);
     map['extra'] = Variable<String>(extra);
     return map;
@@ -5569,6 +5601,9 @@ class ConfirmedProgress extends DataClass
       computedThrough: computedThrough == null && nullToAbsent
           ? const Value.absent()
           : Value(computedThrough),
+      protectedInStreak: protectedInStreak == null && nullToAbsent
+          ? const Value.absent()
+          : Value(protectedInStreak),
       version: Value(version),
       extra: Value(extra),
     );
@@ -5585,6 +5620,7 @@ class ConfirmedProgress extends DataClass
       longest: serializer.fromJson<int?>(json['longest']),
       unit: serializer.fromJson<String?>(json['unit']),
       computedThrough: serializer.fromJson<String?>(json['computedThrough']),
+      protectedInStreak: serializer.fromJson<int?>(json['protectedInStreak']),
       version: serializer.fromJson<int>(json['version']),
       extra: serializer.fromJson<String>(json['extra']),
     );
@@ -5598,6 +5634,7 @@ class ConfirmedProgress extends DataClass
       'longest': serializer.toJson<int?>(longest),
       'unit': serializer.toJson<String?>(unit),
       'computedThrough': serializer.toJson<String?>(computedThrough),
+      'protectedInStreak': serializer.toJson<int?>(protectedInStreak),
       'version': serializer.toJson<int>(version),
       'extra': serializer.toJson<String>(extra),
     };
@@ -5609,6 +5646,7 @@ class ConfirmedProgress extends DataClass
     Value<int?> longest = const Value.absent(),
     Value<String?> unit = const Value.absent(),
     Value<String?> computedThrough = const Value.absent(),
+    Value<int?> protectedInStreak = const Value.absent(),
     int? version,
     String? extra,
   }) => ConfirmedProgress(
@@ -5619,6 +5657,9 @@ class ConfirmedProgress extends DataClass
     computedThrough: computedThrough.present
         ? computedThrough.value
         : this.computedThrough,
+    protectedInStreak: protectedInStreak.present
+        ? protectedInStreak.value
+        : this.protectedInStreak,
     version: version ?? this.version,
     extra: extra ?? this.extra,
   );
@@ -5631,6 +5672,9 @@ class ConfirmedProgress extends DataClass
       computedThrough: data.computedThrough.present
           ? data.computedThrough.value
           : this.computedThrough,
+      protectedInStreak: data.protectedInStreak.present
+          ? data.protectedInStreak.value
+          : this.protectedInStreak,
       version: data.version.present ? data.version.value : this.version,
       extra: data.extra.present ? data.extra.value : this.extra,
     );
@@ -5644,6 +5688,7 @@ class ConfirmedProgress extends DataClass
           ..write('longest: $longest, ')
           ..write('unit: $unit, ')
           ..write('computedThrough: $computedThrough, ')
+          ..write('protectedInStreak: $protectedInStreak, ')
           ..write('version: $version, ')
           ..write('extra: $extra')
           ..write(')'))
@@ -5657,6 +5702,7 @@ class ConfirmedProgress extends DataClass
     longest,
     unit,
     computedThrough,
+    protectedInStreak,
     version,
     extra,
   );
@@ -5669,6 +5715,7 @@ class ConfirmedProgress extends DataClass
           other.longest == this.longest &&
           other.unit == this.unit &&
           other.computedThrough == this.computedThrough &&
+          other.protectedInStreak == this.protectedInStreak &&
           other.version == this.version &&
           other.extra == this.extra);
 }
@@ -5679,6 +5726,7 @@ class HabitProgressCompanion extends UpdateCompanion<ConfirmedProgress> {
   final Value<int?> longest;
   final Value<String?> unit;
   final Value<String?> computedThrough;
+  final Value<int?> protectedInStreak;
   final Value<int> version;
   final Value<String> extra;
   final Value<int> rowid;
@@ -5688,6 +5736,7 @@ class HabitProgressCompanion extends UpdateCompanion<ConfirmedProgress> {
     this.longest = const Value.absent(),
     this.unit = const Value.absent(),
     this.computedThrough = const Value.absent(),
+    this.protectedInStreak = const Value.absent(),
     this.version = const Value.absent(),
     this.extra = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -5698,6 +5747,7 @@ class HabitProgressCompanion extends UpdateCompanion<ConfirmedProgress> {
     this.longest = const Value.absent(),
     this.unit = const Value.absent(),
     this.computedThrough = const Value.absent(),
+    this.protectedInStreak = const Value.absent(),
     required int version,
     this.extra = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -5709,6 +5759,7 @@ class HabitProgressCompanion extends UpdateCompanion<ConfirmedProgress> {
     Expression<int>? longest,
     Expression<String>? unit,
     Expression<String>? computedThrough,
+    Expression<int>? protectedInStreak,
     Expression<int>? version,
     Expression<String>? extra,
     Expression<int>? rowid,
@@ -5719,6 +5770,7 @@ class HabitProgressCompanion extends UpdateCompanion<ConfirmedProgress> {
       if (longest != null) 'longest': longest,
       if (unit != null) 'unit': unit,
       if (computedThrough != null) 'computed_through': computedThrough,
+      if (protectedInStreak != null) 'protected_in_streak': protectedInStreak,
       if (version != null) 'version': version,
       if (extra != null) 'extra': extra,
       if (rowid != null) 'rowid': rowid,
@@ -5731,6 +5783,7 @@ class HabitProgressCompanion extends UpdateCompanion<ConfirmedProgress> {
     Value<int?>? longest,
     Value<String?>? unit,
     Value<String?>? computedThrough,
+    Value<int?>? protectedInStreak,
     Value<int>? version,
     Value<String>? extra,
     Value<int>? rowid,
@@ -5741,6 +5794,7 @@ class HabitProgressCompanion extends UpdateCompanion<ConfirmedProgress> {
       longest: longest ?? this.longest,
       unit: unit ?? this.unit,
       computedThrough: computedThrough ?? this.computedThrough,
+      protectedInStreak: protectedInStreak ?? this.protectedInStreak,
       version: version ?? this.version,
       extra: extra ?? this.extra,
       rowid: rowid ?? this.rowid,
@@ -5765,6 +5819,9 @@ class HabitProgressCompanion extends UpdateCompanion<ConfirmedProgress> {
     if (computedThrough.present) {
       map['computed_through'] = Variable<String>(computedThrough.value);
     }
+    if (protectedInStreak.present) {
+      map['protected_in_streak'] = Variable<int>(protectedInStreak.value);
+    }
     if (version.present) {
       map['version'] = Variable<int>(version.value);
     }
@@ -5785,6 +5842,7 @@ class HabitProgressCompanion extends UpdateCompanion<ConfirmedProgress> {
           ..write('longest: $longest, ')
           ..write('unit: $unit, ')
           ..write('computedThrough: $computedThrough, ')
+          ..write('protectedInStreak: $protectedInStreak, ')
           ..write('version: $version, ')
           ..write('extra: $extra, ')
           ..write('rowid: $rowid')
@@ -8675,6 +8733,532 @@ class TimerDraftsCompanion extends UpdateCompanion<TimerDraft> {
   }
 }
 
+class $RewardStateTable extends RewardState
+    with TableInfo<$RewardStateTable, ConfirmedRewards> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RewardStateTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _xpMeta = const VerificationMeta('xp');
+  @override
+  late final GeneratedColumn<int> xp = GeneratedColumn<int>(
+    'xp',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _levelMeta = const VerificationMeta('level');
+  @override
+  late final GeneratedColumn<int> level = GeneratedColumn<int>(
+    'level',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _progressIntoLevelMeta = const VerificationMeta(
+    'progressIntoLevel',
+  );
+  @override
+  late final GeneratedColumn<int> progressIntoLevel = GeneratedColumn<int>(
+    'progress_into_level',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _nextLevelThresholdMeta =
+      const VerificationMeta('nextLevelThreshold');
+  @override
+  late final GeneratedColumn<int> nextLevelThreshold = GeneratedColumn<int>(
+    'next_level_threshold',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _freezeBalanceMeta = const VerificationMeta(
+    'freezeBalance',
+  );
+  @override
+  late final GeneratedColumn<int> freezeBalance = GeneratedColumn<int>(
+    'freeze_balance',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _extraMeta = const VerificationMeta('extra');
+  @override
+  late final GeneratedColumn<String> extra = GeneratedColumn<String>(
+    'extra',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('{}'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    xp,
+    level,
+    progressIntoLevel,
+    nextLevelThreshold,
+    freezeBalance,
+    version,
+    extra,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'reward_state';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ConfirmedRewards> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('xp')) {
+      context.handle(_xpMeta, xp.isAcceptableOrUnknown(data['xp']!, _xpMeta));
+    }
+    if (data.containsKey('level')) {
+      context.handle(
+        _levelMeta,
+        level.isAcceptableOrUnknown(data['level']!, _levelMeta),
+      );
+    }
+    if (data.containsKey('progress_into_level')) {
+      context.handle(
+        _progressIntoLevelMeta,
+        progressIntoLevel.isAcceptableOrUnknown(
+          data['progress_into_level']!,
+          _progressIntoLevelMeta,
+        ),
+      );
+    }
+    if (data.containsKey('next_level_threshold')) {
+      context.handle(
+        _nextLevelThresholdMeta,
+        nextLevelThreshold.isAcceptableOrUnknown(
+          data['next_level_threshold']!,
+          _nextLevelThresholdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('freeze_balance')) {
+      context.handle(
+        _freezeBalanceMeta,
+        freezeBalance.isAcceptableOrUnknown(
+          data['freeze_balance']!,
+          _freezeBalanceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_versionMeta);
+    }
+    if (data.containsKey('extra')) {
+      context.handle(
+        _extraMeta,
+        extra.isAcceptableOrUnknown(data['extra']!, _extraMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ConfirmedRewards map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ConfirmedRewards(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      xp: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}xp'],
+      ),
+      level: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}level'],
+      ),
+      progressIntoLevel: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}progress_into_level'],
+      ),
+      nextLevelThreshold: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}next_level_threshold'],
+      ),
+      freezeBalance: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}freeze_balance'],
+      ),
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+      extra: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}extra'],
+      )!,
+    );
+  }
+
+  @override
+  $RewardStateTable createAlias(String alias) {
+    return $RewardStateTable(attachedDatabase, alias);
+  }
+}
+
+class ConfirmedRewards extends DataClass
+    implements Insertable<ConfirmedRewards> {
+  final String id;
+  final int? xp;
+  final int? level;
+  final int? progressIntoLevel;
+  final int? nextLevelThreshold;
+  final int? freezeBalance;
+  final int version;
+  final String extra;
+  const ConfirmedRewards({
+    required this.id,
+    this.xp,
+    this.level,
+    this.progressIntoLevel,
+    this.nextLevelThreshold,
+    this.freezeBalance,
+    required this.version,
+    required this.extra,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    if (!nullToAbsent || xp != null) {
+      map['xp'] = Variable<int>(xp);
+    }
+    if (!nullToAbsent || level != null) {
+      map['level'] = Variable<int>(level);
+    }
+    if (!nullToAbsent || progressIntoLevel != null) {
+      map['progress_into_level'] = Variable<int>(progressIntoLevel);
+    }
+    if (!nullToAbsent || nextLevelThreshold != null) {
+      map['next_level_threshold'] = Variable<int>(nextLevelThreshold);
+    }
+    if (!nullToAbsent || freezeBalance != null) {
+      map['freeze_balance'] = Variable<int>(freezeBalance);
+    }
+    map['version'] = Variable<int>(version);
+    map['extra'] = Variable<String>(extra);
+    return map;
+  }
+
+  RewardStateCompanion toCompanion(bool nullToAbsent) {
+    return RewardStateCompanion(
+      id: Value(id),
+      xp: xp == null && nullToAbsent ? const Value.absent() : Value(xp),
+      level: level == null && nullToAbsent
+          ? const Value.absent()
+          : Value(level),
+      progressIntoLevel: progressIntoLevel == null && nullToAbsent
+          ? const Value.absent()
+          : Value(progressIntoLevel),
+      nextLevelThreshold: nextLevelThreshold == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nextLevelThreshold),
+      freezeBalance: freezeBalance == null && nullToAbsent
+          ? const Value.absent()
+          : Value(freezeBalance),
+      version: Value(version),
+      extra: Value(extra),
+    );
+  }
+
+  factory ConfirmedRewards.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ConfirmedRewards(
+      id: serializer.fromJson<String>(json['id']),
+      xp: serializer.fromJson<int?>(json['xp']),
+      level: serializer.fromJson<int?>(json['level']),
+      progressIntoLevel: serializer.fromJson<int?>(json['progressIntoLevel']),
+      nextLevelThreshold: serializer.fromJson<int?>(json['nextLevelThreshold']),
+      freezeBalance: serializer.fromJson<int?>(json['freezeBalance']),
+      version: serializer.fromJson<int>(json['version']),
+      extra: serializer.fromJson<String>(json['extra']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'xp': serializer.toJson<int?>(xp),
+      'level': serializer.toJson<int?>(level),
+      'progressIntoLevel': serializer.toJson<int?>(progressIntoLevel),
+      'nextLevelThreshold': serializer.toJson<int?>(nextLevelThreshold),
+      'freezeBalance': serializer.toJson<int?>(freezeBalance),
+      'version': serializer.toJson<int>(version),
+      'extra': serializer.toJson<String>(extra),
+    };
+  }
+
+  ConfirmedRewards copyWith({
+    String? id,
+    Value<int?> xp = const Value.absent(),
+    Value<int?> level = const Value.absent(),
+    Value<int?> progressIntoLevel = const Value.absent(),
+    Value<int?> nextLevelThreshold = const Value.absent(),
+    Value<int?> freezeBalance = const Value.absent(),
+    int? version,
+    String? extra,
+  }) => ConfirmedRewards(
+    id: id ?? this.id,
+    xp: xp.present ? xp.value : this.xp,
+    level: level.present ? level.value : this.level,
+    progressIntoLevel: progressIntoLevel.present
+        ? progressIntoLevel.value
+        : this.progressIntoLevel,
+    nextLevelThreshold: nextLevelThreshold.present
+        ? nextLevelThreshold.value
+        : this.nextLevelThreshold,
+    freezeBalance: freezeBalance.present
+        ? freezeBalance.value
+        : this.freezeBalance,
+    version: version ?? this.version,
+    extra: extra ?? this.extra,
+  );
+  ConfirmedRewards copyWithCompanion(RewardStateCompanion data) {
+    return ConfirmedRewards(
+      id: data.id.present ? data.id.value : this.id,
+      xp: data.xp.present ? data.xp.value : this.xp,
+      level: data.level.present ? data.level.value : this.level,
+      progressIntoLevel: data.progressIntoLevel.present
+          ? data.progressIntoLevel.value
+          : this.progressIntoLevel,
+      nextLevelThreshold: data.nextLevelThreshold.present
+          ? data.nextLevelThreshold.value
+          : this.nextLevelThreshold,
+      freezeBalance: data.freezeBalance.present
+          ? data.freezeBalance.value
+          : this.freezeBalance,
+      version: data.version.present ? data.version.value : this.version,
+      extra: data.extra.present ? data.extra.value : this.extra,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ConfirmedRewards(')
+          ..write('id: $id, ')
+          ..write('xp: $xp, ')
+          ..write('level: $level, ')
+          ..write('progressIntoLevel: $progressIntoLevel, ')
+          ..write('nextLevelThreshold: $nextLevelThreshold, ')
+          ..write('freezeBalance: $freezeBalance, ')
+          ..write('version: $version, ')
+          ..write('extra: $extra')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    xp,
+    level,
+    progressIntoLevel,
+    nextLevelThreshold,
+    freezeBalance,
+    version,
+    extra,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ConfirmedRewards &&
+          other.id == this.id &&
+          other.xp == this.xp &&
+          other.level == this.level &&
+          other.progressIntoLevel == this.progressIntoLevel &&
+          other.nextLevelThreshold == this.nextLevelThreshold &&
+          other.freezeBalance == this.freezeBalance &&
+          other.version == this.version &&
+          other.extra == this.extra);
+}
+
+class RewardStateCompanion extends UpdateCompanion<ConfirmedRewards> {
+  final Value<String> id;
+  final Value<int?> xp;
+  final Value<int?> level;
+  final Value<int?> progressIntoLevel;
+  final Value<int?> nextLevelThreshold;
+  final Value<int?> freezeBalance;
+  final Value<int> version;
+  final Value<String> extra;
+  final Value<int> rowid;
+  const RewardStateCompanion({
+    this.id = const Value.absent(),
+    this.xp = const Value.absent(),
+    this.level = const Value.absent(),
+    this.progressIntoLevel = const Value.absent(),
+    this.nextLevelThreshold = const Value.absent(),
+    this.freezeBalance = const Value.absent(),
+    this.version = const Value.absent(),
+    this.extra = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  RewardStateCompanion.insert({
+    required String id,
+    this.xp = const Value.absent(),
+    this.level = const Value.absent(),
+    this.progressIntoLevel = const Value.absent(),
+    this.nextLevelThreshold = const Value.absent(),
+    this.freezeBalance = const Value.absent(),
+    required int version,
+    this.extra = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       version = Value(version);
+  static Insertable<ConfirmedRewards> custom({
+    Expression<String>? id,
+    Expression<int>? xp,
+    Expression<int>? level,
+    Expression<int>? progressIntoLevel,
+    Expression<int>? nextLevelThreshold,
+    Expression<int>? freezeBalance,
+    Expression<int>? version,
+    Expression<String>? extra,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (xp != null) 'xp': xp,
+      if (level != null) 'level': level,
+      if (progressIntoLevel != null) 'progress_into_level': progressIntoLevel,
+      if (nextLevelThreshold != null)
+        'next_level_threshold': nextLevelThreshold,
+      if (freezeBalance != null) 'freeze_balance': freezeBalance,
+      if (version != null) 'version': version,
+      if (extra != null) 'extra': extra,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  RewardStateCompanion copyWith({
+    Value<String>? id,
+    Value<int?>? xp,
+    Value<int?>? level,
+    Value<int?>? progressIntoLevel,
+    Value<int?>? nextLevelThreshold,
+    Value<int?>? freezeBalance,
+    Value<int>? version,
+    Value<String>? extra,
+    Value<int>? rowid,
+  }) {
+    return RewardStateCompanion(
+      id: id ?? this.id,
+      xp: xp ?? this.xp,
+      level: level ?? this.level,
+      progressIntoLevel: progressIntoLevel ?? this.progressIntoLevel,
+      nextLevelThreshold: nextLevelThreshold ?? this.nextLevelThreshold,
+      freezeBalance: freezeBalance ?? this.freezeBalance,
+      version: version ?? this.version,
+      extra: extra ?? this.extra,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (xp.present) {
+      map['xp'] = Variable<int>(xp.value);
+    }
+    if (level.present) {
+      map['level'] = Variable<int>(level.value);
+    }
+    if (progressIntoLevel.present) {
+      map['progress_into_level'] = Variable<int>(progressIntoLevel.value);
+    }
+    if (nextLevelThreshold.present) {
+      map['next_level_threshold'] = Variable<int>(nextLevelThreshold.value);
+    }
+    if (freezeBalance.present) {
+      map['freeze_balance'] = Variable<int>(freezeBalance.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (extra.present) {
+      map['extra'] = Variable<String>(extra.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RewardStateCompanion(')
+          ..write('id: $id, ')
+          ..write('xp: $xp, ')
+          ..write('level: $level, ')
+          ..write('progressIntoLevel: $progressIntoLevel, ')
+          ..write('nextLevelThreshold: $nextLevelThreshold, ')
+          ..write('freezeBalance: $freezeBalance, ')
+          ..write('version: $version, ')
+          ..write('extra: $extra, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -8697,6 +9281,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $ScheduledNotificationsTable(this);
   late final $PendingUploadsTable pendingUploads = $PendingUploadsTable(this);
   late final $TimerDraftsTable timerDrafts = $TimerDraftsTable(this);
+  late final $RewardStateTable rewardState = $RewardStateTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -8716,6 +9301,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     scheduledNotifications,
     pendingUploads,
     timerDrafts,
+    rewardState,
   ];
 }
 
@@ -11258,6 +11844,7 @@ typedef $$HabitProgressTableCreateCompanionBuilder =
       Value<int?> longest,
       Value<String?> unit,
       Value<String?> computedThrough,
+      Value<int?> protectedInStreak,
       required int version,
       Value<String> extra,
       Value<int> rowid,
@@ -11269,6 +11856,7 @@ typedef $$HabitProgressTableUpdateCompanionBuilder =
       Value<int?> longest,
       Value<String?> unit,
       Value<String?> computedThrough,
+      Value<int?> protectedInStreak,
       Value<int> version,
       Value<String> extra,
       Value<int> rowid,
@@ -11305,6 +11893,11 @@ class $$HabitProgressTableFilterComposer
 
   ColumnFilters<String> get computedThrough => $composableBuilder(
     column: $table.computedThrough,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get protectedInStreak => $composableBuilder(
+    column: $table.protectedInStreak,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -11353,6 +11946,11 @@ class $$HabitProgressTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get protectedInStreak => $composableBuilder(
+    column: $table.protectedInStreak,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get version => $composableBuilder(
     column: $table.version,
     builder: (column) => ColumnOrderings(column),
@@ -11387,6 +11985,11 @@ class $$HabitProgressTableAnnotationComposer
 
   GeneratedColumn<String> get computedThrough => $composableBuilder(
     column: $table.computedThrough,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get protectedInStreak => $composableBuilder(
+    column: $table.protectedInStreak,
     builder: (column) => column,
   );
 
@@ -11437,6 +12040,7 @@ class $$HabitProgressTableTableManager
                 Value<int?> longest = const Value.absent(),
                 Value<String?> unit = const Value.absent(),
                 Value<String?> computedThrough = const Value.absent(),
+                Value<int?> protectedInStreak = const Value.absent(),
                 Value<int> version = const Value.absent(),
                 Value<String> extra = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -11446,6 +12050,7 @@ class $$HabitProgressTableTableManager
                 longest: longest,
                 unit: unit,
                 computedThrough: computedThrough,
+                protectedInStreak: protectedInStreak,
                 version: version,
                 extra: extra,
                 rowid: rowid,
@@ -11457,6 +12062,7 @@ class $$HabitProgressTableTableManager
                 Value<int?> longest = const Value.absent(),
                 Value<String?> unit = const Value.absent(),
                 Value<String?> computedThrough = const Value.absent(),
+                Value<int?> protectedInStreak = const Value.absent(),
                 required int version,
                 Value<String> extra = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -11466,6 +12072,7 @@ class $$HabitProgressTableTableManager
                 longest: longest,
                 unit: unit,
                 computedThrough: computedThrough,
+                protectedInStreak: protectedInStreak,
                 version: version,
                 extra: extra,
                 rowid: rowid,
@@ -13047,6 +13654,278 @@ typedef $$TimerDraftsTableProcessedTableManager =
       TimerDraft,
       PrefetchHooks Function()
     >;
+typedef $$RewardStateTableCreateCompanionBuilder =
+    RewardStateCompanion Function({
+      required String id,
+      Value<int?> xp,
+      Value<int?> level,
+      Value<int?> progressIntoLevel,
+      Value<int?> nextLevelThreshold,
+      Value<int?> freezeBalance,
+      required int version,
+      Value<String> extra,
+      Value<int> rowid,
+    });
+typedef $$RewardStateTableUpdateCompanionBuilder =
+    RewardStateCompanion Function({
+      Value<String> id,
+      Value<int?> xp,
+      Value<int?> level,
+      Value<int?> progressIntoLevel,
+      Value<int?> nextLevelThreshold,
+      Value<int?> freezeBalance,
+      Value<int> version,
+      Value<String> extra,
+      Value<int> rowid,
+    });
+
+class $$RewardStateTableFilterComposer
+    extends Composer<_$AppDatabase, $RewardStateTable> {
+  $$RewardStateTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get xp => $composableBuilder(
+    column: $table.xp,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get level => $composableBuilder(
+    column: $table.level,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get progressIntoLevel => $composableBuilder(
+    column: $table.progressIntoLevel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get nextLevelThreshold => $composableBuilder(
+    column: $table.nextLevelThreshold,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get freezeBalance => $composableBuilder(
+    column: $table.freezeBalance,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get extra => $composableBuilder(
+    column: $table.extra,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$RewardStateTableOrderingComposer
+    extends Composer<_$AppDatabase, $RewardStateTable> {
+  $$RewardStateTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get xp => $composableBuilder(
+    column: $table.xp,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get level => $composableBuilder(
+    column: $table.level,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get progressIntoLevel => $composableBuilder(
+    column: $table.progressIntoLevel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get nextLevelThreshold => $composableBuilder(
+    column: $table.nextLevelThreshold,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get freezeBalance => $composableBuilder(
+    column: $table.freezeBalance,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get extra => $composableBuilder(
+    column: $table.extra,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$RewardStateTableAnnotationComposer
+    extends Composer<_$AppDatabase, $RewardStateTable> {
+  $$RewardStateTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get xp =>
+      $composableBuilder(column: $table.xp, builder: (column) => column);
+
+  GeneratedColumn<int> get level =>
+      $composableBuilder(column: $table.level, builder: (column) => column);
+
+  GeneratedColumn<int> get progressIntoLevel => $composableBuilder(
+    column: $table.progressIntoLevel,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get nextLevelThreshold => $composableBuilder(
+    column: $table.nextLevelThreshold,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get freezeBalance => $composableBuilder(
+    column: $table.freezeBalance,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<String> get extra =>
+      $composableBuilder(column: $table.extra, builder: (column) => column);
+}
+
+class $$RewardStateTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $RewardStateTable,
+          ConfirmedRewards,
+          $$RewardStateTableFilterComposer,
+          $$RewardStateTableOrderingComposer,
+          $$RewardStateTableAnnotationComposer,
+          $$RewardStateTableCreateCompanionBuilder,
+          $$RewardStateTableUpdateCompanionBuilder,
+          (
+            ConfirmedRewards,
+            BaseReferences<_$AppDatabase, $RewardStateTable, ConfirmedRewards>,
+          ),
+          ConfirmedRewards,
+          PrefetchHooks Function()
+        > {
+  $$RewardStateTableTableManager(_$AppDatabase db, $RewardStateTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RewardStateTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RewardStateTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RewardStateTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<int?> xp = const Value.absent(),
+                Value<int?> level = const Value.absent(),
+                Value<int?> progressIntoLevel = const Value.absent(),
+                Value<int?> nextLevelThreshold = const Value.absent(),
+                Value<int?> freezeBalance = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<String> extra = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RewardStateCompanion(
+                id: id,
+                xp: xp,
+                level: level,
+                progressIntoLevel: progressIntoLevel,
+                nextLevelThreshold: nextLevelThreshold,
+                freezeBalance: freezeBalance,
+                version: version,
+                extra: extra,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<int?> xp = const Value.absent(),
+                Value<int?> level = const Value.absent(),
+                Value<int?> progressIntoLevel = const Value.absent(),
+                Value<int?> nextLevelThreshold = const Value.absent(),
+                Value<int?> freezeBalance = const Value.absent(),
+                required int version,
+                Value<String> extra = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RewardStateCompanion.insert(
+                id: id,
+                xp: xp,
+                level: level,
+                progressIntoLevel: progressIntoLevel,
+                nextLevelThreshold: nextLevelThreshold,
+                freezeBalance: freezeBalance,
+                version: version,
+                extra: extra,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$RewardStateTable, ConfirmedRewards>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $RewardStateTable,
+                    ConfirmedRewards
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$RewardStateTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $RewardStateTable,
+      ConfirmedRewards,
+      $$RewardStateTableFilterComposer,
+      $$RewardStateTableOrderingComposer,
+      $$RewardStateTableAnnotationComposer,
+      $$RewardStateTableCreateCompanionBuilder,
+      $$RewardStateTableUpdateCompanionBuilder,
+      (
+        ConfirmedRewards,
+        BaseReferences<_$AppDatabase, $RewardStateTable, ConfirmedRewards>,
+      ),
+      ConfirmedRewards,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -13082,4 +13961,6 @@ class $AppDatabaseManager {
       $$PendingUploadsTableTableManager(_db, _db.pendingUploads);
   $$TimerDraftsTableTableManager get timerDrafts =>
       $$TimerDraftsTableTableManager(_db, _db.timerDrafts);
+  $$RewardStateTableTableManager get rewardState =>
+      $$RewardStateTableTableManager(_db, _db.rewardState);
 }

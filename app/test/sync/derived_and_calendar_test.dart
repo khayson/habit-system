@@ -155,6 +155,15 @@ void main() {
       expect(await phone.db.select(phone.db.habitProgress).get(), isEmpty);
     });
 
+    test('habit_progress carries protected_in_streak in its own column (A41)', () async {
+      server.journalEntity('habit_progress', 'h1', 1, {...progress(3), 'protected_in_streak': 1});
+      await phone.sync();
+
+      final row = await phone.db.select(phone.db.habitProgress).getSingle();
+      expect(row.protectedInStreak, 1);
+      expect(row.extra.contains('protected_in_streak'), isFalse);
+    });
+
     test('a newer period_evaluation revision replaces the older one', () async {
       Map<String, dynamic> evaluation(bool completed, int revision) => {
         'id': 'e1',
@@ -175,6 +184,56 @@ void main() {
 
       final row = await phone.db.select(phone.db.periodEvaluations).getSingle();
       expect((row.completed, row.revision), (true, 2));
+    });
+  });
+
+  group('reward_state (A39)', () {
+    Map<String, dynamic> rewards(int xp, {Object? level = 1}) => {
+      'xp': xp,
+      'level': level,
+      'progress_into_level': xp % 100,
+      'next_level_threshold': 100,
+      'freeze_balance': 2,
+      'streak_bonus': 'later',
+    };
+
+    test('a pull is typed, follows the version rule and keeps unknown fields', () async {
+      server.journalEntity('reward_state', 'user-1', 3, rewards(10));
+      await phone.sync();
+      server.journalEntity('reward_state', 'user-1', 2, rewards(0)); // older: ignored
+      await phone.sync();
+
+      final row = await phone.db.select(phone.db.rewardState).getSingle();
+      expect((row.id, row.xp, row.level, row.freezeBalance, row.version), ('user-1', 10, 1, 2, 3));
+      expect(EntityCodec.rewardPayload(row)['streak_bonus'], 'later');
+      final opaque = await phone.db.select(phone.db.opaqueEntities).get();
+      expect(opaque.where((o) => o.entityType.contains('reward_state')), isEmpty);
+    });
+
+    test('bootstrap reaches the same apply path', () async {
+      await phone.db.close();
+      server.extraBootstrapEntities.add({
+        'entity': 'reward_state',
+        'id': 'user-1',
+        'version': 4,
+        'payload': rewards(240, level: 3),
+      });
+      phone = await Device(server).init();
+      await phone.sync();
+
+      final row = await phone.db.select(phone.db.rewardState).getSingle();
+      expect((row.xp, row.level, row.version), (240, 3, 4));
+    });
+
+    test('a wrong-typed field keeps the item raw and leaves the confirmed row alone', () async {
+      server.journalEntity('reward_state', 'user-1', 1, rewards(10));
+      await phone.sync();
+      server.journalEntity('reward_state', 'user-1', 2, rewards(20, level: 'two'));
+      await phone.sync();
+
+      expect((await phone.db.select(phone.db.rewardState).getSingle()).xp, 10);
+      final raw = await phone.db.select(phone.db.opaqueEntities).get();
+      expect(raw.map((o) => o.entityType), contains('undecodable:reward_state'));
     });
   });
 }

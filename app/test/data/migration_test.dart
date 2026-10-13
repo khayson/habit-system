@@ -24,6 +24,51 @@ void main() {
     }
   });
 
+  test(
+    'v9 -> v10 types reward_state and lifts protected_in_streak; outbox and data survive',
+    () async {
+      final current = AppDatabase(NativeDatabase(file));
+      await dropV10(current);
+      await current.customStatement('PRAGMA user_version = 9');
+      await current.customStatement(
+        'INSERT INTO outbox (mutation_id, entity, entity_id, operation, occurred_at, payload, '
+        "state, created_at) VALUES ('m1', 'habit_log', 'l1', 'log.set_value', "
+        "'2026-05-28T00:00:00Z', '{}', 'pending', 0)",
+      );
+      await current.customStatement(
+        "INSERT INTO habits (id, name, version) VALUES ('h1', 'Water', 2)",
+      );
+      await current.customStatement(
+        'INSERT INTO habit_progress (habit_id, current, longest, unit, computed_through, '
+        "version, extra) VALUES ('h1', 4, 6, 'days', '2026-05-27', 3, "
+        "'{\"protected_in_streak\":1,\"colour\":\"teal\"}')",
+      );
+      await current.customStatement(
+        'INSERT INTO opaque_entities (entity_type, entity_id, version, operation, payload) '
+        "VALUES ('reward_state', 'u1', 5, 'upsert', "
+        "'{\"xp\":10,\"level\":1,\"progress_into_level\":10,\"next_level_threshold\":100,\"freeze_balance\":2}')",
+      );
+      await current.customStatement(
+        'INSERT INTO opaque_entities (entity_type, entity_id, version, operation, payload) '
+        "VALUES ('weekly_review', 'w1', 1, 'upsert', '{}')",
+      );
+      await current.close();
+
+      final upgraded = AppDatabase(NativeDatabase(file));
+      final rewards = await upgraded.select(upgraded.rewardState).getSingle();
+      expect((rewards.id, rewards.xp, rewards.freezeBalance, rewards.version), ('u1', 10, 2, 5));
+      final progress = await upgraded.select(upgraded.habitProgress).getSingle();
+      expect((progress.current, progress.protectedInStreak), (4, 1));
+      expect(EntityCodec.progressPayload(progress)['colour'], 'teal');
+      expect(progress.extra.contains('protected_in_streak'), isFalse);
+      final opaque = await upgraded.select(upgraded.opaqueEntities).get();
+      expect(opaque.map((o) => o.entityType), ['weekly_review'], reason: 'the rest stays');
+      expect((await upgraded.select(upgraded.outbox).getSingle()).operation, 'log.set_value');
+      expect((await upgraded.select(upgraded.habits).getSingle()).version, 2);
+      await upgraded.close();
+    },
+  );
+
   test('v8 -> v9 adds timer drafts; outbox, scheduled rows and the cursor survive', () async {
     final v9 = AppDatabase(NativeDatabase(file));
     await v9.customStatement(
@@ -319,8 +364,15 @@ void main() {
   });
 }
 
-/// Takes a current database back to v8: drops what v9 added.
+/// Takes a current database back to v9: drops what v10 added.
+Future<void> dropV10(AppDatabase db) async {
+  await db.customStatement('DROP TABLE reward_state');
+  await db.customStatement('ALTER TABLE habit_progress DROP COLUMN protected_in_streak');
+}
+
+/// Takes a current database back to v8: drops what v9 and v10 added.
 Future<void> dropV9(AppDatabase db) async {
+  await dropV10(db);
   await db.customStatement('DROP TABLE timer_drafts');
 }
 

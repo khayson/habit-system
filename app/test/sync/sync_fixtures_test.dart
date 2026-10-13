@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:habit/data/entity_codec.dart';
 import 'package:habit/domain/calendar/timezone_timeline.dart';
 import 'package:habit/domain/calendar/local_date.dart';
 import 'package:habit/sync/outbox_states.dart';
@@ -74,6 +75,7 @@ void main() {
     expect(await phone.db.select(phone.db.opaqueEntities).get(), isEmpty);
     final progress = await phone.db.select(phone.db.habitProgress).getSingle();
     expect((progress.current, progress.longest, progress.version), (1, 1, 2));
+    expect(progress.protectedInStreak, 0, reason: 'its own column (A41)');
     final evaluation = await phone.db.select(phone.db.periodEvaluations).getSingle();
     expect(
       (evaluation.periodKey, evaluation.completed, evaluation.revision),
@@ -81,6 +83,29 @@ void main() {
     );
     expect((await phone.state()).cursor, isNotNull, reason: 'the snapshot cursor was saved');
     await phone.db.close();
+  });
+
+  test('reward_state_entity: the example decodes into every typed field (A39)', () {
+    final fixture = contractFixture('sync/reward_state_entity.json');
+    expect(fixture['suites'], contains('dart'));
+    final example = materialize(fixture['example']) as Map<String, dynamic>;
+    final payload = (example['payload'] as Map).cast<String, dynamic>();
+
+    final row = EntityCodec.rewardRow(
+      payload,
+      id: example['id'] as String,
+      version: example['version'] as int,
+    );
+
+    expect(row.id.value, example['id']);
+    expect(row.version.value, example['version']);
+    expect(row.xp.value, payload['xp']);
+    expect(row.level.value, payload['level']);
+    expect(row.progressIntoLevel.value, payload['progress_into_level']);
+    expect(row.nextLevelThreshold.value, payload['next_level_threshold']);
+    expect(row.freezeBalance.value, payload['freeze_balance']);
+    expect(row.extra.value, '{}', reason: 'every fixture field is a known one');
+    expect(EntityCodec.rewardFields, (fixture['fields'] as List).toSet());
   });
 
   test('log_backdate_payload: a past check-in sends date_mode backdate and log_date', () async {

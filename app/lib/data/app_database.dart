@@ -177,11 +177,32 @@ class HabitProgress extends Table {
   IntColumn get longest => integer().nullable()();
   TextColumn get unit => text().nullable()();
   TextColumn get computedThrough => text().nullable()();
+
+  /// A41: protected periods inside the current streak, as the server counted them.
+  IntColumn get protectedInStreak => integer().nullable()();
   IntColumn get version => integer()();
   TextColumn get extra => text().withDefault(const Constant('{}'))();
 
   @override
   Set<Column> get primaryKey => {habitId};
+}
+
+/// A39 `reward_state`: the user's reward numbers as the server last confirmed them (id = user
+/// id, version = users.reward_version). Never computed here (A44, invariant 9); unknown fields
+/// live in [extra].
+@DataClassName('ConfirmedRewards')
+class RewardState extends Table {
+  TextColumn get id => text()();
+  IntColumn get xp => integer().nullable()();
+  IntColumn get level => integer().nullable()();
+  IntColumn get progressIntoLevel => integer().nullable()();
+  IntColumn get nextLevelThreshold => integer().nullable()();
+  IntColumn get freezeBalance => integer().nullable()();
+  IntColumn get version => integer()();
+  TextColumn get extra => text().withDefault(const Constant('{}'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
 }
 
 /// A32 `period_evaluation`: one closed period's result. Version = revision. Server-confirmed only.
@@ -334,6 +355,7 @@ class TimerDrafts extends Table {
     ScheduledNotifications,
     PendingUploads,
     TimerDrafts,
+    RewardState,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -391,7 +413,7 @@ class AppDatabase extends _$AppDatabase {
   Future<T> writeRetrying<T>(Future<T> Function() write) => transaction(write);
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -455,6 +477,17 @@ class AppDatabase extends _$AppDatabase {
         // Phase 4.3a: timer drafts (A36).
         await m.createTable(timerDrafts);
       }
+      // A database before v5 created habit_progress above, already with this column.
+      if (from < 10 && from >= 5) {
+        // Phase 5.2a: protected_in_streak (A41) moves out of extra into its own column.
+        await m.addColumn(habitProgress, habitProgress.protectedInStreak);
+        await _liftProtectedInStreak();
+      }
+      if (from < 10) {
+        // Phase 5.2a: reward_state (A39); a 5.1-era build kept it opaque.
+        await m.createTable(rewardState);
+        await _typeOpaqueRewardState();
+      }
     },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
@@ -492,6 +525,41 @@ class AppDatabase extends _$AppDatabase {
       await (delete(
         opaqueEntities,
       )..where((o) => o.entityType.equals('reminder') & o.entityId.equals(row.entityId))).go();
+    }
+  }
+
+  /// A 5.1-era build kept `protected_in_streak` in habit_progress.extra. Move an integer value
+  /// into the column and drop the key; any other value stays in extra.
+  Future<void> _liftProtectedInStreak() async {
+    for (final row in await select(habitProgress).get()) {
+      final extra = (jsonDecode(row.extra) as Map).cast<String, dynamic>();
+      final value = extra['protected_in_streak'];
+      if (value is! int) continue;
+      extra.remove('protected_in_streak');
+      await (update(habitProgress)..where((p) => p.habitId.equals(row.habitId))).write(
+        HabitProgressCompanion(protectedInStreak: Value(value), extra: Value(jsonEncode(extra))),
+      );
+    }
+  }
+
+  /// A 5.1-era build kept reward_state opaque. Type the rows that decode (the table is new, so
+  /// the version >= rule holds trivially); anything that does not decode stays opaque.
+  Future<void> _typeOpaqueRewardState() async {
+    final rows = await (select(
+      opaqueEntities,
+    )..where((o) => o.entityType.equals('reward_state'))).get();
+    for (final row in rows) {
+      try {
+        final payload = (jsonDecode(row.payload) as Map).cast<String, dynamic>();
+        await into(rewardState).insertOnConflictUpdate(
+          EntityCodec.rewardRow(payload, id: row.entityId, version: row.version),
+        );
+      } on Object {
+        continue; // stays opaque
+      }
+      await (delete(
+        opaqueEntities,
+      )..where((o) => o.entityType.equals('reward_state') & o.entityId.equals(row.entityId))).go();
     }
   }
 
