@@ -67,6 +67,11 @@ you saw.
 | 43 | Archive a habit on one device while the other checks in offline; reconnect. | The archived variant; Restore then Save my check-in works, and so does Discard this check-in. |
 | 44 | Edit the same habit's name on both devices. | The stale-habit variant lists the differing fields. |
 | 45 | At 200% text size and with a screen reader, open 19 in each variant. | Nothing is clipped and each card and button reads with its values. |
+| 46 | Phase 5.2a. Sign in on a fresh install and let it sync. | Today's summary card shows "{xp} XP · Level {level}" under the habit count; the screen reader reads it as "{xp} XP, Level {level}". |
+| 47 | Turn on airplane mode and complete a habit on Today. | The XP and level stay as they were; the card says "Includes changes waiting to sync. Rewards update after syncing." No "+10" appears anywhere. |
+| 48 | Turn airplane mode off and wait for the sync. | The XP and level change to the server's new numbers and the waiting sentence goes away. |
+| 49 | Open Profile. | Under the name: "{place} · Level {level} · {xp} XP" (or "Level {level} · {xp} XP" without a place). |
+| 50 | Open a habit whose current streak includes a protected day (auto-freeze on, a day missed and closed). | 12's footer says "Your streak includes 1 protected day." |
 
 ## Results
 
@@ -117,3 +122,8 @@ you saw.
 | 43 | | | | |
 | 44 | | | | |
 | 45 | | | | |
+| 46 | | | | |
+| 47 | | | | |
+| 48 | | | | |
+| 49 | | | | |
+| 50 | | | | |
