@@ -1,0 +1,47 @@
+{
+  "description": "A43: an accepted ack for log.set_value, log.increment or log.delete carries xp_delta (+10 or -10) when that mutation moved XP, and no xp_delta key otherwise. It is stored in the receipt, so a duplicate replay returns the same ack. Each case creates a quantity habit (target 2000.000) and runs its steps in order on one habit-day; a step with replay_of re-sends an earlier step's mutation. Old apps ignore the key (A21).",
+  "suites": [
+    "php"
+  ],
+  "now": "2026-05-28T17:22:00Z",
+  "habit": {"type": "quantity", "target_value": "2000.000", "unit": "ml"},
+  "cases": [
+    {
+      "name": "a completing set_value earns 10",
+      "steps": [
+        {"operation": "log.set_value", "value": "2000.000", "expect": {"status": "accepted", "duplicate": false, "xp_delta": 10}}
+      ]
+    },
+    {
+      "name": "an undo below the target takes 10 back",
+      "steps": [
+        {"operation": "log.set_value", "value": "2000.000", "expect": {"status": "accepted", "duplicate": false, "xp_delta": 10}},
+        {"operation": "log.set_value", "value": "500.000", "expect": {"status": "accepted", "duplicate": false, "xp_delta": -10}}
+      ]
+    },
+    {
+      "name": "a partial write carries no key",
+      "steps": [
+        {"operation": "log.increment", "delta": "1500.000", "expect": {"status": "accepted", "duplicate": false, "xp_delta": null}}
+      ]
+    },
+    {
+      "name": "deleting a completed day takes 10 back",
+      "steps": [
+        {"operation": "log.set_value", "value": "2500.000", "expect": {"status": "accepted", "duplicate": false, "xp_delta": 10}},
+        {"operation": "log.delete", "expect": {"status": "accepted", "duplicate": false, "xp_delta": -10}}
+      ]
+    },
+    {
+      "name": "a duplicate replay returns the same xp_delta",
+      "steps": [
+        {"operation": "log.increment", "delta": "2000.000", "expect": {"status": "accepted", "duplicate": false, "xp_delta": 10}},
+        {"replay_of": 0, "expect": {"status": "accepted", "duplicate": true, "xp_delta": 10}}
+      ]
+    }
+  ],
+  "rules": [
+    "xp_delta null in a step means the ack has no xp_delta key at all",
+    "the amount comes from the server's rules (A40); the app never infers it from totals"
+  ]
+}

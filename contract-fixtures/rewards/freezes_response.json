@@ -1,5 +1,5 @@
 {
-  "description": "A41 / A42: GET /freezes?limit&cursor. cap is 2; policy is the latest 20 opt-in versions, newest first; the ledger is newest first, keyset on (created_at, id), with habit_id and period_key null for grants. limit default 20, max 50; a bad cursor is 422. Owner-scoped. Read-only.",
+  "description": "A41 / A42 / A43: GET /freezes?limit&cursor. cap is 2; next_refill_on is the first day of the user's next local month; policy is the latest 20 opt-in versions, newest first; the ledger is newest first, keyset on (created_at, id), with habit_id and period_key null for grants. limit default 20, max 50; a bad cursor is 422. Owner-scoped. Read-only.",
   "suites": [
     "php"
   ],
@@ -8,6 +8,7 @@
       "freeze_balance": 1,
       "cap": 2,
       "auto_freeze": true,
+      "next_refill_on": "{{date}}",
       "policy": [
         {
           "enabled": true,
