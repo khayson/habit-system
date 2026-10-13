@@ -30,7 +30,8 @@
     "entity": "habit_log",
     "entity_id": "{{uuid}}",
     "version": 1,
-    "resolved_date": "2026-05-20"
+    "resolved_date": "2026-05-20",
+    "xp_delta": 10
   },
   "rules": [
     "local_date_hint equals log_date, so the device files the provisional value under the chosen day",

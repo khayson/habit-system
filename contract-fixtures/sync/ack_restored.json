@@ -11,7 +11,8 @@
     "entity": "habit_log",
     "entity_id": "{{uuid}}",
     "version": 3,
-    "resolved_date": "2026-05-28"
+    "resolved_date": "2026-05-28",
+    "xp_delta": 10
   },
   "rules": [
     "entity_id equals the tombstoned log id",
