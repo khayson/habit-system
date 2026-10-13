@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:dio/dio.dart';
-import 'package:drift/drift.dart' show DatabaseConnection;
+import 'package:drift/drift.dart' show DatabaseConnection, Value;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -122,6 +122,51 @@ void main() {
     expect(find.text('Archived habits'), findsNothing, reason: '22 arrives in Phase 4');
     expect(find.text('Terms'), findsOneWidget);
     await tearDownApp(tester, a);
+  });
+
+  group('the level line (design 20, A44)', () {
+    Future<void> confirm(WidgetTester tester, AccountContext a) => tester.runAsync(
+      () => a.session.db
+          .into(a.session.db.rewardState)
+          .insert(
+            RewardStateCompanion.insert(
+              id: a.session.userId,
+              xp: const Value(1250),
+              level: const Value(13),
+              version: 2,
+            ),
+          ),
+    );
+
+    testWidgets('place, level and XP as designed', (tester) async {
+      final a = await account(tester, FakeSyncServer());
+      await tester.runAsync(() => a.writer.updateProfile(name: 'Maya Chen', city: 'Portland', countryCode: null));
+      await confirm(tester, a);
+      await open(tester, a);
+
+      expect(find.text('Portland · Level 13 · 1,250 XP'), findsOneWidget);
+      await tearDownApp(tester, a);
+    });
+
+    testWidgets('without a place: level and XP only', (tester) async {
+      final a = await account(tester, FakeSyncServer());
+      await confirm(tester, a);
+      await open(tester, a);
+
+      expect(find.text('Level 13 · 1,250 XP'), findsOneWidget);
+      expect(find.text('Add your city and country'), findsNothing);
+      await tearDownApp(tester, a);
+    });
+
+    testWidgets('without confirmed numbers: the place alone', (tester) async {
+      final a = await account(tester, FakeSyncServer());
+      await tester.runAsync(() => a.writer.updateProfile(name: 'Maya Chen', city: 'Portland', countryCode: null));
+      await open(tester, a);
+
+      expect(find.text('Portland'), findsOneWidget);
+      expect(find.textContaining('Level'), findsNothing);
+      await tearDownApp(tester, a);
+    });
   });
 
   testWidgets('edit: Save waits for a change; the country is searched; one profile.update', (

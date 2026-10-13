@@ -8,6 +8,7 @@ import '../app/router.dart';
 import '../config/habit_tokens.dart';
 import '../core/time_zones.dart';
 import '../data/local_view.dart';
+import '../data/rewards_view.dart';
 import '../data/timer_draft_view.dart';
 import '../domain/calendar/local_date.dart';
 import '../habit_types/habit_type_ui.dart';
@@ -34,10 +35,18 @@ class TodayScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final account = context.watch<AccountContext?>();
     if (account == null) return const Scaffold();
-    return ChangeNotifierProvider(
+    return MultiProvider(
       key: ValueKey(account.session.userId),
-      create: (_) =>
-          StreamModel<TodayView?>(TimeZones.ready.then((_) => account.view.watchToday(clock))),
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) =>
+              StreamModel<TodayView?>(TimeZones.ready.then((_) => account.view.watchToday(clock))),
+        ),
+        ChangeNotifierProvider(
+          create: (_) =>
+              StreamModel<ConfirmedRewardNumbers?>(Future.value(account.rewards.watch())),
+        ),
+      ],
       child: _TodayBody(clock: clock),
     );
   }
@@ -85,6 +94,8 @@ class _TodayList extends StatelessWidget {
     );
     final total = today.items.length;
     final done = today.completeCount;
+    // A44: the numbers exactly as reward_state confirmed them; no line without them.
+    final rewards = context.watch<StreamModel<ConfirmedRewardNumbers?>>().value;
 
     return ListView(
       padding: const EdgeInsets.all(HabitSpace.margin),
@@ -113,6 +124,18 @@ class _TodayList extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(l10n.todaySummary(done, total), style: text.titleLarge),
+              if (rewards != null) ...[
+                const SizedBox(height: HabitSpace.s8),
+                Semantics(
+                  container: true,
+                  label: l10n.todayRewardLineLabel(rewards.xp, rewards.level),
+                  excludeSemantics: true,
+                  child: Text(
+                    l10n.todayRewardLine(rewards.xp, rewards.level),
+                    style: text.bodyMedium?.copyWith(color: tokens.positiveInk),
+                  ),
+                ),
+              ],
               const SizedBox(height: HabitSpace.s16),
               ExcludeSemantics(
                 child: ClipRRect(

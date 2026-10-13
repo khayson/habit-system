@@ -1,6 +1,9 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:habit/data/app_database.dart';
 import 'package:habit/data/entity_codec.dart';
+import 'package:habit/providers/account_context.dart';
 import 'package:habit/sync/outbox_states.dart';
 
 import '../support/app_harness.dart';
@@ -47,7 +50,10 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('1 of 1 habits complete'), findsOneWidget);
-    expect(find.text('Includes changes waiting to sync.'), findsOneWidget);
+    expect(
+      find.text('Includes changes waiting to sync. Rewards update after syncing.'),
+      findsOneWidget,
+    );
     expect(find.text('2 waiting'), findsOneWidget);
     await tearDownApp(tester, account);
   });
@@ -68,9 +74,95 @@ void main() {
 
     expect(find.textContaining(RegExp(r'^Completed at 10:22\sAM$')), findsOneWidget);
     expect(find.text('Synced'), findsOneWidget);
-    expect(find.text('Includes changes waiting to sync.'), findsNothing);
+    expect(
+      find.text('Includes changes waiting to sync. Rewards update after syncing.'),
+      findsNothing,
+    );
     expect(server.logs.values.single['value'], 1);
     await tearDownApp(tester, account);
+  });
+
+  group('the XP line (design 05, A44)', () {
+    Future<void> confirm(WidgetTester tester, AccountContext account, int xp, int level) =>
+        tester.runAsync(
+          () => account.session.db
+              .into(account.session.db.rewardState)
+              .insert(
+                RewardStateCompanion.insert(
+                  id: account.session.userId,
+                  xp: Value(xp),
+                  level: Value(level),
+                  version: 3,
+                ),
+              ),
+        );
+
+    testWidgets('shows the confirmed numbers with one label; no line without them', (tester) async {
+      useTallPhone(tester);
+      final handle = tester.ensureSemantics();
+      final account = (await tester.runAsync(() => testAccount(FakeSyncServer())))!;
+      await tester.runAsync(
+        () => account.actions.createOneTapHabit(name: 'Stretch', category: 'health'),
+      );
+      await tester.pumpWidget(testApp(initial: '/today', account: account));
+      await settle(tester);
+      expect(find.textContaining(' XP · Level '), findsNothing, reason: 'nothing confirmed yet');
+
+      await confirm(tester, account, 1240, 13);
+      await settle(tester);
+
+      expect(find.text('1,240 XP · Level 13'), findsOneWidget);
+      expect(find.bySemanticsLabel('1,240 XP, Level 13'), findsOneWidget);
+      handle.dispose();
+      await tearDownApp(tester, account);
+    });
+
+    testWidgets('a check-in waiting to sync leaves the numbers and says rewards follow', (
+      tester,
+    ) async {
+      useTallPhone(tester);
+      final account = (await tester.runAsync(() => testAccount(FakeSyncServer())))!;
+      await tester.runAsync(
+        () => account.actions.createOneTapHabit(name: 'Stretch', category: 'health'),
+      );
+      await confirm(tester, account, 1240, 13);
+      await tester.pumpWidget(testApp(initial: '/today', account: account));
+      await settle(tester);
+
+      await tester.tap(find.byTooltip('Check in Stretch'));
+      await settle(tester);
+
+      expect(find.text('1,240 XP · Level 13'), findsOneWidget, reason: 'no amount before the ack');
+      expect(
+        find.text('Includes changes waiting to sync. Rewards update after syncing.'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('+10'), findsNothing);
+      await tearDownApp(tester, account);
+    });
+
+    for (final scale in [1.3, 2.0]) {
+      testWidgets('text scale $scale keeps the card readable', (tester) async {
+        useTallPhone(tester);
+        tester.platformDispatcher.textScaleFactorTestValue = scale;
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        final account = (await tester.runAsync(() => testAccount(FakeSyncServer())))!;
+        await tester.runAsync(
+          () => account.actions.createOneTapHabit(name: 'Stretch', category: 'health'),
+        );
+        await confirm(tester, account, 1250000, 1251);
+        await tester.pumpWidget(testApp(initial: '/today', account: account));
+        await settle(tester);
+
+        expect(tester.takeException(), isNull);
+        expect(find.text('1,250,000 XP · Level 1251'), findsOneWidget);
+        expect(
+          find.text('Includes changes waiting to sync. Rewards update after syncing.'),
+          findsOneWidget,
+        );
+        await tearDownApp(tester, account);
+      });
+    }
   });
 
   testWidgets('a habit-day that needs a look opens the resolve sheet instead of queueing', (

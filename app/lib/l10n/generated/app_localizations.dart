@@ -431,7 +431,7 @@ abstract class AppLocalizations {
   /// No description provided for @todaySummaryProvisional.
   ///
   /// In en, this message translates to:
-  /// **'Includes changes waiting to sync.'**
+  /// **'Includes changes waiting to sync. Rewards update after syncing.'**
   String get todaySummaryProvisional;
 
   /// No description provided for @todayOpening.
@@ -707,7 +707,7 @@ abstract class AppLocalizations {
   /// No description provided for @queueOfflineBody.
   ///
   /// In en, this message translates to:
-  /// **'Your outbox stays safe until each change is acknowledged.'**
+  /// **'Your outbox stays safe until each change is acknowledged. Rewards update after syncing.'**
   String get queueOfflineBody;
 
   /// No description provided for @queuePausedTitle.
@@ -3445,6 +3445,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Removed at {time} · first entry of the day'**
   String reviewRemovedAtFirst(String time);
+
+  /// Design 05: the confirmed reward numbers under the Today summary (A44).
+  ///
+  /// In en, this message translates to:
+  /// **'{xp} XP · Level {level}'**
+  String todayRewardLine(int xp, int level);
+
+  /// Screen reader label for todayRewardLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{xp} XP, Level {level}'**
+  String todayRewardLineLabel(int xp, int level);
+
+  /// Design 20: place, level and XP under the name.
+  ///
+  /// In en, this message translates to:
+  /// **'{place} · Level {level} · {xp} XP'**
+  String profileRewardLine(String place, int level, int xp);
+
+  /// Design 20's line when the profile has no place.
+  ///
+  /// In en, this message translates to:
+  /// **'Level {level} · {xp} XP'**
+  String profileRewardLineNoPlace(int level, int xp);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

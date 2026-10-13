@@ -33,6 +33,14 @@ void main() {
     expect(find.text('Saved on this device'), findsOneWidget);
     expect(find.text('Offline'), findsOneWidget);
     expect(find.text('Waiting for a connection'), findsOneWidget);
+    expect(
+      find.text(
+        'Your outbox stays safe until each change is acknowledged. '
+        'Rewards update after syncing.',
+      ),
+      findsOneWidget,
+      reason: 'design 18, A44',
+    );
     expect(find.text('2'), findsOneWidget, reason: 'pending check-ins');
     expect(find.text('Pending check-ins'), findsOneWidget);
     expect(find.text('Not yet'), findsOneWidget, reason: 'never synced');

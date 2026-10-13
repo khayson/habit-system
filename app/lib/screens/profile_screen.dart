@@ -8,6 +8,7 @@ import '../core/time_zones.dart';
 import '../core/url_launcher_opener.dart';
 import '../core/url_opener.dart';
 import '../data/profile_view.dart';
+import '../data/rewards_view.dart';
 import '../data/timezone_view.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../notifications/notification_scheduler.dart';
@@ -52,6 +53,10 @@ class ProfileScreen extends StatelessWidget {
           create: (_) => StreamModel<TimezoneStatus?>(
             TimeZones.ready.then((_) => DeviceSettings(account.session.db).watch(clock)),
           ),
+        ),
+        ChangeNotifierProvider(
+          create: (_) =>
+              StreamModel<ConfirmedRewardNumbers?>(Future.value(account.rewards.watch())),
         ),
         ChangeNotifierProvider(
           create: (_) => StreamModel<List<HabitReminders>>(
@@ -227,8 +232,15 @@ class _AvatarCard extends StatelessWidget {
       ?profile.city,
       ?(countries?.nameOf(profile.countryCode) ?? profile.countryCode),
     ].join(', ');
-    // ASSUMPTION(A3b-level-line): the design's "· Level 13 · 1,250 XP" waits for the A13c
-    // rewards flag (Phase 5); until then the line shows the place only.
+    // Design 20 with A44: the level and XP as reward_state confirmed them; without them the
+    // place alone.
+    final rewards = context.watch<StreamModel<ConfirmedRewardNumbers?>>().value;
+    final line = switch ((rewards, place.isEmpty)) {
+      (null, true) => l10n.profileLocationEmpty,
+      (null, false) => place,
+      (final r?, true) => l10n.profileRewardLineNoPlace(r.level, r.xp),
+      (final r?, false) => l10n.profileRewardLine(place, r.level, r.xp),
+    };
     return Container(
       padding: const EdgeInsets.symmetric(vertical: HabitSpace.s32, horizontal: HabitSpace.s16),
       decoration: BoxDecoration(
@@ -249,7 +261,7 @@ class _AvatarCard extends StatelessWidget {
           Text(profile.name, style: text.headlineSmall, textAlign: TextAlign.center),
           const SizedBox(height: HabitSpace.s8),
           Text(
-            place.isEmpty ? l10n.profileLocationEmpty : place,
+            line,
             style: text.bodyMedium?.copyWith(color: tokens.muted),
             textAlign: TextAlign.center,
           ),

@@ -11,6 +11,7 @@ import '../data/local_mutation_service.dart';
 import '../data/local_view.dart';
 import '../data/photo_service.dart';
 import '../data/profile_view.dart';
+import '../data/rewards_view.dart';
 import '../data/timezone_view.dart';
 import '../domain/provisional_type_rules.dart';
 import '../l10n/generated/app_localizations.dart';
@@ -96,6 +97,7 @@ class AccountContext {
 
   /// Phase 3b: screen 20's data and the photo on this device.
   late final ProfileView profile = ProfileView(session.db, filesRoot: filesRoot);
+  late final RewardsView rewards = RewardsView(session.db);
   late final PhotoService photos = PhotoService(session.db, filesRoot: filesRoot, clock: _clock);
 
   late final ReminderPermission permission = ReminderPermission(

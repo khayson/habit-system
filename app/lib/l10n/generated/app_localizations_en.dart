@@ -191,7 +191,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get todaySummaryProvisional => 'Includes changes waiting to sync.';
+  String get todaySummaryProvisional =>
+      'Includes changes waiting to sync. Rewards update after syncing.';
 
   @override
   String get todayOpening => 'Opening your habits…';
@@ -338,7 +339,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get queueOfflineTitle => 'Waiting for a connection';
 
   @override
-  String get queueOfflineBody => 'Your outbox stays safe until each change is acknowledged.';
+  String get queueOfflineBody =>
+      'Your outbox stays safe until each change is acknowledged. Rewards update after syncing.';
 
   @override
   String get queuePausedTitle => 'Sync is paused';
@@ -2083,5 +2085,37 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String reviewRemovedAtFirst(String time) {
     return 'Removed at $time · first entry of the day';
+  }
+
+  @override
+  String todayRewardLine(int xp, int level) {
+    final intl.NumberFormat xpNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String xpString = xpNumberFormat.format(xp);
+
+    return '$xpString XP · Level $level';
+  }
+
+  @override
+  String todayRewardLineLabel(int xp, int level) {
+    final intl.NumberFormat xpNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String xpString = xpNumberFormat.format(xp);
+
+    return '$xpString XP, Level $level';
+  }
+
+  @override
+  String profileRewardLine(String place, int level, int xp) {
+    final intl.NumberFormat xpNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String xpString = xpNumberFormat.format(xp);
+
+    return '$place · Level $level · $xpString XP';
+  }
+
+  @override
+  String profileRewardLineNoPlace(int level, int xp) {
+    final intl.NumberFormat xpNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String xpString = xpNumberFormat.format(xp);
+
+    return 'Level $level · $xpString XP';
   }
 }

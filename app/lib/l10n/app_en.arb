@@ -66,7 +66,7 @@
   "todayGreetingPlain": "Today",
   "todaySummary": "{done} of {total} habits complete",
   "@todaySummary": {"placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}},
-  "todaySummaryProvisional": "Includes changes waiting to sync.",
+  "todaySummaryProvisional": "Includes changes waiting to sync. Rewards update after syncing.",
   "todayOpening": "Opening your habits…",
   "todayLoadError": "Your habits could not be shown. Try again.",
   "todayRetry": "Try again",
@@ -120,7 +120,7 @@
   "queueLastSynced": "Last synced",
   "queueNever": "Not yet",
   "queueOfflineTitle": "Waiting for a connection",
-  "queueOfflineBody": "Your outbox stays safe until each change is acknowledged.",
+  "queueOfflineBody": "Your outbox stays safe until each change is acknowledged. Rewards update after syncing.",
   "queuePausedTitle": "Sync is paused",
   "queuePausedBody": "The server is not accepting sync requests from this app ({code}). Your changes stay on this device. Updating the app may help.",
   "@queuePausedBody": {"placeholders": {"code": {"type": "String"}}},
@@ -694,5 +694,13 @@
   "reviewEditedAtFirst": "Edited at {time} · first entry of the day",
   "@reviewEditedAtFirst": {"placeholders": {"time": {"type": "String"}}},
   "reviewRemovedAtFirst": "Removed at {time} · first entry of the day",
-  "@reviewRemovedAtFirst": {"placeholders": {"time": {"type": "String"}}}
+  "@reviewRemovedAtFirst": {"placeholders": {"time": {"type": "String"}}},
+  "todayRewardLine": "{xp} XP · Level {level}",
+  "@todayRewardLine": {"description": "Design 05: the confirmed reward numbers under the Today summary (A44).", "placeholders": {"xp": {"type": "int", "format": "decimalPattern"}, "level": {"type": "int"}}},
+  "todayRewardLineLabel": "{xp} XP, Level {level}",
+  "@todayRewardLineLabel": {"description": "Screen reader label for todayRewardLine.", "placeholders": {"xp": {"type": "int", "format": "decimalPattern"}, "level": {"type": "int"}}},
+  "profileRewardLine": "{place} · Level {level} · {xp} XP",
+  "@profileRewardLine": {"description": "Design 20: place, level and XP under the name.", "placeholders": {"place": {"type": "String"}, "level": {"type": "int"}, "xp": {"type": "int", "format": "decimalPattern"}}},
+  "profileRewardLineNoPlace": "Level {level} · {xp} XP",
+  "@profileRewardLineNoPlace": {"description": "Design 20's line when the profile has no place.", "placeholders": {"level": {"type": "int"}, "xp": {"type": "int", "format": "decimalPattern"}}}
 }
