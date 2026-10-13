@@ -27,19 +27,20 @@ final readonly class XpAwarder
     /**
      * @param  bool  $wasComplete  the habit-day before this write
      * @param  bool  $isComplete  the habit-day after it
+     * @return int|null the XP moved (A43), null when none
      */
-    public function award(string $userId, string $habitId, string $logDate, bool $wasComplete, bool $isComplete, ?string $mutationId): void
+    public function award(string $userId, string $habitId, string $logDate, bool $wasComplete, bool $isComplete, ?string $mutationId): ?int
     {
         if ($wasComplete === $isComplete) {
             // Nothing about completion changed: an edit that stays complete (including a day
             // complete before Phase 5) or stays incomplete earns nothing.
-            return;
+            return null;
         }
         $row = DB::table('xp_entitlements')->where('habit_id', $habitId)->where('log_date', $logDate)->lockForUpdate()->first();
         $current = $row === null ? null : new XpEntitlement(XpEntitlementState::from((string) $row->state), (int) $row->revision);
         $transition = $this->rules->transition($current, $isComplete);
         if (! $transition->changed() || $transition->entitlement === null) {
-            return;
+            return null;
         }
 
         $now = UtcTime::format($this->clock->now());
@@ -63,5 +64,7 @@ final readonly class XpAwarder
             'reason' => $transition->reason, 'mutation_id' => $mutationId, 'created_at' => $now,
         ]);
         $this->rewards->apply($userId, $transition->delta, 0);
+
+        return $transition->delta;
     }
 }

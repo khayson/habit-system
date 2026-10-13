@@ -28,6 +28,7 @@ final readonly class MutationAck
         public ?int $version = null,
         public ?string $resolvedDate = null,
         public ?array $error = null,
+        public ?int $xpDelta = null,
     ) {}
 
     /** @return array<string, mixed> */
@@ -42,6 +43,8 @@ final readonly class MutationAck
             'version' => $this->version,
             'resolved_date' => $this->resolvedDate,
             'error' => $this->error,
+            // A43: only when the mutation moved XP; stored with the receipt.
+            'xp_delta' => $this->xpDelta,
         ], fn ($value, $key) => $value !== null || in_array($key, ['mutation_id', 'status', 'duplicate'], true), ARRAY_FILTER_USE_BOTH);
     }
 
@@ -57,6 +60,8 @@ final readonly class MutationAck
             $stored['version'] ?? null,
             $stored['resolved_date'] ?? null,
             $stored['error'] ?? null,
+            // A receipt written before A43 has no key.
+            isset($stored['xp_delta']) ? (int) $stored['xp_delta'] : null,
         );
     }
 }

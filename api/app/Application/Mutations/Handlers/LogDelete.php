@@ -73,7 +73,7 @@ final readonly class LogDelete
         ]);
         LogWrites::markStreakDirty((string) $log->habit_id, (string) $log->log_date, $now);
         // A40: deleting a completed day reverses its XP; an incomplete one changes nothing.
-        $this->xp->award($ctx->userId, (string) $log->habit_id, (string) $log->log_date, $log->completed_at !== null, false, $m->mutationId);
+        $xpDelta = $this->xp->award($ctx->userId, (string) $log->habit_id, (string) $log->log_date, $log->completed_at !== null, false, $m->mutationId);
         $row = DB::table('habit_logs')->where('id', $log->id)->first();
         $this->journal->append($ctx->userId, 'habit_log', (string) $log->id, 'delete', $version, $this->presenter->log($row ?? $log, $typeKey));
         $habit = DB::table('habits')->where('id', $log->habit_id)->first();
@@ -82,7 +82,7 @@ final readonly class LogDelete
             $this->closer->refreshHabit($ctx->userId, $habit, UserCalendar::timeline($ctx->userId));
         }
 
-        return new HandlerResult('habit_log', (string) $log->id, $version, (string) $log->log_date);
+        return new HandlerResult('habit_log', (string) $log->id, $version, (string) $log->log_date, $xpDelta);
     }
 
     /** @param array<string, mixed> $payload */

@@ -2,8 +2,10 @@
 
 namespace App\Application\Rewards;
 
+use App\Application\Calendar\UserCalendar;
 use App\Application\Presenters\EntityPresenter;
 use App\Application\Sync\SyncCursor;
+use App\Domain\Clock;
 use App\Domain\Freeze\FreezeEvaluator;
 use App\Support\UtcTime;
 use App\Support\WireTime;
@@ -25,7 +27,10 @@ final readonly class RewardsQuery
     /** The opt-in history shown with the wallet. */
     public const int POLICY_LIMIT = 20;
 
-    public function __construct(private EntityPresenter $presenter) {}
+    public function __construct(
+        private EntityPresenter $presenter,
+        private Clock $clock,
+    ) {}
 
     /** @return array<string, mixed> */
     public function rewards(string $userId, ?string $cursor, int $limit): array
@@ -72,6 +77,7 @@ final readonly class RewardsQuery
             'freeze_balance' => (int) $user->freeze_balance,
             'cap' => FreezeEvaluator::CAP,
             'auto_freeze' => (bool) $user->auto_freeze,
+            'next_refill_on' => $this->nextRefillOn($userId),
             'policy' => $policy->map(fn ($p) => [
                 'enabled' => (bool) $p->enabled,
                 'effective_at' => UtcTime::format(WireTime::parse((string) $p->effective_at)),
@@ -87,6 +93,15 @@ final readonly class RewardsQuery
             ], $rows),
             'next_cursor' => $next,
         ];
+    }
+
+    /** A43: the first day of the user's next local month, when the next monthly grant lands. */
+    private function nextRefillOn(string $userId): string
+    {
+        $today = UserCalendar::timeline($userId)->localDateAt($this->clock->now())->toString();
+        [$year, $month] = array_map(intval(...), explode('-', substr($today, 0, 7)));
+
+        return $month === 12 ? sprintf('%04d-01-01', $year + 1) : sprintf('%04d-%02d-01', $year, $month + 1);
     }
 
     /**

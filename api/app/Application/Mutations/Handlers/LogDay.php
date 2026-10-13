@@ -128,13 +128,13 @@ final readonly class LogDay
         // A40: completed_at is set exactly while the day meets its target (above), so it says
         // whether the day was complete before this write.
         $wasComplete = $existing !== null && ! $restoring && $existing->deleted_at === null && $existing->completed_at !== null;
-        $this->xp->award($ctx->userId, (string) $habit->id, $date->toString(), $wasComplete, $complete, $m->mutationId);
+        $xpDelta = $this->xp->award($ctx->userId, (string) $habit->id, $date->toString(), $wasComplete, $complete, $m->mutationId);
         $row = DB::table('habit_logs')->where('id', $id)->first();
         $this->journal->append($ctx->userId, 'habit_log', $id, 'upsert', $currentVersion + 1, $this->presenter->log($row ?? throw new LogicException('Log vanished inside its own transaction.'), (string) $habit->type));
         // A10/A32: a late log re-evaluates its closed period, and any log can move the streak;
         // the derived entities are journaled in this same transaction (invariant 6).
         $this->closer->refreshHabit($ctx->userId, $habit, UserCalendar::timeline($ctx->userId));
 
-        return new HandlerResult('habit_log', $id, $currentVersion + 1, $date->toString());
+        return new HandlerResult('habit_log', $id, $currentVersion + 1, $date->toString(), $xpDelta);
     }
 }

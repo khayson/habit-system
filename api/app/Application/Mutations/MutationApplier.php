@@ -262,7 +262,7 @@ final readonly class MutationApplier
 
     private static function accepted(Mutation $m, HandlerResult $result): MutationAck
     {
-        return new MutationAck($m->mutationId, MutationAck::ACCEPTED, false, $result->entity, $result->entityId, $result->version, $result->resolvedDate);
+        return new MutationAck($m->mutationId, MutationAck::ACCEPTED, false, $result->entity, $result->entityId, $result->version, $result->resolvedDate, xpDelta: $result->xpDelta);
     }
 
     private static function failed(Mutation $m, ApiException $e): MutationAck
