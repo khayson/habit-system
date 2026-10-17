@@ -276,7 +276,7 @@ class LocalMutationService {
         await (db.update(db.outbox)..where((o) => o.seq.equals(last.seq))).write(
           OutboxCompanion(payload: Value(jsonEncode(payload)), occurredAt: Value(_iso(occurredAt))),
         );
-        return LocalWrite(last.mutationId, date, coalesced: true);
+        return _written(habitId, last.mutationId, date, coalesced: true);
       }
 
       final confirmed = await _confirmedLog(habitId, date);
@@ -296,7 +296,7 @@ class LocalMutationService {
           if (logDate != null) ...{'date_mode': 'backdate', 'log_date': logDate.toString()},
         },
       );
-      return LocalWrite(mutationId, date, coalesced: false);
+      return _written(habitId, mutationId, date, coalesced: false);
     });
   }
 
@@ -357,7 +357,7 @@ class LocalMutationService {
               occurredAt: Value(_iso(occurredAt)),
             ),
           );
-          return LocalWrite(last.mutationId, date, coalesced: true);
+          return _written(habitId, last.mutationId, date, coalesced: true, types: types);
         }
       }
 
@@ -376,7 +376,7 @@ class LocalMutationService {
           if (logDate != null) ...{'date_mode': 'backdate', 'log_date': logDate.toString()},
         },
       );
-      return LocalWrite(mutationId, date, coalesced: false);
+      return _written(habitId, mutationId, date, coalesced: false, types: types);
     });
   }
 
@@ -633,6 +633,21 @@ class LocalMutationService {
       );
     });
   }
+
+  /// A log write's result, with whether the day is complete after it, read inside the same
+  /// transaction (A46).
+  Future<LocalWrite> _written(
+    String habitId,
+    String mutationId,
+    LocalDate date, {
+    required bool coalesced,
+    ProvisionalTypeRegistry? types,
+  }) async => LocalWrite(
+    mutationId,
+    date,
+    coalesced: coalesced,
+    completeAfter: await LocalView(db, types: types).dayComplete(habitId, date),
+  );
 
   /// log.delete for one habit-day. Carries habit_id + log_date so the server can resolve it
   /// even if the id never reached it (A29).
@@ -1112,5 +1127,14 @@ class LocalWrite {
   final LocalDate date;
   final bool coalesced;
 
-  const LocalWrite(this.mutationId, this.date, {required this.coalesced});
+  /// A46: the habit-day shows complete on this device after this write (the provisional rule
+  /// Today uses). Decides only whether a save screen waits for the ack.
+  final bool completeAfter;
+
+  const LocalWrite(
+    this.mutationId,
+    this.date, {
+    required this.coalesced,
+    this.completeAfter = false,
+  });
 }

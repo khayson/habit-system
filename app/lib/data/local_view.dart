@@ -301,6 +301,18 @@ class LocalView {
     );
   }
 
+  /// Phase 5.2c (A46): whether [date] of [habitId] shows complete on this device, by the same
+  /// provisional rule as Today's cards. It only decides whether a save screen waits for an ack;
+  /// it never decides what is shown.
+  Future<bool> dayComplete(String habitId, LocalDate date) async {
+    final habit = (await habits()).where((h) => h.id == habitId).firstOrNull;
+    if (habit == null) return false;
+    final p = habit.payload;
+    final target = HabitSchedule.fromWire(p).targetOn(date) ?? p['target_value'];
+    final log = await this.log(habitId, date.toString());
+    return !log.deleted && _complete(types.lookup(p['type'] as String? ?? ''), log.value, target);
+  }
+
   static bool _complete(ProvisionalTypeRules? rules, Object? value, Object? target) {
     if (rules == null) return false;
     final v = rules.parseValue(value);
