@@ -225,6 +225,33 @@ void main() {
       expect((row.xp, row.level, row.version), (240, 3, 4));
     });
 
+    // 5.2a review: reward_state is journaled before the log in the same commit (I4), and a
+    // page boundary can split them. Neither order changes the rows.
+    Map<String, dynamic> log() => {
+      'id': 'l1',
+      'habit_id': 'h1',
+      'log_date': '2026-05-28',
+      'value': 1,
+      'completed_at': '2026-05-28T17:15:00Z',
+      'version': 1,
+      'deleted_at': null,
+    };
+
+    for (final pullLimit in [200, 1]) {
+      test('reward_state before its log, pull limit $pullLimit, ends with both rows', () async {
+        server
+          ..journalEntity('reward_state', 'user-1', 2, rewards(10))
+          ..journalEntity('habit_log', 'l1', 1, log());
+        await phone.engine(pullLimit: pullLimit).run();
+
+        final rewards_ = await phone.db.select(phone.db.rewardState).getSingle();
+        final logs = await phone.db.select(phone.db.habitLogs).get();
+        expect((rewards_.xp, rewards_.version), (10, 2));
+        expect(logs.map((l) => (l.id, l.value)), [('l1', '1')]);
+        expect((await phone.state()).cursor, 'c:${server.seq}');
+      });
+    }
+
     test('a wrong-typed field keeps the item raw and leaves the confirmed row alone', () async {
       server.journalEntity('reward_state', 'user-1', 1, rewards(10));
       await phone.sync();

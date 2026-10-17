@@ -48,6 +48,7 @@ class Device {
     String? owner,
     String? appVersion,
     AvatarSync? avatars,
+    int pullLimit = 200,
   }) => SyncEngine(
     db: db,
     transport: transport ?? server,
@@ -59,6 +60,7 @@ class Device {
     beforeApplyCommit: beforeApplyCommit,
     betweenSelectAndMark: betweenSelectAndMark,
     avatars: avatars,
+    pullLimit: pullLimit,
   );
 
   Future<SyncOutcome> sync({bool force = false}) => engine().run(force: force);
