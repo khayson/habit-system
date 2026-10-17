@@ -83,7 +83,7 @@ Split again after the 3.1 review: **3.2a** (app data and screens) then **3.2b** 
   - Reminders have no server side yet, so 3.2b starts with one: `reminders` as a synced entity (`reminder.create` / `update` / `delete` through the `MutationApplier`, bootstrapped through `entities`). The spec's REST `/reminders` routes and the reminder-device / diagnostics endpoints are not built (nothing uses them).
   - The real-device gate is Khay Studios' to run, from `docs/DEVICE_GATE.md`.
 - **App strings** live in `app/lib/l10n/app_en.arb` (gen-l10n). Generated files are never hand-edited or formatted.
-- **`protected_in_streak` joins `habit_progress` in Phase 5**; the client's heuristic for the 12 footer goes then.
+- **`protected_in_streak` joins `habit_progress` in Phase 5**; the client's heuristic for the 12 footer is gone (done in 5.2a).
 - **XP chip → Phase 5.** Nothing accrues XP before the rewards ledger, so a chip now would be dead code. Today's summary card gets its XP · level line with the ledger.
 - **A32 habit delete.** "Habit delete journals a delete for its `habit_progress`" lands with the delete/archive operation in Phase 4.
 
@@ -141,8 +141,9 @@ A not-due day earns the same XP and never affects a streak (A40; confirmed by Kh
 
 - **5.1 (done):** server only: XP entitlements + ledger, the freeze ledger, usages and policy versions, the monthly grant, spends and late-completion refunds, `reward_state` (A39), `profile.set_auto_freeze` (A42), closed weekly periods stored, GET /rewards and GET /freezes.
 - **5.2:** app side of rewards and freezes, in two parts.
-  - **5.2a:** the 5.1 follow-ups on the server (freeze_usage indexes, policy ordering, `xp_delta` in acks and `next_refill_on`, A43), the app's `reward_state` table and `protected_in_streak`, the XP line on Today and Profile, the queue note (A44), the 12 footer reading the server's count with the client heuristic removed.
-  - **5.2b:** screens 16, 17, 06 and 35, the auto-freeze switch, the completion flow.
+  - **5.2a (done):** the 5.1 follow-ups on the server (freeze_usage indexes, policy ordering, `xp_delta` in acks and `next_refill_on`, A43), the app's `reward_state` table and `protected_in_streak`, the XP line on Today and Profile, the queue note (A44), the 12 footer reading the server's count with the client heuristic removed.
+  - **5.2b:** screens 16 and 17, their services (GET /rewards and GET /freezes on the app), the auto-freeze switch, the entry points (Profile and the 12 footer).
+  - **5.2c:** completion screens 06 and 35 and the engine's ack watch for `xp_delta`.
 - **5.3:** insights: the server endpoint and screens 14 and 15.
 
 Screen 01 (Welcome) is Phase 7 and is still to be built.
