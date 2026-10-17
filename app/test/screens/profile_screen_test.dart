@@ -155,7 +155,8 @@ void main() {
       await confirm(tester, a);
       await open(tester, a);
 
-      expect(find.text('Level 13 · 1,250 XP'), findsOneWidget);
+      // Under the name, and again on the XP and levels row (5.2b).
+      expect(find.text('Level 13 · 1,250 XP'), findsNWidgets(2));
       expect(find.text('Add your city and country'), findsNothing);
       await tearDownApp(tester, a);
     });
