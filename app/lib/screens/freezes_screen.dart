@@ -132,7 +132,6 @@ class _WalletCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final text = Theme.of(context).textTheme;
     final tokens = HabitTokens.of(context);
-    final format = HabitFormat(context);
     final balance = context.watch<StreamModel<ConfirmedRewardNumbers?>>().value?.freezeBalance;
     final facts = context.watch<ValueNotifier<WalletFacts?>>().value;
     final refill = facts?.nextRefillOn;
