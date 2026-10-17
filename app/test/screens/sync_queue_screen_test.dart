@@ -51,6 +51,29 @@ void main() {
     await tearDownApp(tester, account);
   });
 
+  for (final (enabled, label) in [
+    (true, 'Auto-protect turned on'),
+    (false, 'Auto-protect turned off'),
+  ]) {
+    testWidgets('a queued auto-freeze switch reads $label', (tester) async {
+      final account = (await tester.runAsync(
+        () async => AccountContext(
+          session: (await testAccount(FakeSyncServer())).session,
+          transport: OfflineTransport(),
+          refreshIfStale: () async {},
+          notifications: FakeNotificationScheduler(),
+          clock: () => testNow,
+        ),
+      ))!;
+      await tester.runAsync(() => account.writer.setAutoFreeze(enabled));
+      await tester.pumpWidget(testApp(initial: '/sync', account: account));
+      await settle(tester);
+
+      expect(find.text('Your profile · $label'), findsOneWidget);
+      await tearDownApp(tester, account);
+    });
+  }
+
   testWidgets('paused: the reason is shown and nothing is dropped', (tester) async {
     final account = (await tester.runAsync(() => testAccount(FakeSyncServer())))!;
     await tester.runAsync(() async {

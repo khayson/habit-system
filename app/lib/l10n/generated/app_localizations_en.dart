@@ -2118,4 +2118,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
     return 'Level $level · $xpString XP';
   }
+
+  @override
+  String get queueChangeAutoFreezeOn => 'Auto-protect turned on';
+
+  @override
+  String get queueChangeAutoFreezeOff => 'Auto-protect turned off';
 }

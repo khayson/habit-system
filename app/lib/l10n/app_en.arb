@@ -702,5 +702,9 @@
   "profileRewardLine": "{place} · Level {level} · {xp} XP",
   "@profileRewardLine": {"description": "Design 20: place, level and XP under the name.", "placeholders": {"place": {"type": "String"}, "level": {"type": "int"}, "xp": {"type": "int", "format": "decimalPattern"}}},
   "profileRewardLineNoPlace": "Level {level} · {xp} XP",
-  "@profileRewardLineNoPlace": {"description": "Design 20's line when the profile has no place.", "placeholders": {"level": {"type": "int"}, "xp": {"type": "int", "format": "decimalPattern"}}}
+  "@profileRewardLineNoPlace": {"description": "Design 20's line when the profile has no place.", "placeholders": {"level": {"type": "int"}, "xp": {"type": "int", "format": "decimalPattern"}}},
+  "queueChangeAutoFreezeOn": "Auto-protect turned on",
+  "@queueChangeAutoFreezeOn": {"description": "Queue (18): a queued profile.set_auto_freeze with enabled true."},
+  "queueChangeAutoFreezeOff": "Auto-protect turned off",
+  "@queueChangeAutoFreezeOff": {"description": "Queue (18): a queued profile.set_auto_freeze with enabled false."}
 }

@@ -3469,6 +3469,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Level {level} · {xp} XP'**
   String profileRewardLineNoPlace(int level, int xp);
+
+  /// Queue (18): a queued profile.set_auto_freeze with enabled true.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-protect turned on'**
+  String get queueChangeAutoFreezeOn;
+
+  /// Queue (18): a queued profile.set_auto_freeze with enabled false.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-protect turned off'**
+  String get queueChangeAutoFreezeOff;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

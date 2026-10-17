@@ -240,6 +240,11 @@ class _QueueRow extends StatelessWidget {
     final row = item.row;
     if (row.operation == 'profile.update') return l10n.queueChangeProfile;
     if (row.operation == 'profile.set_timezone') return l10n.queueChangeTimezone;
+    if (row.operation == 'profile.set_auto_freeze') {
+      return item.payload['enabled'] == true
+          ? l10n.queueChangeAutoFreezeOn
+          : l10n.queueChangeAutoFreezeOff;
+    }
     if (row.operation == 'habit.create') return l10n.queueChangeNewHabit;
     if (row.operation == 'log.delete') return l10n.queueChangeRemoved;
     if (row.operation == 'log.increment') return l10n.queueChangeIncrement;
