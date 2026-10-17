@@ -378,3 +378,8 @@ An accepted ack for log.set_value, log.increment or log.delete carries `xp_delta
 
 ### A44 — Reward display on the app · ADOPT (amends A9)
 The app shows xp, level and freeze balance exactly as `reward_state` last confirmed them, never an amount it computed. A9's "+10 pending" becomes words only: while changes wait to sync, the screen says "Rewards update after syncing." The bar on 16 and 35 fills progress_into_level divided by span, where span = next_level_threshold minus (xp minus progress_into_level), clamped to 0..1, and empty when span is 0 or less. The label reads '{progress_into_level} / {span} XP toward Level {level + 1}'. This is display arithmetic on the confirmed numbers, kept in one tested function (LevelProgress); it is not a rule. If levels ever skip, the server must send the next level. Completion screens (06 duration, 35 quantity, one layout) appear only for an accepted ack with `xp_delta` above 0, reached from the save screen after the local write, never before; offline, timed out, a conflict or no `xp_delta`: the save returns as it does today.
+
+## 16. Added after the Phase 5.2a review (2026-10-17)
+
+### A45 — Auto-freeze rebases once · ADOPT
+profile.set_auto_freeze is a desired state, so a version_conflict on it is handled like one on profile.set_timezone: the engine re-sends it once, as a new mutation, on the version the server names. The user entity's version also moves for reasons the person did not cause (another device, a photo, a time zone change). A second conflict is the user's to see, and the only choice is Discard.
