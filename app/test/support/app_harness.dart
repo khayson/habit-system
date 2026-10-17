@@ -40,6 +40,7 @@ Future<AccountContext> testAccount(
   DateTime Function()? clock,
   FakeNotificationScheduler? notifications,
   RewardsService? rewardsApi,
+  SyncTransport? transport,
 }) async {
   // Widget tests: streams must close synchronously or closing the database waits forever on a
   // query parked in fake async (drift docs, "Testing").
@@ -54,7 +55,7 @@ Future<AccountContext> testAccount(
   );
   return AccountContext(
     session: AccountSession(userId: 'user-1', deviceId: 'd', db: db),
-    transport: server,
+    transport: transport ?? server,
     refreshIfStale: () async {},
     connectivity: connectivity,
     clock: clock ?? () => testNow,

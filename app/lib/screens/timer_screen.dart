@@ -12,6 +12,7 @@ import '../data/local_mutation_service.dart';
 import '../habit_types/habit_type_ui.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../providers/account_context.dart';
+import '../providers/completion_wait.dart';
 import '../providers/stream_model.dart';
 import '../widgets/habit_format.dart';
 import '../widgets/habit_ui.dart';
@@ -66,8 +67,14 @@ class _TimerState extends State<_Timer> {
   String? _failure;
   bool _failureHint = false;
 
+  /// A46: waiting for the ack of a finish that completed the day, with the snackbar line the
+  /// screen shows when it leaves as before.
+  CompletionWait? _wait;
+  String? _savedLine;
+
   @override
   void dispose() {
+    _wait?.cancel();
     _ticker?.cancel();
     super.dispose();
   }
@@ -87,6 +94,7 @@ class _TimerState extends State<_Timer> {
   void _leave(String message) {
     if (_leaving) return;
     _leaving = true;
+    _wait?.cancel();
     final messenger = ScaffoldMessenger.of(context);
     context.go(Routes.today);
     messenger.showSnackBar(SnackBar(content: Text(message)));
@@ -126,9 +134,23 @@ class _TimerState extends State<_Timer> {
         _leave(l10n.timerNothingToSave);
       } else {
         final seconds = elapsed?.inSeconds ?? 0;
-        _leave(
-          seconds < 60 ? l10n.timerSavedSeconds(seconds) : l10n.timerSavedMinutes(seconds ~/ 60),
-        );
+        final saved = seconds < 60
+            ? l10n.timerSavedSeconds(seconds)
+            : l10n.timerSavedMinutes(seconds ~/ 60);
+        final wait = CompletionWait.start(account, write);
+        if (wait == null) return _leave(saved);
+        setState(() {
+          _wait = wait;
+          _savedLine = saved;
+        });
+        final delta = await wait.result;
+        if (!mounted || _leaving) return;
+        if (delta != null && account.ackWatch.firstOpening(write.mutationId)) {
+          _leaving = true;
+          context.pushReplacement(Routes.complete(widget.habitId), extra: delta);
+        } else {
+          _leave(saved);
+        }
       }
     } on TimerFailure catch (e) {
       if (!mounted) return;
@@ -213,6 +235,10 @@ class _TimerState extends State<_Timer> {
     }
     final draft = draftModel.value;
     final detail = detailModel.value;
+    if (draft == null && _wait != null) {
+      // A46: finished here and waiting for the ack; Back leaves as before.
+      return _Confirming(onBack: () => _leave(_savedLine ?? l10n.timerGone));
+    }
     if (draft == null) {
       // Finished or discarded elsewhere (or by this screen, which is already leaving).
       _tick(false);
@@ -357,6 +383,47 @@ class _TimerState extends State<_Timer> {
               Center(child: link(l10n.timerDiscard, _busy ? null : () => _discard(account))),
             ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The timer's finish while it waits for the ack (A46): the draft is gone, the check-in saved.
+class _Confirming extends StatelessWidget {
+  final VoidCallback onBack;
+
+  const _Confirming({required this.onBack});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final text = Theme.of(context).textTheme;
+    final tokens = HabitTokens.of(context);
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) onBack();
+      },
+      child: Scaffold(
+        body: SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.all(HabitSpace.margin),
+            children: [
+              ScreenHeader(title: '', onBack: onBack),
+              const SizedBox(height: HabitSpace.s48),
+              const Center(child: CircularProgressIndicator()),
+              const SizedBox(height: HabitSpace.s16),
+              Semantics(
+                liveRegion: true,
+                child: Text(
+                  l10n.saveConfirming,
+                  style: text.bodyMedium?.copyWith(color: tokens.muted),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -42,7 +42,12 @@ class AckWatch {
   final LinkedHashMap<String, AckSummary> _known = LinkedHashMap();
   final Map<String, List<Completer<AckSummary?>>> _waiting = {};
 
+  final Set<String> _opened = {};
+
   AckSummary? known(String mutationId) => _known[mutationId];
+
+  /// A46: true the first time a completion screen is opened for [mutationId], false after.
+  bool firstOpening(String mutationId) => _opened.add(mutationId);
 
   /// Records [summary] and answers anyone waiting for it. A duplicate replay publishes again.
   void publish(AckSummary summary) {
@@ -83,5 +88,6 @@ class AckWatch {
   void dispose() {
     _waiting.clear();
     _known.clear();
+    _opened.clear();
   }
 }

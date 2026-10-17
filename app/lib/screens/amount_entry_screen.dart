@@ -10,6 +10,7 @@ import '../data/local_mutation_service.dart';
 import '../habit_types/habit_type_ui.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../providers/account_context.dart';
+import '../providers/completion_wait.dart';
 import '../providers/stream_model.dart';
 import '../widgets/habit_form_text.dart';
 import '../widgets/habit_format.dart';
@@ -64,8 +65,13 @@ class _AmountState extends State<_Amount> {
   String? _error;
   bool _busy = false;
 
+  /// A46: waiting for the ack of a save that completed the day.
+  CompletionWait? _wait;
+
   @override
   void dispose() {
+    // Leaving by any way cancels the wait; a late ack then opens nothing.
+    _wait?.cancel();
     _field.dispose();
     _focus.dispose();
     super.dispose();
@@ -78,7 +84,10 @@ class _AmountState extends State<_Amount> {
     _field.text = type.amountInput(_units!);
   }
 
-  void _leave() => context.canPop() ? context.pop() : context.go(Routes.today);
+  void _leave() {
+    _wait?.cancel();
+    context.canPop() ? context.pop() : context.go(Routes.today);
+  }
 
   /// The stepper and the field follow each other: a valid typed amount moves the stepper.
   void _typed(HabitTypeUi type, String text) {
@@ -112,13 +121,30 @@ class _AmountState extends State<_Amount> {
       return;
     }
     setState(() => _busy = true);
+    final LocalWrite write;
     try {
-      await account.actions.addAmount(widget.habitId, parsed.delta!);
-      if (mounted) _leave();
+      write = await account.actions.addAmount(widget.habitId, parsed.delta!);
     } on LogFailure {
       if (mounted) setState(() => _error = l10n.amountTooMuch);
+      return;
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (mounted && _wait == null) setState(() => _busy = false);
+    }
+    if (!mounted) return;
+    // A46: a save that completed the day waits (at most 6 s) for its ack; anything else
+    // leaves at once, as before.
+    final wait = CompletionWait.start(account, write);
+    if (wait == null) return _leave();
+    setState(() {
+      _wait = wait;
+      _busy = true;
+    });
+    final delta = await wait.result;
+    if (!mounted) return;
+    if (delta != null && account.ackWatch.firstOpening(write.mutationId)) {
+      context.pushReplacement(Routes.complete(widget.habitId), extra: delta);
+    } else {
+      _leave();
     }
   }
 
@@ -275,6 +301,17 @@ class _AmountState extends State<_Amount> {
               loading: _busy,
               onPressed: () => _save(account, type),
             ),
+            if (_wait != null) ...[
+              const SizedBox(height: HabitSpace.s12),
+              Semantics(
+                liveRegion: true,
+                child: Text(
+                  l10n.saveConfirming,
+                  style: text.bodyMedium?.copyWith(color: tokens.muted),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
             const SizedBox(height: HabitSpace.s8),
             if (rules.supportsTimer)
               Center(
@@ -288,7 +325,8 @@ class _AmountState extends State<_Amount> {
               ),
             Center(
               child: TextButton(
-                onPressed: _busy ? null : _leave,
+                // Back always works while confirming: the check-in is already saved.
+                onPressed: _busy && _wait == null ? null : _leave,
                 style: TextButton.styleFrom(
                   minimumSize: const Size(HabitSize.minTarget, HabitSize.minTarget),
                 ),
