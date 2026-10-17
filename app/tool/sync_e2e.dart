@@ -349,7 +349,8 @@ Future<void> main(List<String> args) async {
     await b.sync();
     _check((await b.profile.load())!.autoFreeze, 'B pulled auto_freeze on');
 
-    // Opposite choices at once: the later write wins on both, nothing needs a look.
+    // Opposite choices at once: both end on the choice that reached the server last, nothing
+    // needs a look.
     await a.writer.setAutoFreeze(false);
     await b.writer.setAutoFreeze(true);
     await a.sync();
