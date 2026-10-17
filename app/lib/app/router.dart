@@ -7,6 +7,7 @@ import '../core/url_opener.dart';
 import '../providers/session_provider.dart';
 import '../services/photo_picker.dart';
 import '../screens/amount_entry_screen.dart';
+import '../screens/completion_screen.dart';
 import '../screens/app_shell.dart';
 import '../screens/archived_habits_screen.dart';
 import '../screens/create_account_screen.dart';
@@ -46,6 +47,9 @@ abstract final class Routes {
 
   /// Screens 33 / 36 (4.3b): the habit's timer, running or paused.
   static String timer(String id) => '/habits/$id/timer';
+
+  /// Screens 06 / 35 (5.2c, A46), outside the shell (extra: the ack's xp_delta).
+  static String complete(String id) => '/habits/$id/complete';
 
   /// Screen 22. Matched before '/habits/:id' (router test).
   static const archivedHabits = '/habits/archived';
@@ -147,6 +151,16 @@ List<RouteBase> appRoutes({
     builder: (context, state) => AmountEntryScreen(
       habitId: state.pathParameters['id']!,
       prefill: state.extra is int ? state.extra! as int : null,
+      clock: clock,
+    ),
+  ),
+  GoRoute(
+    path: '/habits/:id/complete',
+    // A restored route has no xp_delta to show: Today.
+    redirect: (context, state) => state.extra is int ? null : Routes.today,
+    builder: (context, state) => CompletionScreen(
+      habitId: state.pathParameters['id']!,
+      xpDelta: state.extra! as int,
       clock: clock,
     ),
   ),

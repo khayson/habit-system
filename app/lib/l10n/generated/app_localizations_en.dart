@@ -2341,4 +2341,64 @@ class AppLocalizationsEn extends AppLocalizations {
 
     return '$dateString';
   }
+
+  @override
+  String get completeTitle => 'That counts.';
+
+  @override
+  String get completeSubtitle => 'A moment for yourself, a little progress.';
+
+  @override
+  String completeHeading(String habit) {
+    return '$habit complete';
+  }
+
+  @override
+  String completeLine(String value) {
+    return '$value logged today';
+  }
+
+  @override
+  String completeXpChip(int n) {
+    return '+$n XP';
+  }
+
+  @override
+  String completeXpChipLabel(int n) {
+    return '$n XP earned';
+  }
+
+  @override
+  String completeLevel(int level) {
+    return 'Level $level';
+  }
+
+  @override
+  String completeXpTotal(int xp) {
+    final intl.NumberFormat xpNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String xpString = xpNumberFormat.format(xp);
+
+    return '$xpString XP total';
+  }
+
+  @override
+  String completeLevelCardLabel(int level, int xp, int into, int span, int next) {
+    final intl.NumberFormat xpNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String xpString = xpNumberFormat.format(xp);
+    final intl.NumberFormat intoNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String intoString = intoNumberFormat.format(into);
+    final intl.NumberFormat spanNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String spanString = spanNumberFormat.format(span);
+
+    return 'Level $level, $xpString XP total, $intoString of $spanString XP toward Level $next';
+  }
+
+  @override
+  String get completeBack => 'Back to today';
+
+  @override
+  String get completeFooter => 'Missed days never erase what you have learned.';
+
+  @override
+  String get saveConfirming => 'Saved on this device. Confirming…';
 }

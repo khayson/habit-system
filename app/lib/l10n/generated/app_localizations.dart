@@ -3799,6 +3799,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{date}'**
   String refillDateYear(DateTime date);
+
+  /// Screens 06 and 35 title.
+  ///
+  /// In en, this message translates to:
+  /// **'That counts.'**
+  String get completeTitle;
+
+  /// No description provided for @completeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A moment for yourself, a little progress.'**
+  String get completeSubtitle;
+
+  /// Screens 06 and 35 (design: "Meditation complete").
+  ///
+  /// In en, this message translates to:
+  /// **'{habit} complete'**
+  String completeHeading(String habit);
+
+  /// ASSUMPTION(A5-complete-line): the day's logged value; the design's prose cannot be derived.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} logged today'**
+  String completeLine(String value);
+
+  /// The ack's xp_delta (A46), never a constant.
+  ///
+  /// In en, this message translates to:
+  /// **'+{n} XP'**
+  String completeXpChip(int n);
+
+  /// Screen reader label for the XP chip.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} XP earned'**
+  String completeXpChipLabel(int n);
+
+  /// No description provided for @completeLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Level {level}'**
+  String completeLevel(int level);
+
+  /// No description provided for @completeXpTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'{xp} XP total'**
+  String completeXpTotal(int xp);
+
+  /// One screen-reader label for the Level card.
+  ///
+  /// In en, this message translates to:
+  /// **'Level {level}, {xp} XP total, {into} of {span} XP toward Level {next}'**
+  String completeLevelCardLabel(int level, int xp, int into, int span, int next);
+
+  /// No description provided for @completeBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to today'**
+  String get completeBack;
+
+  /// No description provided for @completeFooter.
+  ///
+  /// In en, this message translates to:
+  /// **'Missed days never erase what you have learned.'**
+  String get completeFooter;
+
+  /// A46: the save screen while it waits for the ack (at most 6 seconds).
+  ///
+  /// In en, this message translates to:
+  /// **'Saved on this device. Confirming…'**
+  String get saveConfirming;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
