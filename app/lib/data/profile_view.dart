@@ -50,6 +50,20 @@ class ProfileView {
         ? null
         : (jsonDecode(queued.payload) as Map).cast<String, dynamic>();
 
+    // Phase 5.2b: the latest unacknowledged auto-freeze choice, laid over the confirmed one.
+    final switchRow =
+        await (db.select(db.outbox)
+              ..where(
+                (o) =>
+                    o.operation.equals('profile.set_auto_freeze') &
+                    o.state.isIn([...OutboxState.unacked]),
+              )
+              ..orderBy([(o) => OrderingTerm.desc(o.seq)])
+              ..limit(1))
+            .getSingleOrNull();
+    final switchPayload = switchRow == null ? null : jsonDecode(switchRow.payload);
+    final queuedChoice = switchPayload is Map ? switchPayload['enabled'] : null;
+
     final uploads = await (db.select(
       db.pendingUploads,
     )..orderBy([(u) => OrderingTerm.desc(u.createdAt)])).get();
@@ -73,6 +87,9 @@ class ProfileView {
       hasAvatar: user['has_avatar'] == true,
       editQueued: queued != null,
       editNeedsAttention: queued?.state == OutboxState.needsAttention,
+      autoFreeze: queuedChoice is bool ? queuedChoice : user['auto_freeze'] == true,
+      autoFreezeQueued: switchRow != null,
+      autoFreezeNeedsAttention: switchRow?.state == OutboxState.needsAttention,
       photoPath: state.avatarFile == null ? null : p.join(filesRoot, state.avatarFile),
       uploadPending: uploads.any((u) => u.state == UploadState.pending),
       uploadRejected: uploads.any((u) => u.state == UploadState.rejected),
@@ -135,6 +152,11 @@ class ProfileState {
   final bool editQueued;
   final bool editNeedsAttention;
 
+  /// A42: the auto-freeze switch as this device intends it (provisional while queued).
+  final bool autoFreeze;
+  final bool autoFreezeQueued;
+  final bool autoFreezeNeedsAttention;
+
   /// The photo to show (absolute path), or null for initials.
   final String? photoPath;
   final bool uploadPending;
@@ -154,6 +176,9 @@ class ProfileState {
     required this.hasAvatar,
     required this.editQueued,
     required this.editNeedsAttention,
+    this.autoFreeze = false,
+    this.autoFreezeQueued = false,
+    this.autoFreezeNeedsAttention = false,
     required this.photoPath,
     required this.uploadPending,
     required this.uploadRejected,

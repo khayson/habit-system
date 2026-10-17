@@ -73,6 +73,9 @@ class FakeSyncServer implements SyncTransport {
   int avatarVersion = 0;
   bool hasAvatar = false;
 
+  /// A42: profile.set_auto_freeze.
+  bool autoFreeze = false;
+
   /// False to act as a server before 3b (no profile or photo fields on the user).
   bool sendProfileFields = true;
 
@@ -84,6 +87,7 @@ class FakeSyncServer implements SyncTransport {
     'day_start_offset_minutes': 0,
     'xp': 0,
     'version': userVersion,
+    'auto_freeze': autoFreeze,
     if (sendProfileFields) ...{
       'city': city,
       'country_code': countryCode,
@@ -215,6 +219,7 @@ class FakeSyncServer implements SyncTransport {
       'log.delete' => _delete(m),
       'profile.set_timezone' => _setTimezone(m),
       'profile.update' => _profileUpdate(m),
+      'profile.set_auto_freeze' => _setAutoFreeze(m),
       'habit.update' => _habitUpdate(m),
       'habit.archive' || 'habit.restore' => _habitArchive(m),
       'reminder.create' || 'reminder.update' || 'reminder.delete' => _reminder(m),
@@ -269,6 +274,34 @@ class FakeSyncServer implements SyncTransport {
       name = p['name'] as String;
       city = p['city'] as String?;
       countryCode = p['country_code'] as String?;
+      userVersion++;
+      _journal('user', 'user-1', 'upsert', userVersion, user);
+    }
+    return {
+      'mutation_id': m['mutation_id'],
+      'status': 'accepted',
+      'duplicate': false,
+      'entity': 'user',
+      'entity_id': 'user-1',
+      'version': userVersion,
+    };
+  }
+
+  /// A42: profile.set_auto_freeze as the real handler answers it (identical state: no bump).
+  Map<String, dynamic> _setAutoFreeze(Map<String, dynamic> m) {
+    if (m['base_version'] != userVersion) {
+      return _failed(m, 'conflict', {
+        'code': 'version_conflict',
+        'message': 'x',
+        'resource_id': 'user-1',
+        'expected_version': m['base_version'],
+        'current_version': userVersion,
+        'current': user,
+      });
+    }
+    final enabled = (m['payload'] as Map)['enabled'] as bool;
+    if (enabled != autoFreeze) {
+      autoFreeze = enabled;
       userVersion++;
       _journal('user', 'user-1', 'upsert', userVersion, user);
     }

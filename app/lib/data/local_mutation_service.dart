@@ -596,6 +596,44 @@ class LocalMutationService {
     });
   }
 
+  /// profile.set_auto_freeze (A42, screen 17): the desired state on entity user, id = the user
+  /// id, base_version = the confirmed user version. An unsent row coalesces (latest wins, its
+  /// base kept); a stale base is rebased once by the engine (A45).
+  Future<String> setAutoFreeze(bool enabled) {
+    return db.transaction(() async {
+      final calendar = await _calendar();
+      final state = await (db.select(db.syncState)..where((s) => s.id.equals(1))).getSingle();
+      final pending =
+          await (db.select(db.outbox)
+                ..where(
+                  (o) =>
+                      o.operation.equals('profile.set_auto_freeze') &
+                      o.state.equals(OutboxState.pending),
+                )
+                ..orderBy([(o) => OrderingTerm.desc(o.seq)])
+                ..limit(1))
+              .getSingleOrNull();
+      if (pending != null) {
+        await (db.update(db.outbox)..where((o) => o.seq.equals(pending.seq))).write(
+          OutboxCompanion(payload: Value(jsonEncode({'enabled': enabled}))),
+        );
+        return pending.mutationId;
+      }
+      final user = jsonDecode(state.userPayload ?? '{}');
+      final version = user is Map && user['version'] is int ? user['version'] as int : null;
+      return _append(
+        entity: 'user',
+        entityId: state.userId,
+        operation: 'profile.set_auto_freeze',
+        baseVersion: version,
+        calendar: calendar,
+        localDate: null,
+        habitId: null,
+        payload: {'enabled': enabled},
+      );
+    });
+  }
+
   /// log.delete for one habit-day. Carries habit_id + log_date so the server can resolve it
   /// even if the id never reached it (A29).
   Future<LocalWrite> deleteLog({required String habitId, required LocalDate date}) {

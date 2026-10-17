@@ -517,11 +517,12 @@ class SyncEngine {
     // Phase 3.2a: a time zone change was made against the user version this device knew. The
     // server's answer names the current version, so it is sent once more on that base, as a new
     // mutation: the server keeps a receipt for the conflict, so the old id would now be an
-    // idempotency_mismatch. A second conflict is the user's to look at. Other mutations never
-    // rebase automatically.
+    // idempotency_mismatch. A second conflict is the user's to look at. A45: the auto-freeze
+    // switch is a desired state too and rebases the same way. Other mutations never rebase
+    // automatically.
     if (status == 'conflict' &&
         error?['code'] == 'version_conflict' &&
-        row.operation == 'profile.set_timezone' &&
+        _rebasesOnce.contains(row.operation) &&
         !_rebasedOnce(row)) {
       final current = error?['current_version'] ?? (error?['current'] as Map?)?['version'];
       if (current is int) {
@@ -581,6 +582,9 @@ class SyncEngine {
       );
     }
   }
+
+  /// Desired-state writes on the user entity (A26, A45).
+  static const _rebasesOnce = {'profile.set_timezone', 'profile.set_auto_freeze'};
 
   static bool _rebasedOnce(OutboxRow row) {
     final error = EntityCodec.decodeJson(row.lastError);
