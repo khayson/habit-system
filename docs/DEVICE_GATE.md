@@ -79,6 +79,13 @@ you saw.
 | 55 | Two phones on one account: toggle Auto-protect to opposite states at the same time. | Both end on the choice that reached the server last; nothing appears under Needs a look. |
 | 56 | On a habit whose footer says it includes protected days, tap the footer. | 17 opens. |
 | 57 | At 200% text size and with TalkBack, open 16 and 17. | Nothing is clipped; each history row reads habit, date and amount; the switch reads its name, its state and "After a scheduled day or week closes". |
+| 58 | Phase 5.2c. Online, save an amount that reaches a quantity habit's target. | "{habit} complete" with "+10 XP"; the Level card matches 16; Back to today returns to Today. |
+| 59 | Finish a timer at its target. | The same on the duration layout ("{n} min logged today"). |
+| 60 | Repeat 58 in airplane mode. | It returns to Today at once; after reconnecting the XP line updates and no completion screen appears. |
+| 61 | Save a partial amount. | It returns at once. |
+| 62 | Undo the completed day, then complete it again from the amount screen. | The completion screen shows +10 XP again. |
+| 63 | Tap the save, turn on airplane mode at once, then press Back while it says "Saved on this device. Confirming…". | It returns to Today and no completion screen appears later. |
+| 64 | At 200% text size and with TalkBack, open the completion screen. | Nothing is clipped; the heading reads as a header; the chip reads "10 XP earned"; the Level card reads as one label. |
 
 ## Results
 
@@ -141,3 +148,10 @@ you saw.
 | 55 | | | | |
 | 56 | | | | |
 | 57 | | | | |
+| 58 | | | | |
+| 59 | | | | |
+| 60 | | | | |
+| 61 | | | | |
+| 62 | | | | |
+| 63 | | | | |
+| 64 | | | | |
