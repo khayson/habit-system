@@ -3481,6 +3481,324 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Auto-protect turned off'**
   String get queueChangeAutoFreezeOff;
+
+  /// Screen 16 title.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress you earned'**
+  String get progressTitle;
+
+  /// Screen 16: the confirmed level, in capitals as designed.
+  ///
+  /// In en, this message translates to:
+  /// **'LEVEL {level}'**
+  String progressLevel(int level);
+
+  /// Screen 16: the confirmed XP.
+  ///
+  /// In en, this message translates to:
+  /// **'{xp} XP'**
+  String progressXp(int xp);
+
+  /// Screen 16: the level bar's label (A44).
+  ///
+  /// In en, this message translates to:
+  /// **'{into} / {span} XP toward Level {level}'**
+  String progressToward(int into, int span, int level);
+
+  /// Screen 16 before any confirmed reward_state.
+  ///
+  /// In en, this message translates to:
+  /// **'Your progress appears after the first sync.'**
+  String get progressNoNumbers;
+
+  /// No description provided for @progressRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent XP'**
+  String get progressRecent;
+
+  /// Screen 16's footer note, as designed.
+  ///
+  /// In en, this message translates to:
+  /// **'10 XP per completed habit per day.\nRepeated increments never add extra XP.'**
+  String get progressFooter;
+
+  /// No description provided for @ledgerLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'This could not be loaded right now.'**
+  String get ledgerLoadError;
+
+  /// No description provided for @ledgerTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get ledgerTryAgain;
+
+  /// No description provided for @ledgerShowMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Show more'**
+  String get ledgerShowMore;
+
+  /// No description provided for @ledgerMoreError.
+  ///
+  /// In en, this message translates to:
+  /// **'More could not be loaded. The list above is unchanged.'**
+  String get ledgerMoreError;
+
+  /// No description provided for @ledgerEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing here yet.'**
+  String get ledgerEmpty;
+
+  /// No description provided for @ledgerToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get ledgerToday;
+
+  /// No description provided for @ledgerYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get ledgerYesterday;
+
+  /// A history row whose habit is not on this device.
+  ///
+  /// In en, this message translates to:
+  /// **'A habit'**
+  String get ledgerHabitUnknown;
+
+  /// No description provided for @xpRowCompletedValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{day} · completed {value}'**
+  String xpRowCompletedValue(String day, String value);
+
+  /// No description provided for @xpRowCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{day} · completed'**
+  String xpRowCompleted(String day);
+
+  /// A reversal row (A40), neutral.
+  ///
+  /// In en, this message translates to:
+  /// **'{day} · Check-in changed'**
+  String xpRowChanged(String day);
+
+  /// A ledger reason this app does not know (invariant 13).
+  ///
+  /// In en, this message translates to:
+  /// **'{day} · XP update'**
+  String xpRowUnknown(String day);
+
+  /// No description provided for @xpAmountGained.
+  ///
+  /// In en, this message translates to:
+  /// **'+{n} XP'**
+  String xpAmountGained(int n);
+
+  /// A negative ledger delta, with a minus sign (never colour alone).
+  ///
+  /// In en, this message translates to:
+  /// **'−{n} XP'**
+  String xpAmountReturned(int n);
+
+  /// One merged screen-reader label for a history row.
+  ///
+  /// In en, this message translates to:
+  /// **'{title}, {detail}, {amount}'**
+  String ledgerRowLabel(String title, String detail, String amount);
+
+  /// Screen 17 title.
+  ///
+  /// In en, this message translates to:
+  /// **'A little breathing room'**
+  String get freezesTitle;
+
+  /// No description provided for @freezesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Protect continuity, not a pretend check-in.'**
+  String get freezesSubtitle;
+
+  /// No description provided for @freezesBalanceCap.
+  ///
+  /// In en, this message translates to:
+  /// **'{balance} / {cap} freezes'**
+  String freezesBalanceCap(int balance, int cap);
+
+  /// Screen 17 before GET /freezes has answered.
+  ///
+  /// In en, this message translates to:
+  /// **'{balance, plural, =1{1 freeze} other{{balance} freezes}}'**
+  String freezesBalance(int balance);
+
+  /// No description provided for @freezesNoNumbers.
+  ///
+  /// In en, this message translates to:
+  /// **'Your freezes appear after the first sync.'**
+  String get freezesNoNumbers;
+
+  /// Screen 17: the server's next_refill_on (A43), never computed here.
+  ///
+  /// In en, this message translates to:
+  /// **'Next refill: {date} · up to {cap} total'**
+  String freezesRefill(String date, int cap);
+
+  /// No description provided for @autoProtectTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-protect missed periods'**
+  String get autoProtectTitle;
+
+  /// No description provided for @autoProtectBody.
+  ///
+  /// In en, this message translates to:
+  /// **'After a scheduled day or week closes'**
+  String get autoProtectBody;
+
+  /// ASSUMPTION(A11-prospective-line): opting in never protects earlier misses.
+  ///
+  /// In en, this message translates to:
+  /// **'Turning it on protects periods that close from now on.'**
+  String get autoProtectProspective;
+
+  /// No description provided for @autoProtectQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved on this device. It applies after syncing.'**
+  String get autoProtectQueued;
+
+  /// No description provided for @autoProtectNeedsLook.
+  ///
+  /// In en, this message translates to:
+  /// **'This change needs a look in the sync queue.'**
+  String get autoProtectNeedsLook;
+
+  /// No description provided for @freezesHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Usage history'**
+  String get freezesHistory;
+
+  /// No description provided for @freezeRowTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{habit} · {date}'**
+  String freezeRowTitle(String habit, String date);
+
+  /// No description provided for @freezeSpendDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'1 freeze used · daily period protected'**
+  String get freezeSpendDaily;
+
+  /// No description provided for @freezeSpendWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'1 freeze used · weekly period protected'**
+  String get freezeSpendWeekly;
+
+  /// No description provided for @freezeSpendOther.
+  ///
+  /// In en, this message translates to:
+  /// **'1 freeze used · period protected'**
+  String get freezeSpendOther;
+
+  /// ASSUMPTION(A41-refund-row-copy).
+  ///
+  /// In en, this message translates to:
+  /// **'1 freeze returned · completed later'**
+  String get freezeRefund;
+
+  /// ASSUMPTION(A41-refund-row-copy): a zero refund at the cap.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed later · your wallet was already full'**
+  String get freezeRefundAtCap;
+
+  /// ASSUMPTION(A41-grant-row-copy).
+  ///
+  /// In en, this message translates to:
+  /// **'Starting freezes'**
+  String get freezeSignup;
+
+  /// ASSUMPTION(A41-grant-row-copy).
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly refill'**
+  String get freezeMonthly;
+
+  /// ASSUMPTION(A41-grant-row-copy): a zero monthly grant at the cap.
+  ///
+  /// In en, this message translates to:
+  /// **'Your wallet was already full'**
+  String get freezeAlreadyFull;
+
+  /// No description provided for @freezeUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Freeze update'**
+  String get freezeUnknown;
+
+  /// No description provided for @freezeNoteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Protection is not completion'**
+  String get freezeNoteTitle;
+
+  /// No description provided for @freezeNoteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'No XP is awarded for a freeze. A real completion later can return the token once.'**
+  String get freezeNoteBody;
+
+  /// ASSUMPTION(A5-profile-rows): the Profile row that opens 16.
+  ///
+  /// In en, this message translates to:
+  /// **'XP and levels'**
+  String get profileRowProgress;
+
+  /// No description provided for @profileRowProgressEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Appears after the first sync'**
+  String get profileRowProgressEmpty;
+
+  /// ASSUMPTION(A5-profile-rows): the Profile row that opens 17.
+  ///
+  /// In en, this message translates to:
+  /// **'Freezes'**
+  String get profileRowFreezes;
+
+  /// No description provided for @profileRowFreezesOn.
+  ///
+  /// In en, this message translates to:
+  /// **'{freezes} · auto-protect on'**
+  String profileRowFreezesOn(String freezes);
+
+  /// No description provided for @profileRowFreezesOff.
+  ///
+  /// In en, this message translates to:
+  /// **'{freezes} · auto-protect off'**
+  String profileRowFreezesOff(String freezes);
+
+  /// Screen 17's refill date, full month (design: "1 June").
+  ///
+  /// In en, this message translates to:
+  /// **'{date}'**
+  String refillDate(DateTime date);
+
+  /// Screen 17's refill date in another year.
+  ///
+  /// In en, this message translates to:
+  /// **'{date}'**
+  String refillDateYear(DateTime date);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

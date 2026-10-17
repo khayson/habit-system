@@ -2124,4 +2124,221 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get queueChangeAutoFreezeOff => 'Auto-protect turned off';
+
+  @override
+  String get progressTitle => 'Progress you earned';
+
+  @override
+  String progressLevel(int level) {
+    return 'LEVEL $level';
+  }
+
+  @override
+  String progressXp(int xp) {
+    final intl.NumberFormat xpNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String xpString = xpNumberFormat.format(xp);
+
+    return '$xpString XP';
+  }
+
+  @override
+  String progressToward(int into, int span, int level) {
+    final intl.NumberFormat intoNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String intoString = intoNumberFormat.format(into);
+    final intl.NumberFormat spanNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String spanString = spanNumberFormat.format(span);
+
+    return '$intoString / $spanString XP toward Level $level';
+  }
+
+  @override
+  String get progressNoNumbers => 'Your progress appears after the first sync.';
+
+  @override
+  String get progressRecent => 'Recent XP';
+
+  @override
+  String get progressFooter =>
+      '10 XP per completed habit per day.\nRepeated increments never add extra XP.';
+
+  @override
+  String get ledgerLoadError => 'This could not be loaded right now.';
+
+  @override
+  String get ledgerTryAgain => 'Try again';
+
+  @override
+  String get ledgerShowMore => 'Show more';
+
+  @override
+  String get ledgerMoreError => 'More could not be loaded. The list above is unchanged.';
+
+  @override
+  String get ledgerEmpty => 'Nothing here yet.';
+
+  @override
+  String get ledgerToday => 'Today';
+
+  @override
+  String get ledgerYesterday => 'Yesterday';
+
+  @override
+  String get ledgerHabitUnknown => 'A habit';
+
+  @override
+  String xpRowCompletedValue(String day, String value) {
+    return '$day · completed $value';
+  }
+
+  @override
+  String xpRowCompleted(String day) {
+    return '$day · completed';
+  }
+
+  @override
+  String xpRowChanged(String day) {
+    return '$day · Check-in changed';
+  }
+
+  @override
+  String xpRowUnknown(String day) {
+    return '$day · XP update';
+  }
+
+  @override
+  String xpAmountGained(int n) {
+    return '+$n XP';
+  }
+
+  @override
+  String xpAmountReturned(int n) {
+    return '−$n XP';
+  }
+
+  @override
+  String ledgerRowLabel(String title, String detail, String amount) {
+    return '$title, $detail, $amount';
+  }
+
+  @override
+  String get freezesTitle => 'A little breathing room';
+
+  @override
+  String get freezesSubtitle => 'Protect continuity, not a pretend check-in.';
+
+  @override
+  String freezesBalanceCap(int balance, int cap) {
+    return '$balance / $cap freezes';
+  }
+
+  @override
+  String freezesBalance(int balance) {
+    String _temp0 = intl.Intl.pluralLogic(
+      balance,
+      locale: localeName,
+      other: '$balance freezes',
+      one: '1 freeze',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get freezesNoNumbers => 'Your freezes appear after the first sync.';
+
+  @override
+  String freezesRefill(String date, int cap) {
+    return 'Next refill: $date · up to $cap total';
+  }
+
+  @override
+  String get autoProtectTitle => 'Auto-protect missed periods';
+
+  @override
+  String get autoProtectBody => 'After a scheduled day or week closes';
+
+  @override
+  String get autoProtectProspective => 'Turning it on protects periods that close from now on.';
+
+  @override
+  String get autoProtectQueued => 'Saved on this device. It applies after syncing.';
+
+  @override
+  String get autoProtectNeedsLook => 'This change needs a look in the sync queue.';
+
+  @override
+  String get freezesHistory => 'Usage history';
+
+  @override
+  String freezeRowTitle(String habit, String date) {
+    return '$habit · $date';
+  }
+
+  @override
+  String get freezeSpendDaily => '1 freeze used · daily period protected';
+
+  @override
+  String get freezeSpendWeekly => '1 freeze used · weekly period protected';
+
+  @override
+  String get freezeSpendOther => '1 freeze used · period protected';
+
+  @override
+  String get freezeRefund => '1 freeze returned · completed later';
+
+  @override
+  String get freezeRefundAtCap => 'Completed later · your wallet was already full';
+
+  @override
+  String get freezeSignup => 'Starting freezes';
+
+  @override
+  String get freezeMonthly => 'Monthly refill';
+
+  @override
+  String get freezeAlreadyFull => 'Your wallet was already full';
+
+  @override
+  String get freezeUnknown => 'Freeze update';
+
+  @override
+  String get freezeNoteTitle => 'Protection is not completion';
+
+  @override
+  String get freezeNoteBody =>
+      'No XP is awarded for a freeze. A real completion later can return the token once.';
+
+  @override
+  String get profileRowProgress => 'XP and levels';
+
+  @override
+  String get profileRowProgressEmpty => 'Appears after the first sync';
+
+  @override
+  String get profileRowFreezes => 'Freezes';
+
+  @override
+  String profileRowFreezesOn(String freezes) {
+    return '$freezes · auto-protect on';
+  }
+
+  @override
+  String profileRowFreezesOff(String freezes) {
+    return '$freezes · auto-protect off';
+  }
+
+  @override
+  String refillDate(DateTime date) {
+    final intl.DateFormat dateDateFormat = intl.DateFormat('d MMMM', localeName);
+    final String dateString = dateDateFormat.format(date);
+
+    return '$dateString';
+  }
+
+  @override
+  String refillDateYear(DateTime date) {
+    final intl.DateFormat dateDateFormat = intl.DateFormat('d MMMM y', localeName);
+    final String dateString = dateDateFormat.format(date);
+
+    return '$dateString';
+  }
 }

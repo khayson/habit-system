@@ -15,6 +15,7 @@ import 'package:habit/providers/account_context.dart';
 import 'package:habit/providers/session_provider.dart';
 import 'package:habit/services/photo_picker.dart';
 import 'package:habit/services/auth_service.dart';
+import 'package:habit/services/rewards_service.dart';
 import 'package:habit/sync/sync_engine.dart';
 import 'package:habit/sync/sync_transport.dart';
 import 'package:provider/provider.dart';
@@ -38,6 +39,7 @@ Future<AccountContext> testAccount(
   Stream<bool>? connectivity,
   DateTime Function()? clock,
   FakeNotificationScheduler? notifications,
+  RewardsService? rewardsApi,
 }) async {
   // Widget tests: streams must close synchronously or closing the database waits forever on a
   // query parked in fake async (drift docs, "Testing").
@@ -57,6 +59,7 @@ Future<AccountContext> testAccount(
     connectivity: connectivity,
     clock: clock ?? () => testNow,
     notifications: notifications ?? FakeNotificationScheduler(),
+    rewardsApi: rewardsApi,
   );
 }
 

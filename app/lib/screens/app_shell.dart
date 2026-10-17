@@ -19,7 +19,11 @@ class AppShell extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final tokens = HabitTokens.of(context);
     final habits = location.startsWith(Routes.habits);
-    final profile = location.startsWith(Routes.profile);
+    // 16 and 17 open from Profile and keep its tab selected (design).
+    final profile =
+        location.startsWith(Routes.profile) ||
+        location == Routes.rewards ||
+        location == Routes.freezes;
     return Scaffold(
       body: child,
       bottomNavigationBar: DecoratedBox(
