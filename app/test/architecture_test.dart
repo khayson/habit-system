@@ -105,6 +105,7 @@ void main() {
       'sync/ack_delete_natural_key': 'test/sync/sync_fixtures_test.dart',
       'sync/log_backdate_payload': 'test/sync/sync_fixtures_test.dart',
       'sync/reward_state_entity': 'test/sync/sync_fixtures_test.dart',
+      'sync/ack_xp_delta_wire': 'test/sync/ack_watch_test.dart',
       'rewards/rewards_response': 'test/services/rewards_service_test.dart',
       'rewards/freezes_response': 'test/services/rewards_service_test.dart',
       'sync/reminder_mutations': 'test/sync/reminder_sync_test.dart',

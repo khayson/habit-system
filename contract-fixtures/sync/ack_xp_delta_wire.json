@@ -1,0 +1,33 @@
+{
+  "description": "A43 / A46 on the client: accepted /sync acks as the engine receives them and the summary its AckWatch publishes. xp_delta is read only when it is a JSON integer; anything else (missing, a string) reads as no xp_delta and the ack still applies. 0 is kept as 0; the completion flow opens only above 0.",
+  "suites": [
+    "dart"
+  ],
+  "cases": [
+    {
+      "name": "a completion earns 10",
+      "ack": {"mutation_id": "{{uuid}}", "status": "accepted", "duplicate": false, "entity": "habit_log", "entity_id": "{{uuid}}", "version": 1, "resolved_date": "2026-05-28", "xp_delta": 10},
+      "expect": {"status": "accepted", "xp_delta": 10}
+    },
+    {
+      "name": "a reversal takes 10 back",
+      "ack": {"mutation_id": "{{uuid}}", "status": "accepted", "duplicate": false, "entity": "habit_log", "entity_id": "{{uuid}}", "version": 2, "resolved_date": "2026-05-28", "xp_delta": -10},
+      "expect": {"status": "accepted", "xp_delta": -10}
+    },
+    {
+      "name": "no key: no XP moved",
+      "ack": {"mutation_id": "{{uuid}}", "status": "accepted", "duplicate": false, "entity": "habit_log", "entity_id": "{{uuid}}", "version": 1, "resolved_date": "2026-05-28"},
+      "expect": {"status": "accepted", "xp_delta": null}
+    },
+    {
+      "name": "a string is not an integer: read as no xp_delta",
+      "ack": {"mutation_id": "{{uuid}}", "status": "accepted", "duplicate": false, "entity": "habit_log", "entity_id": "{{uuid}}", "version": 1, "resolved_date": "2026-05-28", "xp_delta": "10"},
+      "expect": {"status": "accepted", "xp_delta": null}
+    },
+    {
+      "name": "zero is kept as zero",
+      "ack": {"mutation_id": "{{uuid}}", "status": "accepted", "duplicate": false, "entity": "habit_log", "entity_id": "{{uuid}}", "version": 1, "resolved_date": "2026-05-28", "xp_delta": 0},
+      "expect": {"status": "accepted", "xp_delta": 0}
+    }
+  ]
+}
