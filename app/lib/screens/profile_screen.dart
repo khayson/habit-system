@@ -186,13 +186,7 @@ class _ProfileState extends State<_Profile> with WidgetsBindingObserver {
           _Row(
             icon: Icons.ac_unit,
             title: l10n.profileRowFreezes,
-            subtitle: switch (rewards?.freezeBalance) {
-              null => l10n.profileRowProgressEmpty,
-              final n when profile?.autoFreeze ?? false => l10n.profileRowFreezesOn(
-                l10n.freezesBalance(n),
-              ),
-              final n => l10n.profileRowFreezesOff(l10n.freezesBalance(n)),
-            },
+            subtitle: freezesRowLine(l10n, rewards?.freezeBalance, profile),
             onTap: () => context.push(Routes.freezes),
           ),
           const SizedBox(height: HabitSpace.s48),
@@ -335,6 +329,19 @@ class _Note extends StatelessWidget {
     );
   }
 }
+
+/// The Freezes row's line: the count, then the switch state once the profile has loaded (5.2b
+/// review: never "off" before it is known).
+@visibleForTesting
+String freezesRowLine(AppLocalizations l10n, int? balance, ProfileState? profile) =>
+    switch ((balance, profile)) {
+      (null, _) => l10n.profileRowProgressEmpty,
+      (final n?, null) => l10n.freezesBalance(n),
+      (final n?, final p?) =>
+        p.autoFreeze
+            ? l10n.profileRowFreezesOn(l10n.freezesBalance(n))
+            : l10n.profileRowFreezesOff(l10n.freezesBalance(n)),
+    };
 
 /// One of the design's rows: an icon tile, a title and a muted line, then an action or a
 /// chevron.
