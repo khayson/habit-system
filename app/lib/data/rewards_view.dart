@@ -44,3 +44,28 @@ class RewardsView {
     );
   }
 }
+
+/// Screens 16 and 35's level bar and label (A44): display arithmetic on the confirmed numbers,
+/// not a rule. span = next_level_threshold - (xp - progress_into_level).
+class LevelProgress {
+  final int into;
+  final int span;
+  final int nextLevel;
+
+  const LevelProgress({required this.into, required this.span, required this.nextLevel});
+
+  /// Null when reward_state did not carry the bar's numbers.
+  static LevelProgress? of(ConfirmedRewardNumbers rewards) {
+    final into = rewards.progressIntoLevel;
+    final threshold = rewards.nextLevelThreshold;
+    if (into == null || threshold == null) return null;
+    return LevelProgress(
+      into: into,
+      span: threshold - (rewards.xp - into),
+      nextLevel: rewards.level + 1,
+    );
+  }
+
+  /// 0..1; empty when the span is 0 or less.
+  double get fraction => span <= 0 ? 0 : (into / span).clamp(0.0, 1.0).toDouble();
+}
