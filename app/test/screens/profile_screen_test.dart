@@ -140,7 +140,9 @@ void main() {
 
     testWidgets('place, level and XP as designed', (tester) async {
       final a = await account(tester, FakeSyncServer());
-      await tester.runAsync(() => a.writer.updateProfile(name: 'Maya Chen', city: 'Portland', countryCode: null));
+      await tester.runAsync(
+        () => a.writer.updateProfile(name: 'Maya Chen', city: 'Portland', countryCode: null),
+      );
       await confirm(tester, a);
       await open(tester, a);
 
@@ -160,7 +162,9 @@ void main() {
 
     testWidgets('without confirmed numbers: the place alone', (tester) async {
       final a = await account(tester, FakeSyncServer());
-      await tester.runAsync(() => a.writer.updateProfile(name: 'Maya Chen', city: 'Portland', countryCode: null));
+      await tester.runAsync(
+        () => a.writer.updateProfile(name: 'Maya Chen', city: 'Portland', countryCode: null),
+      );
       await open(tester, a);
 
       expect(find.text('Portland'), findsOneWidget);
