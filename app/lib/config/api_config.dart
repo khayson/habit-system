@@ -14,6 +14,8 @@ abstract final class ApiConfig {
   // Endpoints
   static const String health = '/health';
   static String heatmap(String habitId) => '/habits/$habitId/heatmap';
+  static const String rewards = '/rewards';
+  static const String freezes = '/freezes';
 
   /// Called once at start-up. A release build refuses to run against a non-HTTPS API:
   /// bearer tokens and personal history must never travel in clear text.
