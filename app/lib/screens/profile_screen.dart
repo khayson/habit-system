@@ -121,6 +121,7 @@ class _ProfileState extends State<_Profile> with WidgetsBindingObserver {
     final profile = context.watch<StreamModel<ProfileState?>>().value;
     final zone = context.watch<StreamModel<TimezoneStatus?>>().value;
     final reminders = context.watch<StreamModel<List<HabitReminders>>>().value ?? const [];
+    final rewards = context.watch<StreamModel<ConfirmedRewardNumbers?>>().value;
 
     return SafeArea(
       child: ListView(
@@ -169,6 +170,30 @@ class _ProfileState extends State<_Profile> with WidgetsBindingObserver {
               await showRemindersSheet(context, account, reminders, _permission);
               await _refreshPermission();
             },
+          ),
+          // ASSUMPTION(A5-profile-rows): design 20 shows no way to 16 and 17; two rows in the
+          // existing style, below Reminders.
+          const SizedBox(height: HabitSpace.s16),
+          _Row(
+            icon: Icons.emoji_events_outlined,
+            title: l10n.profileRowProgress,
+            subtitle: rewards == null
+                ? l10n.profileRowProgressEmpty
+                : l10n.profileRewardLineNoPlace(rewards.level, rewards.xp),
+            onTap: () => context.push(Routes.rewards),
+          ),
+          const SizedBox(height: HabitSpace.s16),
+          _Row(
+            icon: Icons.ac_unit,
+            title: l10n.profileRowFreezes,
+            subtitle: switch (rewards?.freezeBalance) {
+              null => l10n.profileRowProgressEmpty,
+              final n when profile?.autoFreeze ?? false => l10n.profileRowFreezesOn(
+                l10n.freezesBalance(n),
+              ),
+              final n => l10n.profileRowFreezesOff(l10n.freezesBalance(n)),
+            },
+            onTap: () => context.push(Routes.freezes),
           ),
           const SizedBox(height: HabitSpace.s48),
           if (profile?.email != null)

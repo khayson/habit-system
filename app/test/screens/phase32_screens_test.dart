@@ -341,6 +341,17 @@ void main() {
           shown ? findsOneWidget : findsNothing,
         );
         if (!shown) expect(find.text('A missed day is a pause, not a failure.'), findsOneWidget);
+        if (shown) {
+          // 5.2b: the footer is a 44 px target that opens 17.
+          final footer = find.ancestor(
+            of: find.textContaining('Your streak includes'),
+            matching: find.byType(InkWell),
+          );
+          expect(tester.getSize(footer).height, greaterThanOrEqualTo(44));
+          await tester.tap(footer);
+          await settle(tester);
+          expect(find.text('A little breathing room'), findsOneWidget);
+        }
         await tearDownApp(tester, account);
       });
     }

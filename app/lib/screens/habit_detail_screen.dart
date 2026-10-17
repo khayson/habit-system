@@ -167,13 +167,31 @@ class _DetailState extends State<_Detail> {
           const SizedBox(height: HabitSpace.s32),
           const _Legend(),
           const SizedBox(height: HabitSpace.s32),
-          Text(
-            [
-              if (protectedDays > 0) l10n.streakProtected(protectedDays),
-              l10n.streakPause,
-            ].join('\n'),
-            style: text.bodyLarge?.copyWith(color: tokens.muted),
-          ),
+          if (protectedDays > 0)
+            // 5.2b: the protected-days footer opens 17.
+            Semantics(
+              button: true,
+              child: InkWell(
+                onTap: () => context.push(Routes.freezes),
+                borderRadius: BorderRadius.circular(HabitRadius.r8),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: HabitSize.minTarget),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          [l10n.streakProtected(protectedDays), l10n.streakPause].join('\n'),
+                          style: text.bodyLarge?.copyWith(color: tokens.muted),
+                        ),
+                      ),
+                      ExcludeSemantics(child: Icon(Icons.chevron_right, color: tokens.primary)),
+                    ],
+                  ),
+                ),
+              ),
+            )
+          else
+            Text(l10n.streakPause, style: text.bodyLarge?.copyWith(color: tokens.muted)),
           const SizedBox(height: HabitSpace.s32),
           _ReminderRow(detail: detail),
         ],
