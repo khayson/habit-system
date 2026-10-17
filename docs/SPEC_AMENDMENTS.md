@@ -383,3 +383,6 @@ The app shows xp, level and freeze balance exactly as `reward_state` last confir
 
 ### A45 — Auto-freeze rebases once · ADOPT
 profile.set_auto_freeze is a desired state, so a version_conflict on it is handled like one on profile.set_timezone: the engine re-sends it once, as a new mutation, on the version the server names. The user entity's version also moves for reasons the person did not cause (another device, a photo, a time zone change). A second conflict is the user's to see, and the only choice is Discard.
+
+### A46 — Completion flow · ADOPT
+A completion screen (35 quantity, 06 duration, one layout) opens only for a check-in saved from the amount screen or the timer's save that left the habit-day complete on this device. After the local write the app asks for a sync at once and waits up to 6 seconds for the ack of that mutation. Offline, a timeout, a conflict or rejection, an ack without xp_delta above 0, or the person leaving the screen: the save returns as it does today, and a late ack never opens the screen afterwards. The +N XP chip shows the ack's xp_delta, never a constant. A one-tap check-in on Today, an undo and a delete never open it. The Level card reads the local reward_state live.
