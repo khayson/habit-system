@@ -20,6 +20,8 @@
 //   calendar  A sets a zone; B gains the pending calendar entry; A changes back; it is gone.
 //   reminders A creates, edits and deletes a reminder; B holds the typed row each time.
 //   profile   A edits name, city and country (profile.update); the server and B have them.
+//   autofreeze A turns auto-protect on; B pulls it. Opposite toggles converge on the later one
+//             (A45); a profile edit and the switch queued together both apply.
 //   photo     A chooses a photo offline (shown at once), reconnects; the engine uploads it with
 //             a real multipart PUT; sm/md/lg are WebP 96/160/320; B fetches md; another
 //             account never gets the bytes (404); removing it clears has_avatar and B's copy.
@@ -338,6 +340,37 @@ Future<void> main(List<String> args) async {
     await b.sync();
     final onB = (await b.profile.load())!;
     _check((onB.name, onB.city, onB.countryCode) == ('E2E Maya', 'Accra', 'GH'), 'B has them');
+  });
+
+  await _scenario('autofreeze', () async {
+    // A42 / A45: the switch is a desired state on the user entity.
+    await a.writer.setAutoFreeze(true);
+    await a.sync();
+    await b.sync();
+    _check((await b.profile.load())!.autoFreeze, 'B pulled auto_freeze on');
+
+    // Opposite choices at once: the later write wins on both, nothing needs a look.
+    await a.writer.setAutoFreeze(false);
+    await b.writer.setAutoFreeze(true);
+    await a.sync();
+    await b.sync(); // stale base: rebased once (A45)
+    await a.sync();
+    final onA = (await a.profile.load())!;
+    final onB = (await b.profile.load())!;
+    _check(
+      onA.autoFreeze && onB.autoFreeze,
+      'both on the later write (${onA.autoFreeze}, ${onB.autoFreeze})',
+    );
+    _check(!onA.autoFreezeNeedsAttention && !onB.autoFreezeNeedsAttention, 'nothing needs a look');
+
+    // A profile edit and the switch queued in one offline session both apply.
+    await a.writer.updateProfile(name: 'E2E Maya', city: 'Kumasi', countryCode: 'GH');
+    await a.writer.setAutoFreeze(false);
+    await a.sync();
+    await a.sync();
+    final me = (await a.dio.get<Map<String, dynamic>>('/me')).data!['data'] as Map;
+    _check((me['city'], me['auto_freeze']) == ('Kumasi', false), 'both applied ($me)');
+    _check((await a.outbox()).isEmpty, 'nothing left in the queue');
   });
 
   await _scenario('photo', () async {
