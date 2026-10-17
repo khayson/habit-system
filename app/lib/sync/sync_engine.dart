@@ -8,6 +8,7 @@ import '../data/app_database.dart';
 import '../data/calendar_store.dart';
 import '../data/entity_codec.dart';
 import '../domain/calendar/day_resolver.dart';
+import 'ack_watch.dart';
 import 'avatar_sync.dart';
 import 'outbox_states.dart';
 import 'sync_transport.dart';
@@ -79,6 +80,9 @@ class SyncEngine {
   /// tests, the command-line smoke run).
   final AvatarSync? avatars;
 
+  /// Phase 5.2c (A46): final ack summaries, published after each apply transaction commits.
+  final AckWatch ackWatch;
+
   /// Test hook: runs inside the apply transaction just before it commits.
   final Future<void> Function()? beforeApplyCommit;
 
@@ -98,7 +102,9 @@ class SyncEngine {
     this.betweenSelectAndMark,
     this.appVersion,
     this.avatars,
-  }) : clock = clock ?? (() => DateTime.now().toUtc()),
+    AckWatch? ackWatch,
+  }) : ackWatch = ackWatch ?? AckWatch(),
+       clock = clock ?? (() => DateTime.now().toUtc()),
        random = random ?? Random(),
        ownerId = ownerId ?? const Uuid().v4();
 
@@ -446,8 +452,9 @@ class SyncEngine {
 
   // Apply ---------------------------------------------------------------------------------------
 
-  Future<void> _apply(SyncPage page, List<OutboxRow> sent) {
-    return db.transaction(() async {
+  Future<void> _apply(SyncPage page, List<OutboxRow> sent) async {
+    final summaries = <AckSummary>[];
+    await db.transaction(() async {
       // Commit only while this engine still owns the lease (F3); otherwise roll back.
       await _renewLease();
       final acks = {for (final ack in page.acks) ack['mutation_id']: ack};
@@ -459,6 +466,8 @@ class SyncEngine {
         }
         try {
           await _applyAck(row, ack);
+          final summary = AckSummary.fromAck(ack.cast<String, dynamic>());
+          if (summary != null) summaries.add(summary);
         } on Object catch (e) {
           if (!_isDecodeError(e)) rethrow;
           // An ack this version cannot read counts as no ack: the row is sent again and the
@@ -485,6 +494,8 @@ class SyncEngine {
       await _rejectOrphans();
       if (beforeApplyCommit != null) await beforeApplyCommit!();
     });
+    // Only after the commit: a transaction that lost its lease rolled back and published nothing.
+    summaries.forEach(ackWatch.publish);
   }
 
   Future<void> _applyAck(OutboxRow row, Map<String, dynamic> ack) async {

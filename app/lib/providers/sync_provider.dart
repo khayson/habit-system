@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../sync/ack_watch.dart';
 import '../sync/sync_engine.dart';
 
 /// Sync triggers for one account (Phase 2b.1 review §6): start, resume, after a local write
@@ -26,6 +27,9 @@ class SyncProvider extends ChangeNotifier {
   }) {
     _connectivity = connectivity?.listen(_onConnectivity);
   }
+
+  /// The engine's ack watch (A46); released with the account.
+  AckWatch get ackWatch => _engine.ackWatch;
 
   bool _syncing = false;
   SyncOutcome? _lastOutcome;

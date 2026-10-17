@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:habit/sync/ack_watch.dart';
 import 'package:habit/data/app_database.dart';
 import 'package:habit/data/local_mutation_service.dart';
 import 'package:habit/data/local_view.dart';
@@ -49,6 +50,7 @@ class Device {
     String? appVersion,
     AvatarSync? avatars,
     int pullLimit = 200,
+    AckWatch? ackWatch,
   }) => SyncEngine(
     db: db,
     transport: transport ?? server,
@@ -61,6 +63,7 @@ class Device {
     betweenSelectAndMark: betweenSelectAndMark,
     avatars: avatars,
     pullLimit: pullLimit,
+    ackWatch: ackWatch,
   );
 
   Future<SyncOutcome> sync({bool force = false}) => engine().run(force: force);

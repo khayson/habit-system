@@ -29,6 +29,7 @@ import '../sync/avatar_transport.dart';
 import '../sync/background_sync.dart';
 import '../sync/http_avatar_transport.dart';
 import '../sync/http_sync_transport.dart';
+import '../sync/ack_watch.dart';
 import '../sync/sync_engine.dart';
 import '../sync/sync_transport.dart';
 import 'stream_model.dart';
@@ -46,6 +47,9 @@ class AccountContext {
 
   /// Older heatmap months (screen 12); null where there is no server (tests, offline-only).
   final RemoteHeatmap? heatmap;
+
+  /// Phase 5.2c (A46): this account's final ack summaries, which its engine publishes.
+  AckWatch get ackWatch => sync.ackWatch;
 
   /// GET /rewards and GET /freezes (screens 16 and 17); null where there is no server.
   final RewardsService? rewardsApi;
@@ -166,6 +170,7 @@ class AccountContext {
 
   void dispose() {
     _reminders?.dispose();
+    ackWatch.dispose();
     sync.dispose();
     queue.dispose();
   }
