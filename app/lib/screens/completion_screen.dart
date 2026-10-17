@@ -219,17 +219,21 @@ class _LevelCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              spacing: HabitSpace.s12,
-              runSpacing: HabitSpace.s4,
-              children: [
-                Text(l10n.completeLevel(rewards.level), style: text.titleLarge),
-                Text(
-                  l10n.completeXpTotal(rewards.xp),
-                  style: text.bodyLarge?.copyWith(color: tokens.positiveInk),
-                ),
-              ],
+            // Level on the left, the total at the right edge (design); it wraps at large text.
+            SizedBox(
+              width: double.infinity,
+              child: Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                spacing: HabitSpace.s12,
+                runSpacing: HabitSpace.s4,
+                children: [
+                  Text(l10n.completeLevel(rewards.level), style: text.titleLarge),
+                  Text(
+                    l10n.completeXpTotal(rewards.xp),
+                    style: text.bodyLarge?.copyWith(color: tokens.positiveInk),
+                  ),
+                ],
+              ),
             ),
             if (progress != null) ...[
               const SizedBox(height: HabitSpace.s16),
