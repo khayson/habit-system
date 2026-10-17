@@ -105,6 +105,8 @@ void main() {
       'sync/ack_delete_natural_key': 'test/sync/sync_fixtures_test.dart',
       'sync/log_backdate_payload': 'test/sync/sync_fixtures_test.dart',
       'sync/reward_state_entity': 'test/sync/sync_fixtures_test.dart',
+      'rewards/rewards_response': 'test/services/rewards_service_test.dart',
+      'rewards/freezes_response': 'test/services/rewards_service_test.dart',
       'sync/reminder_mutations': 'test/sync/reminder_sync_test.dart',
       'sync/reminder_entity': 'test/sync/reminder_sync_test.dart',
       'auth/register_request': 'test/services/auth_service_test.dart',
@@ -113,9 +115,9 @@ void main() {
       'habit/habit_mutations': 'test/sync/habit_acks_test.dart',
     };
 
-    test('every domain, sync, auth and habit fixture that names the dart suite has a consumer', () {
+    test('every domain, sync, auth, habit and rewards fixture that names the dart suite has a consumer', () {
       final named = <String>{};
-      for (final folder in ['domain', 'sync', 'auth', 'habit']) {
+      for (final folder in ['domain', 'sync', 'auth', 'habit', 'rewards']) {
         for (final file in Directory(
           p.join('..', 'contract-fixtures', folder),
         ).listSync().whereType<File>()) {

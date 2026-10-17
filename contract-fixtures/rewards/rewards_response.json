@@ -1,7 +1,8 @@
 {
   "description": "A39 / A40: GET /rewards?limit&cursor. The numbers equal reward_state; the ledger is newest first, keyset on (created_at, id). limit default 20, max 50; cursor opaque; a bad cursor is 422 validation_failed. Owner-scoped (invariant 2). Read-only.",
   "suites": [
-    "php"
+    "php",
+    "dart"
   ],
   "response": {
     "data": {
