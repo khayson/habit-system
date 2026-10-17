@@ -91,8 +91,8 @@ void main() {
         )
         .get();
 
-    expect(db.schemaVersion, 9);
-    expect(userVersion.data.values.single, 9);
+    expect(db.schemaVersion, 10);
+    expect(userVersion.data.values.single, 10);
     expect(journal.data.values.single, 'wal');
     expect(fk.data.values.single, 1);
     expect(synchronous.data.values.single, 2, reason: 'synchronous = FULL (2)');
@@ -108,6 +108,7 @@ void main() {
       'pending_uploads',
       'period_evaluations',
       'reminders',
+      'reward_state',
       'scheduled_notifications',
       'sync_state',
       'timer_drafts',
