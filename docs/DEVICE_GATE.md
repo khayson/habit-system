@@ -72,6 +72,13 @@ you saw.
 | 48 | Turn airplane mode off and wait for the sync. | The XP and level change to the server's new numbers and the waiting sentence goes away. |
 | 49 | Open Profile. | Under the name: "{place} · Level {level} · {xp} XP" (or "Level {level} · {xp} XP" without a place). |
 | 50 | Open a habit whose current streak includes a protected day (auto-freeze on, a day missed and closed). | 12's footer says "Your streak includes 1 protected day." |
+| 51 | Phase 5.2b. Profile → XP and levels (16). | The level and XP match Today's line; Recent XP lists completions with habit names; Show more loads the next page. |
+| 52 | Turn on airplane mode and open 16. | The level and XP stay; the list says it could not be loaded and offers Try again; nothing says "+10 pending". |
+| 53 | Profile → Freezes (17), on an account where a freeze was used. | "{balance} / 2 freezes", the refill date, and a history row such as "{habit} · {date}, 1 freeze used · daily period protected, −1". |
+| 54 | In airplane mode turn Auto-protect on. Reconnect. Relaunch the app. | It shows on with "Saved on this device. It applies after syncing." and the queue lists "Auto-protect turned on"; after reconnecting the note goes; after the relaunch it is still on. |
+| 55 | Two phones on one account: toggle Auto-protect to opposite states at the same time. | Both end on the later choice; nothing appears under Needs a look. |
+| 56 | On a habit whose footer says it includes protected days, tap the footer. | 17 opens. |
+| 57 | At 200% text size and with TalkBack, open 16 and 17. | Nothing is clipped; each history row reads habit, date and amount; the switch reads its name, its state and "After a scheduled day or week closes". |
 
 ## Results
 
@@ -127,3 +134,10 @@ you saw.
 | 48 | | | | |
 | 49 | | | | |
 | 50 | | | | |
+| 51 | | | | |
+| 52 | | | | |
+| 53 | | | | |
+| 54 | | | | |
+| 55 | | | | |
+| 56 | | | | |
+| 57 | | | | |
