@@ -1,5 +1,5 @@
 {
-  "description": "A39: the read-only derived entity holding the reward numbers. One per user; id is the user id; version is users.reward_version, which rises with every xp_ledger or freeze_ledger row that changes a cached number. Bootstrapped in entities (A31) and journaled with the check-in that changed it. The client stores it opaquely until Phase 5.3 and never evaluates the formula (A9). A mutation targeting it is refused with entity_read_only, the same answer for an own, a foreign and a missing id (A32).",
+  "description": "A39: the read-only derived entity holding the reward numbers. One per user; id is the user id; version is users.reward_version, which rises with every xp_ledger or freeze_ledger row that changes a cached number. Bootstrapped in entities (A31) and journaled with the check-in that changed it. The client keeps it in its own reward_state table and never evaluates the formula (A9, A44). A mutation targeting it is refused with entity_read_only, the same answer for an own, a foreign and a missing id (A32).",
   "suites": [
     "php",
     "dart"
