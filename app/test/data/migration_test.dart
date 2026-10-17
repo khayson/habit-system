@@ -69,6 +69,32 @@ void main() {
     },
   );
 
+  test('v9 -> v10 keeps a non-integer protected_in_streak in extra and an undecodable '
+      'reward_state opaque', () async {
+    final current = AppDatabase(NativeDatabase(file));
+    await dropV10(current);
+    await current.customStatement('PRAGMA user_version = 9');
+    await current.customStatement(
+      'INSERT INTO habit_progress (habit_id, current, version, extra) '
+      "VALUES ('h1', 4, 3, '{\"protected_in_streak\":\"one\"}')",
+    );
+    await current.customStatement(
+      'INSERT INTO opaque_entities (entity_type, entity_id, version, operation, payload) '
+      "VALUES ('reward_state', 'u1', 5, 'upsert', '{\"xp\":\"ten\",\"level\":1}')",
+    );
+    await current.close();
+
+    final upgraded = AppDatabase(NativeDatabase(file));
+    final progress = await upgraded.select(upgraded.habitProgress).getSingle();
+    expect(progress.protectedInStreak, isNull);
+    expect(EntityCodec.progressPayload(progress)['protected_in_streak'], isNull);
+    expect(progress.extra, '{"protected_in_streak":"one"}');
+    expect(await upgraded.select(upgraded.rewardState).get(), isEmpty);
+    final opaque = await upgraded.select(upgraded.opaqueEntities).getSingle();
+    expect((opaque.entityType, opaque.entityId, opaque.version), ('reward_state', 'u1', 5));
+    await upgraded.close();
+  });
+
   test('v8 -> v9 adds timer drafts; outbox, scheduled rows and the cursor survive', () async {
     final v9 = AppDatabase(NativeDatabase(file));
     await v9.customStatement(
