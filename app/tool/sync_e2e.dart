@@ -42,6 +42,8 @@
 //             writes a stale value and uses its own (A37): both converge on A's, a higher version.
 //   log-deleted    A deletes the day, B adds to it: kept with `current`; use mine restores the
 //             day with B's amount.
+//   completion     A completes a quantity habit: the engine's AckWatch yields xp_delta 10; B's
+//             reward_state rises by 10; a further add yields none; below target -10; again +10.
 //   timer-draft    A times a duration habit offline (start, pause, resume, finish, A36): one
 //             increment of whole seconds; after sync both devices agree.
 // Exits non-zero at the first failed check, or unless both databases end identical.
@@ -651,6 +653,38 @@ Future<void> main(List<String> args) async {
     final onA = await valueOn(a, cups);
     final onB = await valueOn(b, cups);
     _check(onA == '100.000' && onB == '100.000', "the day is back with B's amount ($onA, $onB)");
+  });
+
+  await _scenario('completion', () async {
+    // A46: the engine's AckWatch carries the server's xp_delta for each log mutation.
+    final jug = await water(a);
+    await a.sync();
+    await b.sync();
+    Future<int> xpOnB() async {
+      await b.sync();
+      return (await b.db.select(b.db.rewardState).getSingle()).xp ?? 0;
+    }
+
+    final before = await xpOnB();
+    Future<int?> deltaOf(Future<LocalWrite> writing) async {
+      final write = await writing;
+      await a.sync();
+      final summary = a.engine.ackWatch.known(write.mutationId);
+      _check(summary?.status == 'accepted', 'accepted (${summary?.status})');
+      return summary!.xpDelta;
+    }
+
+    final completed = await deltaOf(a.writer.incrementLog(habitId: jug, delta: '2000'));
+    _check(completed == 10, 'completing yields xp_delta 10 ($completed)');
+    final onB = await xpOnB();
+    _check(onB == before + 10, 'B holds reward_state with 10 more XP ($before -> $onB)');
+    final more = await deltaOf(a.writer.incrementLog(habitId: jug, delta: '250'));
+    _check(more == null, 'a further increment on a complete day yields none ($more)');
+    final below = await deltaOf(a.writer.setLogValue(habitId: jug, value: '500.000'));
+    _check(below == -10, 'below the target yields -10 ($below)');
+    final again = await deltaOf(a.writer.setLogValue(habitId: jug, value: '2000.000'));
+    _check(again == 10, 'completing again yields +10 ($again)');
+    _check(await xpOnB() == before + 10, 'B nets +10 overall');
   });
 
   await _scenario('timer-draft', () async {
