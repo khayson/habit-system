@@ -72,9 +72,6 @@ it('reproduces the spec insights: 95/125 = 76 % for May, 9/15 = 60 % for the wee
             $c = $calculator->byCategory($byCategory, $from, $to)[$category];
             expect([$c->completed, $c->eligible, $c->percent])->toBe([$row['completed'], $row['eligible'], $row['percent']], $category);
         }
-        if (isset($fixture[$window]['expect']['xp'])) {
-            expect($calculator->earnedXp($all, $from, $to))->toBe($fixture[$window]['expect']['xp']);
-        }
     }
 });
 

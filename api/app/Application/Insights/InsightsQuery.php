@@ -17,6 +17,8 @@ use App\Domain\Period\PeriodEngine;
 use App\Domain\Period\PeriodEvaluation;
 use App\Domain\Period\PeriodKind;
 use App\Domain\Period\PeriodStatus;
+use App\Domain\Reward\XpEntitlementState;
+use App\Domain\Reward\XpRules;
 use Illuminate\Support\Facades\DB;
 use stdClass;
 
@@ -25,7 +27,7 @@ use stdClass;
  * containing their local today at request time (UserCalendar), never a client date. Periods
  * come from the same PeriodEngine the closer stores from, with the habit's active freeze
  * usages; a closed period takes its status from its stored evaluation, as the heatmap does.
- * Every count and percentage comes from ConsistencyCalculator. Read-only, owner-scoped.
+ * Every count and percentage comes from ConsistencyCalculator; xp_earned from the XP entitlements. Read-only, owner-scoped.
  */
 final readonly class InsightsQuery
 {
@@ -110,7 +112,7 @@ final readonly class InsightsQuery
                 'through' => $yesterday->isBefore($start) ? null : $yesterday->toString(),
             ],
             'totals' => self::consistency($this->calculator->summarize($all, $start, $end)),
-            'xp_earned' => $this->calculator->earnedXp($all, $start, $end),
+            'xp_earned' => $yesterday->isBefore($start) ? 0 : $this->ledgerXp($userId, $start, $yesterday, $category),
             'by_category' => $this->categories($byCategory, $start, $end),
         ];
         if ($period === 'week') {
@@ -128,6 +130,38 @@ final readonly class InsightsQuery
         }
 
         return $data;
+    }
+
+    /**
+     * 5.3a review L1: the XP actually given for the window's days through yesterday: one
+     * XpRules::XP_PER_COMPLETION per active entitlement (the net ledger, A40), so not-due
+     * check-ins and the days of a still-open weekly period count. Archived habits keep theirs.
+     * With a category, only habit-days whose definition in force has that category.
+     */
+    private function ledgerXp(string $userId, LocalDate $from, LocalDate $through, ?string $category): int
+    {
+        $rows = DB::table('xp_entitlements')->where('user_id', $userId)->where('state', XpEntitlementState::Active->value)
+            ->whereBetween('log_date', [$from->toString(), $through->toString()])
+            ->get(['habit_id', 'log_date']);
+        if ($category !== null) {
+            $schedules = [];
+            $rows = $rows->filter(function ($row) use (&$schedules, $category) {
+                $id = (string) $row->habit_id;
+                if (! array_key_exists($id, $schedules)) {
+                    $habit = DB::table('habits')->where('id', $id)->first();
+                    $schedules[$id] = $habit === null ? null : $this->habits->schedule($habit);
+                }
+                $schedule = $schedules[$id];
+                if ($schedule === null) {
+                    return false;
+                }
+                $date = LocalDate::fromString((string) $row->log_date);
+
+                return ($schedule->versionOn($date) ?? $schedule->latest())->category === $category;
+            });
+        }
+
+        return $rows->count() * XpRules::XP_PER_COMPLETION;
     }
 
     /** @return array{LocalDate, LocalDate} */

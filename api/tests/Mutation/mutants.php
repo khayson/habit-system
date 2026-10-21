@@ -353,6 +353,13 @@ PHP,
         'tests' => 'tests/Feature/InsightsEndpointTest.php',
     ],
     [
+        'name' => '5.3b: xp_earned counts today (the through bound dropped)',
+        'file' => 'app/Application/Insights/InsightsQuery.php',
+        'search' => "->whereBetween('log_date', [\$from->toString(), \$through->toString()])",
+        'replace' => "->whereBetween('log_date', [\$from->toString(), \$through->addDays(1)->toString()])",
+        'tests' => 'tests/Feature/InsightsEndpointTest.php',
+    ],
+    [
         'name' => '5.3a: an open period enters the window',
         'file' => 'app/Domain/Insights/ConsistencyCalculator.php',
         'search' => "if (! \$evaluation->closed\n                || ",
