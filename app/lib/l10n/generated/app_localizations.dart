@@ -3871,6 +3871,198 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Saved on this device. Confirming…'**
   String get saveConfirming;
+
+  /// No description provided for @insightsWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Week'**
+  String get insightsWeek;
+
+  /// No description provided for @insightsMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
+  String get insightsMonth;
+
+  /// Screen 14 title.
+  ///
+  /// In en, this message translates to:
+  /// **'A week of progress'**
+  String get insightsWeekTitle;
+
+  /// Screen 14 (design: "25–31 May · this week is still in progress.").
+  ///
+  /// In en, this message translates to:
+  /// **'{range} · this week is still in progress.'**
+  String insightsWeekSubtitle(String range);
+
+  /// A date range, en dash, no spaces.
+  ///
+  /// In en, this message translates to:
+  /// **'{start}–{end}'**
+  String insightsRange(String start, String end);
+
+  /// No description provided for @insightsPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}%'**
+  String insightsPercent(int percent);
+
+  /// No description provided for @insightsClosedPeriods.
+  ///
+  /// In en, this message translates to:
+  /// **'{completed} / {eligible} closed periods'**
+  String insightsClosedPeriods(int completed, int eligible);
+
+  /// No description provided for @insightsNoClosedPeriods.
+  ///
+  /// In en, this message translates to:
+  /// **'No closed periods yet'**
+  String get insightsNoClosedPeriods;
+
+  /// No description provided for @insightsXp.
+  ///
+  /// In en, this message translates to:
+  /// **'+{xp} XP'**
+  String insightsXp(int xp);
+
+  /// No description provided for @insightsThrough.
+  ///
+  /// In en, this message translates to:
+  /// **'Through {date}'**
+  String insightsThrough(String date);
+
+  /// No description provided for @insightsNoClosedDays.
+  ///
+  /// In en, this message translates to:
+  /// **'No closed days yet'**
+  String get insightsNoClosedDays;
+
+  /// No description provided for @insightsCheckIns.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed check-ins'**
+  String get insightsCheckIns;
+
+  /// No description provided for @insightsTodayOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Today is still open'**
+  String get insightsTodayOpen;
+
+  /// A day bar's screen-reader label.
+  ///
+  /// In en, this message translates to:
+  /// **'{day}, {completed} of {due} completed'**
+  String insightsDayLabel(String day, int completed, int due);
+
+  /// No description provided for @insightsTodayLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Today so far, {completed} of {due} completed'**
+  String insightsTodayLabel(int completed, int due);
+
+  /// No description provided for @insightsFutureLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{day}, not yet'**
+  String insightsFutureLabel(String day);
+
+  /// No description provided for @insightsOpenWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'{completed} of {target} distinct days this week'**
+  String insightsOpenWeekly(int completed, int target);
+
+  /// No description provided for @insightsPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get insightsPending;
+
+  /// No description provided for @insightsWeekNoteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Consistency without pressure'**
+  String get insightsWeekNoteTitle;
+
+  /// No description provided for @insightsWeekNoteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Only closed, eligible periods count. Future days and archived routines are excluded.'**
+  String get insightsWeekNoteBody;
+
+  /// Screen 15 title.
+  ///
+  /// In en, this message translates to:
+  /// **'Your consistency'**
+  String get insightsMonthTitle;
+
+  /// No description provided for @insightsMonthSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{month} · closed periods through {date}.'**
+  String insightsMonthSubtitle(String month, String date);
+
+  /// No description provided for @insightsMonthSubtitleNone.
+  ///
+  /// In en, this message translates to:
+  /// **'{month} · no closed periods yet.'**
+  String insightsMonthSubtitleNone(String month);
+
+  /// No description provided for @insightsEligiblePeriods.
+  ///
+  /// In en, this message translates to:
+  /// **'{completed} / {eligible} eligible periods'**
+  String insightsEligiblePeriods(int completed, int eligible);
+
+  /// No description provided for @insightsByCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'By category'**
+  String get insightsByCategory;
+
+  /// No description provided for @insightsCategoryCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{completed} / {eligible}'**
+  String insightsCategoryCount(int completed, int eligible);
+
+  /// No description provided for @insightsCategoryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{category}, {completed} of {eligible}, {percent} percent'**
+  String insightsCategoryLabel(String category, int completed, int eligible, int percent);
+
+  /// No description provided for @insightsMonthFooter.
+  ///
+  /// In en, this message translates to:
+  /// **'Protected periods keep a streak, but do not count as completed habits.'**
+  String get insightsMonthFooter;
+
+  /// No description provided for @insightsLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Insights could not be loaded right now.'**
+  String get insightsLoadError;
+
+  /// No description provided for @insightsOfflineNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Insights need a connection. They appear once your phone is back online.'**
+  String get insightsOfflineNone;
+
+  /// No description provided for @insightsOfflineLast.
+  ///
+  /// In en, this message translates to:
+  /// **'These are the last numbers from this session.'**
+  String get insightsOfflineLast;
+
+  /// No description provided for @insightsUnsynced.
+  ///
+  /// In en, this message translates to:
+  /// **'Check-ins waiting to sync aren\'t counted yet.'**
+  String get insightsUnsynced;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

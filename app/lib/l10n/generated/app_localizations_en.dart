@@ -2401,4 +2401,136 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get saveConfirming => 'Saved on this device. Confirming…';
+
+  @override
+  String get insightsWeek => 'Week';
+
+  @override
+  String get insightsMonth => 'Month';
+
+  @override
+  String get insightsWeekTitle => 'A week of progress';
+
+  @override
+  String insightsWeekSubtitle(String range) {
+    return '$range · this week is still in progress.';
+  }
+
+  @override
+  String insightsRange(String start, String end) {
+    return '$start–$end';
+  }
+
+  @override
+  String insightsPercent(int percent) {
+    return '$percent%';
+  }
+
+  @override
+  String insightsClosedPeriods(int completed, int eligible) {
+    return '$completed / $eligible closed periods';
+  }
+
+  @override
+  String get insightsNoClosedPeriods => 'No closed periods yet';
+
+  @override
+  String insightsXp(int xp) {
+    final intl.NumberFormat xpNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String xpString = xpNumberFormat.format(xp);
+
+    return '+$xpString XP';
+  }
+
+  @override
+  String insightsThrough(String date) {
+    return 'Through $date';
+  }
+
+  @override
+  String get insightsNoClosedDays => 'No closed days yet';
+
+  @override
+  String get insightsCheckIns => 'Completed check-ins';
+
+  @override
+  String get insightsTodayOpen => 'Today is still open';
+
+  @override
+  String insightsDayLabel(String day, int completed, int due) {
+    return '$day, $completed of $due completed';
+  }
+
+  @override
+  String insightsTodayLabel(int completed, int due) {
+    return 'Today so far, $completed of $due completed';
+  }
+
+  @override
+  String insightsFutureLabel(String day) {
+    return '$day, not yet';
+  }
+
+  @override
+  String insightsOpenWeekly(int completed, int target) {
+    return '$completed of $target distinct days this week';
+  }
+
+  @override
+  String get insightsPending => 'Pending';
+
+  @override
+  String get insightsWeekNoteTitle => 'Consistency without pressure';
+
+  @override
+  String get insightsWeekNoteBody =>
+      'Only closed, eligible periods count. Future days and archived routines are excluded.';
+
+  @override
+  String get insightsMonthTitle => 'Your consistency';
+
+  @override
+  String insightsMonthSubtitle(String month, String date) {
+    return '$month · closed periods through $date.';
+  }
+
+  @override
+  String insightsMonthSubtitleNone(String month) {
+    return '$month · no closed periods yet.';
+  }
+
+  @override
+  String insightsEligiblePeriods(int completed, int eligible) {
+    return '$completed / $eligible eligible periods';
+  }
+
+  @override
+  String get insightsByCategory => 'By category';
+
+  @override
+  String insightsCategoryCount(int completed, int eligible) {
+    return '$completed / $eligible';
+  }
+
+  @override
+  String insightsCategoryLabel(String category, int completed, int eligible, int percent) {
+    return '$category, $completed of $eligible, $percent percent';
+  }
+
+  @override
+  String get insightsMonthFooter =>
+      'Protected periods keep a streak, but do not count as completed habits.';
+
+  @override
+  String get insightsLoadError => 'Insights could not be loaded right now.';
+
+  @override
+  String get insightsOfflineNone =>
+      'Insights need a connection. They appear once your phone is back online.';
+
+  @override
+  String get insightsOfflineLast => 'These are the last numbers from this session.';
+
+  @override
+  String get insightsUnsynced => 'Check-ins waiting to sync aren\'t counted yet.';
 }
