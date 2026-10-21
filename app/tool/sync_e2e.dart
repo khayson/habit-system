@@ -44,6 +44,8 @@
 //             day with B's amount.
 //   completion     A completes a quantity habit: the engine's AckWatch yields xp_delta 10; B's
 //             reward_state rises by 10; a further add yields none; below target -10; again +10.
+//   insights       GET /insights counts a synced backdated completion and its XP; a not-due
+//             check-in raises xp_earned but not the totals (A47).
 //   timer-draft    A times a duration habit offline (start, pause, resume, finish, A36): one
 //             increment of whole seconds; after sync both devices agree.
 // Exits non-zero at the first failed check, or unless both databases end identical.
@@ -685,6 +687,69 @@ Future<void> main(List<String> args) async {
     final again = await deltaOf(a.writer.setLogValue(habitId: jug, value: '2000.000'));
     _check(again == 10, 'completing again yields +10 ($again)');
     _check(await xpOnB() == before + 10, 'B nets +10 overall');
+  });
+
+  await _scenario('insights', () async {
+    // A47: GET /insights reflects a synced backdated completion; a not-due check-in raises
+    // xp_earned (the ledger) but never the totals. Monday has no closed day in its week, so
+    // the month is used then.
+    final period = today.isoWeekday == 1 ? 'month' : 'week';
+    Future<Map<String, dynamic>> insights() async =>
+        ((await a.dio.get<Map<String, dynamic>>(
+                  '/insights',
+                  queryParameters: {'period': period},
+                )).data!['data']
+                as Map)
+            .cast<String, dynamic>();
+    final yesterday = today.addDays(-1);
+    _check((await insights())['window']['through'] == yesterday.toString(), 'yesterday is closed');
+
+    final daily = await a.writer.createHabitUnchecked(
+      name: 'Insight daily',
+      type: 'binary',
+      target: 1,
+      category: 'learning',
+      startLocalDate: yesterday,
+      backdate: true,
+    );
+    await a.sync();
+    final before = await insights();
+    await a.writer.setLogValue(habitId: daily, value: 1, logDate: yesterday);
+    await a.sync();
+    final after = await insights();
+    int totals(Map<String, dynamic> i, String k) => (i['totals'] as Map)[k] as int;
+    _check(
+      totals(after, 'completed') == totals(before, 'completed') + 1,
+      'the completion counts (${before['totals']} -> ${after['totals']})',
+    );
+    _check(after['xp_earned'] == (before['xp_earned'] as int) + 10, 'and earns 10 XP');
+
+    // Due only on tomorrow's weekday, so yesterday and today are not due.
+    final rare = await a.writer.createHabitUnchecked(
+      name: 'Insight rare',
+      type: 'binary',
+      target: 1,
+      category: 'learning',
+      frequencyType: 'weekdays',
+      frequencyConfig: {
+        'days': [today.addDays(1).isoWeekday],
+      },
+      startLocalDate: yesterday,
+      backdate: true,
+    );
+    await a.sync();
+    final beforeRare = await insights();
+    await a.writer.setLogValue(habitId: rare, value: 1, logDate: yesterday);
+    await a.sync();
+    final afterRare = await insights();
+    _check(
+      afterRare['xp_earned'] == (beforeRare['xp_earned'] as int) + 10,
+      'a not-due check-in raises xp_earned',
+    );
+    _check(
+      afterRare['totals'].toString() == beforeRare['totals'].toString(),
+      'but not the totals (${beforeRare['totals']} -> ${afterRare['totals']})',
+    );
   });
 
   await _scenario('timer-draft', () async {
