@@ -12,7 +12,7 @@ use Illuminate\Testing\TestResponse;
 abstract class TestCase extends BaseTestCase
 {
     /** Freezes the domain Clock and Laravel's clock together (token expiry uses the latter). */
-    protected function freezeClock(string $instant): FrozenClock
+    public function freezeClock(string $instant): FrozenClock
     {
         // Move an already frozen clock rather than replacing it: route controllers (and the
         // services they hold) are cached across requests within one test.

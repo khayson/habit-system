@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\AvatarController;
 use App\Http\Controllers\Api\V1\HabitController;
 use App\Http\Controllers\Api\V1\HealthController;
+use App\Http\Controllers\Api\V1\InsightsController;
 use App\Http\Controllers\Api\V1\RewardsController;
 use App\Http\Controllers\Api\V1\SyncController;
 use Illuminate\Support\Facades\Route;
@@ -27,6 +28,7 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::get('/habits/{habit}/heatmap', [HabitController::class, 'heatmap'])->name('habits.heatmap');
     Route::get('/rewards', [RewardsController::class, 'rewards'])->name('rewards');
     Route::get('/freezes', [RewardsController::class, 'freezes'])->name('freezes');
+    Route::get('/insights', [InsightsController::class, 'show'])->name('insights');
     // A20: the caller's own photo only.
     Route::delete('/me/avatar', [AvatarController::class, 'delete'])->name('me.avatar.delete');
     Route::get('/me/avatar/{size}', [AvatarController::class, 'show'])->name('me.avatar.show');
