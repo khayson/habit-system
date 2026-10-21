@@ -165,6 +165,26 @@ void main() {
     await tearDownApp(tester, account);
   });
 
+  testWidgets('while confirming, the preview keeps its text from the save (5.2c L2)', (
+    tester,
+  ) async {
+    final id = await seed(tester);
+    transport.hold = Completer<void>();
+    await openAmount(tester, id);
+    await tester.enterText(find.byKey(const ValueKey('amount-field')), '2');
+    await tester.pump();
+    expect(find.text('2 / 2 L'), findsOneWidget, reason: 'the preview before saving');
+
+    await save(tester, '2'); // the local total is now 2 L underneath
+
+    expect(find.text('Saved on this device. Confirming…'), findsOneWidget);
+    expect(find.text('2 / 2 L'), findsOneWidget, reason: 'unchanged');
+    expect(find.text('4 / 2 L'), findsNothing);
+    transport.hold!.complete();
+    await drive(tester, rounds: 40);
+    await tearDownApp(tester, account);
+  });
+
   testWidgets('Back during the wait leaves; the late ack then opens nothing', (tester) async {
     final id = await seed(tester);
     transport.hold = Completer<void>();

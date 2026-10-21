@@ -68,6 +68,11 @@ class _AmountState extends State<_Amount> {
   /// A46: waiting for the ack of a save that completed the day.
   CompletionWait? _wait;
 
+  /// 5.2c review L2: the saved total as shown at the moment of the save; while the wait is live
+  /// the screen keeps showing it, so the preview does not move under the person.
+  int _shownSaved = 0;
+  int? _frozenSaved;
+
   @override
   void dispose() {
     // Leaving by any way cancels the wait; a late ack then opens nothing.
@@ -120,12 +125,20 @@ class _AmountState extends State<_Amount> {
       _focus.requestFocus();
       return;
     }
-    setState(() => _busy = true);
+    setState(() {
+      _busy = true;
+      _frozenSaved = _shownSaved;
+    });
     final LocalWrite write;
     try {
       write = await account.actions.addAmount(widget.habitId, parsed.delta!);
     } on LogFailure {
-      if (mounted) setState(() => _error = l10n.amountTooMuch);
+      if (mounted) {
+        setState(() {
+          _error = l10n.amountTooMuch;
+          _frozenSaved = null;
+        });
+      }
       return;
     } finally {
       if (mounted && _wait == null) setState(() => _busy = false);
@@ -213,7 +226,9 @@ class _AmountState extends State<_Amount> {
     final unit = detail.schedule.unitOn(today) ?? detail.habit.payload['unit'] as String?;
     _seed(type, target, unit);
     final rules = type.rules;
-    final saved = rules.parseValue(detail.logOn(today)?.value) ?? 0;
+    final live = rules.parseValue(detail.logOn(today)?.value) ?? 0;
+    final saved = _frozenSaved ?? live;
+    _shownSaved = saved;
     final after = saved + (_units ?? 0);
     final targetUnits = rules.parseTarget(target);
     final reached = targetUnits != null && rules.isComplete(after, targetUnits);
