@@ -143,8 +143,10 @@ A not-due day earns the same XP and never affects a streak (A40; confirmed by Kh
 - **5.2:** app side of rewards and freezes, in two parts.
   - **5.2a (done):** the 5.1 follow-ups on the server (freeze_usage indexes, policy ordering, `xp_delta` in acks and `next_refill_on`, A43), the app's `reward_state` table and `protected_in_streak`, the XP line on Today and Profile, the queue note (A44), the 12 footer reading the server's count with the client heuristic removed.
   - **5.2b (done):** screens 16 and 17, their services (GET /rewards and GET /freezes on the app), the auto-freeze switch, the entry points (Profile and the 12 footer).
-  - **5.2c:** completion screens 06 and 35 and the engine's ack watch for `xp_delta`.
-- **5.3:** insights: the server endpoint and screens 14 and 15.
+  - **5.2c (done):** completion screens 06 and 35 and the engine's ack watch for `xp_delta`.
+- **5.3:** insights, in two parts.
+  - **5.3a:** GET /insights on the server (A47), its contract fixtures, and the app's InsightsService (no screens; the tab stays disabled).
+  - **5.3b:** screens 14 and 15, enabling the Insights tab, and their device gate steps (65 on).
 
 Screen 01 (Welcome) is Phase 7 and is still to be built.
 
