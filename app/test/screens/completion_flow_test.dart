@@ -196,6 +196,24 @@ void main() {
     await tearDownApp(tester, account);
   });
 
+  testWidgets('an add to a day already complete and synced leaves at once (5.2c L1)', (
+    tester,
+  ) async {
+    final id = await seed(tester);
+    await tester.runAsync(() => account.writer.setLogValue(habitId: id, value: '2.000'));
+    await syncNow(tester, account);
+    transport.calls = 0;
+    await openAmount(tester, id);
+
+    await save(tester, '0.5');
+
+    expect(onToday(), isTrue);
+    expect(find.text('That counts.'), findsNothing);
+    expect(transport.calls, 0, reason: 'no forced sync: this ack cannot carry XP');
+    await drive(tester, rounds: 40);
+    await tearDownApp(tester, account);
+  });
+
   testWidgets('reward_state arriving in a later response updates the card', (tester) async {
     final id = await seed(tester);
     transport.rewardLater = true;

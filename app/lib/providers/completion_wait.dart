@@ -26,10 +26,11 @@ class CompletionWait {
 
   const CompletionWait._(this.result, this.cancel);
 
-  /// Null when there is nothing to wait for: the day is not complete, or the device is offline
+  /// Null when there is nothing to wait for: the write did not complete the day (nor join the
+  /// unsent row that did), or the device is offline
   /// (ASSUMPTION(A44-offline-return)). Then the save screen leaves at once, as before.
   static CompletionWait? start(AccountContext account, LocalWrite write, {Duration? wait}) {
-    if (!write.completeAfter || account.sync.offline) return null;
+    if (!write.mayEarnXp || account.sync.offline) return null;
     final id = write.mutationId;
     final ack = account.ackWatch.waitFor(id, wait ?? timeout);
     final done = Completer<int?>();

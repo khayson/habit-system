@@ -266,6 +266,7 @@ class LocalMutationService {
         DayResolver(calendar.timeline, () => occurredAt).validateBackdate(logDate);
       }
       final date = logDate ?? calendar.timeline.localDateAt(occurredAt);
+      final before = await LocalView(db).dayComplete(habitId, date);
       final rows = await _rowsFor(habitId, date);
 
       // Coalesce only into the newest row for this habit-day, only while it is unsent.
@@ -276,7 +277,7 @@ class LocalMutationService {
         await (db.update(db.outbox)..where((o) => o.seq.equals(last.seq))).write(
           OutboxCompanion(payload: Value(jsonEncode(payload)), occurredAt: Value(_iso(occurredAt))),
         );
-        return _written(habitId, last.mutationId, date, coalesced: true);
+        return _written(habitId, last.mutationId, date, before, coalesced: true);
       }
 
       final confirmed = await _confirmedLog(habitId, date);
@@ -296,7 +297,7 @@ class LocalMutationService {
           if (logDate != null) ...{'date_mode': 'backdate', 'log_date': logDate.toString()},
         },
       );
-      return _written(habitId, mutationId, date, coalesced: false);
+      return _written(habitId, mutationId, date, before, coalesced: false);
     });
   }
 
@@ -326,6 +327,7 @@ class LocalMutationService {
         DayResolver(calendar.timeline, () => occurredAt).validateBackdate(logDate);
       }
       final date = logDate ?? calendar.timeline.localDateAt(occurredAt);
+      final before = await LocalView(db, types: types).dayComplete(habitId, date);
       final rows = await _rowsFor(habitId, date);
       final confirmed = await _confirmedLog(habitId, date);
       final day = applyLogRows(confirmed: confirmed, rows: rows, rules: rules);
@@ -357,7 +359,7 @@ class LocalMutationService {
               occurredAt: Value(_iso(occurredAt)),
             ),
           );
-          return _written(habitId, last.mutationId, date, coalesced: true, types: types);
+          return _written(habitId, last.mutationId, date, before, coalesced: true, types: types);
         }
       }
 
@@ -376,7 +378,7 @@ class LocalMutationService {
           if (logDate != null) ...{'date_mode': 'backdate', 'log_date': logDate.toString()},
         },
       );
-      return _written(habitId, mutationId, date, coalesced: false, types: types);
+      return _written(habitId, mutationId, date, before, coalesced: false, types: types);
     });
   }
 
@@ -639,13 +641,15 @@ class LocalMutationService {
   Future<LocalWrite> _written(
     String habitId,
     String mutationId,
-    LocalDate date, {
+    LocalDate date,
+    bool completeBefore, {
     required bool coalesced,
     ProvisionalTypeRegistry? types,
   }) async => LocalWrite(
     mutationId,
     date,
     coalesced: coalesced,
+    completeBefore: completeBefore,
     completeAfter: await LocalView(db, types: types).dayComplete(habitId, date),
   );
 
@@ -1131,10 +1135,18 @@ class LocalWrite {
   /// Today uses). Decides only whether a save screen waits for the ack.
   final bool completeAfter;
 
+  /// The day showed complete before this write (read at the start of the same transaction).
+  final bool completeBefore;
+
   const LocalWrite(
     this.mutationId,
     this.date, {
     required this.coalesced,
     this.completeAfter = false,
+    this.completeBefore = false,
   });
+
+  /// 5.2c review L1: only this write's ack can carry the day's XP when the write completed the
+  /// day, or joined the unsent row that will (coalesced).
+  bool get mayEarnXp => completeAfter && (!completeBefore || coalesced);
 }
