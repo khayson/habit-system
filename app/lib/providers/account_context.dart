@@ -22,6 +22,7 @@ import '../notifications/reminder_scheduling.dart';
 import '../services/auth_service.dart';
 import '../services/habit_actions.dart';
 import '../services/heatmap_service.dart';
+import '../services/insights_service.dart';
 import '../services/rewards_service.dart';
 import '../background/workmanager_sync.dart';
 import '../sync/avatar_sync.dart';
@@ -54,6 +55,9 @@ class AccountContext {
   /// GET /rewards and GET /freezes (screens 16 and 17); null where there is no server.
   final RewardsService? rewardsApi;
 
+  /// GET /insights (screens 14 and 15, 5.3b); null where there is no server.
+  final InsightsService? insightsApi;
+
   /// The device's notification scheduler (Phase 3.2b); one per device, shared by accounts.
   final NotificationScheduler notifications;
 
@@ -67,6 +71,7 @@ class AccountContext {
     required this.session,
     this.heatmap,
     this.rewardsApi,
+    this.insightsApi,
     NotificationScheduler? notifications,
     this.background,
     required SyncTransport transport,
@@ -158,6 +163,7 @@ class AccountContext {
     session: session,
     heatmap: HeatmapService(api),
     rewardsApi: RewardsService(api),
+    insightsApi: InsightsService(api),
     background: const WorkmanagerSyncScheduler(),
     transport: HttpSyncTransport(api.dio, currentToken: api.currentToken),
     avatarTransport: HttpAvatarTransport(api.dio),
