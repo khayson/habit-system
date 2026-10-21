@@ -1,12 +1,12 @@
 {
-  "description": "A47: GET /insights?period=week|month[&category=]. The window is the user's local week (Monday to Sunday) or calendar month containing their local today at request time (UserCalendar), never a client date. Consistency counts closed eligible periods only (A28: a period belongs to the window containing its start date); protected periods count in the denominator, never the numerator; open, future, not-due periods and archived habits are excluded. percent rounds half up and is null when nothing is eligible. by_category lists categories with eligible > 0 in DefinitionVersion::CATEGORIES order and sums to totals. Week only: days (habit-day counts of day periods; open is today; future days have null counts) and open_periods (weekly habits whose current period is open). Each case declares its seed: 'domain/insights.json' means that file's seed (the five daily/weekday habits); extra_habits and steps are added on top. Habit names never travel; the app resolves them locally.",
+  "description": "A47: GET /insights?period=week|month[&category=]. The window is the user's local week (Monday to Sunday) or calendar month containing their local today at request time (UserCalendar), never a client date. Consistency counts closed eligible periods only (A28: a period belongs to the window containing its start date); protected periods count in the denominator, never the numerator; open, future, not-due periods and archived habits are excluded. xp_earned is 10 per active XP entitlement (the net ledger, A40) dated from the window start through `through`, so not-due check-ins and days in a still-open weekly period count, today never does, and archived habits keep theirs. percent rounds half up and is null when nothing is eligible. by_category lists categories with eligible > 0 in DefinitionVersion::CATEGORIES order and sums to totals. Week only: days (habit-day counts of day periods; open is today; future days have null counts) and open_periods (weekly habits whose current period is open). Each case declares its seed: 'domain/insights.json' means that file's seed (the five daily/weekday habits); extra_habits and steps are added on top. Habit names never travel; the app resolves them locally.",
   "suites": [
     "php",
     "dart"
   ],
   "cases": [
     {
-      "name": "week: 9 of 15 closed periods, +90 XP through 27 May, an open weekly habit",
+      "name": "week: 9 of 15 closed periods; XP from the ledger through 27 May, with a not-due check-in and an open weekly habit's days",
       "now": "2026-05-28T20:00:00Z",
       "timezone": "America/Los_Angeles",
       "seed": {
@@ -19,56 +19,182 @@
             "type": "binary",
             "target": 1,
             "frequency_type": "weekly_count",
-            "frequency_config": {"count": 3},
+            "frequency_config": {
+              "count": 3
+            },
             "start_local_date": "2026-05-25",
-            "logs": {"2026-05-25": 1, "2026-05-26": 1}
+            "logs": {
+              "2026-05-25": 1,
+              "2026-05-26": 1
+            }
+          },
+          {
+            "id": "01970000-0000-7000-8000-000000000007",
+            "name": "Weekend walk",
+            "category": "health",
+            "type": "binary",
+            "target": 1,
+            "frequency_type": "weekdays",
+            "frequency_config": {
+              "days": [
+                6
+              ]
+            },
+            "start_local_date": "2026-05-25",
+            "logs": {
+              "2026-05-26": 1
+            }
           }
         ]
       },
-      "query": {"period": "week"},
+      "query": {
+        "period": "week"
+      },
       "expect": {
         "period": "week",
         "category": null,
-        "window": {"start": "2026-05-25", "end": "2026-05-31", "today": "2026-05-28", "through": "2026-05-27"},
-        "totals": {"completed": 9, "eligible": 15, "percent": 60},
-        "xp_earned": 90,
+        "window": {
+          "start": "2026-05-25",
+          "end": "2026-05-31",
+          "today": "2026-05-28",
+          "through": "2026-05-27"
+        },
+        "totals": {
+          "completed": 9,
+          "eligible": 15,
+          "percent": 60
+        },
+        "xp_earned": 120,
         "by_category": [
-          {"category": "health", "completed": 1, "eligible": 6, "percent": 17},
-          {"category": "mindfulness", "completed": 3, "eligible": 3, "percent": 100},
-          {"category": "learning", "completed": 3, "eligible": 3, "percent": 100},
-          {"category": "productivity", "completed": 2, "eligible": 3, "percent": 67}
+          {
+            "category": "health",
+            "completed": 1,
+            "eligible": 6,
+            "percent": 17
+          },
+          {
+            "category": "mindfulness",
+            "completed": 3,
+            "eligible": 3,
+            "percent": 100
+          },
+          {
+            "category": "learning",
+            "completed": 3,
+            "eligible": 3,
+            "percent": 100
+          },
+          {
+            "category": "productivity",
+            "completed": 2,
+            "eligible": 3,
+            "percent": 67
+          }
         ],
         "days": [
-          {"date": "2026-05-25", "completed": 3, "due": 5, "open": false},
-          {"date": "2026-05-26", "completed": 3, "due": 5, "open": false},
-          {"date": "2026-05-27", "completed": 3, "due": 5, "open": false},
-          {"date": "2026-05-28", "completed": 4, "due": 5, "open": true},
-          {"date": "2026-05-29", "completed": null, "due": null, "open": false},
-          {"date": "2026-05-30", "completed": null, "due": null, "open": false},
-          {"date": "2026-05-31", "completed": null, "due": null, "open": false}
+          {
+            "date": "2026-05-25",
+            "completed": 3,
+            "due": 5,
+            "open": false
+          },
+          {
+            "date": "2026-05-26",
+            "completed": 3,
+            "due": 5,
+            "open": false
+          },
+          {
+            "date": "2026-05-27",
+            "completed": 3,
+            "due": 5,
+            "open": false
+          },
+          {
+            "date": "2026-05-28",
+            "completed": 4,
+            "due": 5,
+            "open": true
+          },
+          {
+            "date": "2026-05-29",
+            "completed": null,
+            "due": null,
+            "open": false
+          },
+          {
+            "date": "2026-05-30",
+            "completed": null,
+            "due": null,
+            "open": false
+          },
+          {
+            "date": "2026-05-31",
+            "completed": null,
+            "due": null,
+            "open": false
+          }
         ],
         "open_periods": [
-          {"habit_id": "01970000-0000-7000-8000-000000000006", "completed": 2, "target": 3}
+          {
+            "habit_id": "01970000-0000-7000-8000-000000000006",
+            "completed": 2,
+            "target": 3
+          }
         ]
-      }
+      },
+      "xp_note": "90 from the nine completed closed day periods, 20 from Pilates on 25 and 26 May (its week is still open), 10 from Weekend walk on Tuesday 26 May (not due). Today's four completions are not counted."
     },
     {
       "name": "month: 95 of 125, four categories summing to the total",
       "now": "2026-05-28T20:00:00Z",
       "timezone": "America/Los_Angeles",
-      "seed": {"from": "domain/insights.json"},
-      "query": {"period": "month"},
+      "seed": {
+        "from": "domain/insights.json"
+      },
+      "query": {
+        "period": "month"
+      },
       "expect": {
         "period": "month",
         "category": null,
-        "window": {"start": "2026-05-01", "end": "2026-05-31", "today": "2026-05-28", "through": "2026-05-27"},
-        "totals": {"completed": 95, "eligible": 125, "percent": 76},
+        "window": {
+          "start": "2026-05-01",
+          "end": "2026-05-31",
+          "today": "2026-05-28",
+          "through": "2026-05-27"
+        },
+        "totals": {
+          "completed": 95,
+          "eligible": 125,
+          "percent": 76
+        },
         "xp_earned": 950,
         "by_category": [
-          {"category": "health", "completed": 37, "eligible": 54, "percent": 69},
-          {"category": "mindfulness", "completed": 22, "eligible": 27, "percent": 81},
-          {"category": "learning", "completed": 21, "eligible": 25, "percent": 84},
-          {"category": "productivity", "completed": 15, "eligible": 19, "percent": 79}
+          {
+            "category": "health",
+            "completed": 37,
+            "eligible": 54,
+            "percent": 69
+          },
+          {
+            "category": "mindfulness",
+            "completed": 22,
+            "eligible": 27,
+            "percent": 81
+          },
+          {
+            "category": "learning",
+            "completed": 21,
+            "eligible": 25,
+            "percent": 84
+          },
+          {
+            "category": "productivity",
+            "completed": 15,
+            "eligible": 19,
+            "percent": 79
+          }
         ]
       }
     },
@@ -76,16 +202,35 @@
       "name": "category filter: month, health only",
       "now": "2026-05-28T20:00:00Z",
       "timezone": "America/Los_Angeles",
-      "seed": {"from": "domain/insights.json"},
-      "query": {"period": "month", "category": "health"},
+      "seed": {
+        "from": "domain/insights.json"
+      },
+      "query": {
+        "period": "month",
+        "category": "health"
+      },
       "expect": {
         "period": "month",
         "category": "health",
-        "window": {"start": "2026-05-01", "end": "2026-05-31", "today": "2026-05-28", "through": "2026-05-27"},
-        "totals": {"completed": 37, "eligible": 54, "percent": 69},
+        "window": {
+          "start": "2026-05-01",
+          "end": "2026-05-31",
+          "today": "2026-05-28",
+          "through": "2026-05-27"
+        },
+        "totals": {
+          "completed": 37,
+          "eligible": 54,
+          "percent": 69
+        },
         "xp_earned": 370,
         "by_category": [
-          {"category": "health", "completed": 37, "eligible": 54, "percent": 69}
+          {
+            "category": "health",
+            "completed": 37,
+            "eligible": 54,
+            "percent": 69
+          }
         ]
       }
     },
@@ -94,22 +239,68 @@
       "now": "2026-05-28T20:00:00Z",
       "timezone": "America/Los_Angeles",
       "seed": {},
-      "query": {"period": "week"},
+      "query": {
+        "period": "week"
+      },
       "expect": {
         "period": "week",
         "category": null,
-        "window": {"start": "2026-05-25", "end": "2026-05-31", "today": "2026-05-28", "through": "2026-05-27"},
-        "totals": {"completed": 0, "eligible": 0, "percent": null},
+        "window": {
+          "start": "2026-05-25",
+          "end": "2026-05-31",
+          "today": "2026-05-28",
+          "through": "2026-05-27"
+        },
+        "totals": {
+          "completed": 0,
+          "eligible": 0,
+          "percent": null
+        },
         "xp_earned": 0,
         "by_category": [],
         "days": [
-          {"date": "2026-05-25", "completed": 0, "due": 0, "open": false},
-          {"date": "2026-05-26", "completed": 0, "due": 0, "open": false},
-          {"date": "2026-05-27", "completed": 0, "due": 0, "open": false},
-          {"date": "2026-05-28", "completed": 0, "due": 0, "open": true},
-          {"date": "2026-05-29", "completed": null, "due": null, "open": false},
-          {"date": "2026-05-30", "completed": null, "due": null, "open": false},
-          {"date": "2026-05-31", "completed": null, "due": null, "open": false}
+          {
+            "date": "2026-05-25",
+            "completed": 0,
+            "due": 0,
+            "open": false
+          },
+          {
+            "date": "2026-05-26",
+            "completed": 0,
+            "due": 0,
+            "open": false
+          },
+          {
+            "date": "2026-05-27",
+            "completed": 0,
+            "due": 0,
+            "open": false
+          },
+          {
+            "date": "2026-05-28",
+            "completed": 0,
+            "due": 0,
+            "open": true
+          },
+          {
+            "date": "2026-05-29",
+            "completed": null,
+            "due": null,
+            "open": false
+          },
+          {
+            "date": "2026-05-30",
+            "completed": null,
+            "due": null,
+            "open": false
+          },
+          {
+            "date": "2026-05-31",
+            "completed": null,
+            "due": null,
+            "open": false
+          }
         ],
         "open_periods": []
       }
@@ -130,35 +321,184 @@
             "frequency_type": "daily",
             "frequency_config": {},
             "start_local_date": "2026-05-25",
-            "logs": {"2026-05-25": 1, "2026-05-27": 1}
+            "logs": {
+              "2026-05-25": 1,
+              "2026-05-27": 1
+            }
           }
         ]
       },
-      "query": {"period": "week"},
+      "query": {
+        "period": "week"
+      },
       "expect": {
         "period": "week",
         "category": null,
-        "window": {"start": "2026-05-25", "end": "2026-05-31", "today": "2026-05-28", "through": "2026-05-27"},
-        "totals": {"completed": 2, "eligible": 3, "percent": 67},
+        "window": {
+          "start": "2026-05-25",
+          "end": "2026-05-31",
+          "today": "2026-05-28",
+          "through": "2026-05-27"
+        },
+        "totals": {
+          "completed": 2,
+          "eligible": 3,
+          "percent": 67
+        },
         "xp_earned": 20,
         "by_category": [
-          {"category": "health", "completed": 2, "eligible": 3, "percent": 67}
+          {
+            "category": "health",
+            "completed": 2,
+            "eligible": 3,
+            "percent": 67
+          }
         ],
         "days": [
-          {"date": "2026-05-25", "completed": 1, "due": 1, "open": false},
-          {"date": "2026-05-26", "completed": 0, "due": 1, "open": false},
-          {"date": "2026-05-27", "completed": 1, "due": 1, "open": false},
-          {"date": "2026-05-28", "completed": 0, "due": 1, "open": true},
-          {"date": "2026-05-29", "completed": null, "due": null, "open": false},
-          {"date": "2026-05-30", "completed": null, "due": null, "open": false},
-          {"date": "2026-05-31", "completed": null, "due": null, "open": false}
+          {
+            "date": "2026-05-25",
+            "completed": 1,
+            "due": 1,
+            "open": false
+          },
+          {
+            "date": "2026-05-26",
+            "completed": 0,
+            "due": 1,
+            "open": false
+          },
+          {
+            "date": "2026-05-27",
+            "completed": 1,
+            "due": 1,
+            "open": false
+          },
+          {
+            "date": "2026-05-28",
+            "completed": 0,
+            "due": 1,
+            "open": true
+          },
+          {
+            "date": "2026-05-29",
+            "completed": null,
+            "due": null,
+            "open": false
+          },
+          {
+            "date": "2026-05-30",
+            "completed": null,
+            "due": null,
+            "open": false
+          },
+          {
+            "date": "2026-05-31",
+            "completed": null,
+            "due": null,
+            "open": false
+          }
         ],
         "open_periods": []
       },
       "protected_period": "d:2026-05-26"
     },
     {
-      "name": "an archived habit is excluded everywhere",
+      "name": "today's completion is not counted in xp_earned",
+      "now": "2026-05-28T20:00:00Z",
+      "timezone": "America/Los_Angeles",
+      "seed": {
+        "extra_habits": [
+          {
+            "id": "01970000-0000-7000-8000-000000000031",
+            "name": "Floss",
+            "category": "health",
+            "type": "binary",
+            "target": 1,
+            "frequency_type": "daily",
+            "frequency_config": {},
+            "start_local_date": "2026-05-25",
+            "logs": {
+              "2026-05-27": 1,
+              "2026-05-28": 1
+            }
+          }
+        ]
+      },
+      "query": {
+        "period": "week"
+      },
+      "expect": {
+        "period": "week",
+        "category": null,
+        "window": {
+          "start": "2026-05-25",
+          "end": "2026-05-31",
+          "today": "2026-05-28",
+          "through": "2026-05-27"
+        },
+        "totals": {
+          "completed": 1,
+          "eligible": 3,
+          "percent": 33
+        },
+        "xp_earned": 10,
+        "by_category": [
+          {
+            "category": "health",
+            "completed": 1,
+            "eligible": 3,
+            "percent": 33
+          }
+        ],
+        "days": [
+          {
+            "date": "2026-05-25",
+            "completed": 0,
+            "due": 1,
+            "open": false
+          },
+          {
+            "date": "2026-05-26",
+            "completed": 0,
+            "due": 1,
+            "open": false
+          },
+          {
+            "date": "2026-05-27",
+            "completed": 1,
+            "due": 1,
+            "open": false
+          },
+          {
+            "date": "2026-05-28",
+            "completed": 1,
+            "due": 1,
+            "open": true
+          },
+          {
+            "date": "2026-05-29",
+            "completed": null,
+            "due": null,
+            "open": false
+          },
+          {
+            "date": "2026-05-30",
+            "completed": null,
+            "due": null,
+            "open": false
+          },
+          {
+            "date": "2026-05-31",
+            "completed": null,
+            "due": null,
+            "open": false
+          }
+        ],
+        "open_periods": []
+      }
+    },
+    {
+      "name": "an archived habit is excluded from consistency but keeps its XP",
       "now": "2026-05-28T20:00:00Z",
       "timezone": "America/Los_Angeles",
       "seed": {
@@ -172,7 +512,11 @@
             "frequency_type": "daily",
             "frequency_config": {},
             "start_local_date": "2026-05-25",
-            "logs": {"2026-05-25": 1, "2026-05-26": 1, "2026-05-27": 1}
+            "logs": {
+              "2026-05-25": 1,
+              "2026-05-26": 1,
+              "2026-05-27": 1
+            }
           },
           {
             "id": "01970000-0000-7000-8000-000000000022",
@@ -183,29 +527,84 @@
             "frequency_type": "daily",
             "frequency_config": {},
             "start_local_date": "2026-05-25",
-            "logs": {"2026-05-25": 1, "2026-05-26": 1, "2026-05-27": 1},
+            "logs": {
+              "2026-05-25": 1,
+              "2026-05-26": 1,
+              "2026-05-27": 1
+            },
             "archived": true
           }
         ]
       },
-      "query": {"period": "week"},
+      "query": {
+        "period": "week"
+      },
       "expect": {
         "period": "week",
         "category": null,
-        "window": {"start": "2026-05-25", "end": "2026-05-31", "today": "2026-05-28", "through": "2026-05-27"},
-        "totals": {"completed": 3, "eligible": 3, "percent": 100},
-        "xp_earned": 30,
+        "window": {
+          "start": "2026-05-25",
+          "end": "2026-05-31",
+          "today": "2026-05-28",
+          "through": "2026-05-27"
+        },
+        "totals": {
+          "completed": 3,
+          "eligible": 3,
+          "percent": 100
+        },
+        "xp_earned": 60,
         "by_category": [
-          {"category": "health", "completed": 3, "eligible": 3, "percent": 100}
+          {
+            "category": "health",
+            "completed": 3,
+            "eligible": 3,
+            "percent": 100
+          }
         ],
         "days": [
-          {"date": "2026-05-25", "completed": 1, "due": 1, "open": false},
-          {"date": "2026-05-26", "completed": 1, "due": 1, "open": false},
-          {"date": "2026-05-27", "completed": 1, "due": 1, "open": false},
-          {"date": "2026-05-28", "completed": 0, "due": 1, "open": true},
-          {"date": "2026-05-29", "completed": null, "due": null, "open": false},
-          {"date": "2026-05-30", "completed": null, "due": null, "open": false},
-          {"date": "2026-05-31", "completed": null, "due": null, "open": false}
+          {
+            "date": "2026-05-25",
+            "completed": 1,
+            "due": 1,
+            "open": false
+          },
+          {
+            "date": "2026-05-26",
+            "completed": 1,
+            "due": 1,
+            "open": false
+          },
+          {
+            "date": "2026-05-27",
+            "completed": 1,
+            "due": 1,
+            "open": false
+          },
+          {
+            "date": "2026-05-28",
+            "completed": 0,
+            "due": 1,
+            "open": true
+          },
+          {
+            "date": "2026-05-29",
+            "completed": null,
+            "due": null,
+            "open": false
+          },
+          {
+            "date": "2026-05-30",
+            "completed": null,
+            "due": null,
+            "open": false
+          },
+          {
+            "date": "2026-05-31",
+            "completed": null,
+            "due": null,
+            "open": false
+          }
         ],
         "open_periods": []
       }
@@ -215,12 +614,23 @@
       "now": "2026-06-01T03:00:00Z",
       "timezone": "America/Los_Angeles",
       "seed": {},
-      "query": {"period": "month"},
+      "query": {
+        "period": "month"
+      },
       "expect": {
         "period": "month",
         "category": null,
-        "window": {"start": "2026-05-01", "end": "2026-05-31", "today": "2026-05-31", "through": "2026-05-30"},
-        "totals": {"completed": 0, "eligible": 0, "percent": null},
+        "window": {
+          "start": "2026-05-01",
+          "end": "2026-05-31",
+          "today": "2026-05-31",
+          "through": "2026-05-30"
+        },
+        "totals": {
+          "completed": 0,
+          "eligible": 0,
+          "percent": null
+        },
         "xp_earned": 0,
         "by_category": []
       }
@@ -230,22 +640,68 @@
       "now": "2026-06-01T03:00:00Z",
       "timezone": "Africa/Accra",
       "seed": {},
-      "query": {"period": "week"},
+      "query": {
+        "period": "week"
+      },
       "expect": {
         "period": "week",
         "category": null,
-        "window": {"start": "2026-06-01", "end": "2026-06-07", "today": "2026-06-01", "through": null},
-        "totals": {"completed": 0, "eligible": 0, "percent": null},
+        "window": {
+          "start": "2026-06-01",
+          "end": "2026-06-07",
+          "today": "2026-06-01",
+          "through": null
+        },
+        "totals": {
+          "completed": 0,
+          "eligible": 0,
+          "percent": null
+        },
         "xp_earned": 0,
         "by_category": [],
         "days": [
-          {"date": "2026-06-01", "completed": 0, "due": 0, "open": true},
-          {"date": "2026-06-02", "completed": null, "due": null, "open": false},
-          {"date": "2026-06-03", "completed": null, "due": null, "open": false},
-          {"date": "2026-06-04", "completed": null, "due": null, "open": false},
-          {"date": "2026-06-05", "completed": null, "due": null, "open": false},
-          {"date": "2026-06-06", "completed": null, "due": null, "open": false},
-          {"date": "2026-06-07", "completed": null, "due": null, "open": false}
+          {
+            "date": "2026-06-01",
+            "completed": 0,
+            "due": 0,
+            "open": true
+          },
+          {
+            "date": "2026-06-02",
+            "completed": null,
+            "due": null,
+            "open": false
+          },
+          {
+            "date": "2026-06-03",
+            "completed": null,
+            "due": null,
+            "open": false
+          },
+          {
+            "date": "2026-06-04",
+            "completed": null,
+            "due": null,
+            "open": false
+          },
+          {
+            "date": "2026-06-05",
+            "completed": null,
+            "due": null,
+            "open": false
+          },
+          {
+            "date": "2026-06-06",
+            "completed": null,
+            "due": null,
+            "open": false
+          },
+          {
+            "date": "2026-06-07",
+            "completed": null,
+            "due": null,
+            "open": false
+          }
         ],
         "open_periods": []
       }

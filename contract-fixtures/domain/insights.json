@@ -295,9 +295,8 @@
         "completed": 9,
         "eligible": 15,
         "percent": 60
-      },
-      "xp": 90
+      }
     },
-    "note": "Through 27 May. The current day (28 May) is open and outside the denominator."
+    "note": "Through 27 May. The current day (28 May) is open and outside the denominator. The week's XP is the ledger's, pinned by insights/insights_responses.json (A47)."
   }
 }
