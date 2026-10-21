@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../app/router.dart';
 import '../config/habit_tokens.dart';
 import '../core/exceptions/app_exception.dart';
 import '../data/local_view.dart';
@@ -115,6 +117,8 @@ class _InsightsScreenState extends State<InsightsScreen> {
             ScreenHeader(
               title: week ? l10n.insightsWeekTitle : l10n.insightsMonthTitle,
               subtitle: shown == null || shown.period != _period ? null : _subtitle(context, shown),
+              // Design 14 and 15 draw Back; like Profile, a tab root goes back to Today.
+              onBack: () => context.go(Routes.today),
             ),
             SegmentedTabs(
               labels: [l10n.insightsWeek, l10n.insightsMonth],
