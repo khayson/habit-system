@@ -19,6 +19,7 @@ class AppShell extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final tokens = HabitTokens.of(context);
     final habits = location.startsWith(Routes.habits);
+    final insights = location == Routes.insights;
     // 16 and 17 open from Profile and keep its tab selected (design).
     final profile =
         location.startsWith(Routes.profile) ||
@@ -40,7 +41,7 @@ class AppShell extends StatelessWidget {
                 _Tab(
                   icon: Icons.home_outlined,
                   label: l10n.navToday,
-                  selected: !habits && !profile,
+                  selected: !habits && !profile && !insights,
                   onTap: () => context.go(Routes.today),
                 ),
                 _Tab(
@@ -52,7 +53,8 @@ class AppShell extends StatelessWidget {
                 _Tab(
                   icon: Icons.signal_cellular_alt_outlined,
                   label: l10n.navInsights,
-                  selected: false,
+                  selected: insights,
+                  onTap: () => context.go(Routes.insights),
                 ),
                 _Tab(
                   icon: Icons.person_outline,

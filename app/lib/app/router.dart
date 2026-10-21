@@ -18,6 +18,7 @@ import '../screens/frequency_screen.dart';
 import '../screens/habit_detail_screen.dart';
 import '../screens/habit_library_screen.dart';
 import '../screens/freezes_screen.dart';
+import '../screens/insights_screen.dart';
 import '../screens/progress_screen.dart';
 import '../screens/profile_screen.dart';
 import '../screens/history_screen.dart';
@@ -64,6 +65,9 @@ abstract final class Routes {
   /// Screens 16 and 17 (5.2b), inside the shell with Profile selected, as designed.
   static const rewards = '/rewards';
   static const freezes = '/freezes';
+
+  /// Screens 14 and 15 (5.3b), the Insights tab.
+  static const insights = '/insights';
 
   /// Screen 19 (4.3c): review one change that needs a look.
   static String review(String mutationId) => '/sync/review/$mutationId';
@@ -205,6 +209,7 @@ List<RouteBase> appRoutes({
         path: Routes.archivedHabits,
         builder: (context, state) => ArchivedHabitsScreen(clock: clock),
       ),
+      GoRoute(path: Routes.insights, builder: (context, state) => const InsightsScreen()),
       GoRoute(
         path: Routes.rewards,
         builder: (context, state) => ProgressScreen(clock: clock),
