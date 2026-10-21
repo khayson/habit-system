@@ -145,8 +145,8 @@ A not-due day earns the same XP and never affects a streak (A40; confirmed by Kh
   - **5.2b (done):** screens 16 and 17, their services (GET /rewards and GET /freezes on the app), the auto-freeze switch, the entry points (Profile and the 12 footer).
   - **5.2c (done):** completion screens 06 and 35 and the engine's ack watch for `xp_delta`.
 - **5.3:** insights, in two parts.
-  - **5.3a:** GET /insights on the server (A47), its contract fixtures, and the app's InsightsService (no screens; the tab stays disabled).
-  - **5.3b:** screens 14 and 15, enabling the Insights tab, and their device gate steps (65 on).
+  - **5.3a (done):** GET /insights on the server (A47), its contract fixtures, and the app's InsightsService (no screens; the tab stays disabled).
+  - **5.3b (done):** screens 14 and 15, enabling the Insights tab, and their device gate steps (65 on).
 
 Screen 01 (Welcome) is Phase 7 and is still to be built.
 
