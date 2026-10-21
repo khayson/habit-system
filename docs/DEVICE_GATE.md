@@ -86,6 +86,13 @@ you saw.
 | 62 | Undo the completed day, then complete it again from the amount screen. | The completion screen shows +10 XP again. |
 | 63 | Tap the save, turn on airplane mode at once, then press Back while it says "Saved on this device. Confirming…". | It returns to Today and no completion screen appears later. |
 | 64 | At 200% text size and with TalkBack, open the completion screen. | Nothing is clipped; the heading reads as a header; the chip reads "10 XP earned"; the Level card reads as one label. |
+| 65 | Phase 5.3b. Online, tap the Insights tab. | "A week of progress" with this week's dates; the percentage and "{completed} / {eligible} closed periods", "+{n} XP" and "Through {yesterday}"; seven bars, future days flat; open weekly habits listed with "Pending". The tab shows as selected. |
+| 66 | Switch to Month. Leave the tab and come back. | "Your consistency" with the month and "closed periods through {yesterday}"; a row per category with its numbers; Month is still selected on return. |
+| 67 | On a Monday morning, before anything has closed this week, open Week. | "No closed periods yet" and "No closed days yet"; never "0%". |
+| 68 | In airplane mode, open Insights after a fresh app start. | "Insights need a connection. They appear once your phone is back online." No error wording. |
+| 69 | Open Insights online, then turn on airplane mode and pull to refresh. | The numbers stay, with "These are the last numbers from this session." |
+| 70 | Check in offline, then open Insights. | "Check-ins waiting to sync aren't counted yet."; after reconnecting and syncing the line goes. |
+| 71 | With TalkBack and at 200% text, open Week and Month. | The tab reads as selected; each day reads like "Monday, 3 of 5 completed"; each category reads its numbers and percent; nothing is clipped. |
 
 ## Results
 
@@ -155,3 +162,10 @@ you saw.
 | 62 | | | | |
 | 63 | | | | |
 | 64 | | | | |
+| 65 | | | | |
+| 66 | | | | |
+| 67 | | | | |
+| 68 | | | | |
+| 69 | | | | |
+| 70 | | | | |
+| 71 | | | | |
