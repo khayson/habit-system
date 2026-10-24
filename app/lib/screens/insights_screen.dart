@@ -41,10 +41,39 @@ class _InsightsScreenState extends State<InsightsScreen> {
   bool _failed = false;
   Map<String, (String?, ProvisionalTypeRules?)> _habits = const {};
 
+  /// 5.3b review L1: unsent check-ins seen on the last queue change; when they all reach the
+  /// server, the numbers are fetched again so they include them.
+  AccountContext? _account;
+  bool _hadWaiting = false;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    final account = context.read<AccountContext?>();
+    if (!identical(account, _account)) {
+      _account?.queue.removeListener(_onQueue);
+      _account = account;
+      account?.queue.addListener(_onQueue);
+      _hadWaiting = _waiting(account);
+    }
     if (_shown == null && !_loading) _load();
+  }
+
+  @override
+  void dispose() {
+    _account?.queue.removeListener(_onQueue);
+    super.dispose();
+  }
+
+  static bool _waiting(AccountContext? account) =>
+      (account?.queue.value?.items ?? const <QueueItem>[]).any(
+        (i) => i.row.entity == 'habit_log' && OutboxState.unacked.contains(i.row.state),
+      );
+
+  void _onQueue() {
+    final waiting = _waiting(_account);
+    if (_hadWaiting && !waiting && mounted) _load();
+    _hadWaiting = waiting;
   }
 
   Future<void> _load() async {
@@ -129,10 +158,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
             ListenableBuilder(
               listenable: account.queue,
               builder: (context, _) {
-                final waiting = (account.queue.value?.items ?? const <QueueItem>[]).any(
-                  (i) => i.row.entity == 'habit_log' && OutboxState.unacked.contains(i.row.state),
-                );
-                return waiting
+                return _waiting(account)
                     ? Padding(
                         padding: const EdgeInsets.only(bottom: HabitSpace.s16),
                         child: Text(l10n.insightsUnsynced, style: muted),
@@ -145,6 +171,21 @@ class _InsightsScreenState extends State<InsightsScreen> {
                 padding: const EdgeInsets.only(bottom: HabitSpace.s16),
                 child: Text(l10n.insightsOfflineLast, style: muted),
               ),
+            // 5.3b review L2: a refresh that failed while numbers are shown says so.
+            if (shown != null && _failed) ...[
+              Text(l10n.insightsRefreshFailed, style: muted),
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size(HabitSize.minTarget, HabitSize.minTarget),
+                  ),
+                  onPressed: _load,
+                  child: Text(l10n.ledgerTryAgain),
+                ),
+              ),
+              const SizedBox(height: HabitSpace.s8),
+            ],
             if (shown == null) ...[
               if (_loading)
                 const Padding(

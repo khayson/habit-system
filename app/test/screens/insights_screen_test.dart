@@ -209,6 +209,49 @@ void main() {
     await tearDownApp(tester, a);
   });
 
+  testWidgets('when waiting check-ins sync, it fetches once more (5.3b L1)', (tester) async {
+    final server = FakeSyncServer();
+    final api = FakeInsights()..answers['week'] = answer('week');
+    useTallPhone(tester);
+    final a = (await tester.runAsync(() => testAccount(server, insightsApi: api)))!;
+    await tester.runAsync(() async {
+      final habit = await a.actions.createOneTapHabit(name: 'Stretch', category: 'health');
+      await a.writer.setLogValue(habitId: habit, value: 1);
+    });
+    await open(tester, a);
+    expect(find.text("Check-ins waiting to sync aren't counted yet."), findsOneWidget);
+    expect(api.calls, ['week']);
+
+    await syncNow(tester, a);
+    await settle(tester);
+
+    expect(find.text("Check-ins waiting to sync aren't counted yet."), findsNothing);
+    expect(api.calls, ['week', 'week'], reason: 'the numbers now include them');
+    await tearDownApp(tester, a);
+  });
+
+  testWidgets('a failed refresh with numbers shown says so, with Try again (5.3b L2)', (
+    tester,
+  ) async {
+    final api = FakeInsights()..answers['week'] = answer('week');
+    final a = await account(tester, api);
+    await open(tester, a);
+    api.fail = AppErrorKind.api;
+
+    await tester.fling(find.text('A week of progress'), const Offset(0, 400), 1000);
+    await settle(tester);
+
+    expect(find.text('60%'), findsOneWidget, reason: 'the numbers stay');
+    expect(find.text("Couldn't refresh right now."), findsOneWidget);
+    final retry = find.widgetWithText(TextButton, 'Try again');
+    expect(tester.getSize(retry).height, greaterThanOrEqualTo(44));
+    api.fail = null;
+    await tester.tap(retry);
+    await settle(tester);
+    expect(find.text("Couldn't refresh right now."), findsNothing);
+    await tearDownApp(tester, a);
+  });
+
   testWidgets('a category this app does not know reads Other', (tester) async {
     final month = answer('month')
       ..['by_category'] = [

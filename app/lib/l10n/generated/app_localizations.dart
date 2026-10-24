@@ -4063,6 +4063,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Check-ins waiting to sync aren\'t counted yet.'**
   String get insightsUnsynced;
+
+  /// Insights: a refresh failed while numbers are shown (5.3b review L2).
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t refresh right now.'**
+  String get insightsRefreshFailed;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

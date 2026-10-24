@@ -860,5 +860,7 @@
   "insightsLoadError": "Insights could not be loaded right now.",
   "insightsOfflineNone": "Insights need a connection. They appear once your phone is back online.",
   "insightsOfflineLast": "These are the last numbers from this session.",
-  "insightsUnsynced": "Check-ins waiting to sync aren't counted yet."
+  "insightsUnsynced": "Check-ins waiting to sync aren't counted yet.",
+  "insightsRefreshFailed": "Couldn't refresh right now.",
+  "@insightsRefreshFailed": {"description": "Insights: a refresh failed while numbers are shown (5.3b review L2)."}
 }

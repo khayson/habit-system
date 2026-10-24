@@ -2533,4 +2533,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get insightsUnsynced => 'Check-ins waiting to sync aren\'t counted yet.';
+
+  @override
+  String get insightsRefreshFailed => 'Couldn\'t refresh right now.';
 }
