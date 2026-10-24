@@ -158,7 +158,7 @@ Screen 01 (Welcome) is Phase 7 and is still to be built.
 
 Five parts:
 
-- **6.1 (in progress):** exports, screens 21, 29 and 30 (A48).
+- **6.1 (done):** exports, screens 21, 29 and 30 (A48).
 - **6.2:** account deletion, screen 28.
 - **6.3:** imports with the signed manifest, screens 31 and 32.
 - **6.4:** password reset, screens 25 to 27; waits on a domain and an email provider (A15).
