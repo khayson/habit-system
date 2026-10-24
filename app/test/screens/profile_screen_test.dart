@@ -118,7 +118,7 @@ void main() {
     expect(find.bySemanticsLabel(RegExp('America/Los_Angeles')), findsOneWidget);
     expect(find.text('Reminders'), findsOneWidget);
     expect(find.text('Signed in as maya@example.com'), findsOneWidget);
-    expect(find.text('Privacy and export'), findsNothing, reason: '21 arrives in Phase 6');
+    expect(find.text('Privacy and export'), findsOneWidget, reason: '21, Phase 6.1');
     expect(find.text('Archived habits'), findsNothing, reason: '22 arrives in Phase 4');
     expect(find.text('Terms'), findsOneWidget);
     await tearDownApp(tester, a);

@@ -143,9 +143,15 @@ void main() {
         r"at risk|don.t break|\blos(e|ing|t)\b|\bfail(ed)?\b",
         caseSensitive: false,
       );
-      // Reassurance the design file prints verbatim (09's subtitle), not a loss threat. Exact
-      // strings only: any other wording with these words still fails (4.2b, listed in the packet).
-      const designReassurance = {'Adjust your routine without losing history.'};
+      // Reassurance the design file prints verbatim (09's subtitle; 30's card and job status), not
+      // a loss threat. Exact strings only: any other wording with these words still fails (4.2b,
+      // 6.1, listed in the packets).
+      const designReassurance = {
+        'Adjust your routine without losing history.',
+        'No data was lost. Retry the job when a connection is available.',
+        '{kind} · failed',
+        'failed',
+      };
       expect(
         values.where(threat.hasMatch).where((v) => !designReassurance.contains(v)).toList(),
         isEmpty,
