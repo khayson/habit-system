@@ -399,7 +399,7 @@ PHP,
         'name' => '6.1: an expired link still downloads',
         'file' => 'app/Http/Controllers/Api/V1/ExportController.php',
         'search' => "if (\$job->status === 'expired' || (\$job->status === 'ready' && \$this->expired(\$job))) {",
-        'replace' => "if (false) {",
+        'replace' => 'if (false) {',
         'tests' => 'tests/Feature/ExportEndpointsTest.php',
     ],
     [
