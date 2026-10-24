@@ -48,9 +48,17 @@
 //             check-in raises xp_earned but not the totals (A47).
 //   timer-draft    A times a duration habit offline (start, pause, resume, finish, A36): one
 //             increment of whole seconds; after sync both devices agree.
+//   export    A requests a JSON export (A48); the queue worker builds it (E2E_QUEUE_CMD, e.g.
+//             `php artisan queue:work --stop-when-empty`); the zip downloads, its manifest
+//             verifies with E2E_EXPORT_KEY (kid:secret, the server's EXPORT_SIGNING_KEYS) and
+//             every file hash matches; habit and log counts equal A's. A CSV export quotes and
+//             neutralises a habit named with a leading = (A16).
 // Exits non-zero at the first failed check, or unless both databases end identical.
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:crypto/crypto.dart';
 
 import 'package:dio/dio.dart';
 import 'package:drift/drift.dart';
@@ -784,6 +792,83 @@ Future<void> main(List<String> args) async {
     _check(onA == 120 && onB == 120, 'both devices agree ($onA, $onB)');
   });
 
+  await _scenario('export', () async {
+    final key = Platform.environment['E2E_EXPORT_KEY'] ?? '';
+    final colon = key.indexOf(':');
+    if (colon < 1) {
+      throw StateError('E2E_EXPORT_KEY (kid:secret) is required for the export scenario');
+    }
+    final (kid, secret) = (key.substring(0, colon), key.substring(colon + 1));
+    await a.sync();
+
+    Future<List<int>> export(String format) async {
+      final job =
+          (await a.dio.post<Map<String, dynamic>>(
+                '/exports',
+                data: {'format': format},
+              )).data!['data']
+              as Map;
+      _check(job['status'] == 'queued', '$format: queued (${job['status']})');
+      await _runCommand('E2E_QUEUE_CMD', 'queue');
+      final ready =
+          (await a.dio.get<Map<String, dynamic>>('/exports/${job['id']}')).data!['data'] as Map;
+      _check(ready['status'] == 'ready', '$format: ready (${ready['status']})');
+      return (await a.dio.get<List<int>>(
+        ready['download_url'] as String,
+        options: Options(responseType: ResponseType.bytes),
+      )).data!;
+    }
+
+    final files = _unzip(await export('json'));
+    final manifest = (jsonDecode(utf8.decode(files['manifest.json']!)) as Map)
+        .cast<String, dynamic>();
+    _check(manifest['kid'] == kid, 'signed under $kid (${manifest['kid']})');
+    final signed = Map.of(manifest)..remove('signature');
+    final expected = Hmac(
+      sha256,
+      utf8.encode(secret),
+    ).convert(utf8.encode(jsonEncode(_canonical(signed)))).toString();
+    _check(manifest['signature'] == expected, 'the manifest signature verifies');
+    final listed = (manifest['files'] as List).cast<Map<String, dynamic>>();
+    for (final f in listed) {
+      _check(
+        sha256.convert(files[f['name']]!).toString() == f['sha256'],
+        '${f['name']} matches its hash',
+      );
+    }
+    _check(
+      files.keys.toSet().difference({'manifest.json'}).length == listed.length,
+      'every file is listed (${files.keys})',
+    );
+    final user = (await a.db.select(a.db.syncState).getSingle()).userId;
+    _check(manifest['user_id'] == user, 'the manifest binds A');
+    final doc = jsonDecode(utf8.decode(files['export.json']!)) as Map;
+    final habits = await a.db.select(a.db.habits).get();
+    final logs = await (a.db.select(a.db.habitLogs)..where((l) => l.deletedAt.isNull())).get();
+    _check(
+      (doc['habits'] as List).length == habits.length,
+      'habits: ${(doc['habits'] as List).length} exported, ${habits.length} on A',
+    );
+    _check(
+      (doc['logs'] as List).length == logs.length,
+      'logs: ${(doc['logs'] as List).length} exported, ${logs.length} on A',
+    );
+
+    const formula = '=SUM(A1), now';
+    final named = await a.writer.createHabitUnchecked(
+      name: formula,
+      type: 'binary',
+      target: 1,
+      category: 'health',
+      startLocalDate: today,
+    );
+    await a.writer.setLogValue(habitId: named, value: 1);
+    await a.sync();
+    final csv = utf8.decode(await export('csv'));
+    _check(csv.contains(',"\'$formula",'), 'the = name comes back quoted and neutralised');
+    _check(!csv.contains(',$formula'), 'and never bare');
+  });
+
   await a.sync();
   await b.sync();
   final stateA = await a.snapshot();
@@ -814,17 +899,51 @@ Future<void> _scenario(String name, Future<void> Function() body) async {
 }
 
 /// Runs the A10 closer once (E2E_CLOSE_CMD, e.g. `php artisan habits:close-periods --sync`).
-Future<void> _closePeriods() async {
-  final command = Platform.environment['E2E_CLOSE_CMD'];
-  if (command == null || command.isEmpty) {
-    throw StateError('E2E_CLOSE_CMD is required for the derived scenario');
-  }
+Future<void> _closePeriods() => _runCommand('E2E_CLOSE_CMD', 'closer');
+
+/// Runs the command line in [variable] once.
+Future<void> _runCommand(String variable, String label) async {
+  final command = Platform.environment[variable];
+  if (command == null || command.isEmpty) throw StateError('$variable is required');
   // One command line, run by the platform shell (a single executable name otherwise).
   final result = Platform.isWindows
       ? await Process.run('cmd', ['/c', command])
       : await Process.run('/bin/sh', ['-c', command]);
-  if (result.exitCode != 0) throw StateError('close-periods failed: ${result.stderr}');
-  _say('  closer: ${'${result.stdout}'.trim()}');
+  if (result.exitCode != 0) throw StateError('$label failed: ${result.stderr}');
+  _say('  $label: ${'${result.stdout}'.trim()}');
+}
+
+/// A16: keys sorted at every depth; with jsonEncode (slashes and non-ASCII unescaped), the
+/// bytes the server signs.
+Object? _canonical(Object? value) => switch (value) {
+  Map() => {for (final k in value.keys.cast<String>().toList()..sort()) k: _canonical(value[k])},
+  List() => value.map(_canonical).toList(),
+  _ => value,
+};
+
+/// The entries of a zip (stored or deflated), read through its central directory.
+Map<String, List<int>> _unzip(List<int> zip) {
+  final bytes = Uint8List.fromList(zip);
+  final b = ByteData.sublistView(bytes);
+  int u16(int at) => b.getUint16(at, Endian.little);
+  int u32(int at) => b.getUint32(at, Endian.little);
+  var end = bytes.length - 22;
+  while (u32(end) != 0x06054b50) {
+    end--;
+  }
+  var at = u32(end + 16);
+  final entries = <String, List<int>>{};
+  for (var i = 0; i < u16(end + 10); i++) {
+    final nameLength = u16(at + 28);
+    final local = u32(at + 42);
+    final start = local + 30 + u16(local + 26) + u16(local + 28);
+    final data = bytes.sublist(start, start + u32(at + 20));
+    entries[utf8.decode(bytes.sublist(at + 46, at + 46 + nameLength))] = u16(at + 10) == 8
+        ? ZLibDecoder(raw: true).convert(data)
+        : data;
+    at += 46 + nameLength + u16(at + 30) + u16(at + 32);
+  }
+  return entries;
 }
 
 /// A restore from an older backup, as the API sees it: the user's journal head moves back and

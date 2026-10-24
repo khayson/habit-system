@@ -131,6 +131,12 @@ jobs:
       E2E_DATABASE_URL: postgresql://habit:habit@127.0.0.1:5432/habit_e2e
       # Run from app/: the A10 closer, once, inline.
       E2E_CLOSE_CMD: php ../api/artisan habits:close-periods --sync
+      # A48: the export job runs on the database queue; one worker pass builds it.
+      E2E_QUEUE_CMD: php ../api/artisan queue:work --stop-when-empty
+      # The public test key from phpunit.xml: the server signs with it, the e2e verifies.
+      EXPORT_SIGNING_KEYS: test-2026:test-export-signing-secret-not-for-production
+      EXPORT_SIGNING_KID: test-2026
+      E2E_EXPORT_KEY: test-2026:test-export-signing-secret-not-for-production
     steps:
       - uses: actions/checkout@v7
       - uses: shivammathur/setup-php@v2

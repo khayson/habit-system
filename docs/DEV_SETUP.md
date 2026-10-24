@@ -167,17 +167,22 @@ re-bootstrap, the queued edit survives) and refresh (the old token works inside 
 grace window) and derived (a past day closes and the other device receives `habit_progress` and
 `period_evaluation`, A32), profile (name, city and country reach the server and B) and photo (a
 photo chosen offline uploads with a real multipart PUT; sm/md/lg are WebP 96/160/320; B fetches
-md; another account gets 404; removal clears it on B). It prints PASS/FAIL per scenario, then
+md; another account gets 404; removal clears it on B) and export (a JSON export built by one
+queue worker pass downloads, its manifest verifies with the test key, its counts match; a CSV
+export neutralises a habit named with a leading `=`, A48). It prints PASS/FAIL per scenario, then
 `CONVERGED` (exit 0) or stops non-zero.
 
 ```powershell
 scripts\db-up.ps1
-scripts\api-serve.ps1 -E2E                # in another terminal; -E2E lifts the sync rate limit
+scripts\api-serve.ps1 -E2E                # in another terminal; -E2E lifts the sync rate limit and sets the test export key
 cd app
 $env:E2E_DATABASE_URL = 'postgresql://habit:habit@127.0.0.1:5432/habit'
 $env:E2E_PSQL = "$env:USERPROFILE\tools\pgsql-17\bin\psql.exe"   # if psql is not on PATH
 $env:E2E_CLOSE_CMD = "$env:USERPROFILE\tools\php-8.4\php.exe ..\api\artisan habits:close-periods --sync"
 $env:E2E_PHP = "$env:USERPROFILE\tools\php-8.4\php.exe"   # draws the photo scenario's JPEG (GD); default `php`
+$env:E2E_QUEUE_CMD = "$env:USERPROFILE\tools\php-8.4\php.exe ..\api\artisan queue:work --stop-when-empty"
+$env:EXPORT_SIGNING_KEYS = 'test-2026:test-export-signing-secret-not-for-production'   # for the worker
+$env:E2E_EXPORT_KEY = $env:EXPORT_SIGNING_KEYS
 dart run tool/sync_e2e.dart               # default http://127.0.0.1:8000/api/v1
 ```
 
