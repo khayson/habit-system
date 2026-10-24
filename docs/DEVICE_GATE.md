@@ -93,6 +93,13 @@ you saw.
 | 69 | Open Insights online, then turn on airplane mode and pull to refresh. | The numbers stay, with "These are the last numbers from this session." |
 | 70 | Check in offline, then open Insights. | "Check-ins waiting to sync aren't counted yet."; after reconnecting and syncing the line goes. |
 | 71 | With TalkBack and at 200% text, open Week and Month. | The tab reads as selected; each day reads like "Monday, 3 of 5 completed"; each category reads its numbers and percent; nothing is clipped. |
+| 72 | Phase 6.1. Profile, then Privacy and export. | "Your data, yours" with JSON backup selected, "Included in your export", "Cloud history is up to date" (or "{n} changes waiting to sync" while check-ins wait) and "Exports are private. Download links are temporary." No bottom bar. |
+| 73 | Tap Request new export. Then tap Back to privacy and export, and open the screen again. | "Preparing your export" with "Queued securely" and today's time. Back on Privacy and export, "Latest export · queued", "preparing" or "ready" in words. |
+| 74 | When it is ready (the dev server's queue worker runs), tap Download latest export and save it to Files. | The share sheet opens with habit-export.zip; Files saves it and it opens as a zip with export.json and manifest.json (and the photo if set). Repeat with CSV history: habit-export.csv. |
+| 75 | On the dev server, run `UPDATE export_jobs SET expires_at = now() - interval '1 minute' WHERE id = '<id>';`, then reopen Privacy and export. | "Latest export · expired"; no Download button; "Request new export" still works. |
+| 76 | Tap Download latest export and turn on airplane mode at once. | "The download did not finish. Try again when you're online." The screen stays; after reconnecting, Download works. |
+| 77 | On the dev server, run `UPDATE export_jobs SET status = 'failed', error_code = 'export_failed' WHERE id = '<id>';` for a queued job, then open it from the status screen. | "Let's try that again", "Your habits and history are unchanged." and "JSON backup · failed"; Retry export returns to "Preparing your export". |
+| 78 | With TalkBack and at 200% text, open Privacy and export, the status screen and the failed screen. | Every status reads as words (never colour alone); the format choice reads as selected; nothing is clipped. |
 
 ## Results
 
@@ -169,3 +176,10 @@ you saw.
 | 69 | | | | |
 | 70 | | | | |
 | 71 | | | | |
+| 72 | | | | |
+| 73 | | | | |
+| 74 | | | | |
+| 75 | | | | |
+| 76 | | | | |
+| 77 | | | | |
+| 78 | | | | |
