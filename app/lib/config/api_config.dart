@@ -17,6 +17,8 @@ abstract final class ApiConfig {
   static const String rewards = '/rewards';
   static const String freezes = '/freezes';
   static const String insights = '/insights';
+  static const String exports = '/exports';
+  static String export(String id) => '/exports/$id';
 
   /// Called once at start-up. A release build refuses to run against a non-HTTPS API:
   /// bearer tokens and personal history must never travel in clear text.

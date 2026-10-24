@@ -15,6 +15,7 @@ import 'package:habit/providers/account_context.dart';
 import 'package:habit/providers/session_provider.dart';
 import 'package:habit/services/photo_picker.dart';
 import 'package:habit/services/auth_service.dart';
+import 'package:habit/services/export_service.dart';
 import 'package:habit/services/insights_service.dart';
 import 'package:habit/services/rewards_service.dart';
 import 'package:habit/sync/sync_engine.dart';
@@ -42,6 +43,7 @@ Future<AccountContext> testAccount(
   FakeNotificationScheduler? notifications,
   RewardsService? rewardsApi,
   InsightsService? insightsApi,
+  ExportService? exportsApi,
   SyncTransport? transport,
 }) async {
   // Widget tests: streams must close synchronously or closing the database waits forever on a
@@ -64,6 +66,7 @@ Future<AccountContext> testAccount(
     notifications: notifications ?? FakeNotificationScheduler(),
     rewardsApi: rewardsApi,
     insightsApi: insightsApi,
+    exportsApi: exportsApi,
   );
 }
 
