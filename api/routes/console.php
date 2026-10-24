@@ -11,3 +11,6 @@ Artisan::command('inspire', function () {
 // A10: close finished periods every 5 minutes (one unique job per stale user).
 // H3: the overlap lock expires after 10 minutes, so a crashed run never blocks the next ones.
 Schedule::command('habits:close-periods')->everyFiveMinutes()->withoutOverlapping(10);
+
+// A48: ready exports past their 24 hours become expired and lose their object.
+Schedule::command('exports:expire')->everyFifteenMinutes()->withoutOverlapping(10);

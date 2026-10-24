@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\AvatarController;
+use App\Http\Controllers\Api\V1\ExportController;
 use App\Http\Controllers\Api\V1\HabitController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\InsightsController;
@@ -29,12 +30,18 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::get('/rewards', [RewardsController::class, 'rewards'])->name('rewards');
     Route::get('/freezes', [RewardsController::class, 'freezes'])->name('freezes');
     Route::get('/insights', [InsightsController::class, 'show'])->name('insights');
+    Route::get('/exports', [ExportController::class, 'index'])->name('exports.index');
+    Route::get('/exports/{export}', [ExportController::class, 'show'])->name('exports.show');
+    Route::get('/exports/{export}/download', [ExportController::class, 'download'])->name('exports.download');
     // A20: the caller's own photo only.
     Route::delete('/me/avatar', [AvatarController::class, 'delete'])->name('me.avatar.delete');
     Route::get('/me/avatar/{size}', [AvatarController::class, 'show'])->name('me.avatar.show');
 });
 
 // A20: 10 uploads per hour per user (config api.rate_limits.avatar_uploads_per_hour).
+// A48: requesting an export is limited per hour; reading jobs and downloading use the api limit.
+Route::post('/exports', [ExportController::class, 'store'])->middleware(['auth:sanctum', 'throttle:exports'])->name('exports.store');
+
 Route::put('/me/avatar', [AvatarController::class, 'put'])->middleware(['auth:sanctum', 'throttle:avatar-upload'])->name('me.avatar.put');
 
 Route::post('/sync', [SyncController::class, 'sync'])->middleware(['auth:sanctum', 'throttle:sync'])->name('sync');

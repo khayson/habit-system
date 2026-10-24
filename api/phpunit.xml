@@ -38,5 +38,8 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <env name="EXPORT_SIGNING_KEYS" value="test-2026:test-export-signing-secret-not-for-production"/>
+        <env name="EXPORT_SIGNING_KID" value="test-2026"/>
+        <env name="EXPORT_DISK" value="local"/>
     </php>
 </phpunit>

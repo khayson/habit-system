@@ -30,7 +30,7 @@
       "format": "json",
       "status": "ready",
       "requested_at": "{{timestamp}}",
-      "snapshot_seq": "{{int}}",
+      "snapshot_seq": "{{seq}}",
       "expires_at": "{{timestamp}}",
       "download_url": "{{url}}",
       "error_code": null
@@ -50,7 +50,7 @@
       "format": "json",
       "status": "expired",
       "requested_at": "{{timestamp}}",
-      "snapshot_seq": "{{int}}",
+      "snapshot_seq": "{{seq}}",
       "expires_at": "{{timestamp}}",
       "download_url": null,
       "error_code": null
@@ -63,7 +63,7 @@
         "format": "json",
         "status": "ready",
         "requested_at": "{{timestamp}}",
-        "snapshot_seq": "{{int}}",
+        "snapshot_seq": "{{seq}}",
         "expires_at": "{{timestamp}}",
         "download_url": "{{url}}",
         "error_code": null

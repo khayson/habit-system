@@ -61,6 +61,8 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('sync', fn (Request $request) => Limit::perMinute($limit('sync_per_minute'))->by($byUserOrIp($request)));
 
+        RateLimiter::for('exports', fn (Request $request) => Limit::perHour($limit('exports_per_hour'))->by($byUserOrIp($request)));
+
         RateLimiter::for('avatar-upload', fn (Request $request) => Limit::perHour($limit('avatar_uploads_per_hour'))->by($byUserOrIp($request)));
     }
 }

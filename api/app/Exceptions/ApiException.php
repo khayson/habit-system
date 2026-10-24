@@ -70,4 +70,10 @@ class ApiException extends RuntimeException
     {
         return new self(410, 'cursor_expired', 'A full refresh is needed. Your unsent changes are kept.');
     }
+
+    /** 410: an export link used after its 24 hours, or an expired job (A48). */
+    public static function exportExpired(): self
+    {
+        return new self(410, 'export_expired', 'This download has expired. Request a new export.');
+    }
 }
