@@ -156,6 +156,14 @@ Screen 01 (Welcome) is Phase 7 and is still to be built.
 
 - Password reset + app links (A15); account deletion with status receipt; exports; imports with signed manifest (A16); milestone push (FCM; APNs once a macOS CI route exists).
 
+Five parts:
+
+- **6.1 (in progress):** exports, screens 21, 29 and 30 (A48).
+- **6.2:** account deletion, screen 28.
+- **6.3:** imports with the signed manifest, screens 31 and 32.
+- **6.4:** password reset, screens 25 to 27; waits on a domain and an email provider (A15).
+- **6.5:** milestone push; waits on a Firebase project.
+
 **Gate**: export round-trip; bad-import preview; deletion flow; secrets absent from exports.
 
 ## Phase 7 — Hardening and release · M
