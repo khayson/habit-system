@@ -1,0 +1,83 @@
+{
+  "description": "A48: an export job as GET /exports/{id} and POST /exports return it, in each status, and the list response of GET /exports (the 5 newest, newest first). download_url and expires_at are set only while ready; error_code only when failed. Owner-scoped; read through the authenticated API client.",
+  "suites": [
+    "php",
+    "dart"
+  ],
+  "jobs": {
+    "queued": {
+      "id": "{{uuid}}",
+      "format": "json",
+      "status": "queued",
+      "requested_at": "{{timestamp}}",
+      "snapshot_seq": null,
+      "expires_at": null,
+      "download_url": null,
+      "error_code": null
+    },
+    "running": {
+      "id": "{{uuid}}",
+      "format": "json",
+      "status": "running",
+      "requested_at": "{{timestamp}}",
+      "snapshot_seq": null,
+      "expires_at": null,
+      "download_url": null,
+      "error_code": null
+    },
+    "ready": {
+      "id": "{{uuid}}",
+      "format": "json",
+      "status": "ready",
+      "requested_at": "{{timestamp}}",
+      "snapshot_seq": "{{int}}",
+      "expires_at": "{{timestamp}}",
+      "download_url": "{{url}}",
+      "error_code": null
+    },
+    "failed": {
+      "id": "{{uuid}}",
+      "format": "json",
+      "status": "failed",
+      "requested_at": "{{timestamp}}",
+      "snapshot_seq": null,
+      "expires_at": null,
+      "download_url": null,
+      "error_code": "export_failed"
+    },
+    "expired": {
+      "id": "{{uuid}}",
+      "format": "json",
+      "status": "expired",
+      "requested_at": "{{timestamp}}",
+      "snapshot_seq": "{{int}}",
+      "expires_at": "{{timestamp}}",
+      "download_url": null,
+      "error_code": null
+    }
+  },
+  "list": {
+    "data": [
+      {
+        "id": "{{uuid}}",
+        "format": "json",
+        "status": "ready",
+        "requested_at": "{{timestamp}}",
+        "snapshot_seq": "{{int}}",
+        "expires_at": "{{timestamp}}",
+        "download_url": "{{url}}",
+        "error_code": null
+      },
+      {
+        "id": "{{uuid}}",
+        "format": "json",
+        "status": "failed",
+        "requested_at": "{{timestamp}}",
+        "snapshot_seq": null,
+        "expires_at": null,
+        "download_url": null,
+        "error_code": "export_failed"
+      }
+    ]
+  }
+}

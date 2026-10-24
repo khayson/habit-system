@@ -109,6 +109,7 @@ void main() {
       'rewards/rewards_response': 'test/services/rewards_service_test.dart',
       'rewards/freezes_response': 'test/services/rewards_service_test.dart',
       'insights/insights_responses': 'test/services/insights_service_test.dart',
+      'exports/export_job': 'test/services/export_service_test.dart',
       'sync/reminder_mutations': 'test/sync/reminder_sync_test.dart',
       'sync/reminder_entity': 'test/sync/reminder_sync_test.dart',
       'auth/register_request': 'test/services/auth_service_test.dart',
@@ -117,9 +118,9 @@ void main() {
       'habit/habit_mutations': 'test/sync/habit_acks_test.dart',
     };
 
-    test('every domain, sync, auth, habit, rewards and insights fixture that names the dart suite has a consumer', () {
+    test('every domain, sync, auth, habit, rewards, insights and exports fixture that names the dart suite has a consumer', () {
       final named = <String>{};
-      for (final folder in ['domain', 'sync', 'auth', 'habit', 'rewards', 'insights']) {
+      for (final folder in ['domain', 'sync', 'auth', 'habit', 'rewards', 'insights', 'exports']) {
         for (final file in Directory(
           p.join('..', 'contract-fixtures', folder),
         ).listSync().whereType<File>()) {

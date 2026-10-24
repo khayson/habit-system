@@ -1,0 +1,14 @@
+{
+  "description": "A48: the export's download link was used after its 24 hours (or the job expired). Request a new export.",
+  "status": 410,
+  "body": {
+    "error": {
+      "code": "export_expired",
+      "message": "This download has expired. Request a new export."
+    },
+    "meta": {
+      "request_id": "{{uuid}}",
+      "server_time": "{{timestamp}}"
+    }
+  }
+}

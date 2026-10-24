@@ -1,0 +1,67 @@
+{
+  "description": "A16 / A48: the export manifest's signature is HMAC-SHA256 over the canonical JSON of the manifest without `signature` (object keys sorted at every level, no whitespace, UTF-8 unescaped, unescaped slashes, integers as integers, list order kept). The test key below exists only in the testing environment. A changed user_id or snapshot_seq, a changed file hash, a wrong signature or an unknown kid fails verification.",
+  "suites": [
+    "php"
+  ],
+  "keys": {
+    "test-2026": "test-export-signing-secret-not-for-production"
+  },
+  "manifest": {
+    "schema_version": 1,
+    "user_id": "01970000-0000-7000-8000-0000000000a1",
+    "snapshot_seq": 42,
+    "generated_at": "2026-05-28T17:22:00Z",
+    "files": [
+      {
+        "name": "export.json",
+        "sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+      },
+      {
+        "name": "avatar.webp",
+        "sha256": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35"
+      }
+    ],
+    "kid": "test-2026"
+  },
+  "canonical": "{\"files\":[{\"name\":\"export.json\",\"sha256\":\"6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d\"},{\"name\":\"avatar.webp\",\"sha256\":\"d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35\"}],\"generated_at\":\"2026-05-28T17:22:00Z\",\"kid\":\"test-2026\",\"schema_version\":1,\"snapshot_seq\":42,\"user_id\":\"01970000-0000-7000-8000-0000000000a1\"}",
+  "signature": "d20dd4a1401cf139bbc135b852cd97c4a8bb9ba0e6ef070ba85b4433fbf15223",
+  "tampered": [
+    {
+      "name": "another user_id",
+      "set": {
+        "user_id": "01970000-0000-7000-8000-0000000000b2"
+      },
+      "reason": "signature"
+    },
+    {
+      "name": "another snapshot_seq",
+      "set": {
+        "snapshot_seq": 43
+      },
+      "reason": "signature"
+    },
+    {
+      "name": "a changed file hash",
+      "set": {
+        "files": [
+          {
+            "name": "export.json",
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+          },
+          {
+            "name": "avatar.webp",
+            "sha256": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35"
+          }
+        ]
+      },
+      "reason": "signature"
+    },
+    {
+      "name": "an unknown kid",
+      "set": {
+        "kid": "retired-2025"
+      },
+      "reason": "unknown_kid"
+    }
+  ]
+}

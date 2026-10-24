@@ -35,6 +35,7 @@ Object? materialize(Object? value) {
     '{{cursor_or_null}}' => 'eyJ2IjoxfQ.c2lnbmF0dXJl',
     '{{time}}' => '2026-05-28T17:22:00Z',
     '{{date}}' => '2026-06-01',
+    '{{url}}' => 'https://api.example.com/api/v1/exports/x/download?signature=abc',
     '{{seq}}' => 6,
     final Map<String, dynamic> map => map.map((k, v) => MapEntry(k, materialize(v))),
     final List<dynamic> list => list.map(materialize).toList(),

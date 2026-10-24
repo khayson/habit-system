@@ -34,6 +34,7 @@ Every error response uses one envelope (CLAUDE.md, A25):
 | `idempotency_mismatch` | 409 | Same `mutation_id` / `Idempotency-Key`, different payload hash. | — | `error_409_idempotency_mismatch.json` |
 | `resource_deleted` | 409 | Target is tombstoned. | `entity`, `resource_id`, `current_version` (tombstone version) | `error_409_resource_deleted.json` |
 | `cursor_expired` | 410 | Sync cursor older than the 180-day journal. Client bootstraps and keeps its outbox. | — | `error_410_cursor_expired.json` |
+| `export_expired` | 410 | An export download link used after its 24 hours, or an expired job (A48). Request a new export. | — | `error_410_export_expired.json` |
 | `payload_too_large` | 413 | Body or batch over its cap (e.g. more than 100 sync mutations). | — | `error_413_payload_too_large.json` |
 | `unsupported_media_type` | 415 | Body content type not accepted. | — | `error_415_unsupported_media_type.json` |
 | `validation_failed` | 422 | Field validation. | `fields: { name: [messages] }` | `error_422_validation_failed.json` |

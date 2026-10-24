@@ -1,0 +1,79 @@
+{
+  "description": "A16 / A48: checkins.csv. Every user-controlled cell (habit name, unit, note) that starts with =, +, -, @, tab or carriage return is prefixed with a single quote; then standard RFC 4180 quoting (a cell with a comma, a double quote, CR or LF is wrapped in double quotes, inner quotes doubled). Rows end with LF. Server-generated cells (dates, ids, numbers) are never prefixed.",
+  "suites": [
+    "php"
+  ],
+  "header": [
+    "local_date",
+    "habit_id",
+    "habit_name",
+    "category",
+    "type",
+    "value",
+    "unit",
+    "target",
+    "completed",
+    "note"
+  ],
+  "cells": [
+    {
+      "in": "Water",
+      "out": "Water"
+    },
+    {
+      "in": "=HYPERLINK(\"http://x\")",
+      "out": "\"'=HYPERLINK(\"\"http://x\"\")\""
+    },
+    {
+      "in": "+1 push-up",
+      "out": "'+1 push-up"
+    },
+    {
+      "in": "-5 kg",
+      "out": "'-5 kg"
+    },
+    {
+      "in": "@SUM(A1)",
+      "out": "'@SUM(A1)"
+    },
+    {
+      "in": "\tTab",
+      "out": "'\tTab"
+    },
+    {
+      "in": "\rReturn",
+      "out": "\"'\rReturn\""
+    },
+    {
+      "in": "a, b",
+      "out": "\"a, b\""
+    },
+    {
+      "in": "say \"hi\"",
+      "out": "\"say \"\"hi\"\"\""
+    },
+    {
+      "in": "two\nlines",
+      "out": "\"two\nlines\""
+    },
+    {
+      "in": "",
+      "out": ""
+    }
+  ],
+  "row": {
+    "in": {
+      "local_date": "2026-05-27",
+      "habit_id": "01970000-0000-7000-8000-000000000001",
+      "habit_name": "=Water",
+      "category": "health",
+      "type": "quantity",
+      "value": "2000.000",
+      "unit": "mL",
+      "target": "2000.000",
+      "completed": true,
+      "note": null
+    },
+    "out": "2026-05-27,01970000-0000-7000-8000-000000000001,'=Water,health,quantity,2000.000,mL,2000.000,true,"
+  }
+}
