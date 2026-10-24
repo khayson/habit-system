@@ -31,5 +31,5 @@ abstract final class LegalConfig {
 /// sends at registration. A test fails when they drift from the documents.
 abstract final class LegalVersions {
   static const String terms = '2026-10-10';
-  static const String privacy = '2026-10-10';
+  static const String privacy = '2026-10-24';
 }

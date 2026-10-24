@@ -23,11 +23,12 @@ function registerBody(array $overrides = []): array
 it('stores the accepted versions and the server time of acceptance', function () {
     $this->freezeClock('2026-10-10T09:15:00Z');
 
-    $this->postJson('/api/v1/auth/register', registerBody())->assertCreated();
+    $body = registerBody();
+    $this->postJson('/api/v1/auth/register', $body)->assertCreated();
 
-    $row = DB::table('users')->where('email', 'maya.chen@example.com')->first();
-    expect($row->terms_version)->toBe('2026-10-10')
-        ->and($row->privacy_version)->toBe('2026-10-10')
+    $row = DB::table('users')->where('email', $body['email'])->first();
+    expect($row->terms_version)->toBe($body['terms_version'])
+        ->and($row->privacy_version)->toBe($body['privacy_version'])
         ->and(CarbonImmutable::parse($row->legal_accepted_at)->toIso8601ZuluString())->toBe('2026-10-10T09:15:00Z');
 });
 

@@ -1,7 +1,7 @@
 ---
 title: Privacy Policy
-version: 2026-10-10
-effective: 2026-10-10
+version: 2026-10-24
+effective: 2026-10-24
 status: draft
 ---
 
@@ -70,13 +70,13 @@ Our servers are with {{hosting_provider}} in {{hosting_region}}. If you live els
 - **Your account and habit data:** until you delete your account.
 - **After you delete your account:** your sessions end straight away; your data is removed from our live systems within 30 days; private backups age out within 90 days.
 - **Records of deletions** (so your other devices learn that something was deleted): kept for up to 180 days.
-- **Export files:** the download link works for 24 hours.
+- **Export files:** the download link works for 24 hours; then the file is deleted from our servers.
 - **Profile photo:** deleted when you replace or remove it, or delete your account. The original upload is discarded once the app's sizes are made, and location information inside the photo is removed.
 - **Technical logs:** {{log_retention_days}} days.
 
 ## 8. Your choices and rights
 
-- **See and export your data** from the app.
+- **See and export your data** from the app. An export contains your profile, time zone history, habits, check-ins and notes, reminders, rewards and freeze history, and your profile photo. It never contains your password, sign-in tokens or device details. Only you can download it.
 - **Correct it** by editing it in the app.
 - **Delete it** by deleting your account, or by removing a photo, label or habit.
 - **Ask us** to restrict or stop certain uses, or to give you your data in a portable format, by emailing {{contact_email}}.
