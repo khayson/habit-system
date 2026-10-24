@@ -171,6 +171,14 @@ class _ProfileState extends State<_Profile> with WidgetsBindingObserver {
               await _refreshPermission();
             },
           ),
+          // Design 20's Privacy and export row (screen 21, 6.1).
+          const SizedBox(height: HabitSpace.s16),
+          _Row(
+            icon: Icons.shield_outlined,
+            title: l10n.profilePrivacy,
+            subtitle: l10n.profilePrivacyLine,
+            onTap: () => context.push(Routes.privacy),
+          ),
           // ASSUMPTION(A5-profile-rows): design 20 shows no way to 16 and 17; two rows in the
           // existing style, below Reminders.
           const SizedBox(height: HabitSpace.s16),

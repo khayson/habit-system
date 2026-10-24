@@ -2536,4 +2536,196 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get insightsRefreshFailed => 'Couldn\'t refresh right now.';
+
+  @override
+  String get profilePrivacy => 'Privacy and export';
+
+  @override
+  String get profilePrivacyLine => 'Your history, portable and private';
+
+  @override
+  String get privacyTitle => 'Your data, yours';
+
+  @override
+  String get privacySubtitle => 'Export habit history whenever you need it.';
+
+  @override
+  String get privacyJson => 'JSON backup';
+
+  @override
+  String get privacyCsv => 'CSV history';
+
+  @override
+  String get privacyIncludedTitle => 'Included in your export';
+
+  @override
+  String get privacyIncludedBody => 'Habits, logs, rewards, freeze history';
+
+  @override
+  String get privacyIncludedAll => 'All';
+
+  @override
+  String get privacyUpToDateTitle => 'Cloud history is up to date';
+
+  @override
+  String privacyUpToDateBody(String when) {
+    return 'Last synced $when. Pending changes must sync before a full server export.';
+  }
+
+  @override
+  String get privacyNeverSynced =>
+      'Not synced yet. Pending changes must sync before a full server export.';
+
+  @override
+  String privacyPendingTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count changes waiting to sync',
+      one: '1 change waiting to sync',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get privacyPendingBody => 'They reach a server export only after syncing.';
+
+  @override
+  String privacyLatest(String status) {
+    return 'Latest export · $status';
+  }
+
+  @override
+  String get privacyLatestNone => 'No export yet';
+
+  @override
+  String privacyRequested(String format, String date) {
+    return '$format · requested $date';
+  }
+
+  @override
+  String get privacyExpiresNote => 'Private download expires after 24 hours.';
+
+  @override
+  String get privacyDownload => 'Download latest export';
+
+  @override
+  String get privacyRequest => 'Request new export';
+
+  @override
+  String get privacyFooter => 'Exports are private. Download links are temporary.';
+
+  @override
+  String get privacyLoadError => 'Your exports could not be loaded right now.';
+
+  @override
+  String get privacyDownloadError => 'The download did not finish. Try again when you\'re online.';
+
+  @override
+  String get privacyRequestError => 'The export could not be requested right now. Try again.';
+
+  @override
+  String get exportStatusQueued => 'queued';
+
+  @override
+  String get exportStatusRunning => 'preparing';
+
+  @override
+  String get exportStatusReady => 'ready';
+
+  @override
+  String get exportStatusFailed => 'failed';
+
+  @override
+  String get exportStatusExpired => 'expired';
+
+  @override
+  String get exportStatusUnknown => 'updating';
+
+  @override
+  String get exportFormatJson => 'JSON';
+
+  @override
+  String get exportFormatCsv => 'CSV';
+
+  @override
+  String get exportKindJson => 'JSON backup';
+
+  @override
+  String get exportKindCsv => 'CSV history';
+
+  @override
+  String get exportPreparingTitle => 'Preparing your export';
+
+  @override
+  String get exportPreparingSubtitle => 'Your history will be ready as a private download.';
+
+  @override
+  String get exportQueuedTitle => 'Queued securely';
+
+  @override
+  String exportQueuedBody(String kind, String when) {
+    return '$kind requested $when. This may take a little time.';
+  }
+
+  @override
+  String get exportReadyTitle => 'Ready to download';
+
+  @override
+  String exportReadyBody(String kind, String when) {
+    return '$kind requested $when. Private download expires after 24 hours.';
+  }
+
+  @override
+  String get exportIncludesTitle => 'Your export includes';
+
+  @override
+  String get exportIncludesBody =>
+      'Habits and definitions\nCheck-in history\nReward and freeze records';
+
+  @override
+  String get exportLeaveNote =>
+      'You can leave this screen. The export status stays available in Privacy and export.';
+
+  @override
+  String get exportBackToPrivacy => 'Back to privacy and export';
+
+  @override
+  String get exportReadyFooter => 'Download is available only after status is Ready.';
+
+  @override
+  String get exportFailedTitle => 'Let\'s try that again';
+
+  @override
+  String get exportFailedSubtitle => 'Your habits and history are unchanged.';
+
+  @override
+  String get exportFailedCardTitle => 'The export did not finish';
+
+  @override
+  String get exportFailedCardBody =>
+      'No data was lost. Retry the job when a connection is available.';
+
+  @override
+  String exportFailedJob(String kind) {
+    return '$kind · failed';
+  }
+
+  @override
+  String exportRequestFrom(String when) {
+    return 'Request from $when';
+  }
+
+  @override
+  String get exportRetry => 'Retry export';
+
+  @override
+  String exportWhenToday(String time) {
+    return 'today at $time';
+  }
+
+  @override
+  String exportWhenDay(String date, String time) {
+    return '$date at $time';
+  }
 }

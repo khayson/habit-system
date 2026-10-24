@@ -4069,6 +4069,330 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t refresh right now.'**
   String get insightsRefreshFailed;
+
+  /// No description provided for @profilePrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy and export'**
+  String get profilePrivacy;
+
+  /// No description provided for @profilePrivacyLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Your history, portable and private'**
+  String get profilePrivacyLine;
+
+  /// Screen 21 title.
+  ///
+  /// In en, this message translates to:
+  /// **'Your data, yours'**
+  String get privacyTitle;
+
+  /// No description provided for @privacySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export habit history whenever you need it.'**
+  String get privacySubtitle;
+
+  /// No description provided for @privacyJson.
+  ///
+  /// In en, this message translates to:
+  /// **'JSON backup'**
+  String get privacyJson;
+
+  /// No description provided for @privacyCsv.
+  ///
+  /// In en, this message translates to:
+  /// **'CSV history'**
+  String get privacyCsv;
+
+  /// No description provided for @privacyIncludedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Included in your export'**
+  String get privacyIncludedTitle;
+
+  /// No description provided for @privacyIncludedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Habits, logs, rewards, freeze history'**
+  String get privacyIncludedBody;
+
+  /// No description provided for @privacyIncludedAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get privacyIncludedAll;
+
+  /// No description provided for @privacyUpToDateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud history is up to date'**
+  String get privacyUpToDateTitle;
+
+  /// No description provided for @privacyUpToDateBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Last synced {when}. Pending changes must sync before a full server export.'**
+  String privacyUpToDateBody(String when);
+
+  /// No description provided for @privacyNeverSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'Not synced yet. Pending changes must sync before a full server export.'**
+  String get privacyNeverSynced;
+
+  /// No description provided for @privacyPendingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 change waiting to sync} other{{count} changes waiting to sync}}'**
+  String privacyPendingTitle(int count);
+
+  /// No description provided for @privacyPendingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'They reach a server export only after syncing.'**
+  String get privacyPendingBody;
+
+  /// No description provided for @privacyLatest.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest export · {status}'**
+  String privacyLatest(String status);
+
+  /// No description provided for @privacyLatestNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No export yet'**
+  String get privacyLatestNone;
+
+  /// No description provided for @privacyRequested.
+  ///
+  /// In en, this message translates to:
+  /// **'{format} · requested {date}'**
+  String privacyRequested(String format, String date);
+
+  /// No description provided for @privacyExpiresNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Private download expires after 24 hours.'**
+  String get privacyExpiresNote;
+
+  /// No description provided for @privacyDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Download latest export'**
+  String get privacyDownload;
+
+  /// No description provided for @privacyRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Request new export'**
+  String get privacyRequest;
+
+  /// No description provided for @privacyFooter.
+  ///
+  /// In en, this message translates to:
+  /// **'Exports are private. Download links are temporary.'**
+  String get privacyFooter;
+
+  /// No description provided for @privacyLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Your exports could not be loaded right now.'**
+  String get privacyLoadError;
+
+  /// No description provided for @privacyDownloadError.
+  ///
+  /// In en, this message translates to:
+  /// **'The download did not finish. Try again when you\'re online.'**
+  String get privacyDownloadError;
+
+  /// No description provided for @privacyRequestError.
+  ///
+  /// In en, this message translates to:
+  /// **'The export could not be requested right now. Try again.'**
+  String get privacyRequestError;
+
+  /// No description provided for @exportStatusQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'queued'**
+  String get exportStatusQueued;
+
+  /// No description provided for @exportStatusRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'preparing'**
+  String get exportStatusRunning;
+
+  /// No description provided for @exportStatusReady.
+  ///
+  /// In en, this message translates to:
+  /// **'ready'**
+  String get exportStatusReady;
+
+  /// No description provided for @exportStatusFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'failed'**
+  String get exportStatusFailed;
+
+  /// No description provided for @exportStatusExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'expired'**
+  String get exportStatusExpired;
+
+  /// No description provided for @exportStatusUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'updating'**
+  String get exportStatusUnknown;
+
+  /// No description provided for @exportFormatJson.
+  ///
+  /// In en, this message translates to:
+  /// **'JSON'**
+  String get exportFormatJson;
+
+  /// No description provided for @exportFormatCsv.
+  ///
+  /// In en, this message translates to:
+  /// **'CSV'**
+  String get exportFormatCsv;
+
+  /// No description provided for @exportKindJson.
+  ///
+  /// In en, this message translates to:
+  /// **'JSON backup'**
+  String get exportKindJson;
+
+  /// No description provided for @exportKindCsv.
+  ///
+  /// In en, this message translates to:
+  /// **'CSV history'**
+  String get exportKindCsv;
+
+  /// Screen 29 title.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing your export'**
+  String get exportPreparingTitle;
+
+  /// No description provided for @exportPreparingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your history will be ready as a private download.'**
+  String get exportPreparingSubtitle;
+
+  /// No description provided for @exportQueuedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Queued securely'**
+  String get exportQueuedTitle;
+
+  /// No description provided for @exportQueuedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{kind} requested {when}. This may take a little time.'**
+  String exportQueuedBody(String kind, String when);
+
+  /// No description provided for @exportReadyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to download'**
+  String get exportReadyTitle;
+
+  /// No description provided for @exportReadyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{kind} requested {when}. Private download expires after 24 hours.'**
+  String exportReadyBody(String kind, String when);
+
+  /// No description provided for @exportIncludesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your export includes'**
+  String get exportIncludesTitle;
+
+  /// No description provided for @exportIncludesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Habits and definitions\nCheck-in history\nReward and freeze records'**
+  String get exportIncludesBody;
+
+  /// No description provided for @exportLeaveNote.
+  ///
+  /// In en, this message translates to:
+  /// **'You can leave this screen. The export status stays available in Privacy and export.'**
+  String get exportLeaveNote;
+
+  /// No description provided for @exportBackToPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to privacy and export'**
+  String get exportBackToPrivacy;
+
+  /// No description provided for @exportReadyFooter.
+  ///
+  /// In en, this message translates to:
+  /// **'Download is available only after status is Ready.'**
+  String get exportReadyFooter;
+
+  /// Screen 30 title (design: Let’s try that again).
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s try that again'**
+  String get exportFailedTitle;
+
+  /// No description provided for @exportFailedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your habits and history are unchanged.'**
+  String get exportFailedSubtitle;
+
+  /// No description provided for @exportFailedCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The export did not finish'**
+  String get exportFailedCardTitle;
+
+  /// No description provided for @exportFailedCardBody.
+  ///
+  /// In en, this message translates to:
+  /// **'No data was lost. Retry the job when a connection is available.'**
+  String get exportFailedCardBody;
+
+  /// No description provided for @exportFailedJob.
+  ///
+  /// In en, this message translates to:
+  /// **'{kind} · failed'**
+  String exportFailedJob(String kind);
+
+  /// No description provided for @exportRequestFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Request from {when}'**
+  String exportRequestFrom(String when);
+
+  /// No description provided for @exportRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry export'**
+  String get exportRetry;
+
+  /// No description provided for @exportWhenToday.
+  ///
+  /// In en, this message translates to:
+  /// **'today at {time}'**
+  String exportWhenToday(String time);
+
+  /// No description provided for @exportWhenDay.
+  ///
+  /// In en, this message translates to:
+  /// **'{date} at {time}'**
+  String exportWhenDay(String date, String time);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

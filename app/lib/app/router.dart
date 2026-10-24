@@ -6,7 +6,11 @@ import '../core/url_launcher_opener.dart';
 import '../core/url_opener.dart';
 import '../providers/session_provider.dart';
 import '../services/photo_picker.dart';
+import '../core/file_sharer.dart';
+import '../models/export_job.dart';
 import '../screens/amount_entry_screen.dart';
+import '../screens/export_status_screen.dart';
+import '../screens/privacy_screen.dart';
 import '../screens/completion_screen.dart';
 import '../screens/app_shell.dart';
 import '../screens/archived_habits_screen.dart';
@@ -51,6 +55,10 @@ abstract final class Routes {
 
   /// Screens 06 / 35 (5.2c, A46), outside the shell (extra: the ack's xp_delta).
   static String complete(String id) => '/habits/$id/complete';
+
+  /// Screens 21, 29 and 30 (6.1, A48), full screens without the bottom bar, as designed.
+  static const privacy = '/privacy';
+  static String exportStatus(String id) => '/privacy/exports/$id';
 
   /// Screen 22. Matched before '/habits/:id' (router test).
   static const archivedHabits = '/habits/archived';
@@ -123,7 +131,24 @@ List<RouteBase> appRoutes({
   DeviceTimezone? registrationZone,
   UrlOpener? urlOpener,
   PhotoPicker? photoPicker,
+  FileSharer? fileSharer,
 }) => [
+  GoRoute(
+    path: Routes.privacy,
+    builder: (context, state) =>
+        PrivacyScreen(sharer: fileSharer ?? const SharePlusFileSharer(), clock: clock),
+  ),
+  GoRoute(
+    path: '/privacy/exports/:id',
+    builder: (context, state) => ExportStatusScreen(
+      // A retry replaces this screen with the new job's: a new state, not the old one.
+      key: ValueKey(state.pathParameters['id']),
+      exportId: state.pathParameters['id']!,
+      initial: state.extra is ExportJob ? state.extra! as ExportJob : null,
+      sharer: fileSharer ?? const SharePlusFileSharer(),
+      clock: clock,
+    ),
+  ),
   GoRoute(path: Routes.signIn, builder: (context, state) => const SignInScreen()),
   GoRoute(
     path: Routes.createAccount,

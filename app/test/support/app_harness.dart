@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:habit/app/router.dart';
 import 'package:habit/config/theme.dart';
+import 'package:habit/core/file_sharer.dart';
 import 'package:habit/core/time_zones.dart';
 import 'package:habit/core/url_opener.dart';
 import 'package:habit/data/app_database.dart';
@@ -80,6 +81,7 @@ Widget testApp({
   DateTime Function()? clock,
   UrlOpener? urlOpener,
   PhotoPicker? photoPicker,
+  FileSharer? fileSharer,
 }) {
   final router = GoRouter(
     initialLocation: initial,
@@ -97,6 +99,7 @@ Widget testApp({
       registrationZone: () async => 'America/Los_Angeles',
       urlOpener: urlOpener ?? FakeUrlOpener(),
       photoPicker: photoPicker,
+      fileSharer: fileSharer,
     ),
   );
   final materialApp = MaterialApp.router(
