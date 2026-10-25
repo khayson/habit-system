@@ -187,6 +187,8 @@ Future<void> _toggle(
 Future<bool> confirmDeleteHabit(BuildContext context, String name) async {
   final confirmed = await showModalBottomSheet<bool>(
     context: context,
+    // Over the whole app, the bottom bar included: nothing else is usable while it asks.
+    useRootNavigator: true,
     isScrollControlled: true,
     showDragHandle: true,
     builder: (context) {

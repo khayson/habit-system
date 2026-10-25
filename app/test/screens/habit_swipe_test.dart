@@ -121,6 +121,12 @@ void main() {
       findsOneWidget,
     );
     expect(await tester.runAsync(() => operations(account)), before, reason: 'nothing yet');
+    // Above everything: the bottom bar cannot be used while the question is open.
+    expect(
+      tester.getRect(find.byType(BottomSheet)).bottom,
+      tester.getSize(find.byType(MaterialApp)).height,
+      reason: 'the sheet reaches the bottom of the screen, over the bottom bar',
+    );
     await tester.tap(find.text('Keep habit'));
     await settle(tester);
     expect(find.text('Delete Stretch?'), findsNothing);
