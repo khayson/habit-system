@@ -134,6 +134,10 @@
     }
   },
   "snackUndo": "Undo",
+  "toastClose": "Close message",
+  "@toastClose": {
+    "description": "A52: tooltip and label of the close button on a toast."
+  },
   "deleteHabitTitle": "Delete {name}?",
   "@deleteHabitTitle": {
     "placeholders": {

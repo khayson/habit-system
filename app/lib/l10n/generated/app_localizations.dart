@@ -692,6 +692,12 @@ abstract class AppLocalizations {
   /// **'Undo'**
   String get snackUndo;
 
+  /// A52: tooltip and label of the close button on a toast.
+  ///
+  /// In en, this message translates to:
+  /// **'Close message'**
+  String get toastClose;
+
   /// No description provided for @deleteHabitTitle.
   ///
   /// In en, this message translates to:

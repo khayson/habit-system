@@ -337,6 +337,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get snackUndo => 'Undo';
 
   @override
+  String get toastClose => 'Close message';
+
+  @override
   String deleteHabitTitle(String name) {
     return 'Delete $name?';
   }
