@@ -1,7 +1,7 @@
 ---
 title: Privacy Policy
-version: 2026-10-24
-effective: 2026-10-24
+version: 2026-10-25
+effective: 2026-10-25
 status: draft
 ---
 
@@ -33,7 +33,7 @@ This policy explains what {{app_name}} collects about you, why, who can see it, 
 | **Device and sync details:** the name of your device, a random device identifier, the app version, your sign-in token for that device and when it was last used. | To sync your data safely and let you sign out a device. |
 | **Technical logs:** IP address, request time, app version and error details. | For security, preventing abuse and fixing problems. Kept for {{log_retention_days}} days. |
 
-Your email address is used for account and security messages (such as verifying your email and resetting your password). We do not send marketing emails.
+Your email address is used for account and security messages, such as a code to reset your password when you ask for one. We do not send marketing emails.
 
 We do not collect your precise location (GPS), your contacts, or advertising identifiers. The "City, Country" label is text you choose; the app never detects it.
 
@@ -55,7 +55,7 @@ We do not use your data for advertising, we do not sell it, and we make no autom
 Only with companies that help us run the service, under contract and only on our instructions:
 
 - our hosting provider, {{hosting_provider}}, which stores your data on our behalf;
-- a service that delivers our account emails;
+- {{email_provider}}, which delivers our account emails (such as a password reset code) and so processes your email address and the content of those emails;
 - a breached-password check. When you choose a password, our server asks the Have I Been Pwned service whether it has appeared in a known data breach. Only the first five characters of a one-way hash of the password are sent. Your password and your email address are not;
 - GitHub, which hosts these Terms and Privacy pages. Opening them is like visiting any website: GitHub may log your IP address and the request under its own privacy statement. We set no cookies and run no analytics on these pages.
 

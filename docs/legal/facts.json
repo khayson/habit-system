@@ -4,8 +4,9 @@
   "contact_email": null,
   "postal_address": null,
   "governing_law": null,
-  "hosting_provider": null,
+  "hosting_provider": "Render and Neon",
   "hosting_region": null,
   "minimum_age": 16,
-  "log_retention_days": 30
+  "log_retention_days": 30,
+  "email_provider": "Brevo"
 }

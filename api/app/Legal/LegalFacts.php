@@ -10,7 +10,7 @@ final readonly class LegalFacts
 {
     public const array KEYS = [
         'app_name', 'publisher', 'contact_email', 'postal_address', 'governing_law',
-        'hosting_provider', 'hosting_region', 'minimum_age', 'log_retention_days',
+        'hosting_provider', 'hosting_region', 'minimum_age', 'log_retention_days', 'email_provider',
     ];
 
     /** @param array<string, string|int|null> $values */

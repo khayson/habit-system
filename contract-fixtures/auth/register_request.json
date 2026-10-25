@@ -12,7 +12,7 @@
     "device_name": "Maya's phone",
     "device_id": "{{uuid}}",
     "terms_version": "2026-10-10",
-    "privacy_version": "2026-10-24"
+    "privacy_version": "2026-10-25"
   },
   "rules": [
     "terms_version and privacy_version are required; each is YYYY-MM-DD and a real calendar date, otherwise 422 validation_failed naming the field",
