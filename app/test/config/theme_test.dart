@@ -109,6 +109,16 @@ void main() {
     expect(AppTheme.dark.brightness, Brightness.dark);
   });
 
+  // A51 (found on the emulator): a snackbar's action, such as Undo, reads on the snackbar.
+  test('snackbar text and its action meet 4.5:1 on the snackbar in both themes', () {
+    for (final theme in [AppTheme.light, AppTheme.dark]) {
+      final bar = theme.colorScheme.inverseSurface;
+      final action = theme.snackBarTheme.actionTextColor ?? theme.colorScheme.inversePrimary;
+      expect(contrast(action, bar), greaterThanOrEqualTo(4.5), reason: '${theme.brightness} action');
+      expect(contrast(theme.colorScheme.onInverseSurface, bar), greaterThanOrEqualTo(4.5));
+    }
+  });
+
   test('type ramp matches the design file (size / line height)', () {
     final t = AppTheme.textTheme(Colors.black);
     void check(TextStyle? s, double size, double line) {
