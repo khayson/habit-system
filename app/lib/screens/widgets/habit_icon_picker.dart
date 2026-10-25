@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../config/habit_tokens.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../widgets/app_icons.dart';
-import '../../widgets/habit_icons.dart';
+import '../../domain/habit_icons.dart';
 
 /// A53: the picker for a habit's icon, a bottom sheet over create and edit (no design; built
 /// from the app's own parts, approved by Khay Studios). Every free Hugeicons glyph, searched on

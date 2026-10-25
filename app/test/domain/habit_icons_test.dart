@@ -2,8 +2,10 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:habit/widgets/habit_icon_catalog.g.dart';
-import 'package:habit/widgets/habit_icons.dart';
+import 'package:habit/domain/habit_icon_keys.g.dart';
+import 'package:habit/widgets/habit_icon_glyphs.g.dart';
+import 'package:habit/domain/habit_icons.dart';
+import 'package:habit/widgets/app_icons.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 import '../support/contract_fixtures.dart';
@@ -43,6 +45,11 @@ void main() {
         multiLine: true,
       ).allMatches(source).length;
       expect(habitIconGlyphs, hasLength(count));
+      expect(
+        habitIconKeys,
+        habitIconGlyphs.keys.toList(),
+        reason: 'the pure key list is the glyph map\'s',
+      );
       expect(habitIconGlyphs['book-02'], same(HugeIcons.strokeRoundedBook02));
       expect(habitIconGlyphs['book-open-01'], same(HugeIcons.strokeRoundedBookOpen01));
       expect(habitIconGlyphs['1st-bracket'], same(HugeIcons.strokeRounded1stBracket));
@@ -73,7 +80,7 @@ void main() {
     expect(HabitIconCatalog.keyFor(null, 'gardening'), 'star');
     expect(HabitIconCatalog.keyFor(null, null), 'star');
     expect(
-      HabitIconCatalog.glyphFor('icon-from-a-newer-app', 'learning'),
+      AppIcons.habit('icon-from-a-newer-app', category: 'learning'),
       same(habitIconGlyphs['book-02']),
     );
   });

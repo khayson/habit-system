@@ -22,7 +22,7 @@ import '../widgets/habit_ui.dart';
 import '../widgets/schedule_text.dart';
 import 'frequency_screen.dart';
 import 'widgets/habit_icon_picker.dart';
-import '../widgets/habit_icons.dart';
+import '../domain/habit_icons.dart';
 import '../widgets/app_icons.dart';
 import '../widgets/app_toast.dart';
 

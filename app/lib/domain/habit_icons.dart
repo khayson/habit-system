@@ -1,21 +1,19 @@
-import 'app_icons.dart';
-import 'habit_icon_catalog.g.dart';
+import 'habit_icon_keys.g.dart';
 
-/// A53: a habit's own icon. Every free Hugeicons stroke-rounded glyph, by its kebab key, with
-/// the category defaults, the keyword suggestion and an offline search. Pure Dart (no widgets),
-/// so the create and edit forms, tests and tools share it.
+/// A53: a habit's own icon, by key: every free Hugeicons stroke-rounded key, the category
+/// defaults, the keyword suggestion and an offline search. Pure Dart (no Flutter), so the forms,
+/// background code and the e2e tool share it; the glyphs are AppIcons.habit's.
 abstract final class HabitIconCatalog {
   /// The key a habit shows: its own when this app knows it, else its category's default (a
   /// key from a newer app is kept on the habit, never rewritten; invariant 13).
   static String keyFor(String? icon, String? category) {
-    if (icon != null && habitIconGlyphs.containsKey(icon)) return icon;
+    if (icon != null && _known.contains(icon)) return icon;
     return habitIconCategoryDefaults[category] ?? habitIconCategoryDefaults['other']!;
   }
 
-  static AppIconData glyphFor(String? icon, String? category) =>
-      habitIconGlyphs[keyFor(icon, category)]!;
+  static final Set<String> _known = habitIconKeys.toSet();
 
-  static bool knows(String key) => habitIconGlyphs.containsKey(key);
+  static bool knows(String key) => _known.contains(key);
 
   /// How many featured icons [search] lists first (the picker's "Suggested").
   static int get featuredCount => habitIconFeatured.length;
@@ -55,11 +53,11 @@ abstract final class HabitIconCatalog {
 
   static final List<String> _ordered = [
     for (final (key, _) in habitIconFeatured) key,
-    ...(habitIconGlyphs.keys.where((k) => !_featuredLabels.containsKey(k)).toList()..sort()),
+    ...(habitIconKeys.where((k) => !_featuredLabels.containsKey(k)).toList()..sort()),
   ];
 
   static final Map<String, Set<String>> _index = () {
-    final index = {for (final key in habitIconGlyphs.keys) key: key.split('-').toSet()};
+    final index = {for (final key in habitIconKeys) key: key.split('-').toSet()};
     for (final (key, label) in habitIconFeatured) {
       index[key]!.addAll(_words(label));
     }

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import 'habit_icons.dart';
+import '../domain/habit_icons.dart';
+import 'habit_icon_glyphs.g.dart';
 
 /// A52: one icon as Hugeicons draws it (stroke-rounded SVG paths).
 typedef AppIconData = List<List<dynamic>>;
@@ -71,9 +72,9 @@ abstract final class AppIcons {
   static const AppIconData hide = HugeIcons.strokeRoundedViewOff;
 
   /// A53: a habit's own icon, from the whole Hugeicons set by its key; a null or unknown key
-  /// shows [category]'s default (lib/widgets/habit_icons.dart).
+  /// shows [category]'s default (lib/domain/habit_icons.dart).
   static AppIconData habit(String? key, {String? category}) =>
-      HabitIconCatalog.glyphFor(key, category);
+      habitIconGlyphs[HabitIconCatalog.keyFor(key, category)]!;
 }
 
 /// A52: draws one [AppIcons] entry. Size and colour follow the surrounding [IconTheme] unless

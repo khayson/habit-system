@@ -6,7 +6,7 @@ import 'package:habit/domain/calendar/local_date.dart';
 import 'package:habit/providers/account_context.dart';
 import 'package:habit/sync/sync_transport.dart';
 import 'package:habit/widgets/app_icons.dart';
-import 'package:habit/widgets/habit_icon_catalog.g.dart';
+import 'package:habit/widgets/habit_icon_glyphs.g.dart';
 
 import '../support/app_harness.dart';
 import '../support/fake_sync_server.dart';
@@ -21,10 +21,11 @@ void main() {
   Future<AccountContext> account(WidgetTester tester, {bool offline = true}) async {
     useTallPhone(tester);
     server = FakeSyncServer();
-    if (offline)
+    if (offline) {
       server.failNextSync.addAll(
         List.filled(50, const SyncTransportException(SyncFailure.network)),
       );
+    }
     return (await tester.runAsync(() => testAccount(server)))!;
   }
 

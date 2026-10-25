@@ -3,7 +3,7 @@ import 'package:habit/app/router.dart';
 import 'package:habit/domain/calendar/local_date.dart';
 import 'package:habit/providers/account_context.dart';
 import 'package:habit/widgets/app_icons.dart';
-import 'package:habit/widgets/habit_icon_catalog.g.dart';
+import 'package:habit/widgets/habit_icon_glyphs.g.dart';
 
 import '../support/app_harness.dart';
 import '../support/fake_sync_server.dart';
