@@ -114,7 +114,11 @@ void main() {
     for (final theme in [AppTheme.light, AppTheme.dark]) {
       final bar = theme.colorScheme.inverseSurface;
       final action = theme.snackBarTheme.actionTextColor ?? theme.colorScheme.inversePrimary;
-      expect(contrast(action, bar), greaterThanOrEqualTo(4.5), reason: '${theme.brightness} action');
+      expect(
+        contrast(action, bar),
+        greaterThanOrEqualTo(4.5),
+        reason: '${theme.brightness} action',
+      );
       expect(contrast(theme.colorScheme.onInverseSurface, bar), greaterThanOrEqualTo(4.5));
     }
   });
