@@ -61,6 +61,10 @@
 //             from the API's log mailer (E2E_MAIL_LOG, the API's storage/logs/laravel.log; local
 //             and CI only, where MAIL_MAILER=log); a wrong code is refused; the reset revokes
 //             both devices (401 on /me, the next sync logged out); the new password signs in.
+//   habit-delete  a fresh account on two devices (A51): E1 deletes a habit with check-ins while
+//             E2 holds an unsent increment for it; after syncing neither device has the habit,
+//             E2's increment waits in its queue as deleted on another device (discard only),
+//             and XP is unchanged on both.
 // Exits non-zero at the first failed check, or unless both databases end identical.
 import 'dart:convert';
 import 'dart:io';
@@ -1018,6 +1022,66 @@ Future<void> main(List<String> args) async {
     _check(login.statusCode == 200, 'the new password signs in (${login.statusCode})');
     await d1.db.close();
     await d2.db.close();
+  });
+
+  await _scenario('habit-delete', () async {
+    final email = 'e2e-habit-delete+${DateTime.now().millisecondsSinceEpoch}@example.test';
+    const password = 'e2e-habit-delete-1234';
+    final e1 = await _Device.signIn(baseUrl, dir, 'E1', '/auth/register', {
+      'name': 'E2E Habit Delete',
+      'email': email,
+      'password': password,
+      'timezone': 'America/Los_Angeles',
+      'terms_version': '2026-10-25',
+      'privacy_version': '2026-10-25',
+    });
+    final e2 = await _Device.signIn(baseUrl, dir, 'E2', '/auth/login', {
+      'email': email,
+      'password': password,
+    });
+    await e1.sync();
+    final today = await e1.today();
+    final juice = await e1.writer.createHabitUnchecked(
+      name: 'Juice',
+      type: 'quantity',
+      target: '500.000',
+      unit: 'ml',
+      category: 'health',
+      startLocalDate: today.addDays(-2),
+      backdate: true,
+    );
+    await e1.writer.setLogValue(habitId: juice, value: '500.000', logDate: today.addDays(-1));
+    await e1.writer.setLogValue(habitId: juice, value: '500.000');
+    await e1.sync();
+    await e2.sync();
+    Future<int> xp(_Device d) async => (await d.db.select(d.db.rewardState).getSingle()).xp ?? 0;
+    final earned = await xp(e1);
+    _check(earned > 0, 'the check-ins earned XP ($earned)');
+    _check(await xp(e2) == earned, 'E2 holds the same XP');
+    await e2.writer.incrementLog(habitId: juice, delta: '100');
+
+    await e1.writer.deleteHabit(juice);
+    await e1.sync();
+    await e2.sync();
+    await e1.sync();
+
+    for (final d in [e1, e2]) {
+      final habits = await (d.db.select(d.db.habits)..where((h) => h.id.equals(juice))).get();
+      final logs = await (d.db.select(d.db.habitLogs)..where((l) => l.habitId.equals(juice))).get();
+      _check(habits.isEmpty && logs.isEmpty, '${d.name} has no habit and no check-ins');
+      _check(await xp(d) == earned, '${d.name} keeps its XP (${await xp(d)})');
+    }
+    final kept = (await e2.outbox()).single;
+    final error = jsonDecode(kept.lastError!) as Map;
+    _check(
+      kept.state == OutboxState.needsAttention &&
+          error['code'] == 'resource_deleted' &&
+          error['entity'] == 'habit',
+      "E2's increment waits as deleted on another device (${kept.state} ${error['code']})",
+    );
+    _check(await e1.outbox().then((o) => o.isEmpty), "E1's delete is acknowledged");
+    await e1.db.close();
+    await e2.db.close();
   });
 
   await a.sync();
