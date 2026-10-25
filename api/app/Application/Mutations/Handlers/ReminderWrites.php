@@ -129,6 +129,11 @@ final readonly class ReminderWrites
         $row = DB::table('reminders')->where('id', $m->entityId)->where('user_id', $ctx->userId)->lockForUpdate()->first()
             ?? throw new ApiException(404, 'not_found', 'Not found.');
         if ($row->deleted_at !== null) {
+            // A51: removed with its habit; say so, as log writes do.
+            $habit = DB::table('habits')->where('id', $row->habit_id)->first(['id', 'version', 'deleted_at']);
+            if ($habit !== null && $habit->deleted_at !== null) {
+                throw ApiException::habitDeleted((string) $habit->id, (int) $habit->version);
+            }
             throw ApiException::resourceDeleted('reminder', $m->entityId, (int) $row->version);
         }
         if ($m->baseVersion !== (int) $row->version) {

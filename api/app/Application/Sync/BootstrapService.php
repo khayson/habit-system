@@ -111,6 +111,8 @@ final readonly class BootstrapService
                 : ['phase' => self::PHASE_EVALUATIONS, 'after' => null];
         } elseif ($state['phase'] === self::PHASE_REMINDERS) {
             $rows = DB::table('reminders')->where('user_id', $userId)
+                // A51: a deleted habit's reminder tombstones are not part of a new device's state.
+                ->whereNotIn('habit_id', DB::table('habits')->where('user_id', $userId)->whereNotNull('deleted_at')->select('id'))
                 ->when($state['after'] !== null, fn ($q) => $q->where('id', '>', $state['after']))
                 ->orderBy('id')->limit($limit + 1)->get();
             $entities = $rows->take($limit)->map(fn (stdClass $r) => [

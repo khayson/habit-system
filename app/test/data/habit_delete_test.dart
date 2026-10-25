@@ -173,4 +173,38 @@ void main() {
     expect(kept.state, OutboxState.needsAttention);
     expect(reviewable(kept), isFalse, reason: 'the habit is gone here: discard only');
   });
+
+  // 6.6 review I1: a reminder edit for a habit deleted elsewhere names the habit too.
+  test(
+    'a reminder edit for a habit deleted on another device comes back naming the habit',
+    () async {
+      final id = await yoga(phone);
+      final reminder = await phone.writer.createReminder(
+        habitId: id,
+        localTime: '08:00',
+        daysOfWeek: [1, 2, 3],
+      );
+      await phone.sync(force: true);
+      final tablet = await Device(server).init();
+      addTearDown(tablet.db.close);
+      await tablet.sync(force: true);
+      await tablet.writer.updateReminder(
+        reminderId: reminder,
+        localTime: '09:00',
+        daysOfWeek: [1, 2, 3],
+      );
+
+      await phone.writer.deleteHabit(id);
+      await phone.sync(force: true);
+      await tablet.sync(force: true);
+
+      final kept = (await tablet.outbox()).single;
+      final error = jsonDecode(kept.lastError!) as Map;
+      expect(
+        (kept.state, error['code'], error['entity']),
+        (OutboxState.needsAttention, 'resource_deleted', 'habit'),
+      );
+      expect(reviewable(kept), isFalse);
+    },
+  );
 }

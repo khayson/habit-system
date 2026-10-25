@@ -57,9 +57,11 @@ function deleteHabit(object $test, string $token, string $habitId, ?int $base = 
 function habitOwned(string $habitId): array
 {
     $counts = [];
-    foreach (['habit_logs', 'reminders', 'habit_definition_versions', 'habit_active_ranges', 'habit_streak_cache', 'period_evaluations'] as $table) {
+    foreach (['habit_logs', 'habit_definition_versions', 'habit_active_ranges', 'habit_streak_cache', 'period_evaluations'] as $table) {
         $counts[$table] = DB::table($table)->where('habit_id', $habitId)->count();
     }
+    // Reminders stay as tombstones (6.6 review I1): only live ones count.
+    $counts['reminders'] = DB::table('reminders')->where('habit_id', $habitId)->whereNull('deleted_at')->count();
 
     return $counts;
 }
@@ -220,4 +222,18 @@ it('leaves the purge working: the tombstone goes with the account', function () 
 
     expect(DB::table('habits')->where('id', $this->habit)->exists())->toBeFalse()
         ->and(DB::table('xp_entitlements')->where('habit_id', $this->habit)->exists())->toBeFalse();
+});
+
+// 6.6 review I1: a reminder edit after its habit was deleted names the habit, like log writes.
+it('answers a reminder edit or delete under a deleted habit with resource_deleted naming the habit', function () {
+    $reminder = DB::table('reminders')->where('habit_id', $this->habit)->first();
+    deleteHabit($this, $this->maya['token'], $this->habit)->assertOk();
+
+    foreach (['update', 'delete'] as $step) {
+        $ack = $this->sync($this->maya['token'], [M::reminder($step, (string) $reminder->id, null, (int) $reminder->version)])->json('data.acks.0');
+        expect([$ack['status'], $ack['error']['code'], $ack['error']['entity'], $ack['error']['habit_id']])
+            ->toBe(['conflict', 'resource_deleted', 'habit', $this->habit], $step)
+            ->and($ack['entity_id'])->toBe((string) $reminder->id);
+    }
+    expect(DB::table('reminders')->where('habit_id', $this->habit)->whereNull('deleted_at')->count())->toBe(0);
 });

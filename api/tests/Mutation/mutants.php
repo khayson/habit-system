@@ -530,8 +530,8 @@ PHP,
     [
         'name' => '6.6: a deleted habit leaves its logs behind',
         'file' => 'app/Application/Mutations/Handlers/HabitWrites.php',
-        'search' => "foreach (['habit_logs', 'reminders', 'period_evaluations',",
-        'replace' => "foreach (['reminders', 'period_evaluations',",
+        'search' => "foreach (['habit_logs', 'period_evaluations',",
+        'replace' => "foreach (['period_evaluations',",
         'tests' => 'tests/Feature/HabitDeleteTest.php',
     ],
     [

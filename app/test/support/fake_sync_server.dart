@@ -334,13 +334,15 @@ class FakeSyncServer implements SyncTransport {
     final p = (m['payload'] as Map).cast<String, dynamic>();
     final existing = reminders[id];
     Map<String, dynamic> conflict(Map<String, dynamic> current) => current['deleted_at'] != null
-        ? _failed(m, 'conflict', {
-            'code': 'resource_deleted',
-            'message': 'x',
-            'entity': 'reminder',
-            'resource_id': id,
-            'current_version': current['version'],
-          })
+        // A51: removed with its habit: name the habit, as log writes do (6.6 review I1).
+        ? _underDeletedHabit(m, habits[current['habit_id']]) ??
+              _failed(m, 'conflict', {
+                'code': 'resource_deleted',
+                'message': 'x',
+                'entity': 'reminder',
+                'resource_id': id,
+                'current_version': current['version'],
+              })
         : _failed(m, 'conflict', {
             'code': 'version_conflict',
             'message': 'x',
@@ -577,12 +579,13 @@ class FakeSyncServer implements SyncTransport {
       }
       logs.remove(log['id']);
     }
+    // Reminders become tombstones, as reminder.delete leaves them (6.6 review I1).
     for (final reminder in reminders.values.where((r) => r['habit_id'] == id).toList()) {
       if (reminder['deleted_at'] == null) {
         final gone = {...reminder, 'deleted_at': at, 'version': (reminder['version'] as int) + 1};
+        reminders[reminder['id'] as String] = gone;
         _journal('reminder', reminder['id'] as String, 'delete', gone['version'] as int, gone);
       }
-      reminders.remove(reminder['id']);
     }
     habit
       ..['deleted_at'] = at

@@ -207,12 +207,16 @@ final readonly class HabitWrites
             $gone = (object) [...(array) $log, 'deleted_at' => $now, 'version' => (int) $log->version + 1];
             $this->journal->append($userId, 'habit_log', (string) $log->id, 'delete', (int) $gone->version, $this->presenter->log($gone, (string) $habit->type));
         }
-        $reminders = DB::table('reminders')->where('habit_id', $habit->id)->orderBy('id')->get();
-        foreach ($reminders->whereNull('deleted_at') as $reminder) {
-            $gone = (object) [...(array) $reminder, 'deleted_at' => $now, 'version' => (int) $reminder->version + 1];
-            $this->journal->append($userId, 'reminder', (string) $reminder->id, 'delete', (int) $gone->version, $this->presenter->reminder($gone));
+        // Reminders become tombstones, as reminder.delete leaves them, so a later edit of one can
+        // still name its deleted habit (6.6 review I1).
+        $reminders = DB::table('reminders')->where('habit_id', $habit->id)->whereNull('deleted_at')->orderBy('id')->get();
+        foreach ($reminders as $reminder) {
+            $version = (int) $reminder->version + 1;
+            DB::table('reminders')->where('id', $reminder->id)->update(['deleted_at' => $now, 'version' => $version, 'updated_at' => $now]);
+            $gone = (object) [...(array) $reminder, 'deleted_at' => $now, 'version' => $version];
+            $this->journal->append($userId, 'reminder', (string) $reminder->id, 'delete', $version, $this->presenter->reminder($gone));
         }
-        foreach (['habit_logs', 'reminders', 'period_evaluations', 'habit_streak_cache', 'habit_active_ranges', 'habit_definition_versions'] as $table) {
+        foreach (['habit_logs', 'period_evaluations', 'habit_streak_cache', 'habit_active_ranges', 'habit_definition_versions'] as $table) {
             DB::table($table)->where('habit_id', $habit->id)->delete();
         }
 
