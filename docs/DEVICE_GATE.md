@@ -112,6 +112,13 @@ you saw.
 | 88 | On 27, type a wrong code five times (with a valid new password), then the right one. | Each time "This code is not valid. Request a new one." under the code with "Request a new code"; after the fifth wrong try the right code is refused too; Request a new code opens 25 with the email. |
 | 89 | With the account also signed in on a second phone, reset with a fresh code. | Sign in opens with the email and "Your password has changed. Sign in with the new one."; the new password works; the second phone signs out at its next sync, as an expired session does. |
 | 90 | With TalkBack and at 200% text, go through 25, 26 and 27. | The code field reads "Reset code"; the countdown reads "Resend reset email, available in … seconds"; nothing is clipped; dark theme keeps the cards readable. |
+| 91 | Phase 6.6. On Habits, swipe a throwaway habit all the way right. | The green "Archive" shows under the row as it moves (icon and word), a light tap of vibration at the far end; the habit leaves the list; "Archived {name}." with Undo. Undo brings it back. |
+| 92 | Swipe a habit about a third of the way, either direction, and let go; then scroll the list up and down quickly. | The action shows underneath and the row springs back; nothing changes; scrolling never archives or opens anything. |
+| 93 | Swipe a habit all the way left. | The row springs back and "Delete {name}?" opens with "This removes the habit, its check-ins, notes and reminders from all your devices. XP you earned stays." Keep habit closes it and nothing changes. |
+| 94 | Swipe left again and tap Delete habit (try once in airplane mode). | "Deleted {name}." with no Undo; the habit, its check-ins and its reminder notification are gone; XP and level on Progress are unchanged; offline it syncs later. |
+| 95 | With the account on a second phone that has an unsent check-in for that habit, open the app and sync. | The habit is gone there too; the queue shows the check-in with "This habit was deleted on another device." and Discard only. |
+| 96 | On Archived routines, swipe right and swipe left; open a habit's detail and use Delete habit at the end. | Right restores with Undo; left asks first; the detail entry asks the same question and returns to Habits after deleting. |
+| 97 | With TalkBack on Habits and Archived routines, use the actions menu on a row. | "Archive" (or "Restore") and "Delete" are offered; Delete opens the confirmation; at 200% text and in dark theme the sheet and its buttons are readable and nothing is clipped. |
 
 ## Results
 
@@ -207,3 +214,10 @@ you saw.
 | 88 | | | | |
 | 89 | | | | |
 | 90 | | | | |
+| 91 | | | | |
+| 92 | | | | |
+| 93 | | | | |
+| 94 | | | | |
+| 95 | | | | |
+| 96 | | | | |
+| 97 | | | | |
