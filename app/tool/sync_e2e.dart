@@ -53,6 +53,10 @@
 //             verifies with E2E_EXPORT_KEY (kid:secret, the server's EXPORT_SIGNING_KEYS) and
 //             every file hash matches; habit and log counts equal A's. A CSV export quotes and
 //             neutralises a habit named with a leading = (A16).
+//   delete-account  a fresh account on two devices (A49): C1 deletes it with its password;
+//             C2's next sync is logged out (401); the receipt reads queued, then completed after
+//             one queue worker pass (E2E_QUEUE_CMD runs the purge); the old credentials fail
+//             like a wrong password; the email registers again.
 // Exits non-zero at the first failed check, or unless both databases end identical.
 import 'dart:convert';
 import 'dart:io';
@@ -867,6 +871,78 @@ Future<void> main(List<String> args) async {
     final csv = utf8.decode(await export('csv'));
     _check(csv.contains(',"\'$formula",'), 'the = name comes back quoted and neutralised');
     _check(!csv.contains(',$formula'), 'and never bare');
+  });
+
+  await _scenario('delete-account', () async {
+    final email = 'e2e-delete+${DateTime.now().millisecondsSinceEpoch}@example.test';
+    const password = 'e2e-delete-password-1234';
+    final register = {
+      'name': 'E2E Delete',
+      'email': email,
+      'password': password,
+      'timezone': 'America/Los_Angeles',
+      'terms_version': '2026-10-24',
+      'privacy_version': '2026-10-24',
+    };
+    final c1 = await _Device.signIn(baseUrl, dir, 'C1', '/auth/register', register);
+    final c2 = await _Device.signIn(baseUrl, dir, 'C2', '/auth/login', {
+      'email': email,
+      'password': password,
+    });
+    await c1.writer.createHabitUnchecked(
+      name: 'Walk',
+      type: 'binary',
+      target: 1,
+      category: 'health',
+      startLocalDate: await c1.today(),
+    );
+    await c1.sync();
+    await c2.sync();
+
+    final wrong = await c1.dio.delete<Object?>(
+      '/me',
+      data: {'password': 'not the password'},
+      options: Options(validateStatus: (_) => true),
+    );
+    _check(wrong.statusCode == 422, 'a wrong password is 422 (${wrong.statusCode})');
+    final accepted = (await c1.dio.delete<Map<String, dynamic>>(
+      '/me',
+      data: {'password': password},
+    ));
+    _check(accepted.statusCode == 202, '202 (${accepted.statusCode})');
+    final data = accepted.data!['data'] as Map;
+    final receipt = Dio(
+      BaseOptions(
+        baseUrl: baseUrl,
+        headers: {'Accept': 'application/json', 'Authorization': 'Bearer ${data['receipt_token']}'},
+      ),
+    );
+    Future<String?> status() async =>
+        ((await receipt.get<Map<String, dynamic>>('/account-deletions/${data['id']}')).data!['data']
+                as Map)['status']
+            as String?;
+
+    final outcome = await c2.engine.run(force: true);
+    _check(outcome == SyncOutcome.loggedOut, "C2's next sync is logged out (${outcome.name})");
+    _check(await status() == 'queued', 'the receipt reads queued');
+    await _runCommand('E2E_QUEUE_CMD', 'queue');
+    _check(await status() == 'completed', 'the receipt reads completed after one purge run');
+
+    final anon = Dio(BaseOptions(baseUrl: baseUrl, headers: {'Accept': 'application/json'}));
+    final login = await anon.post<Object?>(
+      '/auth/login',
+      data: {'email': email, 'password': password, 'device_name': 'e2e'},
+      options: Options(validateStatus: (_) => true),
+    );
+    _check(login.statusCode == 422, 'the old credentials fail like a wrong password');
+    final again = await anon.post<Object?>(
+      '/auth/register',
+      data: {...register, 'device_name': 'e2e'},
+      options: Options(validateStatus: (_) => true),
+    );
+    _check(again.statusCode == 201, 'the email registers again (${again.statusCode})');
+    await c1.db.close();
+    await c2.db.close();
   });
 
   await a.sync();
