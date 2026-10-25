@@ -161,10 +161,12 @@ Five parts:
 - **6.1 (done):** exports, screens 21, 29 and 30 (A48).
 - **6.2 (done):** account deletion, screen 28 (A49), with the 6.1 review's fixes.
 - **6.3:** imports with the signed manifest, screens 31 and 32.
-- **6.4:** password reset, screens 25 to 27; waits on a domain and an email provider (A15).
-- **6.5:** milestone push; waits on a Firebase project.
+- **6.4 (done):** password reset by a 6-digit code, screens 25 to 27 (A50, replacing A15's links), with the 6.2 review's fix.
+- **6.5:** milestone push (Firebase).
 
 **Gate**: export round-trip; bad-import preview; deletion flow; secrets absent from exports.
+
+**Release path (Khay Studios, 2026-10-25):** 6.4, then a **deployment phase** (Render free web service, Neon free PostgreSQL, outside object storage for photos and exports, Brevo SMTP, one protected HTTP endpoint that an outside timer calls to run the scheduler and the queue, a signed release APK on a GitHub Release with a download page), then **the device gate** on a real phone, then **6.3** imports, **6.5** milestone push and **Phase 7**.
 
 ## Phase 7 — Hardening and release · M
 
