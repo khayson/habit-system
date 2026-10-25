@@ -17,12 +17,9 @@ class HabitFormat {
     : l10n = AppLocalizations.of(context),
       locale = Localizations.localeOf(context).toLanguageTag();
 
-  static AppIconData icon(ProvisionalTypeRules? rules) => switch (rules?.display) {
-    TypeDisplay.yesNo => AppIcons.yesNo,
-    TypeDisplay.quantity => AppIcons.quantity,
-    TypeDisplay.duration => AppIcons.duration,
-    null => AppIcons.unknownType,
-  };
+  /// A53: a habit's own icon (its chosen key, else its category's default), never its type's.
+  static AppIconData icon(String? icon, String? category) =>
+      AppIcons.habit(icon, category: category);
 
   String typeLabel(ProvisionalTypeRules? rules) => switch (rules?.display) {
     TypeDisplay.yesNo => l10n.typeYesNo,

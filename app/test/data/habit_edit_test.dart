@@ -112,32 +112,30 @@ void main() {
     );
   });
 
-  test(
-    'a synced habit: six keys, never the type, on the confirmed version; a second edit coalesces',
-    () async {
-      final id = await water();
-      await phone.sync(force: true);
+  test('a synced habit: seven keys (A53 icon), never the type, on the confirmed version; a second edit coalesces', () async {
+    final id = await water();
+    await phone.sync(force: true);
 
-      await phone.writer.updateHabit(id, draft(name: 'Water daily', target: '2500.000'));
-      final first = (await habitRows(id)).single;
-      expect(first.operation, 'habit.update');
-      expect(first.baseVersion, 1);
-      expect(payload(first).keys.toSet(), {
-        'name',
-        'category',
-        'target_value',
-        'unit',
-        'frequency_type',
-        'frequency_config',
-      });
+    await phone.writer.updateHabit(id, draft(name: 'Water daily', target: '2500.000'));
+    final first = (await habitRows(id)).single;
+    expect(first.operation, 'habit.update');
+    expect(first.baseVersion, 1);
+    expect(payload(first).keys.toSet(), {
+      'name',
+      'category',
+      'target_value',
+      'unit',
+      'frequency_type',
+      'frequency_config',
+      'icon',
+    });
 
-      await phone.writer.updateHabit(id, draft(name: 'Water daily', target: '3000.000'));
-      final rows = await habitRows(id);
-      expect(rows, hasLength(1), reason: 'coalesced');
-      expect((rows.single.mutationId, rows.single.baseVersion), (first.mutationId, 1));
-      expect(payload(rows.single)['target_value'], '3000.000');
-    },
-  );
+    await phone.writer.updateHabit(id, draft(name: 'Water daily', target: '3000.000'));
+    final rows = await habitRows(id);
+    expect(rows, hasLength(1), reason: 'coalesced');
+    expect((rows.single.mutationId, rows.single.baseVersion), (first.mutationId, 1));
+    expect(payload(rows.single)['target_value'], '3000.000');
+  });
 
   test('an edit equal to what the habit shows writes nothing', () async {
     final id = await water();

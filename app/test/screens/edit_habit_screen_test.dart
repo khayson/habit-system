@@ -116,7 +116,7 @@ void main() {
     await tearDownApp(tester, account);
   });
 
-  testWidgets('a target change: habit.update with the six keys of the fixture, then waiting', (
+  testWidgets('a target change: habit.update with the seven keys of the fixture, then waiting', (
     tester,
   ) async {
     await seed(tester);
@@ -135,6 +135,7 @@ void main() {
       'unit',
       'frequency_type',
       'frequency_config',
+      'icon',
     }, reason: rules);
     expect(
       (sent['name'], sent['target_value'], sent['unit'], sent['frequency_type']),

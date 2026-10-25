@@ -71,6 +71,7 @@ class HabitFormErrors {
   required String category,
   required TargetInput target,
   required FrequencyChoice frequency,
+  String? icon,
 }) {
   final words = HabitFormText(l10n);
   final parsed = type.parse(target);
@@ -81,6 +82,7 @@ class HabitFormErrors {
     unit: parsed.unit,
     frequencyType: frequency.type,
     frequencyConfig: frequency.config,
+    icon: icon,
   );
   final byField = HabitFormErrors.fromProblems(l10n, draft.problems(type.rules));
   // The registry's own message wins for the target fields; a refused parse leaves the draft's

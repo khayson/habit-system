@@ -410,9 +410,27 @@ class FakeSyncServer implements SyncTransport {
     }, 'upsert');
   }
 
+  /// A53: the server checks an icon key's shape only.
+  Map<String, dynamic>? _iconRefused(Map<String, dynamic> m, Map<String, dynamic> p) {
+    final icon = p['icon'];
+    if (!p.containsKey('icon') || icon == null) return null;
+    if (icon is String && icon.length <= 64 && RegExp(r'^[a-z0-9]+(-[a-z0-9]+)*$').hasMatch(icon)) {
+      return null;
+    }
+    return _failed(m, 'rejected', {
+      'code': 'validation_failed',
+      'message': 'x',
+      'fields': {
+        'icon': ['The icon format is invalid.'],
+      },
+    });
+  }
+
   Map<String, dynamic> _habitCreate(Map<String, dynamic> m) {
     final id = m['entity_id'] as String;
     final p = (m['payload'] as Map).cast<String, dynamic>();
+    final badIcon = _iconRefused(m, p);
+    if (badIcon != null) return badIcon;
     if (!knownTypes.contains(p['type'])) {
       return _failed(m, 'rejected', {'code': 'unsupported_type', 'message': 'x'});
     }
@@ -432,6 +450,7 @@ class FakeSyncServer implements SyncTransport {
       'type': p['type'],
       'unit': p['unit'],
       'category': p['category'],
+      'icon': p['icon'],
       'target_value': p['target_value'],
       'frequency_type': p['frequency_type'],
       'frequency_config': p['frequency_config'],
@@ -508,6 +527,10 @@ class FakeSyncServer implements SyncTransport {
       return _failed(m, 'rejected', {'code': 'habit_archived', 'message': 'x'});
     }
     final p = (m['payload'] as Map).cast<String, dynamic>();
+    final badIcon = _iconRefused(m, p);
+    if (badIcon != null) return badIcon;
+    // A53: an absent icon keeps it; null clears it. Never a definition version.
+    final icon = p.containsKey('icon') ? p['icon'] : habit['icon'];
     final defs = (habit['definitions'] as List).cast<Map<String, dynamic>>();
     Map<String, Object?> fields(Map<String, dynamic> d) => {
       'target_value': d['target_value'],
@@ -543,12 +566,13 @@ class FakeSyncServer implements SyncTransport {
         defs.add({...next, 'version': (latest['version'] as int) + 1, 'effective_date': effective});
       }
     }
-    if (!changed && p['name'] == habit['name']) {
+    if (!changed && p['name'] == habit['name'] && icon == habit['icon']) {
       return _accepted(m, habit['id'] as String, habit['version'] as int);
     }
     final top = defs.last;
     habit
       ..['name'] = p['name']
+      ..['icon'] = icon
       ..['target_value'] = top['target_value']
       ..['unit'] = top['unit']
       ..['category'] = top['category']
@@ -590,6 +614,7 @@ class FakeSyncServer implements SyncTransport {
     habit
       ..['deleted_at'] = at
       ..['name'] = ''
+      ..['icon'] = null
       ..['unit'] = null
       ..['definitions'] = <Object?>[]
       ..['active_ranges'] = <Object?>[]

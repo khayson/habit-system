@@ -332,7 +332,9 @@ class _CheckInRow extends StatelessWidget {
     return SurfaceCard(
       child: Row(
         children: [
-          ExcludeSemantics(child: IconTile(icon: HabitFormat.icon(rules))),
+          ExcludeSemantics(
+            child: IconTile(icon: HabitFormat.icon(detail.habit.icon, detail.habit.category)),
+          ),
           const SizedBox(width: HabitSpace.s16),
           Expanded(
             child: Column(

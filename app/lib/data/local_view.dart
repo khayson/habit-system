@@ -115,6 +115,7 @@ class LocalView {
                 id: h.id,
                 name: h.payload['name'] as String? ?? '',
                 category: h.payload['category'] as String?,
+                icon: h.icon,
                 type: h.payload['type'] as String? ?? '',
                 archivedOn: switch ((DateTime.tryParse('${h.payload['archived_at']}'), calendar)) {
                   (final DateTime at?, final AccountCalendar c?) => c.timeline.localDateAt(
@@ -484,6 +485,11 @@ class HabitView {
     editNeedsAttention: editNeedsAttention ?? this.editNeedsAttention,
   );
 
+  /// A53: the chosen icon's key (possibly one this app does not know), or null.
+  String? get icon => payload['icon'] is String ? payload['icon'] as String : null;
+
+  String? get category => payload['category'] as String?;
+
   /// The edit form's starting point (4.2b): the latest definition with any unsent edit. Null
   /// when the habit cannot be edited here ([editBlocked] says why).
   HabitDraft? get editable => editBlocked == null ? HabitDraft.fromWire(payload) : null;
@@ -576,6 +582,9 @@ class ArchivedHabit {
   final String id;
   final String name;
   final String? category;
+
+  /// A53: the chosen icon's key, or null.
+  final String? icon;
   final String type;
 
   /// The local date the habit was archived, in the account's calendar.
@@ -585,6 +594,7 @@ class ArchivedHabit {
     required this.id,
     required this.name,
     required this.category,
+    this.icon,
     required this.type,
     required this.archivedOn,
   });

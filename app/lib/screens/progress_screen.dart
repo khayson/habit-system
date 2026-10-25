@@ -165,7 +165,7 @@ class _XpRowView extends StatelessWidget {
       XpRowKind.unknown => l10n.xpRowUnknown(day),
     };
     return LedgerRow(
-      icon: HabitFormat.icon(row.rules),
+      icon: HabitFormat.icon(row.habitIcon, row.habitCategory),
       tone: Tone.positive,
       title: row.habitName ?? l10n.ledgerHabitUnknown,
       detail: detail,

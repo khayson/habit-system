@@ -130,7 +130,15 @@ void main() {
   test("the app builds the fixture's habit.update requests and reads its habits without loss", () {
     final fixture = contractFixture('habit/habit_mutations.json');
     expect(fixture['suites'], contains('dart'));
-    const keys = {'name', 'category', 'target_value', 'unit', 'frequency_type', 'frequency_config'};
+    const keys = {
+      'name',
+      'category',
+      'target_value',
+      'unit',
+      'frequency_type',
+      'frequency_config',
+      'icon',
+    };
     var updates = 0;
     for (final c in (fixture['cases'] as List).cast<Map<String, dynamic>>()) {
       final habit = (c['habit'] as Map).cast<String, dynamic>();

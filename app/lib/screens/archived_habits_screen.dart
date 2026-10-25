@@ -110,9 +110,7 @@ class _ArchivedState extends State<_Archived> {
                 child: Row(
                   children: [
                     ExcludeSemantics(
-                      child: IconTile(
-                        icon: HabitFormat.icon(account.view.types.lookup(habit.type)),
-                      ),
+                      child: IconTile(icon: HabitFormat.icon(habit.icon, habit.category)),
                     ),
                     const SizedBox(width: HabitSpace.s16),
                     Expanded(

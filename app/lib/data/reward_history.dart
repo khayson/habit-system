@@ -18,6 +18,10 @@ class XpRow {
 
   /// Null when the habit is not on this device ("A habit").
   final String? habitName;
+
+  /// A53: the habit's icon key and category (its row shows the habit's own icon).
+  final String? habitIcon;
+  final String? habitCategory;
   final ProvisionalTypeRules? rules;
   final LocalDate? date;
   final DayWord dayWord;
@@ -32,6 +36,8 @@ class XpRow {
   const XpRow({
     required this.id,
     required this.habitName,
+    this.habitIcon,
+    this.habitCategory,
     required this.rules,
     required this.date,
     required this.dayWord,
@@ -113,6 +119,8 @@ class RewardHistory {
           return XpRow(
             id: e.id,
             habitName: habit?.payload['name'] as String?,
+            habitIcon: habit?.icon,
+            habitCategory: habit?.category,
             rules: rules,
             date: date,
             dayWord: _dayWord(date, today),

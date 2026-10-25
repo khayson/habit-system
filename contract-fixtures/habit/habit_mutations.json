@@ -192,7 +192,7 @@
     }
   ],
   "rules": [
-    "habit.update carries the whole editable state {name, category, target_value, unit, frequency_type, frequency_config}; a case's payload lists only the fields it changes and the test fills the rest from the habit as it stands",
+    "habit.update carries the whole editable state {name, category, target_value, unit, frequency_type, frequency_config, icon (A53)}; a case's payload lists only the fields it changes and the test fills the rest from the habit as it stands",
     "the name applies at once; category, target, unit and frequency are a new definition version effective from nextEffectiveDate at apply time, replaced in place while pending, removed when the desired state equals the version in force",
     "restoring on the archive day opens a range from tomorrow (max(today, previous end)): adjacent, no overlap, no gap; archiving again before that range starts removes it (ASSUMPTION(A34-empty-range): a range cannot end where it starts)",
     "every rejected and conflicting step writes nothing and journals nothing"

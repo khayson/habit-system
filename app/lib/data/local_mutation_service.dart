@@ -58,6 +58,7 @@ class LocalMutationService {
         category: p['category']! as String,
         frequencyType: p['frequency_type']! as String,
         frequencyConfig: (p['frequency_config']! as Map).cast<String, Object?>(),
+        icon: p['icon'] as String?,
         startLocalDate: startLocalDate ?? (await _calendar()).today(clock()),
       );
       if (reminder != null) {
@@ -84,6 +85,7 @@ class LocalMutationService {
     required String category,
     String frequencyType = 'daily',
     Map<String, Object?> frequencyConfig = const {},
+    String? icon,
     required LocalDate startLocalDate,
     bool backdate = false,
   }) {
@@ -107,6 +109,7 @@ class LocalMutationService {
           'frequency_type': frequencyType,
           'frequency_config': frequencyConfig,
           'start_local_date': startLocalDate.toString(),
+          'icon': ?icon,
           if (backdate) 'date_mode': 'backdate',
         },
       );

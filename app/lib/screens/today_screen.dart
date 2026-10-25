@@ -249,7 +249,9 @@ class _HabitRow extends StatelessWidget {
       semanticsLabel: '${l10n.todayOpenDetail(item.name)}. ${lines.join('. ')}',
       child: Row(
         children: [
-          ExcludeSemantics(child: IconTile(icon: HabitFormat.icon(item.rules))),
+          ExcludeSemantics(
+            child: IconTile(icon: HabitFormat.icon(item.habit.icon, item.habit.category)),
+          ),
           const SizedBox(width: HabitSpace.s16),
           Expanded(
             child: ExcludeSemantics(
@@ -348,7 +350,9 @@ class _AmountRow extends StatelessWidget {
           '${l10n.todayOpenDetail(item.name)}. ${l10n.todayAmountSpoken(item.name, said)}',
       child: Row(
         children: [
-          ExcludeSemantics(child: IconTile(icon: HabitFormat.icon(item.rules))),
+          ExcludeSemantics(
+            child: IconTile(icon: HabitFormat.icon(item.habit.icon, item.habit.category)),
+          ),
           const SizedBox(width: HabitSpace.s16),
           Expanded(
             child: ExcludeSemantics(

@@ -153,7 +153,15 @@ class _HabitRow extends StatelessWidget {
       rightIcon: AppIcons.archive,
       onRight: () => archiveWithUndo(context, account, habit.id, name),
       onLeft: () => confirmAndDeleteHabit(context, account, habit.id, name),
-      child: _card(context, l10n, text, tokens, HabitFormat.icon(rules), name, detail),
+      child: _card(
+        context,
+        l10n,
+        text,
+        tokens,
+        HabitFormat.icon(habit.icon, habit.category),
+        name,
+        detail,
+      ),
     );
   }
 

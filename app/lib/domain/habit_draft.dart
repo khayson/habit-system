@@ -1,6 +1,7 @@
 import 'provisional_type_rules.dart';
 
-/// A34: the editable state of a habit, as habit.update sends it (the six keys, never `type`).
+/// A34: the editable state of a habit, as habit.update sends it (seven keys with A53's icon,
+/// never `type`).
 /// Pure Dart: the edit form (4.2b) and LocalMutationService validate through [problems], so a
 /// change the server would refuse is never queued.
 class HabitDraft {
@@ -11,6 +12,10 @@ class HabitDraft {
   final String frequencyType;
   final Map<String, dynamic> frequencyConfig;
 
+  /// A53: the chosen icon's key, or null (the category's default shows). A key this app does
+  /// not know is carried unchanged (invariant 13).
+  final String? icon;
+
   const HabitDraft({
     required this.name,
     required this.category,
@@ -18,6 +23,7 @@ class HabitDraft {
     required this.unit,
     required this.frequencyType,
     required this.frequencyConfig,
+    this.icon,
   });
 
   /// The editable fields of a habit entity or a queued payload (wire form).
@@ -30,13 +36,14 @@ class HabitDraft {
     frequencyConfig: p['frequency_config'] is Map
         ? (p['frequency_config'] as Map).cast<String, dynamic>()
         : const {},
+    icon: p['icon'] is String ? p['icon'] as String : null,
   );
 
   static const categories = ['health', 'mindfulness', 'learning', 'productivity', 'other'];
   static const nameMax = 100;
   static const unitMax = 24;
 
-  /// The habit.update payload: all six keys, trimmed, never `type`.
+  /// The habit.update payload: all seven keys, trimmed, never `type`.
   Map<String, Object?> toPayload() => {
     'name': name.trim(),
     'category': category,
@@ -50,6 +57,7 @@ class HabitDraft {
             'days': [...(frequencyConfig['days'] as List).whereType<int>()]..sort(),
           }
         : frequencyConfig,
+    'icon': icon,
   };
 
   /// 4.2b review L1: what 09 saves when the habit changed under the form (a pull from another
@@ -80,6 +88,7 @@ class HabitDraft {
       unit: s['unit'] == e['unit'] ? current.unit : edited.unit,
       frequencyType: frequencyTouched ? edited.frequencyType : current.frequencyType,
       frequencyConfig: frequencyTouched ? edited.frequencyConfig : current.frequencyConfig,
+      icon: s['icon'] == e['icon'] ? current.icon : edited.icon,
     );
   }
 
@@ -91,6 +100,7 @@ class HabitDraft {
         ? '${a['target_value']}' == '${b['target_value']}'
         : rules.parseTarget(a['target_value']) == rules.parseTarget(b['target_value']);
     return a['name'] == b['name'] &&
+        a['icon'] == b['icon'] &&
         a['category'] == b['category'] &&
         targetsEqual &&
         a['unit'] == b['unit'] &&

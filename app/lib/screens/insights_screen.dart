@@ -8,7 +8,6 @@ import '../config/habit_tokens.dart';
 import '../core/exceptions/app_exception.dart';
 import '../data/local_view.dart';
 import '../domain/calendar/local_date.dart';
-import '../domain/provisional_type_rules.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../models/insights.dart';
 import '../providers/account_context.dart';
@@ -39,7 +38,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
   bool _loading = false;
   bool _offline = false;
   bool _failed = false;
-  Map<String, (String?, ProvisionalTypeRules?)> _habits = const {};
+  Map<String, (String?, String?, String?)> _habits = const {};
 
   /// 5.3b review L1: unsent check-ins seen on the last queue change; when they all reach the
   /// server, the numbers are fetched again so they include them.
@@ -89,10 +88,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
     });
     final habits = {
       for (final h in await account.view.habits())
-        h.id: (
-          h.payload['name'] as String?,
-          account.view.types.lookup(h.payload['type'] as String? ?? ''),
-        ),
+        h.id: (h.payload['name'] as String?, h.icon, h.category),
     };
     try {
       if (api == null) {
@@ -272,7 +268,7 @@ class _Tile extends StatelessWidget {
 
 class _Week extends StatelessWidget {
   final Insights insights;
-  final Map<String, (String?, ProvisionalTypeRules?)> habits;
+  final Map<String, (String?, String?, String?)> habits;
 
   const _Week({required this.insights, required this.habits});
 
@@ -364,7 +360,9 @@ class _Week extends StatelessWidget {
             child: SurfaceCard(
               child: Row(
                 children: [
-                  IconTile(icon: HabitFormat.icon(habits[open.habitId]?.$2)),
+                  IconTile(
+                    icon: HabitFormat.icon(habits[open.habitId]?.$2, habits[open.habitId]?.$3),
+                  ),
                   const SizedBox(width: HabitSpace.s16),
                   Expanded(
                     child: Column(
