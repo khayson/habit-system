@@ -9,7 +9,11 @@ use App\Support\UtcTime;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
-/** A49: queues (or with --sync runs) the purge of every deletion past purge_after not yet completed. */
+/**
+ * A49: queues (or with --sync runs) the purge of every deletion past purge_after not yet
+ * completed. A completed deletion whose receipt has expired has no reader left and is removed
+ * (6.2 review L1).
+ */
 final class PurgeAccounts extends Command
 {
     protected $signature = 'accounts:purge {--sync : Purge inline instead of queueing}';
@@ -27,7 +31,9 @@ final class PurgeAccounts extends Command
                 PurgeAccountJob::dispatch((string) $id);
             }
         }
-        $this->info(count($due).' deletion(s) purged or queued.');
+        $removed = DB::table('account_deletions')->where('status', 'completed')
+            ->where('receipt_expires_at', '<=', UtcTime::format($clock->now()))->delete();
+        $this->info(count($due)." deletion(s) purged or queued, {$removed} expired record(s) removed.");
 
         return self::SUCCESS;
     }

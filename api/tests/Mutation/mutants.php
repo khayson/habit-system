@@ -467,4 +467,13 @@ PHP,
         'replace' => "'habit' => \$rows,",
         'tests' => 'tests/Feature/AccountDeletionTest.php',
     ],
+
+    // Phase 6.4 ---------------------------------------------------------------------------
+    [
+        'name' => '6.4: completed deletions are kept after their receipt expires (6.2 review L1)',
+        'file' => 'app/Console/Commands/PurgeAccounts.php',
+        'search' => "->where('receipt_expires_at', '<=', UtcTime::format(\$clock->now()))->delete();",
+        'replace' => "->where('receipt_expires_at', '<=', UtcTime::format(\$clock->now()))->count();",
+        'tests' => 'tests/Feature/AccountDeletionTest.php',
+    ],
 ];

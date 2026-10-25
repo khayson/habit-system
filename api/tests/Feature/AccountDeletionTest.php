@@ -307,3 +307,22 @@ it('keeps the avatar and export stores out of other users\' folders', function (
     expect(Storage::disk('local')->allFiles('avatars/'.$sam['id']))->toHaveCount(1)
         ->and(Storage::disk('local')->allFiles('exports/'.$sam['id']))->toHaveCount(1);
 });
+
+// 6.2 review L1: a completed deletion is kept only while its receipt can read it.
+it('removes completed deletions once their receipt has expired, and nothing else', function () {
+    $maya = deletableUser($this);
+    $done = asUser($this, $maya['token'], 'DELETE', '/me', deleteMeFixture()['request'])->json('data');
+    Queue::fake();
+    $sam = deletableUser($this, 'sam@example.com');
+    $pending = asUser($this, $sam['token'], 'DELETE', '/me', deleteMeFixture()['request'])->json('data');
+    $exists = fn (string $id) => DB::table('account_deletions')->where('id', $id)->exists();
+
+    $this->freezeClock('2026-07-02T17:21:59Z');
+    DB::table('account_deletions')->where('id', $pending['id'])->update(['purge_after' => '2026-08-01 00:00:00+00']);
+    Artisan::call('accounts:purge', ['--sync' => true]);
+    expect([$exists($done['id']), $exists($pending['id'])])->toBe([true, true]);
+
+    $this->freezeClock('2026-07-02T17:22:00Z');
+    Artisan::call('accounts:purge', ['--sync' => true]);
+    expect([$exists($done['id']), $exists($pending['id'])])->toBe([false, true]);
+});
