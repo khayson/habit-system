@@ -81,7 +81,8 @@ void main() {
       auth,
       buildAccount: (s) => AccountContext(
         session: s,
-        transport: FakeSyncServer(),
+        // Offline sync: the habit and reminder below stay waiting, as on a phone without signal.
+        transport: OfflineTransport(),
         refreshIfStale: () async {},
         notifications: os,
         background: background,
@@ -171,6 +172,11 @@ void main() {
     await tester.enterText(find.byType(TextField), 'pw');
     await tester.pump();
     expect(destructive(tester).onPressed, isNotNull);
+    // Only the destructive button deletes: the keyboard's done action never does.
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await settle(tester);
+    expect(http.sent('DELETE /me'), isEmpty);
+    expect(find.text('Delete your account?'), findsOneWidget);
     final semantics = tester.getSemantics(find.text('Delete account permanently'));
     expect(semantics.label, 'Delete account permanently');
 

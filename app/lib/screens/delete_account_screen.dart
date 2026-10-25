@@ -106,12 +106,8 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
             ),
             const SizedBox(height: HabitSpace.s32),
             FieldLabel(l10n.deleteAccountPasswordLabel),
-            PasswordField(
-              controller: _password,
-              autofillHints: const [],
-              errorText: _fieldError,
-              onSubmitted: (_) => canDelete ? _delete() : null,
-            ),
+            // Only the destructive button deletes: no submit from the keyboard.
+            PasswordField(controller: _password, autofillHints: const [], errorText: _fieldError),
             const SizedBox(height: HabitSpace.s32),
             SurfaceCard(
               child: Column(
