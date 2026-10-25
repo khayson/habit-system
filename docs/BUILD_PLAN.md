@@ -165,6 +165,7 @@ Six parts:
 - **6.5:** milestone push (Firebase).
 - **6.6 (done):** deleting a habit, and swipe to archive or delete on 07 and 22 (A51, Khay Studios' decision), with the 6.4 review's fix.
 - **6.7 (done):** the app's own floating toast instead of every snackbar and Hugeicons for every icon through one registry (A52, Khay Studios' decision), with the 6.6 review's fixes.
+- **6.8 (done):** a chosen icon for each habit from the whole Hugeicons set with search (A53, Khay Studios' decision), "Changes saved." after an edit, and the 6.7 review's fix. Next: the **deployment phase** (Cloudflare R2 bucket `habit-files` in Western Europe for photos and exports; Render and Neon in Frankfurt).
 
 **Gate**: export round-trip; bad-import preview; deletion flow; secrets absent from exports.
 

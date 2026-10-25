@@ -125,6 +125,13 @@ you saw.
 | 101 | Edit a habit that another device has archived meanwhile, then save. | Habits opens and the message shows there with an info mark (not a check), so it is still visible after the screen changes. |
 | 102 | With TalkBack on, archive a habit by the actions menu, then save a past day in History. | TalkBack reads each message once when it appears; the message stays until closed (no timer); Undo and the close mark are reachable and read their names ("Undo", "Close message"). |
 | 103 | Turn on Remove animations (Accessibility) and at 200% text in dark theme, archive a habit. | The message appears at once with no slide; its text wraps instead of clipping; Undo and the close mark keep at least a fingertip's size and read clearly on the dark surface. |
+| 104 | Phase 6.8. On Create habit, type "Reading" in the name, then look at the Icon row. | The row shows an open book and "Reading"; before typing it showed the category's icon and its name. |
+| 105 | Tap Edit on the Icon row. Scroll the sheet, then type "yoga" in Search icons and tap a yoga icon. | The sheet lists Suggested first, then all icons; the search narrows it as you type and never needs a connection (try in airplane mode); the tapped icon closes the sheet and shows in the row. |
+| 106 | After picking, change the name to "Drink water", then create the habit. | The picked icon stays (the name no longer changes it); Today and Habits show that icon for the habit, not the type's. |
+| 107 | Edit an existing habit, pick a different icon and save. Open the app on a second phone with the same account and sync. | "Changes saved." shows after the save; the second phone shows the new icon on Today and Habits. |
+| 108 | Open an old habit you never gave an icon (created before this update). | It shows its category's icon, or a fitting one if its name has an obvious word ("Water", "Reading", "Run"). |
+| 109 | With TalkBack on, open the icon sheet and move through a few icons. | Each icon is read by its name ("Reading", "Water", "Book open 2"); the current one is read as selected; the search field and the headings are reachable. |
+| 110 | At 200% text and in dark theme, open the icon sheet and search. | The title, the search field and the headings wrap without clipping; the icons stay at least a fingertip's size; the selected one shows a check and a border, not only a colour. |
 
 ## Results
 
@@ -233,3 +240,10 @@ you saw.
 | 101 | | | | |
 | 102 | | | | |
 | 103 | | | | |
+| 104 | | | | |
+| 105 | | | | |
+| 106 | | | | |
+| 107 | | | | |
+| 108 | | | | |
+| 109 | | | | |
+| 110 | | | | |
