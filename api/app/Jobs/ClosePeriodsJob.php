@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Application\Periods\PeriodCloser;
+use App\Exceptions\AccountDeleted;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -32,7 +33,11 @@ final class ClosePeriodsJob implements ShouldBeUnique, ShouldQueue
 
     public function handle(PeriodCloser $closer): void
     {
-        $closer->closeUser($this->userId);
+        try {
+            $closer->closeUser($this->userId);
+        } catch (AccountDeleted) {
+            // A49: deleted after it was queued; the purge removes everything.
+        }
     }
 
     /** Logs the user id only: no payloads, no personal data (invariant 11). */

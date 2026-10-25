@@ -18,6 +18,7 @@ use App\Domain\Clock;
 use App\Domain\Habit\HabitArchived;
 use App\Domain\Habit\HabitTypeRegistry;
 use App\Domain\Habit\UnsupportedOperation;
+use App\Exceptions\AccountDeleted;
 use App\Exceptions\ApiException;
 use App\Exceptions\DomainErrorMapper;
 use App\Support\UtcTime;
@@ -91,6 +92,9 @@ final readonly class MutationApplier
 
         try {
             return $this->applyParsed($userId, $deviceId, $mutation, PayloadHash::of($raw), $capabilities);
+        } catch (AccountDeleted $e) {
+            // A49: the whole request ends as a 401; nothing of this mutation was written.
+            throw $e;
         } catch (Throwable $e) {
             // B1: one unexpected failure must never fail the batch or wedge an ordered outbox.
             // Everything in its transaction rolled back and no receipt exists, so a retry (or a

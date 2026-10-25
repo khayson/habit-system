@@ -64,6 +64,16 @@ final class ExportStore
         $this->quietDelete($key);
     }
 
+    /** Removes every export object of $userId and nothing of anyone else (A49 purge). */
+    public function deleteAllFor(string $userId): void
+    {
+        $userId = strtolower($userId);
+        if (! preg_match('/^'.self::UUID.'$/', $userId)) {
+            throw new InvalidArgumentException('A user id is required.');
+        }
+        $this->disk()->deleteDirectory("exports/{$userId}");
+    }
+
     /** True when $key is an export object under exports/{$userId}/. */
     public function owns(string $userId, string $key): bool
     {

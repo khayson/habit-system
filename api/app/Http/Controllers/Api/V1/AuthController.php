@@ -49,7 +49,8 @@ final class AuthController
     public function login(LoginRequest $request): JsonResponse
     {
         $data = $request->validated();
-        $user = User::query()->where('email', $data['email'])->first();
+        // A49: a deleted account (purge pending) is an unknown email.
+        $user = User::query()->where('email', $data['email'])->whereNull('deleted_at')->first();
 
         // Same answer, and the same bcrypt work, for an unknown email and a wrong password: no
         // account enumeration by content or by timing (S6).

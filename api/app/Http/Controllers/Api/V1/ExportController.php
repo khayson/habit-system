@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Application\Exports\ExportStore;
 use App\Application\Exports\OpenExports;
+use App\Application\Journal\ChangeJournal;
 use App\Domain\Clock;
 use App\Exceptions\ApiException;
 use App\Http\Responses\ApiResponse;
@@ -32,6 +33,7 @@ final class ExportController
     public function __construct(
         private readonly ExportStore $store,
         private readonly Clock $clock,
+        private readonly ChangeJournal $journal,
     ) {}
 
     /**
@@ -46,8 +48,9 @@ final class ExportController
         $format = (string) $data['format'];
 
         $job = DB::transaction(function () use ($user, $format) {
-            // The user row lock keeps two requests from both starting a job.
-            DB::table('users')->where('id', $user->id)->lockForUpdate()->first();
+            // The user row lock keeps two requests from both starting a job (and a deleted
+            // account from starting one, A49).
+            $this->journal->lockUser((string) $user->id);
             $open = OpenExports::live(DB::table('export_jobs')->where('user_id', $user->id)->where('format', $format), $this->clock->now())
                 ->orderByDesc('created_at')->first();
             if ($open !== null) {

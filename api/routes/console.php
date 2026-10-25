@@ -14,3 +14,6 @@ Schedule::command('habits:close-periods')->everyFiveMinutes()->withoutOverlappin
 
 // A48: ready exports past their 24 hours become expired and lose their object.
 Schedule::command('exports:expire')->everyFifteenMinutes()->withoutOverlapping(10);
+
+// A49: any deletion whose purge is due and not completed (the job normally runs at once).
+Schedule::command('accounts:purge')->everyFiveMinutes()->withoutOverlapping(10);

@@ -54,6 +54,11 @@ class AppServiceProvider extends ServiceProvider
             Limit::perMinute($limit('auth_per_minute_per_email'))->by('email:'.$email($request).'|'.$request->ip()),
         ]);
 
+        // A49: DELETE /me checks a password, so it gets the login limits, per IP and per user.
+        RateLimiter::for('account-delete', fn (Request $request) => [
+            Limit::perMinute($limit('auth_per_minute_per_ip'))->by('ip:'.$request->ip()),
+            Limit::perMinute($limit('auth_per_minute_per_email'))->by($byUserOrIp($request)),
+        ]);
         RateLimiter::for('password-reset', fn (Request $request) => [
             Limit::perHour($limit('password_reset_per_hour_per_ip'))->by('ip:'.$request->ip()),
             Limit::perHour($limit('password_reset_per_hour_per_email'))->by('email:'.$email($request)),

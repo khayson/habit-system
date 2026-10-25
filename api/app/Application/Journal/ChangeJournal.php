@@ -3,6 +3,7 @@
 namespace App\Application\Journal;
 
 use App\Domain\Clock;
+use App\Exceptions\AccountDeleted;
 use App\Support\UtcTime;
 use Illuminate\Support\Facades\DB;
 use LogicException;
@@ -19,13 +20,15 @@ final readonly class ChangeJournal
 
     /**
      * Takes the user lock (SELECT … FOR UPDATE). Call first in every transaction that writes
-     * domain state for the user.
+     * domain state for the user. A49: a deleted account (or one already purged) throws
+     * AccountDeleted once the lock is held, so a writer that waited on a deletion commits nothing.
      */
     public function lockUser(string $userId): void
     {
         $this->assertInTransaction();
-        if (DB::selectOne('SELECT id FROM users WHERE id = ? FOR UPDATE', [$userId]) === null) {
-            throw new LogicException('Cannot lock a missing user.');
+        $user = DB::selectOne('SELECT id, deleted_at FROM users WHERE id = ? FOR UPDATE', [$userId]);
+        if ($user === null || $user->deleted_at !== null) {
+            throw new AccountDeleted;
         }
     }
 

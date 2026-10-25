@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AccountController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\AvatarController;
 use App\Http\Controllers\Api\V1\ExportController;
@@ -45,3 +46,8 @@ Route::post('/exports', [ExportController::class, 'store'])->middleware(['auth:s
 Route::put('/me/avatar', [AvatarController::class, 'put'])->middleware(['auth:sanctum', 'throttle:avatar-upload'])->name('me.avatar.put');
 
 Route::post('/sync', [SyncController::class, 'sync'])->middleware(['auth:sanctum', 'throttle:sync'])->name('sync');
+
+// A49: deleting the account checks the password under the login limits; the status is read with
+// the receipt (not a session), so it sits outside auth:sanctum.
+Route::delete('/me', [AccountController::class, 'destroy'])->middleware(['auth:sanctum', 'throttle:account-delete'])->name('me.destroy');
+Route::get('/account-deletions/{deletion}', [AccountController::class, 'show'])->middleware('throttle:api')->name('account-deletions.show');
