@@ -423,4 +423,13 @@ PHP,
         'replace' => "'name' => \$user->name, 'email' => \$user->email, 'password' => \$user->password,",
         'tests' => 'tests/Feature/ExportEndpointsTest.php',
     ],
+
+    // Phase 6.2 ---------------------------------------------------------------------------
+    [
+        'name' => '6.2: a stale export job still blocks its format (6.1 review M1)',
+        'file' => 'app/Application/Exports/OpenExports.php',
+        'search' => "->where('status', 'running')->where('updated_at', '>', self::runningCutoff(\$now)))",
+        'replace' => "->where('status', 'running'))",
+        'tests' => 'tests/Feature/ExportEndpointsTest.php',
+    ],
 ];

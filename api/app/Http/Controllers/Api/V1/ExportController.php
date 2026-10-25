@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Application\Exports\ExportStore;
+use App\Application\Exports\OpenExports;
 use App\Domain\Clock;
 use App\Exceptions\ApiException;
 use App\Http\Responses\ApiResponse;
@@ -33,7 +34,10 @@ final class ExportController
         private readonly Clock $clock,
     ) {}
 
-    /** POST /exports {format} -> 202. A queued or running job of that format is returned instead. */
+    /**
+     * POST /exports {format} -> 202. A live queued or running job of that format is returned
+     * instead; a stale one (OpenExports) is passed over.
+     */
     public function store(Request $request): JsonResponse
     {
         /** @var User $user */
@@ -44,8 +48,8 @@ final class ExportController
         $job = DB::transaction(function () use ($user, $format) {
             // The user row lock keeps two requests from both starting a job.
             DB::table('users')->where('id', $user->id)->lockForUpdate()->first();
-            $open = DB::table('export_jobs')->where('user_id', $user->id)->where('format', $format)
-                ->whereIn('status', ['queued', 'running'])->orderByDesc('created_at')->first();
+            $open = OpenExports::live(DB::table('export_jobs')->where('user_id', $user->id)->where('format', $format), $this->clock->now())
+                ->orderByDesc('created_at')->first();
             if ($open !== null) {
                 return $open;
             }

@@ -14,7 +14,8 @@ use Throwable;
 
 /**
  * A48: builds one export job's object. Queued (database driver). A failure marks the job failed
- * with an error_code and leaves no object behind; history is only ever read.
+ * with an error_code and leaves no object behind; history is only ever read. When the queue gives
+ * up on the job (a killed worker, a timeout), failed() does the same (6.1 review M1).
  */
 final class RunExportJob implements ShouldQueue
 {
@@ -52,5 +53,22 @@ final class RunExportJob implements ShouldQueue
                 'status' => 'failed', 'error_code' => 'export_failed', 'object_key' => null, 'updated_at' => $now(),
             ]);
         }
+    }
+
+    /** The queue's hook once it gives up: handle() never reached its own catch. */
+    public function failed(?Throwable $e): void
+    {
+        $job = DB::table('export_jobs')->where('id', $this->exportId)->first();
+        if ($job === null || ! in_array($job->status, ['queued', 'running'], true)) {
+            return;
+        }
+        if ($job->object_key !== null) {
+            app(ExportStore::class)->delete((string) $job->user_id, (string) $job->object_key);
+        }
+        Log::error('export failed', ['export_id' => $job->id, 'exception' => $e === null ? null : $e::class]);
+        DB::table('export_jobs')->where('id', $job->id)->whereIn('status', ['queued', 'running'])->update([
+            'status' => 'failed', 'error_code' => 'export_failed', 'object_key' => null,
+            'updated_at' => UtcTime::format(app(Clock::class)->now()),
+        ]);
     }
 }

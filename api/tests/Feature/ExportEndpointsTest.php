@@ -1,6 +1,7 @@
 <?php
 
 use App\Application\Exports\ExportBuilder;
+use App\Application\Exports\ExportStore;
 use App\Domain\Export\ManifestCheck;
 use App\Jobs\RunExportJob;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -212,4 +213,61 @@ it('validates the format and needs a session', function () {
     app('auth')->forgetGuards();
     $this->flushHeaders();
     $this->postJson('/api/v1/exports', ['format' => 'json'])->assertUnauthorized();
+});
+
+/*
+ * 6.1 review M1: a job no worker will finish (killed, timed out, or never picked up) must not
+ * block that format for ever.
+ */
+
+it('marks the job failed and deletes its object when the queue gives up on it', function () {
+    Queue::fake();
+    $id = exportsCall($this, 'POST', $this->maya['token'], '/exports', ['format' => 'json'])->json('data.id');
+    $key = app(ExportStore::class)->put($this->maya['id'], 'zip', 'PK');
+    Storage::disk('local')->assertExists($key);
+    DB::table('export_jobs')->where('id', $id)->update(['status' => 'running', 'object_key' => $key]);
+
+    (new RunExportJob($id))->failed(new RuntimeException('worker killed'));
+
+    $row = DB::table('export_jobs')->where('id', $id)->first();
+    expect([$row->status, $row->error_code, $row->object_key])->toBe(['failed', 'export_failed', null]);
+    Storage::disk('local')->assertMissing($key);
+});
+
+it('sweeps a running job silent for 30 minutes and a queued job older than 24 hours into failed', function () {
+    Queue::fake();
+    $running = exportsCall($this, 'POST', $this->maya['token'], '/exports', ['format' => 'json'])->json('data.id');
+    DB::table('export_jobs')->where('id', $running)->update(['status' => 'running']);
+    $queued = exportsCall($this, 'POST', $this->maya['token'], '/exports', ['format' => 'csv'])->json('data.id');
+    $status = fn (string $id) => DB::table('export_jobs')->where('id', $id)->value('status');
+
+    $this->freezeClock('2026-05-28T17:51:59Z');
+    Artisan::call('exports:expire');
+    expect([$status($running), $status($queued)])->toBe(['running', 'queued']);
+
+    $this->freezeClock('2026-05-28T17:52:00Z');
+    Artisan::call('exports:expire');
+    expect([$status($running), $status($queued)])->toBe(['failed', 'queued'])
+        ->and(DB::table('export_jobs')->where('id', $running)->value('error_code'))->toBe('export_failed');
+
+    $this->freezeClock('2026-05-29T17:22:00Z');
+    Artisan::call('exports:expire');
+    expect($status($queued))->toBe('failed');
+});
+
+it('starts a new job instead of returning a stale one', function () {
+    Queue::fake();
+    $queued = exportsCall($this, 'POST', $this->maya['token'], '/exports', ['format' => 'json'])->json('data.id');
+    $running = exportsCall($this, 'POST', $this->maya['token'], '/exports', ['format' => 'csv'])->json('data.id');
+    DB::table('export_jobs')->where('id', $running)->update(['status' => 'running']);
+
+    $this->freezeClock('2026-05-28T17:51:59Z');
+    expect(exportsCall($this, 'POST', $this->maya['token'], '/exports', ['format' => 'csv'])->json('data.id'))->toBe($running);
+
+    $this->freezeClock('2026-05-28T17:52:00Z');
+    $freshCsv = exportsCall($this, 'POST', $this->maya['token'], '/exports', ['format' => 'csv'])->assertStatus(202)->json('data');
+    expect($freshCsv['id'])->not->toBe($running)->and($freshCsv['status'])->toBe('queued');
+
+    $this->freezeClock('2026-05-29T17:22:00Z');
+    expect(exportsCall($this, 'POST', $this->maya['token'], '/exports', ['format' => 'json'])->json('data.id'))->not->toBe($queued);
 });
