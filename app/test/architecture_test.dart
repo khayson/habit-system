@@ -113,6 +113,8 @@ void main() {
       'sync/reminder_mutations': 'test/sync/reminder_sync_test.dart',
       'sync/reminder_entity': 'test/sync/reminder_sync_test.dart',
       'auth/register_request': 'test/services/auth_service_test.dart',
+      'auth/delete_me': 'test/services/auth_service_test.dart',
+      'auth/account_deletion_status': 'test/services/auth_service_test.dart',
       'sync/profile_update_mutations': 'test/data/profile_test.dart',
       'sync/user_entity': 'test/data/profile_test.dart',
       'habit/habit_mutations': 'test/sync/habit_acks_test.dart',

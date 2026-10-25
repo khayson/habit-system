@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqlite3/common.dart' show CommonDatabase;
@@ -25,6 +27,24 @@ AppDatabase openAccountDatabase(String accountKey, {Future<Object> Function()? d
       ),
     ),
   );
+}
+
+/// A49: removes a deleted account's database file (and its WAL and journal files) and nothing of
+/// any other account. The caller closes the database first.
+Future<void> deleteAccountDatabase(
+  String accountKey, {
+  Future<Directory> Function()? directory,
+}) async {
+  final dir = await (directory ?? getApplicationSupportDirectory)();
+  final name = databaseNameFor(accountKey);
+  for (final suffix in ['.sqlite', '.sqlite-wal', '.sqlite-shm', '.sqlite-journal']) {
+    final file = File('${dir.path}/$name$suffix');
+    try {
+      if (file.existsSync()) file.deleteSync();
+    } on FileSystemException {
+      // A file another isolate still holds goes when the OS releases it.
+    }
+  }
 }
 
 /// Phase 3b: the account's own folder for files (the profile photo), next to its database in

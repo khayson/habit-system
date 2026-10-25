@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 
 import '../services/auth_service.dart';
@@ -17,6 +19,10 @@ class SessionProvider extends ChangeNotifier {
 
   AccountContext? _account;
   bool _needsSetup = false;
+  bool _accountDeleted = false;
+
+  /// A49: sign-in says the account is being deleted, until the next sign-in or registration.
+  bool get accountDeleted => _accountDeleted;
 
   AccountContext? get account => _account;
   bool get isAuthenticated => _account != null;
@@ -69,6 +75,31 @@ class SessionProvider extends ChangeNotifier {
     await _auth.signOut();
   }
 
+  /// A49: deletes the account on the server (the password is the reauthentication), then this
+  /// account's reminders, background sync, database, files and tokens on this device. A failure
+  /// on the server (wrong password, offline) throws before anything local changes. Other
+  /// accounts on the device are untouched.
+  Future<void> deleteAccount(String password) async {
+    final account = _account;
+    if (account == null) return;
+    final receipt = await _auth.requestAccountDeletion(password);
+    // Set at once: the 202 revoked this device's token too, so an in-flight sync's 401 may end
+    // the session before the steps below.
+    _accountDeleted = true;
+    try {
+      await account.endForLogout();
+    } on Object {
+      // Best effort, as at sign-out: the account is gone on the server either way.
+    }
+    await _auth.forgetDeletedAccount(receipt);
+    try {
+      Directory(account.filesRoot).deleteSync(recursive: true);
+    } on FileSystemException {
+      // No photo folder, or the OS holds it; nothing else reads it now.
+    }
+    notifyListeners();
+  }
+
   /// The ApiClient saw the server reject the stored token (it owns that decision, G1).
   Future<void> handleUnauthenticated() => _auth.logout();
 
@@ -76,6 +107,7 @@ class SessionProvider extends ChangeNotifier {
   void _ended() => _close();
 
   void _open(AccountSession session) {
+    _accountDeleted = false;
     if (_account?.session.userId != session.userId) {
       _account?.dispose();
       _account = _buildAccount(session);

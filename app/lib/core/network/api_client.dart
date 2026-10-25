@@ -100,6 +100,9 @@ class ApiClient {
     parser,
   );
 
+  Future<ApiResponse<T>> delete<T>(String path, T Function(dynamic data) parser, {Object? data}) =>
+      _send(() => _dio.delete<Object?>(path, data: data), parser);
+
   Future<ApiResponse<T>> _send<T>(
     Future<Response<Object?>> Function() request,
     T Function(dynamic data) parser,

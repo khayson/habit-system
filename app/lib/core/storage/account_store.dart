@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 /// Which account is signed in, when its token was issued, and this install's device id (A6).
@@ -13,12 +15,18 @@ abstract interface class AccountStore {
 
   /// Stable per install; created on first use.
   Future<String> deviceId(String Function() create);
+
+  /// A49: deletion id to receipt token, for every account deleted on this device. Device-level:
+  /// it outlives the account and [clearSession] keeps it.
+  Future<Map<String, String>> readDeletionReceipts();
+  Future<void> addDeletionReceipt(String deletionId, String token);
 }
 
 class SecureAccountStore implements AccountStore {
   static const _userId = 'account_user_id';
   static const _issuedAt = 'token_issued_at';
   static const _deviceId = 'device_id';
+  static const _deletionReceipts = 'account_deletion_receipts';
 
   final FlutterSecureStorage _storage;
 
@@ -55,4 +63,20 @@ class SecureAccountStore implements AccountStore {
     await _storage.write(key: _deviceId, value: id);
     return id;
   }
+
+  @override
+  Future<Map<String, String>> readDeletionReceipts() async {
+    try {
+      final stored = jsonDecode(await _storage.read(key: _deletionReceipts) ?? '{}');
+      return (stored as Map).cast<String, String>();
+    } on Object {
+      return {};
+    }
+  }
+
+  @override
+  Future<void> addDeletionReceipt(String deletionId, String token) async => _storage.write(
+    key: _deletionReceipts,
+    value: jsonEncode({...await readDeletionReceipts(), deletionId: token}),
+  );
 }

@@ -2,9 +2,11 @@ import 'package:dio/dio.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:habit/config/legal_config.dart';
+import 'package:habit/core/exceptions/app_exception.dart';
 import 'package:habit/core/network/api_client.dart';
 import 'package:habit/core/storage/account_store.dart';
 import 'package:habit/data/app_database.dart';
+import 'package:habit/models/account_deletion.dart';
 import 'package:habit/services/auth_service.dart';
 
 import '../core/api_client_test.dart' show MemoryTokenStore;
@@ -36,6 +38,15 @@ class MemoryAccountStore implements AccountStore {
 
   @override
   Future<String> deviceId(String Function() create) async => device ??= create();
+
+  final Map<String, String> deletionReceipts = {};
+
+  @override
+  Future<Map<String, String>> readDeletionReceipts() async => {...deletionReceipts};
+
+  @override
+  Future<void> addDeletionReceipt(String deletionId, String token) async =>
+      deletionReceipts[deletionId] = token;
 }
 
 const _alice = '0190a000-0000-7000-8000-00000000000a';
@@ -59,8 +70,10 @@ void main() {
   late Map<String, AppDatabase> opened;
   late DateTime now;
   late AuthService auth;
+  late List<String> deletedDatabases;
 
   setUp(() {
+    deletedDatabases = [];
     http = RouteAdapter();
     tokens = MemoryTokenStore();
     accounts = MemoryAccountStore();
@@ -73,7 +86,96 @@ void main() {
       accounts,
       openDatabase: (userId) =>
           opened.putIfAbsent(userId, () => AppDatabase(NativeDatabase.memory())),
+      deleteDatabase: (userId) async => deletedDatabases.add(userId),
       clock: () => now,
+    );
+  });
+
+  group('A49: account deletion', () {
+    final fixture = contractFixture('auth/delete_me.json');
+    final statuses = contractFixture('auth/account_deletion_status.json');
+
+    test('both fixtures declare the Dart suite', () {
+      expect(fixture['suites'], contains('dart'));
+      expect(statuses['suites'], contains('dart'));
+    });
+
+    test('sends the fixture body and decodes the 202 receipt', () async {
+      http.on('POST /auth/login', Reply(200, _session(_alice, 'tok-1')));
+      await auth.login(email: 'a@example.test', password: 'correct horse battery');
+      final accepted = fixture['accepted'] as Map<String, dynamic>;
+      http.on('DELETE /me', Reply(accepted['status'] as int, materialize(accepted['body'])));
+
+      final receipt = await auth.requestAccountDeletion(
+        (fixture['request'] as Map)['password'] as String,
+      );
+
+      expectContract(fixture['request'], http.sent('DELETE /me').single.data);
+      expect(http.sent('DELETE /me').single.headers['Authorization'], 'Bearer tok-1');
+      expect(receipt.deletion.status, AccountDeletionStatus.queued);
+      expect(receipt.token, materialize('{{secret}}'));
+      expect(receipt.expiresAt, DateTime.utc(2026, 5, 28, 17, 22));
+      expect(tokens.token, 'tok-1', reason: 'nothing local changes before the caller decides');
+      expect(deletedDatabases, isEmpty);
+    });
+
+    test('a wrong password is the field error from the server', () async {
+      http.on('POST /auth/login', Reply(200, _session(_alice, 'tok-1')));
+      await auth.login(email: 'a@example.test', password: 'correct horse battery');
+      final wrong = fixture['wrong_password'] as Map<String, dynamic>;
+      http.on('DELETE /me', Reply(wrong['status'] as int, materialize(wrong['body'])));
+
+      await expectLater(
+        auth.requestAccountDeletion('not it'),
+        throwsA(
+          isA<AppException>().having((e) => e.fields['password'], 'password', [
+            'The password is incorrect.',
+          ]),
+        ),
+      );
+      expect(tokens.token, 'tok-1');
+    });
+
+    for (final status in ['queued', 'purging', 'completed']) {
+      test('decodes a $status deletion status', () {
+        final json = materialize((statuses['statuses'] as Map)[status]) as Map<String, dynamic>;
+        final deletion = AccountDeletion.fromJson(json);
+        expect(deletion.status.name, status);
+        expect(deletion.completedAt == null, status != 'completed');
+      });
+    }
+
+    test('an unknown status word is kept as unknown, never a crash', () {
+      final json = {
+        ...materialize((statuses['statuses'] as Map)['queued']) as Map<String, dynamic>,
+        'status': 'archived',
+      };
+      expect(AccountDeletion.fromJson(json).status, AccountDeletionStatus.unknown);
+    });
+
+    test(
+      "forgetting keeps the receipt, ends the session, and deletes only this account's database",
+      () async {
+        http
+          ..on('POST /auth/login', Reply(200, _session(_bob, 'tok-b')))
+          ..on('POST /auth/login', Reply(200, _session(_alice, 'tok-a')));
+        await auth.login(email: 'b@example.test', password: 'correct horse battery');
+        await auth.login(email: 'a@example.test', password: 'correct horse battery');
+        var ended = 0;
+        auth.onSessionEnded = () => ended++;
+        final accepted = fixture['accepted'] as Map<String, dynamic>;
+        final receipt = DeletionReceipt.fromJson(
+          ((materialize(accepted['body']) as Map)['data'] as Map).cast<String, dynamic>(),
+        );
+
+        await auth.forgetDeletedAccount(receipt);
+
+        expect(deletedDatabases, [_alice]);
+        expect(accounts.deletionReceipts, {receipt.deletion.id: receipt.token});
+        expect((tokens.token, accounts.userId, auth.current), (null, null, null));
+        expect(ended, 1);
+        expect(accounts.device, isNotNull, reason: 'the install keeps its device id');
+      },
     );
   });
 

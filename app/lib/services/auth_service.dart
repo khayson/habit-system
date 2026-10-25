@@ -7,6 +7,7 @@ import '../core/storage/account_store.dart';
 import '../core/storage/token_store.dart';
 import '../data/app_database.dart';
 import '../data/database_opener.dart';
+import '../models/account_deletion.dart';
 import '../sync/sync_engine.dart';
 
 /// A signed-in account and its own database (one file per user id).
@@ -47,6 +48,7 @@ class AuthService {
   final TokenStore _tokens;
   final AccountStore _accounts;
   final AppDatabase Function(String userId) _openDatabase;
+  final Future<void> Function(String userId) _deleteDatabase;
   final DateTime Function() _clock;
   final String _deviceName;
 
@@ -55,6 +57,7 @@ class AuthService {
     this._tokens,
     this._accounts, {
     this._openDatabase = openAccountDatabase,
+    this._deleteDatabase = deleteAccountDatabase,
     DateTime Function()? clock,
     this._deviceName = 'Habit app',
   }) : _clock = clock ?? DateTime.now;
@@ -173,6 +176,26 @@ class AuthService {
     final open = _opened;
     _opened = null;
     await open?.db.close();
+  }
+
+  /// A49: DELETE /me with the password. Network only: nothing on the device changes here, so a
+  /// wrong password or no connection leaves everything as it was.
+  Future<DeletionReceipt> requestAccountDeletion(String password) async => (await _api.delete(
+    '/me',
+    (d) => DeletionReceipt.fromJson((d as Map).cast<String, dynamic>()),
+    data: {'password': password},
+  )).data;
+
+  /// A49, after the 202: the receipt is kept under a device-level key; this account's token,
+  /// session and database file go (the session ends first, so nothing is still reading it).
+  /// Other accounts' databases are untouched.
+  Future<void> forgetDeletedAccount(DeletionReceipt receipt) async {
+    await _accounts.addDeletionReceipt(receipt.deletion.id, receipt.token);
+    final open = _opened;
+    _opened = null;
+    await logout();
+    await open?.db.close();
+    if (open != null) await _deleteDatabase(open.userId);
   }
 
   Future<AccountSession> _signIn(_Session session, String deviceId) async {
