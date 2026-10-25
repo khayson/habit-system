@@ -456,7 +456,7 @@ No design exists. Khay Studios approved building it from the app's existing comp
   - `LocalMutationService.deleteHabit` writes the `habit.delete` outbox row with the confirmed version as `base_version`. In the same drift transaction it removes the habit's unsent log and archive/restore rows from the outbox, since they can never apply. **This is the one place invariant 8 ("never delete an unacknowledged outbox row") is relaxed**, and only for rows the person's own delete makes meaningless. It also removes the habit, its logs, drafts and reminders locally and cancels its notifications.
   - A pulled habit tombstone does the same on other devices, except for the outbox. An unsent row there comes back `resource_deleted` (entity habit) and the queue shows "This habit was deleted on another device." with Discard only.
 - Gestures (Habits list 07 and Archived routines 22; never Today):
-  - A swipe right past about 70 % of the row archives at once (on 22: restores), with a snackbar Undo.
+  - A swipe right past about 70 % of the row archives at once (on 22: restores), with an Undo (in the toast since A52).
   - A swipe left past it opens the "Delete {name}?" confirmation and the row springs back. Only "Delete habit" there deletes.
   - A shorter swipe shows the action and springs back. A light haptic marks the threshold.
   - Habit detail (12) has "Delete habit" too, and every swipeable row has screen-reader actions for Archive (or Restore) and Delete.

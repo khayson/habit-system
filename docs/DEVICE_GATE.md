@@ -119,6 +119,12 @@ you saw.
 | 95 | With the account on a second phone that has an unsent check-in for that habit, open the app and sync. | The habit is gone there too; the queue shows the check-in with "This habit was deleted on another device." and Discard only. |
 | 96 | On Archived routines, swipe right and swipe left; open a habit's detail and use Delete habit at the end. | Right restores with Undo; left asks first; the detail entry asks the same question and returns to Habits after deleting. |
 | 97 | With TalkBack on Habits and Archived routines, use the actions menu on a row. | "Archive" (or "Restore") and "Delete" are offered; Delete opens the confirmation; at 200% text and in dark theme the sheet and its buttons are readable and nothing is clipped. |
+| 98 | Phase 6.7. On Habits, swipe a throwaway habit all the way right and watch the top of the screen. | A rounded message slides in under the status bar with a check mark, "Archived {name}.", Undo and a close mark; the list does not move. Without a touch it leaves after about 6 seconds. |
+| 99 | Archive again and tap Undo on the message; archive once more and swipe the message up; archive again and tap its close mark. | Undo brings the habit back and the message closes; a swipe up and the close mark each remove it and change nothing else. A second archive replaces the first message rather than stacking. |
+| 100 | Open History for a habit, change a past day's value and save. | "Saved on this device. It syncs when you are online." shows at the top with a check mark and leaves after about 4 seconds; the history screen stays usable under it. |
+| 101 | Edit a habit that another device has archived meanwhile, then save. | Habits opens and the message shows there with an info mark (not a check), so it is still visible after the screen changes. |
+| 102 | With TalkBack on, archive a habit by the actions menu, then save a past day in History. | TalkBack reads each message once when it appears; the message stays until closed (no timer); Undo and the close mark are reachable and read their names ("Undo", "Close message"). |
+| 103 | Turn on Remove animations (Accessibility) and at 200% text in dark theme, archive a habit. | The message appears at once with no slide; its text wraps instead of clipping; Undo and the close mark keep at least a fingertip's size and read clearly on the dark surface. |
 
 ## Results
 
@@ -221,3 +227,9 @@ you saw.
 | 95 | | | | |
 | 96 | | | | |
 | 97 | | | | |
+| 98 | | | | |
+| 99 | | | | |
+| 100 | | | | |
+| 101 | | | | |
+| 102 | | | | |
+| 103 | | | | |

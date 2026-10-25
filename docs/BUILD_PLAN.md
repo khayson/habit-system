@@ -164,6 +164,7 @@ Six parts:
 - **6.4 (done):** password reset by a 6-digit code, screens 25 to 27 (A50, replacing A15's links), with the 6.2 review's fix.
 - **6.5:** milestone push (Firebase).
 - **6.6 (done):** deleting a habit, and swipe to archive or delete on 07 and 22 (A51, Khay Studios' decision), with the 6.4 review's fix.
+- **6.7 (done):** the app's own floating toast instead of every snackbar and Hugeicons for every icon through one registry (A52, Khay Studios' decision), with the 6.6 review's fixes.
 
 **Gate**: export round-trip; bad-import preview; deletion flow; secrets absent from exports.
 
