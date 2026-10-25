@@ -37,6 +37,7 @@ Object? materialize(Object? value) {
     '{{date}}' => '2026-06-01',
     '{{url}}' => 'https://api.example.com/api/v1/exports/x/download?signature=abc',
     '{{seq}}' => 6,
+    '{{secret}}' => 'r3ceiptT0kenOnlyReadsTheDeletionStatus0123456789',
     final Map<String, dynamic> map => map.map((k, v) => MapEntry(k, materialize(v))),
     final List<dynamic> list => list.map(materialize).toList(),
     _ => value,
@@ -54,6 +55,8 @@ void expectContract(Object? expected, Object? actual, [String path = r'$']) {
       );
     case '{{seq}}':
       expect(actual, isA<int>(), reason: path);
+    case '{{secret}}':
+      expect(actual, matches(RegExp(r'^[A-Za-z0-9]{48}$')), reason: path);
     case '{{timestamp}}':
       expect(
         actual,

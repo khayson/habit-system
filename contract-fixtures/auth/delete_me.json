@@ -1,0 +1,35 @@
+{
+  "description": "A49: DELETE /me as the app sends it, the 202 it receives, and the wrong-password error. receipt_token is returned once, stored on the server only as its SHA-256 hash, valid 35 days, and reads GET /account-deletions/{id} only. Every session token of the user is revoked in the same transaction.",
+  "suites": [
+    "php",
+    "dart"
+  ],
+  "request": {
+    "password": "12-plus-character-password"
+  },
+  "accepted": {
+    "status": 202,
+    "body": {
+      "data": {
+        "id": "{{uuid}}",
+        "status": "queued",
+        "requested_at": "{{timestamp}}",
+        "completed_at": null,
+        "receipt_token": "{{secret}}",
+        "receipt_expires_at": "{{timestamp}}"
+      },
+      "meta": { "api_version": "v1", "server_time": "{{timestamp}}", "request_id": "{{uuid}}" }
+    }
+  },
+  "wrong_password": {
+    "status": 422,
+    "body": {
+      "error": {
+        "code": "validation_failed",
+        "message": "Check the highlighted fields.",
+        "fields": { "password": ["The password is incorrect."] }
+      },
+      "meta": { "request_id": "{{uuid}}", "server_time": "{{timestamp}}" }
+    }
+  }
+}

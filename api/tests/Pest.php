@@ -55,6 +55,7 @@ function assertMatchesContract(mixed $expected, mixed $actual, string $path = '$
             'int' => '/^[1-9]\d*$/',
             'date' => '/^\d{4}-\d{2}-\d{2}$/',
             'url' => '/^https?:\/\/\S+$/',
+            'secret' => '/^[A-Za-z0-9]{48}$/',
             'cursor', 'cursor_or_null' => CURSOR_PATTERN,
             default => throw new InvalidArgumentException("Unknown placeholder {$expected} at {$path}"),
         };

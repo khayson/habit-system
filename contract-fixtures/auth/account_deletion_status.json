@@ -1,0 +1,27 @@
+{
+  "description": "A49: GET /account-deletions/{id} with the receipt as Authorization: Bearer, in each status. Only these four fields; completed_at is set only when completed. Any other id, a wrong, expired or missing receipt, or a full session token is 404 (envelope/error_404_not_found.json).",
+  "suites": [
+    "php",
+    "dart"
+  ],
+  "statuses": {
+    "queued": {
+      "id": "{{uuid}}",
+      "status": "queued",
+      "requested_at": "{{timestamp}}",
+      "completed_at": null
+    },
+    "purging": {
+      "id": "{{uuid}}",
+      "status": "purging",
+      "requested_at": "{{timestamp}}",
+      "completed_at": null
+    },
+    "completed": {
+      "id": "{{uuid}}",
+      "status": "completed",
+      "requested_at": "{{timestamp}}",
+      "completed_at": "{{timestamp}}"
+    }
+  }
+}
