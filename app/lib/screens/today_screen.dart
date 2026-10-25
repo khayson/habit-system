@@ -220,11 +220,7 @@ class _HabitRow extends StatelessWidget {
     } else if (!item.rules!.oneTap) {
       (subtitle, trailing, tone) = (l10n.todayOtherType, AppIcons.waiting, Tone.info);
     } else if (item.habit.provisional && item.log.syncState == null) {
-      (subtitle, trailing, tone) = (
-        l10n.todayNewHabitWaiting,
-        AppIcons.notDone,
-        Tone.neutral,
-      );
+      (subtitle, trailing, tone) = (l10n.todayNewHabitWaiting, AppIcons.notDone, Tone.neutral);
     } else {
       (subtitle, trailing, tone) = (
         item.pending ? l10n.todayNotDoneWaiting : l10n.todayNotDone,

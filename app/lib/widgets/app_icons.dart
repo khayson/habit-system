@@ -83,14 +83,14 @@ class AppIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = IconTheme.of(context);
-    final drawn = HugeIcon(
-      icon: icon,
-      size: size ?? theme.size ?? 24,
-      color: color ?? theme.color,
-    );
+    final drawn = HugeIcon(icon: icon, size: size ?? theme.size ?? 24, color: color ?? theme.color);
     final label = semanticLabel;
     return label == null
         ? ExcludeSemantics(child: drawn)
-        : Semantics(label: label, image: true, child: ExcludeSemantics(child: drawn));
+        : Semantics(
+            label: label,
+            image: true,
+            child: ExcludeSemantics(child: drawn),
+          );
   }
 }

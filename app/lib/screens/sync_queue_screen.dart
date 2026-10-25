@@ -93,11 +93,7 @@ class SyncQueueScreen extends StatelessWidget {
           icon: AppIcons.offline,
         )
       else if (queue.items.isEmpty)
-        InfoCard(
-          title: l10n.queueSyncedTitle,
-          body: l10n.queueSyncedBody,
-          icon: AppIcons.synced,
-        ),
+        InfoCard(title: l10n.queueSyncedTitle, body: l10n.queueSyncedBody, icon: AppIcons.synced),
       const SizedBox(height: HabitSpace.s24),
       for (final item in queue.items) ...[
         _QueueRow(item: item, account: account),
@@ -169,7 +165,10 @@ class _QueueRow extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              IconTile(icon: row.entity == 'habit' ? AppIcons.newHabit : AppIcons.check, tone: tone),
+              IconTile(
+                icon: row.entity == 'habit' ? AppIcons.newHabit : AppIcons.check,
+                tone: tone,
+              ),
               const SizedBox(width: HabitSpace.s16),
               Expanded(
                 child: Column(
