@@ -137,6 +137,8 @@ jobs:
       EXPORT_SIGNING_KEYS: test-2026:test-export-signing-secret-not-for-production
       EXPORT_SIGNING_KID: test-2026
       E2E_EXPORT_KEY: test-2026:test-export-signing-secret-not-for-production
+      # A50: the API's log mailer writes the reset code here (MAIL_MAILER=log in .env.example).
+      E2E_MAIL_LOG: ../api/storage/logs/laravel.log
     steps:
       - uses: actions/checkout@v7
       - uses: shivammathur/setup-php@v2

@@ -57,6 +57,10 @@
 //             C2's next sync is logged out (401); the receipt reads queued, then completed after
 //             one queue worker pass (E2E_QUEUE_CMD runs the purge); the old credentials fail
 //             like a wrong password; the email registers again.
+//   password-reset  a fresh account on two devices (A50): a code is requested; the tool reads it
+//             from the API's log mailer (E2E_MAIL_LOG, the API's storage/logs/laravel.log; local
+//             and CI only, where MAIL_MAILER=log); a wrong code is refused; the reset revokes
+//             both devices (401 on /me, the next sync logged out); the new password signs in.
 // Exits non-zero at the first failed check, or unless both databases end identical.
 import 'dart:convert';
 import 'dart:io';
@@ -943,6 +947,77 @@ Future<void> main(List<String> args) async {
     _check(again.statusCode == 201, 'the email registers again (${again.statusCode})');
     await c1.db.close();
     await c2.db.close();
+  });
+
+  await _scenario('password-reset', () async {
+    final logPath = Platform.environment['E2E_MAIL_LOG'];
+    if (logPath == null || logPath.isEmpty) throw StateError('E2E_MAIL_LOG is required');
+    // The API creates the file on its first log line, which may be this mail.
+    final mailLog = File(logPath);
+    final email = 'e2e-reset+${DateTime.now().millisecondsSinceEpoch}@example.test';
+    const oldPassword = 'e2e-reset-password-1234';
+    const newPassword = 'e2e-reset-new-password-5678';
+    final d1 = await _Device.signIn(baseUrl, dir, 'D1', '/auth/register', {
+      'name': 'E2E Reset',
+      'email': email,
+      'password': oldPassword,
+      'timezone': 'America/Los_Angeles',
+      'terms_version': '2026-10-24',
+      'privacy_version': '2026-10-24',
+    });
+    final d2 = await _Device.signIn(baseUrl, dir, 'D2', '/auth/login', {
+      'email': email,
+      'password': oldPassword,
+    });
+    await d1.sync();
+    await d2.sync();
+
+    final anon = Dio(BaseOptions(baseUrl: baseUrl, headers: {'Accept': 'application/json'}));
+    final before = mailLog.existsSync() ? mailLog.lengthSync() : 0;
+    final asked = await anon.post<Object?>('/auth/forgot-password', data: {'email': email});
+    _check(asked.statusCode == 202, 'forgot-password is 202 (${asked.statusCode})');
+    // The mail is written after the response; give it a moment.
+    String? code;
+    for (var i = 0; i < 50 && code == null; i++) {
+      if (!mailLog.existsSync()) {
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+        continue;
+      }
+      final raf = mailLog.openSync()..setPositionSync(before);
+      final added = utf8.decode(raf.readSync(mailLog.lengthSync() - before), allowMalformed: true);
+      raf.closeSync();
+      code = RegExp(r'Your password reset code is: (\d{6})').allMatches(added).lastOrNull?.group(1);
+      if (code == null) await Future<void>.delayed(const Duration(milliseconds: 100));
+    }
+    _check(code != null, 'the code reached the log mailer');
+
+    Future<Response<Object?>> resetWith(String token) => anon.post<Object?>(
+      '/auth/reset-password',
+      data: {
+        'email': email,
+        'reset_token': token,
+        'password': newPassword,
+        'password_confirmation': newPassword,
+      },
+      options: Options(validateStatus: (_) => true),
+    );
+    final wrong = await resetWith(code == '000000' ? '000001' : '000000');
+    _check(wrong.statusCode == 422, 'a wrong code is 422 (${wrong.statusCode})');
+    final done = await resetWith(code!);
+    _check(done.statusCode == 204, 'the right code resets (${done.statusCode})');
+
+    final me = await d1.dio.get<Object?>('/me', options: Options(validateStatus: (_) => true));
+    _check(me.statusCode == 401, "D1's old token gets 401 on /me (${me.statusCode})");
+    final outcome = await d2.engine.run(force: true);
+    _check(outcome == SyncOutcome.loggedOut, "D2's next sync is logged out (${outcome.name})");
+    final login = await anon.post<Object?>(
+      '/auth/login',
+      data: {'email': email, 'password': newPassword, 'device_name': 'e2e'},
+      options: Options(validateStatus: (_) => true),
+    );
+    _check(login.statusCode == 200, 'the new password signs in (${login.statusCode})');
+    await d1.db.close();
+    await d2.db.close();
   });
 
   await a.sync();
