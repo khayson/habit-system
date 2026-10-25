@@ -100,6 +100,12 @@ you saw.
 | 76 | Tap Download latest export and turn on airplane mode at once. | "The download did not finish. Try again when you're online." The screen stays; after reconnecting, Download works. |
 | 77 | On the dev server, run `UPDATE export_jobs SET status = 'failed', error_code = 'export_failed' WHERE id = '<id>';` for a queued job, then open it from the status screen. | "Let's try that again", "Your habits and history are unchanged." and "JSON backup · failed"; Retry export returns to "Preparing your export". |
 | 78 | With TalkBack and at 200% text, open Privacy and export, the status screen and the failed screen. | Every status reads as words (never colour alone); the format choice reads as selected; nothing is clipped. |
+| 79 | Phase 6.2. On a throwaway account (never maya.chen@example.com or screens.43c@example.test), Profile, Privacy and export, Delete account. | 21 keeps the bottom bar with Profile selected. 28 shows "Delete your account?", the amber "Export before you leave" card, "Confirm your password", "What happens next", "Keep my account" and "Delete account permanently" (greyed until a password is typed). No bottom bar. |
+| 80 | Type a wrong password and tap Delete account permanently. | "The password is incorrect." under the field; still on 28; Today still shows your habits afterwards. |
+| 81 | In airplane mode, type the right password and tap Delete account permanently. | "Deleting your account needs a connection." Nothing changes; Keep my account returns to 21. |
+| 82 | Sign in to the same throwaway account on a second phone. On the first, check in offline, open 28, read the card ("… changes are still waiting to sync."), reconnect and delete with the right password. | The first phone opens sign in with "Your account is being deleted." and "Sessions on your other devices have ended." Its reminders stop. Signing in with the old password fails like a wrong password. |
+| 83 | Open the app on the second phone (or wait for its next sync). | It signs out the way an expired session does, to sign in, with no error wording. |
+| 84 | With TalkBack and at 200% text, open 28 and move to the destructive button. | TalkBack reads "Delete account permanently, button" (and "disabled" before a password); the password field reads its label and the show/hide button; nothing is clipped; dark theme keeps the button readable. |
 
 ## Results
 
@@ -183,3 +189,9 @@ you saw.
 | 76 | | | | |
 | 77 | | | | |
 | 78 | | | | |
+| 79 | | | | |
+| 80 | | | | |
+| 81 | | | | |
+| 82 | | | | |
+| 83 | | | | |
+| 84 | | | | |
