@@ -312,7 +312,11 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
               ],
               Center(
                 child: TextButton(
-                  style: TextButton.styleFrom(foregroundColor: tokens.muted),
+                  // As drawn: a quiet text action, smaller than the buttons around it.
+                  style: TextButton.styleFrom(
+                    foregroundColor: tokens.muted,
+                    textStyle: text.bodyMedium,
+                  ),
                   onPressed: _busy ? null : () => context.push(Routes.deleteAccount),
                   child: Text(l10n.privacyDeleteAccount),
                 ),
