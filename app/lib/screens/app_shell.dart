@@ -24,7 +24,8 @@ class AppShell extends StatelessWidget {
     final profile =
         location.startsWith(Routes.profile) ||
         location == Routes.rewards ||
-        location == Routes.freezes;
+        location == Routes.freezes ||
+        location == Routes.privacy;
     return Scaffold(
       body: child,
       bottomNavigationBar: DecoratedBox(

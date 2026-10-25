@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui' show Tristate;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -81,7 +82,9 @@ void main() {
       expect(find.text('Download latest export'), ready ? findsOneWidget : findsNothing);
       expect(find.text('Restore from a JSON backup'), findsNothing, reason: '6.3');
       expect(find.text('Delete account'), findsNothing, reason: '6.2');
-      expect(find.text('Today'), findsNothing, reason: 'no bottom bar, as designed');
+      // 6.1 review L1: 21 draws the bottom bar with Profile selected.
+      expect(find.text('Today'), findsOneWidget, reason: 'the bottom bar, as designed');
+      expect(tester.getSemantics(find.text('Profile')).flagsCollection.isSelected, Tristate.isTrue);
       await tearDownApp(tester, a);
     });
   }
@@ -145,6 +148,7 @@ void main() {
       findsOneWidget,
     );
     expect(api.requested, ['json']);
+    expect(find.text('Today'), findsNothing, reason: '29 draws no bottom bar');
 
     api.byId['n1'] = job(ExportStatus.running, id: 'n1');
     await tester.pump(const Duration(seconds: 5));

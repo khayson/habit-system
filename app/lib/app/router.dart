@@ -133,11 +133,7 @@ List<RouteBase> appRoutes({
   PhotoPicker? photoPicker,
   FileSharer? fileSharer,
 }) => [
-  GoRoute(
-    path: Routes.privacy,
-    builder: (context, state) =>
-        PrivacyScreen(sharer: fileSharer ?? const SharePlusFileSharer(), clock: clock),
-  ),
+  // 29 and 30 draw no bottom bar; 21 is inside the shell (6.1 review L1).
   GoRoute(
     path: '/privacy/exports/:id',
     builder: (context, state) => ExportStatusScreen(
@@ -235,6 +231,11 @@ List<RouteBase> appRoutes({
         builder: (context, state) => ArchivedHabitsScreen(clock: clock),
       ),
       GoRoute(path: Routes.insights, builder: (context, state) => const InsightsScreen()),
+      GoRoute(
+        path: Routes.privacy,
+        builder: (context, state) =>
+            PrivacyScreen(sharer: fileSharer ?? const SharePlusFileSharer(), clock: clock),
+      ),
       GoRoute(
         path: Routes.rewards,
         builder: (context, state) => ProgressScreen(clock: clock),
