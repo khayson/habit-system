@@ -1,0 +1,100 @@
+{
+  "description": "A51: habit.delete on the wire. The accepted ack; a stale base_version (version_conflict with the current habit); a log write to a deleted habit (conflict resource_deleted naming the habit, the ack keeping the log's own id); the journal changes one delete produces (each removed log and reminder, then the habit); and the habit tombstone as a pulled change (deleted_at set, name empty, no unit, no definitions or ranges).",
+  "suites": [
+    "php",
+    "dart"
+  ],
+  "now": "2026-05-28T17:22:00Z",
+  "delete": {
+    "mutation": {
+      "mutation_id": "{{uuid}}",
+      "entity": "habit",
+      "entity_id": "{{uuid}}",
+      "operation": "habit.delete",
+      "base_version": 1,
+      "occurred_at": "2026-05-28T17:22:00Z",
+      "captured_timezone": "America/Los_Angeles",
+      "local_date_hint": null,
+      "payload": {}
+    },
+    "expect": {
+      "mutation_id": "{{uuid}}",
+      "status": "accepted",
+      "duplicate": false,
+      "entity": "habit",
+      "entity_id": "{{uuid}}",
+      "version": 2
+    }
+  },
+  "stale": {
+    "base_version": 0,
+    "expect": {
+      "status": "conflict",
+      "error_code": "version_conflict",
+      "expected_version": 0,
+      "current_version": 1
+    }
+  },
+  "log_on_deleted": {
+    "mutation": {
+      "mutation_id": "{{uuid}}",
+      "entity": "habit_log",
+      "entity_id": "{{uuid}}",
+      "operation": "log.set_value",
+      "base_version": 0,
+      "occurred_at": "2026-05-28T17:15:00Z",
+      "captured_timezone": "America/Los_Angeles",
+      "local_date_hint": "2026-05-28",
+      "payload": { "habit_id": "{{uuid}}", "value": 1 }
+    },
+    "expect": {
+      "mutation_id": "{{uuid}}",
+      "status": "conflict",
+      "duplicate": false,
+      "entity": "habit_log",
+      "entity_id": "{{uuid}}",
+      "error": {
+        "code": "resource_deleted",
+        "message": "This habit was deleted on another device.",
+        "entity": "habit",
+        "habit_id": "{{uuid}}",
+        "current_version": 2
+      }
+    }
+  },
+  "journal": [
+    { "entity": "habit_log", "operation": "delete" },
+    { "entity": "reminder", "operation": "delete" },
+    { "entity": "habit", "operation": "delete" }
+  ],
+  "tombstone": {
+    "seq": "{{seq}}",
+    "entity": "habit",
+    "id": "{{uuid}}",
+    "operation": "delete",
+    "version": 2,
+    "payload": {
+      "id": "{{uuid}}",
+      "name": "",
+      "type": "binary",
+      "unit": null,
+      "category": "health",
+      "target_value": 1,
+      "frequency_type": "daily",
+      "frequency_config": {},
+      "start_local_date": "2026-05-20",
+      "archived_at": null,
+      "deleted_at": "{{timestamp}}",
+      "version": 2,
+      "definition_version": 1,
+      "definitions": [],
+      "active_ranges": []
+    }
+  },
+  "rules": [
+    "habit.delete is allowed from active or archived; repeated, it is acknowledged with no change",
+    "removed with the habit: its logs (with notes), reminders, definition versions, active ranges, streak cache and period evaluations",
+    "kept: xp_entitlements, xp_ledger, freeze_usage, freeze_ledger and reward_state; the level never drops because of a delete",
+    "every log.* write and reminder.create on a deleted habit is conflict resource_deleted with entity habit and no resource_id; habit.update, habit.archive and habit.restore are conflict resource_deleted naming the habit"
+  ]
+}
