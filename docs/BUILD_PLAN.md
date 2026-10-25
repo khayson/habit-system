@@ -156,13 +156,14 @@ Screen 01 (Welcome) is Phase 7 and is still to be built.
 
 - Password reset + app links (A15); account deletion with status receipt; exports; imports with signed manifest (A16); milestone push (FCM; APNs once a macOS CI route exists).
 
-Five parts:
+Six parts:
 
 - **6.1 (done):** exports, screens 21, 29 and 30 (A48).
 - **6.2 (done):** account deletion, screen 28 (A49), with the 6.1 review's fixes.
 - **6.3:** imports with the signed manifest, screens 31 and 32.
 - **6.4 (done):** password reset by a 6-digit code, screens 25 to 27 (A50, replacing A15's links), with the 6.2 review's fix.
 - **6.5:** milestone push (Firebase).
+- **6.6 (done):** deleting a habit, and swipe to archive or delete on 07 and 22 (A51, Khay Studios' decision), with the 6.4 review's fix.
 
 **Gate**: export round-trip; bad-import preview; deletion flow; secrets absent from exports.
 
