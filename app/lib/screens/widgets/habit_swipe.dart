@@ -172,8 +172,11 @@ Future<void> _toggle(
   toast.show(
     archive ? l10n.archivedSnack(name) : l10n.restoredSnack(name),
     actionLabel: l10n.snackUndo,
-    onAction: () =>
-        archive ? account.actions.restoreHabit(habitId) : account.actions.archiveHabit(habitId),
+    onAction: () {
+      // 6.7 review L1: never act on an account that is no longer the active one.
+      if (!account.isOpen) return;
+      archive ? account.actions.restoreHabit(habitId) : account.actions.archiveHabit(habitId);
+    },
   );
 }
 

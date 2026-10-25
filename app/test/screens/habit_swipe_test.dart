@@ -80,6 +80,23 @@ void main() {
     await tearDownApp(tester, account);
   });
 
+  // 6.7 review L1: an Undo whose account is no longer the active one does nothing.
+  testWidgets('Undo after the account was closed (sign-out, switch) writes nothing', (
+    tester,
+  ) async {
+    final (account, _) = await withStretch(tester);
+    await open(tester, account, '/habits');
+    await swipe(tester, 'Stretch', 0.9);
+    expect(find.text('Archived Stretch.'), findsOneWidget);
+
+    account.dispose(); // what SessionProvider does on sign-out or an account switch
+    expect(account.isOpen, isFalse);
+    await tester.tap(find.text('Undo'));
+    await settle(tester);
+    expect(await tester.runAsync(() => operations(account)), isNot(contains('habit.restore')));
+    await tearDownApp(tester, account);
+  });
+
   testWidgets('a short swipe shows the action and springs back, doing nothing', (tester) async {
     final (account, _) = await withStretch(tester);
     await open(tester, account, '/habits');

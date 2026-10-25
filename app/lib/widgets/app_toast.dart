@@ -70,6 +70,30 @@ class AppToast {
   }
 }
 
+/// 6.7 review L1: closes the toast on screen whenever [owner] changes. The app passes the
+/// signed-in account, so sign-out, a rejected token, account deletion and an account switch
+/// never leave a toast (or its Undo) from the account that was left.
+class AppToastScope extends StatefulWidget {
+  final Object? owner;
+  final Widget child;
+
+  const AppToastScope({super.key, required this.owner, required this.child});
+
+  @override
+  State<AppToastScope> createState() => _AppToastScopeState();
+}
+
+class _AppToastScopeState extends State<AppToastScope> {
+  @override
+  void didUpdateWidget(AppToastScope old) {
+    super.didUpdateWidget(old);
+    if (!identical(old.owner, widget.owner)) AppToast.dismissCurrent();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
+
 class _Toast extends StatefulWidget {
   final String message;
   final ToastTone tone;

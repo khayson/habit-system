@@ -6,6 +6,7 @@ import '../config/theme.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../providers/account_context.dart';
 import '../providers/session_provider.dart';
+import '../widgets/app_toast.dart';
 
 class HabitApp extends StatelessWidget {
   final GoRouter router;
@@ -27,7 +28,10 @@ class HabitApp extends StatelessWidget {
       builder: (context, child) => Consumer<SessionProvider>(
         builder: (context, session, _) => Provider<AccountContext?>.value(
           value: session.account,
-          child: _Foreground(account: session.account, child: child ?? const SizedBox()),
+          child: AppToastScope(
+            owner: session.account,
+            child: _Foreground(account: session.account, child: child ?? const SizedBox()),
+          ),
         ),
       ),
     );

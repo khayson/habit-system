@@ -166,4 +166,43 @@ void main() {
     await tester.pump(const Duration(seconds: 5));
     await tester.pumpAndSettle();
   });
+  // 6.7 review L1: a toast never outlives the account it was shown for.
+  testWidgets('AppToastScope closes the toast when its owner changes (sign-out, switch)', (
+    tester,
+  ) async {
+    Widget host(Object? owner) => AppToastScope(
+      owner: owner,
+      child: MaterialApp(
+        theme: AppTheme.light,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: Center(
+            child: Builder(
+              builder: (context) => TextButton(
+                onPressed: () => AppToast.of(context).show('Archived Stretch.'),
+                child: const Text('go'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    const a = 'account-a';
+    await tester.pumpWidget(host(a));
+    await tester.tap(find.text('go'));
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(host(a)); // a rebuild with the same owner keeps it
+    expect(find.text('Archived Stretch.'), findsOneWidget);
+
+    await tester.pumpWidget(host(null)); // signed out
+    await tester.pump();
+    expect(find.text('Archived Stretch.'), findsNothing);
+
+    await tester.tap(find.text('go'));
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(host('account-b')); // switched
+    await tester.pump();
+    expect(find.text('Archived Stretch.'), findsNothing);
+  });
 }

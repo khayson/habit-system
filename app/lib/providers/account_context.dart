@@ -180,7 +180,15 @@ class AccountContext {
     ),
   );
 
+  bool _open = true;
+
+  /// False once signed out or switched away (6.7 review L1): late UI callbacks, such as a
+  /// toast's Undo, check it and do nothing.
+  bool get isOpen => _open;
+
   void dispose() {
+    if (!_open) return;
+    _open = false;
     _reminders?.dispose();
     ackWatch.dispose();
     sync.dispose();
