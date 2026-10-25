@@ -174,7 +174,7 @@ void main() {
 
     expect(
       tester.getSemantics(row),
-      containsSemantics(
+      isSemantics(
         customActions: [
           const CustomSemanticsAction(label: 'Archive'),
           const CustomSemanticsAction(label: 'Delete'),
@@ -182,7 +182,7 @@ void main() {
       ),
     );
     final node = tester.getSemantics(row);
-    tester.binding.pipelineOwner.semanticsOwner!.performAction(
+    node.owner!.performAction(
       node.id,
       SemanticsAction.customAction,
       CustomSemanticsAction.getIdentifier(const CustomSemanticsAction(label: 'Delete')),
