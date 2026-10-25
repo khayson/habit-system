@@ -129,6 +129,7 @@ void main() {
       'sync/user_entity': 'test/data/profile_test.dart',
       'habit/habit_mutations': 'test/sync/habit_acks_test.dart',
       'habit/habit_delete': 'test/data/habit_delete_test.dart',
+      'habit/icons': 'test/widgets/habit_icons_test.dart',
     };
 
     test('every domain, sync, auth, habit, rewards, insights and exports fixture that names the dart suite has a consumer', () {
