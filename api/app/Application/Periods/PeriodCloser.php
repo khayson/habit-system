@@ -60,7 +60,7 @@ final readonly class PeriodCloser
             $timeline = UserCalendar::timeline($userId);
             $changed = $this->journalCalendarInForce($userId);
             $today = $timeline->localDateAt($this->clock->now());
-            $habits = DB::table('habits')->where('user_id', $userId)->orderBy('id')->get();
+            $habits = DB::table('habits')->where('user_id', $userId)->whereNull('deleted_at')->orderBy('id')->get();
 
             // A41: the local month's grant, then one spend pass across all habits for the periods
             // that closed since the wallet last looked; refreshHabit then sees the new usages.
@@ -102,6 +102,7 @@ final readonly class PeriodCloser
         $habitStale = DB::table('habits')
             ->leftJoin('habit_streak_cache', 'habit_streak_cache.habit_id', '=', 'habits.id')
             ->where('habits.user_id', $userId)
+            ->whereNull('habits.deleted_at')
             ->where(fn ($q) => $q->whereNull('habit_streak_cache.habit_id')
                 ->orWhereNotNull('habit_streak_cache.dirty_from')
                 ->orWhereNull('habit_streak_cache.computed_through')
@@ -111,7 +112,7 @@ final readonly class PeriodCloser
         // A41: the wallet has not looked at yesterday's closed periods yet.
         $watermark = DB::table('users')->where('id', $userId)->value('freeze_closed_through');
         $walletStale = ($watermark === null || (string) $watermark < $yesterday)
-            && DB::table('habits')->where('user_id', $userId)->exists();
+            && DB::table('habits')->where('user_id', $userId)->whereNull('deleted_at')->exists();
 
         return $habitStale || $walletStale || $this->calendarChangedSinceJournal($userId);
     }

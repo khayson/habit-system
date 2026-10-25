@@ -179,12 +179,13 @@ final readonly class MutationApplier
             return [$m->operation, self::accepted($m, $this->profileSetAutoFreeze->handle($ctx))];
         }
         if ($m->entity === 'habit') {
-            // A34: edit, archive and restore; there is no habit delete in v1.
+            // A34: edit, archive and restore; A51: delete.
             return match ($m->operation) {
                 'habit.create' => [$m->operation, self::accepted($m, $this->habitCreate->handle($ctx))],
                 'habit.update' => [$m->operation, self::accepted($m, $this->habitWrites->update($ctx))],
                 'habit.archive' => [$m->operation, self::accepted($m, $this->habitWrites->archive($ctx))],
                 'habit.restore' => [$m->operation, self::accepted($m, $this->habitWrites->restore($ctx))],
+                'habit.delete' => [$m->operation, self::accepted($m, $this->habitWrites->delete($ctx))],
                 default => throw new UnsupportedOperation($m->entity, $m->operation),
             };
         }
@@ -208,6 +209,10 @@ final readonly class MutationApplier
                 throw ValidationException::withMessages(['habit_id' => ['A valid habit_id is required.']]);
             }
             $habit = $this->habits->findOwned($ctx->userId, $habitId) ?? throw new DependencyPending;
+            // A51: nor on a deleted one.
+            if ($habit->deleted_at !== null) {
+                throw ApiException::habitDeleted((string) $habit->id, (int) $habit->version);
+            }
             // A34: no log write lands on an archived habit.
             if ($habit->archived_at !== null) {
                 throw new HabitArchived((string) $habit->id);

@@ -99,7 +99,8 @@ final readonly class ExportBuilder
     {
         $userId = (string) $user->id;
         $rows = fn (string $table) => DB::table($table)->where('user_id', $userId)->orderBy('id')->get();
-        $habits = DB::table('habits')->where('user_id', $userId)->orderBy('id')->get();
+        // A51: a deleted habit is not exported; its XP rows keep the habit_id.
+        $habits = DB::table('habits')->where('user_id', $userId)->whereNull('deleted_at')->orderBy('id')->get();
         $types = $habits->pluck('type', 'id')->all();
 
         return [
@@ -148,7 +149,7 @@ final readonly class ExportBuilder
     private function csv(string $userId): string
     {
         $out = CsvWriter::header();
-        $habits = DB::table('habits')->where('user_id', $userId)->get()->keyBy('id');
+        $habits = DB::table('habits')->where('user_id', $userId)->whereNull('deleted_at')->get()->keyBy('id');
         $definitions = DB::table('habit_definition_versions')->whereIn('habit_id', $habits->keys())->orderBy('version')->get()->groupBy('habit_id');
         $logs = DB::table('habit_logs')->where('user_id', $userId)->whereNull('deleted_at')->orderBy('log_date')->orderBy('habit_id')->get();
         foreach ($logs as $log) {

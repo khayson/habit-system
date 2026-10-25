@@ -28,7 +28,8 @@ final class HabitController
         $user = $request->user();
         // Malformed, missing and foreign ids are one answer (invariant 2).
         $row = Str::isUuid($habit) ? $this->habits->findOwned($user->id, strtolower($habit)) : null;
-        if ($row === null) {
+        // A51: a deleted habit has no heatmap.
+        if ($row === null || $row->deleted_at !== null) {
             throw new ApiException(404, 'not_found', 'Not found.');
         }
 

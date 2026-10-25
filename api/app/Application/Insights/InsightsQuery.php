@@ -58,7 +58,7 @@ final readonly class InsightsQuery
         $due = [];
         $completed = [];
         // A34: archived routines are excluded (design 14's note).
-        $habits = DB::table('habits')->where('user_id', $userId)->whereNull('archived_at')->orderBy('id')->get();
+        $habits = DB::table('habits')->where('user_id', $userId)->whereNull('archived_at')->whereNull('deleted_at')->orderBy('id')->get();
         foreach ($habits as $habit) {
             $type = $this->types->get((string) $habit->type);
             $logs = [];
@@ -149,7 +149,9 @@ final readonly class InsightsQuery
                 $id = (string) $row->habit_id;
                 if (! array_key_exists($id, $schedules)) {
                     $habit = DB::table('habits')->where('id', $id)->first();
-                    $schedules[$id] = $habit === null ? null : $this->habits->schedule($habit);
+                    // A51: a deleted habit has no definitions, so it joins no category; its XP
+                    // still counts in the totals.
+                    $schedules[$id] = $habit === null || $habit->deleted_at !== null ? null : $this->habits->schedule($habit);
                 }
                 $schedule = $schedules[$id];
                 if ($schedule === null) {

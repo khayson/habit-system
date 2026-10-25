@@ -49,6 +49,9 @@ final readonly class ReminderWrites
         $fields = $this->fields($m->payload);
         // A missing or foreign habit is the same answer: the habit may still be on its way.
         $habit = $this->habits->findOwned($ctx->userId, strtolower($habitId)) ?? throw new DependencyPending;
+        if ($habit->deleted_at !== null) {
+            throw ApiException::habitDeleted((string) $habit->id, (int) $habit->version);
+        }
 
         $existing = DB::table('reminders')->where('id', $m->entityId)->first();
         if ($existing !== null) {

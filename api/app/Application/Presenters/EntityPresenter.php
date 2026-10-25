@@ -81,6 +81,8 @@ final readonly class EntityPresenter
             'frequency_config' => (object) HabitRepository::json($habit->frequency_config),
             'start_local_date' => $habit->start_local_date,
             'archived_at' => $habit->archived_at === null ? null : UtcTime::format(WireTime::parse((string) $habit->archived_at)),
+            // A51: a tombstone carries deleted_at; its name and unit are cleared.
+            'deleted_at' => ($habit->deleted_at ?? null) === null ? null : UtcTime::format(WireTime::parse((string) $habit->deleted_at)),
             'version' => (int) $habit->version,
             'definition_version' => (int) $habit->definition_version,
             'definitions' => array_map(fn (stdClass $row) => [

@@ -29,7 +29,7 @@ use LogicException;
 use stdClass;
 
 /**
- * A34: habit.update, habit.archive and habit.restore. Each is owner-scoped, checked against
+ * A34: habit.update, habit.archive and habit.restore; A51: habit.delete. Each is owner-scoped, checked against
  * habits.version, and journals ONE habit row in the applier's transaction (invariant 6). A
  * desired state equal to the current one is acknowledged with no version and no journal row.
  *
@@ -187,18 +187,73 @@ final readonly class HabitWrites
         return $this->journaled($habit, ['archived_at' => null], $now);
     }
 
-    /** Owner and version checks shared by the three operations. */
+    /**
+     * A51: the habit becomes a cleared tombstone; its logs, reminders, definitions, ranges, streak
+     * cache and evaluations go, each removed log and reminder journaled as a delete first. XP and
+     * freeze ledgers stay (invariant 7). Already deleted: acknowledged with no change.
+     */
+    public function delete(MutationContext $ctx): HandlerResult
+    {
+        $habit = $this->owned($ctx);
+        if ($habit->deleted_at !== null) {
+            return new HandlerResult('habit', (string) $habit->id, (int) $habit->version);
+        }
+        $this->versionChecked($ctx, $habit);
+        $now = UtcTime::format($this->clock->now());
+        $userId = (string) $habit->user_id;
+
+        $logs = DB::table('habit_logs')->where('habit_id', $habit->id)->orderBy('id')->get();
+        foreach ($logs->whereNull('deleted_at') as $log) {
+            $gone = (object) [...(array) $log, 'deleted_at' => $now, 'version' => (int) $log->version + 1];
+            $this->journal->append($userId, 'habit_log', (string) $log->id, 'delete', (int) $gone->version, $this->presenter->log($gone, (string) $habit->type));
+        }
+        $reminders = DB::table('reminders')->where('habit_id', $habit->id)->orderBy('id')->get();
+        foreach ($reminders->whereNull('deleted_at') as $reminder) {
+            $gone = (object) [...(array) $reminder, 'deleted_at' => $now, 'version' => (int) $reminder->version + 1];
+            $this->journal->append($userId, 'reminder', (string) $reminder->id, 'delete', (int) $gone->version, $this->presenter->reminder($gone));
+        }
+        foreach (['habit_logs', 'reminders', 'period_evaluations', 'habit_streak_cache', 'habit_active_ranges', 'habit_definition_versions'] as $table) {
+            DB::table($table)->where('habit_id', $habit->id)->delete();
+        }
+
+        $version = (int) $habit->version + 1;
+        DB::table('habits')->where('id', $habit->id)->update([
+            'deleted_at' => $now, 'name' => '', 'unit' => null, 'version' => $version, 'updated_at' => $now,
+        ]);
+        $row = DB::table('habits')->where('id', $habit->id)->first() ?? throw new LogicException('Habit vanished inside its own transaction.');
+        $this->journal->append($userId, 'habit', (string) $habit->id, 'delete', $version, $this->presenter->habit($row));
+
+        return new HandlerResult('habit', (string) $habit->id, $version);
+    }
+
+    /** Owner and version checks shared by update, archive and restore; a deleted habit is gone. */
     private function checked(MutationContext $ctx): stdClass
+    {
+        $habit = $this->owned($ctx);
+        if ($habit->deleted_at !== null) {
+            throw ApiException::resourceDeleted('habit', (string) $habit->id, (int) $habit->version, $this->presenter->habit($habit));
+        }
+
+        return $this->versionChecked($ctx, $habit);
+    }
+
+    /** The caller's own habit, locked; a missing or foreign one is one answer (invariant 2). */
+    private function owned(MutationContext $ctx): stdClass
     {
         $m = $ctx->mutation;
         if ($m->baseVersion === null) {
             throw ValidationException::withMessages(['base_version' => ['base_version is required.']]);
         }
-        // A missing or foreign habit is one answer (invariant 2).
-        $habit = DB::table('habits')->where('user_id', $ctx->userId)->where('id', $m->entityId)->lockForUpdate()->first()
+
+        return DB::table('habits')->where('user_id', $ctx->userId)->where('id', $m->entityId)->lockForUpdate()->first()
             ?? throw new ApiException(404, 'not_found', 'Not found.');
+    }
+
+    private function versionChecked(MutationContext $ctx, stdClass $habit): stdClass
+    {
+        $m = $ctx->mutation;
         if ($m->baseVersion !== (int) $habit->version) {
-            throw ApiException::versionConflict((string) $habit->id, $m->baseVersion, (int) $habit->version, $this->presenter->habit($habit));
+            throw ApiException::versionConflict((string) $habit->id, (int) $m->baseVersion, (int) $habit->version, $this->presenter->habit($habit));
         }
 
         return $habit;

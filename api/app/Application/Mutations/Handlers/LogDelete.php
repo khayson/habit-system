@@ -44,6 +44,14 @@ final readonly class LogDelete
         // natural key (habit_id + log_date), still owner-scoped.
         $log = LogWrites::find($ctx->userId, $m->entityId) ?? $this->findByNaturalKey($ctx->userId, $m->payload);
         if ($log === null) {
+            // A51: the day went with its deleted habit.
+            $habitId = $m->payload['habit_id'] ?? null;
+            $parent = is_string($habitId) && Str::isUuid($habitId)
+                ? DB::table('habits')->where('user_id', $ctx->userId)->where('id', strtolower($habitId))->first(['id', 'version', 'deleted_at'])
+                : null;
+            if ($parent !== null && $parent->deleted_at !== null) {
+                throw ApiException::habitDeleted((string) $parent->id, (int) $parent->version);
+            }
             throw new ApiException(404, 'not_found', 'Not found.');
         }
         $owner = DB::table('habits')->where('id', $log->habit_id)->first(['type', 'archived_at']);

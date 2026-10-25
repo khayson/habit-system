@@ -74,7 +74,8 @@ final readonly class BootstrapService
         $next = null;
 
         if ($state['phase'] === self::PHASE_HABITS) {
-            $rows = DB::table('habits')->where('user_id', $userId)
+            // A51: a deleted habit is not part of the state a new device starts from.
+            $rows = DB::table('habits')->where('user_id', $userId)->whereNull('deleted_at')
                 ->when($state['after'] !== null, fn ($q) => $q->where('id', '>', $state['after']))
                 ->orderBy('id')->limit($limit + 1)->get();
             $habits = $rows->take($limit)->map(fn (stdClass $h) => $this->presenter->habit($h))->values()->all();

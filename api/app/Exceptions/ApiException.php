@@ -59,6 +59,19 @@ class ApiException extends RuntimeException
         ]);
     }
 
+    /**
+     * A51: 409 resource_deleted for a write under a deleted habit (a log or a reminder). It names
+     * the habit without `resource_id`, so the ack keeps the mutation's own entity id.
+     */
+    public static function habitDeleted(string $habitId, int $tombstoneVersion): self
+    {
+        return new self(409, 'resource_deleted', 'This habit was deleted on another device.', [
+            'entity' => 'habit',
+            'habit_id' => $habitId,
+            'current_version' => $tombstoneVersion,
+        ]);
+    }
+
     /** 410: sync cursor older than journal retention. */
     /** 422: the mutation targets a server-derived entity (A32). Same for own, foreign, missing. */
     public static function entityReadOnly(): self
