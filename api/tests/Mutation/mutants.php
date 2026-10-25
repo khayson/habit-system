@@ -369,8 +369,8 @@ PHP,
     [
         'name' => '5.3a: an archived habit is counted',
         'file' => 'app/Application/Insights/InsightsQuery.php',
-        'search' => "->whereNull('archived_at')->orderBy('id')",
-        'replace' => "->orderBy('id')",
+        'search' => "->whereNull('archived_at')->whereNull('deleted_at')->orderBy('id')",
+        'replace' => "->whereNull('deleted_at')->orderBy('id')",
         'tests' => 'tests/Feature/InsightsEndpointTest.php',
     ],
     [
