@@ -11,6 +11,7 @@ import '../models/export_job.dart';
 import '../screens/amount_entry_screen.dart';
 import '../screens/export_status_screen.dart';
 import '../screens/delete_account_screen.dart';
+import '../screens/password_reset_screens.dart';
 import '../screens/privacy_screen.dart';
 import '../screens/completion_screen.dart';
 import '../screens/app_shell.dart';
@@ -38,6 +39,11 @@ import '../screens/today_screen.dart';
 abstract final class Routes {
   static const signIn = '/sign-in';
   static const createAccount = '/create-account';
+
+  /// A50: 25, 26 and 27, reached from sign in; the email travels as `extra`.
+  static const forgotPassword = '/forgot-password';
+  static const resetSent = '/forgot-password/sent';
+  static const resetPassword = '/forgot-password/reset';
   static const setup = '/setup';
   static const today = '/today';
   static const habits = '/habits';
@@ -98,8 +104,8 @@ abstract final class Routes {
   static const status = '/status';
 
   /// Reachable without a session.
-  static const public = {signIn, createAccount, status};
-  static const authOnly = {signIn, createAccount};
+  static const public = {signIn, createAccount, status, forgotPassword, resetSent, resetPassword};
+  static const authOnly = {signIn, createAccount, forgotPassword, resetSent, resetPassword};
 }
 
 /// Pure redirect rule, unit-tested on its own.
@@ -149,6 +155,21 @@ List<RouteBase> appRoutes({
     ),
   ),
   GoRoute(path: Routes.signIn, builder: (context, state) => const SignInScreen()),
+  GoRoute(
+    path: Routes.forgotPassword,
+    builder: (context, state) =>
+        ForgotPasswordScreen(email: state.extra is String ? state.extra! as String : ''),
+  ),
+  GoRoute(
+    path: Routes.resetSent,
+    builder: (context, state) =>
+        ResetSentScreen(email: state.extra is String ? state.extra! as String : ''),
+  ),
+  GoRoute(
+    path: Routes.resetPassword,
+    builder: (context, state) =>
+        ResetPasswordScreen(email: state.extra is String ? state.extra! as String : ''),
+  ),
   GoRoute(
     path: Routes.createAccount,
     builder: (context, state) => CreateAccountScreen(

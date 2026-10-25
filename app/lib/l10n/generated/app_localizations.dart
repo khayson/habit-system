@@ -4298,6 +4298,198 @@ abstract class AppLocalizations {
   /// **'Try again'**
   String get deleteAccountTryAgain;
 
+  /// No description provided for @signInForgotPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password?'**
+  String get signInForgotPassword;
+
+  /// No description provided for @signInPasswordChangedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your password has changed.'**
+  String get signInPasswordChangedTitle;
+
+  /// Screen 02 after a reset (A50): one calm line, title plus body.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with the new one.'**
+  String get signInPasswordChangedBody;
+
+  /// No description provided for @forgotTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A fresh start'**
+  String get forgotTitle;
+
+  /// Screen 25. The design says 'reset link'; A50 sends a code.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email to get a reset code.'**
+  String get forgotSubtitle;
+
+  /// No description provided for @forgotPrivateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Private and secure'**
+  String get forgotPrivateTitle;
+
+  /// No description provided for @forgotPrivateBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The response is the same whether or not an account uses this email.'**
+  String get forgotPrivateBody;
+
+  /// No description provided for @forgotSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send reset code'**
+  String get forgotSend;
+
+  /// No description provided for @forgotBackToSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to sign in'**
+  String get forgotBackToSignIn;
+
+  /// No description provided for @resetSentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your inbox'**
+  String get resetSentTitle;
+
+  /// No description provided for @resetSentSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'If an account matches, a reset email is on its way.'**
+  String get resetSentSubtitle;
+
+  /// No description provided for @resetSentBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 6-digit code from the email to choose a new password.'**
+  String get resetSentBody;
+
+  /// No description provided for @resetSentNothingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing arrived?'**
+  String get resetSentNothingTitle;
+
+  /// No description provided for @resetSentNothingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your spam folder. You can request another code after the resend cooldown.'**
+  String get resetSentNothingBody;
+
+  /// No description provided for @resetSentEnterCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter code'**
+  String get resetSentEnterCode;
+
+  /// No description provided for @resetSentResend.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend reset email'**
+  String get resetSentResend;
+
+  /// No description provided for @resetSentResendIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend reset email in {seconds} s'**
+  String resetSentResendIn(int seconds);
+
+  /// TalkBack label for the disabled resend button during the 60-second cooldown.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend reset email, available in {seconds} seconds'**
+  String resetSentResendInLabel(int seconds);
+
+  /// No description provided for @resetSentResent.
+  ///
+  /// In en, this message translates to:
+  /// **'We asked for a new code. It replaces the earlier one.'**
+  String get resetSentResent;
+
+  /// No description provided for @resetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a new password'**
+  String get resetTitle;
+
+  /// No description provided for @resetSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A reset code can only be used once.'**
+  String get resetSubtitle;
+
+  /// No description provided for @resetCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset code'**
+  String get resetCodeLabel;
+
+  /// No description provided for @resetCodeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'6 digits'**
+  String get resetCodeHint;
+
+  /// No description provided for @resetCodeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 6-digit code from the email.'**
+  String get resetCodeInvalid;
+
+  /// No description provided for @resetNewPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get resetNewPassword;
+
+  /// No description provided for @resetConfirmPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm password'**
+  String get resetConfirmPassword;
+
+  /// No description provided for @resetMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The two passwords must match.'**
+  String get resetMismatch;
+
+  /// No description provided for @resetRulesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use at least 12 characters'**
+  String get resetRulesTitle;
+
+  /// No description provided for @resetRulesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The two passwords must match. Expired codes return to the reset request.'**
+  String get resetRulesBody;
+
+  /// No description provided for @resetSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save new password'**
+  String get resetSave;
+
+  /// No description provided for @resetFooter.
+  ///
+  /// In en, this message translates to:
+  /// **'Successful reset returns to sign in.'**
+  String get resetFooter;
+
+  /// No description provided for @resetRequestNewCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Request a new code'**
+  String get resetRequestNewCode;
+
   /// No description provided for @signInAccountDeletedTitle.
   ///
   /// In en, this message translates to:

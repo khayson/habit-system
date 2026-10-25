@@ -2678,6 +2678,109 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteAccountTryAgain => 'Try again';
 
   @override
+  String get signInForgotPassword => 'Forgot password?';
+
+  @override
+  String get signInPasswordChangedTitle => 'Your password has changed.';
+
+  @override
+  String get signInPasswordChangedBody => 'Sign in with the new one.';
+
+  @override
+  String get forgotTitle => 'A fresh start';
+
+  @override
+  String get forgotSubtitle => 'Enter your email to get a reset code.';
+
+  @override
+  String get forgotPrivateTitle => 'Private and secure';
+
+  @override
+  String get forgotPrivateBody =>
+      'The response is the same whether or not an account uses this email.';
+
+  @override
+  String get forgotSend => 'Send reset code';
+
+  @override
+  String get forgotBackToSignIn => 'Back to sign in';
+
+  @override
+  String get resetSentTitle => 'Check your inbox';
+
+  @override
+  String get resetSentSubtitle => 'If an account matches, a reset email is on its way.';
+
+  @override
+  String get resetSentBody => 'Enter the 6-digit code from the email to choose a new password.';
+
+  @override
+  String get resetSentNothingTitle => 'Nothing arrived?';
+
+  @override
+  String get resetSentNothingBody =>
+      'Check your spam folder. You can request another code after the resend cooldown.';
+
+  @override
+  String get resetSentEnterCode => 'Enter code';
+
+  @override
+  String get resetSentResend => 'Resend reset email';
+
+  @override
+  String resetSentResendIn(int seconds) {
+    return 'Resend reset email in $seconds s';
+  }
+
+  @override
+  String resetSentResendInLabel(int seconds) {
+    return 'Resend reset email, available in $seconds seconds';
+  }
+
+  @override
+  String get resetSentResent => 'We asked for a new code. It replaces the earlier one.';
+
+  @override
+  String get resetTitle => 'Choose a new password';
+
+  @override
+  String get resetSubtitle => 'A reset code can only be used once.';
+
+  @override
+  String get resetCodeLabel => 'Reset code';
+
+  @override
+  String get resetCodeHint => '6 digits';
+
+  @override
+  String get resetCodeInvalid => 'Enter the 6-digit code from the email.';
+
+  @override
+  String get resetNewPassword => 'New password';
+
+  @override
+  String get resetConfirmPassword => 'Confirm password';
+
+  @override
+  String get resetMismatch => 'The two passwords must match.';
+
+  @override
+  String get resetRulesTitle => 'Use at least 12 characters';
+
+  @override
+  String get resetRulesBody =>
+      'The two passwords must match. Expired codes return to the reset request.';
+
+  @override
+  String get resetSave => 'Save new password';
+
+  @override
+  String get resetFooter => 'Successful reset returns to sign in.';
+
+  @override
+  String get resetRequestNewCode => 'Request a new code';
+
+  @override
   String get signInAccountDeletedTitle => 'Your account is being deleted.';
 
   @override

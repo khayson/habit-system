@@ -92,7 +92,17 @@ class InfoCard extends StatelessWidget {
   final Tone tone;
   final IconData? icon;
 
-  const InfoCard({super.key, required this.title, this.body, this.tone = Tone.positive, this.icon});
+  /// The title in the tone's ink, as 25, 26 and 27 draw it.
+  final bool tintTitle;
+
+  const InfoCard({
+    super.key,
+    required this.title,
+    this.body,
+    this.tone = Tone.positive,
+    this.icon,
+    this.tintTitle = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -116,7 +126,13 @@ class InfoCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: text.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+                Text(
+                  title,
+                  style: text.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: tintTitle ? tone.ink(tokens) : null,
+                  ),
+                ),
                 if (body != null) ...[
                   const SizedBox(height: HabitSpace.s4),
                   Text(body!, style: text.bodySmall?.copyWith(color: tokens.muted)),

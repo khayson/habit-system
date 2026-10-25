@@ -30,6 +30,14 @@ class _SignInScreenState extends State<SignInScreen> {
   Map<String, List<String>> _fieldErrors = const {};
 
   @override
+  void initState() {
+    super.initState();
+    // A50: after a reset, sign in starts with that email.
+    final email = context.read<SessionProvider>().signInEmail;
+    if (email != null) _email.text = email;
+  }
+
+  @override
   void dispose() {
     _email.dispose();
     _password.dispose();
@@ -72,13 +80,19 @@ class _SignInScreenState extends State<SignInScreen> {
               padding: const EdgeInsets.all(HabitSpace.margin),
               children: [
                 ScreenHeader(title: l10n.signInTitle, subtitle: l10n.signInSubtitle),
-                // A49: after this device deleted the account.
-                if (context.watch<SessionProvider>().accountDeleted) ...[
+                // A49: after this device deleted the account; A50: after a password reset.
+                if (context.watch<SessionProvider>().signInNotice case final notice?) ...[
                   Semantics(
                     liveRegion: true,
                     child: InfoCard(
-                      title: l10n.signInAccountDeletedTitle,
-                      body: l10n.signInAccountDeletedBody,
+                      title: switch (notice) {
+                        SignInNotice.accountDeleted => l10n.signInAccountDeletedTitle,
+                        SignInNotice.passwordChanged => l10n.signInPasswordChangedTitle,
+                      },
+                      body: switch (notice) {
+                        SignInNotice.accountDeleted => l10n.signInAccountDeletedBody,
+                        SignInNotice.passwordChanged => l10n.signInPasswordChangedBody,
+                      },
                       tone: Tone.info,
                     ),
                   ),
@@ -106,7 +120,15 @@ class _SignInScreenState extends State<SignInScreen> {
                   onSubmitted: (_) => _submit(),
                   validator: (v) => (v ?? '').isEmpty ? l10n.errorRequired : null,
                 ),
-                const SizedBox(height: HabitSpace.s32),
+                // As drawn: right-aligned under the password, opening 25 with the email so far.
+                Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: TextButton(
+                    onPressed: () => context.push(Routes.forgotPassword, extra: _email.text.trim()),
+                    child: Text(l10n.signInForgotPassword),
+                  ),
+                ),
+                const SizedBox(height: HabitSpace.s16),
                 if (_error != null) ...[
                   ErrorBanner(_error!),
                   const SizedBox(height: HabitSpace.s16),

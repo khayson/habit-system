@@ -5,6 +5,15 @@ import 'package:flutter/foundation.dart';
 import '../services/auth_service.dart';
 import 'account_context.dart';
 
+/// The calm line sign in (02) shows after something ended the session on purpose.
+enum SignInNotice {
+  /// A49: this device deleted the account.
+  accountDeleted,
+
+  /// A50: the password was reset; sign in with the new one.
+  passwordChanged,
+}
+
 /// The signed-in account (if any) and where the onboarding flow stands. Drives the router.
 ///
 /// Signing out, or the server rejecting the token, only ends the session: the account's
@@ -19,10 +28,14 @@ class SessionProvider extends ChangeNotifier {
 
   AccountContext? _account;
   bool _needsSetup = false;
-  bool _accountDeleted = false;
+  SignInNotice? _notice;
+  String? _noticeEmail;
 
-  /// A49: sign-in says the account is being deleted, until the next sign-in or registration.
-  bool get accountDeleted => _accountDeleted;
+  /// What sign in says (A49, A50), until the next sign-in or registration.
+  SignInNotice? get signInNotice => _notice;
+
+  /// The email sign in starts with after a reset (A50).
+  String? get signInEmail => _noticeEmail;
 
   AccountContext? get account => _account;
   bool get isAuthenticated => _account != null;
@@ -85,7 +98,8 @@ class SessionProvider extends ChangeNotifier {
     final receipt = await _auth.requestAccountDeletion(password);
     // Set at once: the 202 revoked this device's token too, so an in-flight sync's 401 may end
     // the session before the steps below.
-    _accountDeleted = true;
+    _notice = SignInNotice.accountDeleted;
+    _noticeEmail = null;
     try {
       await account.endForLogout();
     } on Object {
@@ -100,6 +114,28 @@ class SessionProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// A50: asks for a reset code; the same answer for every email. Needs no session.
+  Future<void> requestPasswordReset(String email) => _auth.requestPasswordReset(email);
+
+  /// A50: sets the new password with the code, then sign in starts with [email] and a calm
+  /// line. The server revoked every session; a signed-in device signs out at its next 401.
+  Future<void> resetPassword({
+    required String email,
+    required String code,
+    required String password,
+    required String confirmation,
+  }) async {
+    await _auth.resetPassword(
+      email: email,
+      code: code,
+      password: password,
+      confirmation: confirmation,
+    );
+    _notice = SignInNotice.passwordChanged;
+    _noticeEmail = email;
+    notifyListeners();
+  }
+
   /// The ApiClient saw the server reject the stored token (it owns that decision, G1).
   Future<void> handleUnauthenticated() => _auth.logout();
 
@@ -107,7 +143,8 @@ class SessionProvider extends ChangeNotifier {
   void _ended() => _close();
 
   void _open(AccountSession session) {
-    _accountDeleted = false;
+    _notice = null;
+    _noticeEmail = null;
     if (_account?.session.userId != session.userId) {
       _account?.dispose();
       _account = _buildAccount(session);
