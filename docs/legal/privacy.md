@@ -78,7 +78,7 @@ Our servers are with {{hosting_provider}} in {{hosting_region}}. If you live els
 
 - **See and export your data** from the app. An export contains your profile, time zone history, habits, check-ins and notes, reminders, rewards and freeze history, and your profile photo. It never contains your password, sign-in tokens or device details. Only you can download it.
 - **Correct it** by editing it in the app.
-- **Delete it** by deleting your account, or by removing a photo, label or habit.
+- **Delete it** by deleting your account, or by removing a photo or label. Deleting a habit removes it, its check-ins, notes and reminders from all your devices and from our live systems; the XP you earned from it stays in your totals.
 - **Ask us** to restrict or stop certain uses, or to give you your data in a portable format, by emailing {{contact_email}}.
 
 Depending on where you live, including under Ghana's Data Protection Act, 2012 (Act 843) and, where it applies, the EU or UK GDPR, you may have the right to access, correct, delete, restrict, object to and move your data, and to withdraw consent. We will answer within the time the law requires. If you are not happy with how we handled your data, you can complain to the Data Protection Commission in Ghana or to the data protection authority where you live.
