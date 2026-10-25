@@ -111,6 +111,49 @@
   "reasonVersionConflict": "It changed on another device first.",
   "reasonResourceDeleted": "It was removed on another device first.",
   "reasonHabitDeleted": "This habit was deleted on another device.",
+  "swipeArchive": "Archive",
+  "swipeRestore": "Restore",
+  "swipeDelete": "Delete",
+  "@swipeDelete": {
+    "description": "A51: what a left swipe reveals on 07 and 22, and the screen-reader action. It opens the confirmation."
+  },
+  "archivedSnack": "Archived {name}.",
+  "@archivedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "restoredSnack": "Restored {name}.",
+  "@restoredSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "snackUndo": "Undo",
+  "deleteHabitTitle": "Delete {name}?",
+  "@deleteHabitTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteHabitBody": "This removes the habit, its check-ins, notes and reminders from all your devices. XP you earned stays.",
+  "deleteHabitKeep": "Keep habit",
+  "deleteHabitConfirm": "Delete habit",
+  "deletedSnack": "Deleted {name}.",
+  "@deletedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "detailDeleteHabit": "Delete habit",
   "@reasonHabitDeleted": {
     "description": "A51: a queued change for a habit another device deleted; Discard only."
   },

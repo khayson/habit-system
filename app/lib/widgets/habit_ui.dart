@@ -295,6 +295,46 @@ class PrimaryButton extends StatelessWidget {
   }
 }
 
+/// A destructive action (28, the habit delete sheet): filled in the error ink, disabled while
+/// [onPressed] is null, busy while [loading]. Its full label is what a screen reader reads.
+class DestructiveButton extends StatelessWidget {
+  final String label;
+  final bool loading;
+  final VoidCallback? onPressed;
+
+  const DestructiveButton({super.key, required this.label, this.loading = false, this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final tokens = HabitTokens.of(context);
+    return SizedBox(
+      width: double.infinity,
+      child: FilledButton(
+        style: FilledButton.styleFrom(
+          backgroundColor: scheme.error,
+          foregroundColor: scheme.onError,
+        ),
+        onPressed: loading ? null : onPressed,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (loading) ...[
+              SizedBox.square(
+                dimension: 18,
+                child: CircularProgressIndicator(strokeWidth: 2, color: tokens.disabledInk),
+              ),
+              const SizedBox(width: HabitSpace.s12),
+            ],
+            Flexible(child: Text(label, textAlign: TextAlign.center)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// A form-level error (network, rate limit), announced to screen readers.
 class ErrorBanner extends StatelessWidget {
   final String message;

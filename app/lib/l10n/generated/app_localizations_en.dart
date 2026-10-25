@@ -315,6 +315,51 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reasonHabitDeleted => 'This habit was deleted on another device.';
 
   @override
+  String get swipeArchive => 'Archive';
+
+  @override
+  String get swipeRestore => 'Restore';
+
+  @override
+  String get swipeDelete => 'Delete';
+
+  @override
+  String archivedSnack(String name) {
+    return 'Archived $name.';
+  }
+
+  @override
+  String restoredSnack(String name) {
+    return 'Restored $name.';
+  }
+
+  @override
+  String get snackUndo => 'Undo';
+
+  @override
+  String deleteHabitTitle(String name) {
+    return 'Delete $name?';
+  }
+
+  @override
+  String get deleteHabitBody =>
+      'This removes the habit, its check-ins, notes and reminders from all your devices. XP you earned stays.';
+
+  @override
+  String get deleteHabitKeep => 'Keep habit';
+
+  @override
+  String get deleteHabitConfirm => 'Delete habit';
+
+  @override
+  String deletedSnack(String name) {
+    return 'Deleted $name.';
+  }
+
+  @override
+  String get detailDeleteHabit => 'Delete habit';
+
+  @override
   String get reasonParentRejected => 'Its habit was not saved.';
 
   @override

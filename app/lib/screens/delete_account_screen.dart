@@ -136,7 +136,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
             ],
             tonalButton(label: l10n.deleteAccountKeep, onPressed: _busy ? null : _back),
             const SizedBox(height: HabitSpace.s12),
-            _DestructiveButton(
+            DestructiveButton(
               label: l10n.deleteAccountConfirm,
               loading: _busy,
               onPressed: canDelete ? _delete : null,
@@ -188,46 +188,6 @@ class _ExportCard extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// 28's destructive action: filled in the error ink, disabled until a password is typed, then
-/// busy while the server answers. Its full label is what a screen reader reads.
-class _DestructiveButton extends StatelessWidget {
-  final String label;
-  final bool loading;
-  final VoidCallback? onPressed;
-
-  const _DestructiveButton({required this.label, required this.loading, this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final tokens = HabitTokens.of(context);
-    return SizedBox(
-      width: double.infinity,
-      child: FilledButton(
-        style: FilledButton.styleFrom(
-          backgroundColor: scheme.error,
-          foregroundColor: scheme.onError,
-        ),
-        onPressed: loading ? null : onPressed,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (loading) ...[
-              SizedBox.square(
-                dimension: 18,
-                child: CircularProgressIndicator(strokeWidth: 2, color: tokens.disabledInk),
-              ),
-              const SizedBox(width: HabitSpace.s12),
-            ],
-            Flexible(child: Text(label, textAlign: TextAlign.center)),
-          ],
-        ),
       ),
     );
   }

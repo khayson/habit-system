@@ -656,6 +656,78 @@ abstract class AppLocalizations {
   /// **'This habit was deleted on another device.'**
   String get reasonHabitDeleted;
 
+  /// No description provided for @swipeArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive'**
+  String get swipeArchive;
+
+  /// No description provided for @swipeRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get swipeRestore;
+
+  /// A51: what a left swipe reveals on 07 and 22, and the screen-reader action. It opens the confirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get swipeDelete;
+
+  /// No description provided for @archivedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived {name}.'**
+  String archivedSnack(String name);
+
+  /// No description provided for @restoredSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Restored {name}.'**
+  String restoredSnack(String name);
+
+  /// No description provided for @snackUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get snackUndo;
+
+  /// No description provided for @deleteHabitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {name}?'**
+  String deleteHabitTitle(String name);
+
+  /// No description provided for @deleteHabitBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes the habit, its check-ins, notes and reminders from all your devices. XP you earned stays.'**
+  String get deleteHabitBody;
+
+  /// No description provided for @deleteHabitKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep habit'**
+  String get deleteHabitKeep;
+
+  /// No description provided for @deleteHabitConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete habit'**
+  String get deleteHabitConfirm;
+
+  /// No description provided for @deletedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted {name}.'**
+  String deletedSnack(String name);
+
+  /// No description provided for @detailDeleteHabit.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete habit'**
+  String get detailDeleteHabit;
+
   /// No description provided for @reasonParentRejected.
   ///
   /// In en, this message translates to:

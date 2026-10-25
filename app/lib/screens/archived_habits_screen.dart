@@ -11,6 +11,7 @@ import '../providers/account_context.dart';
 import '../providers/stream_model.dart';
 import '../widgets/habit_format.dart';
 import '../widgets/habit_ui.dart';
+import 'widgets/habit_swipe.dart';
 
 /// Screen 22: archived routines (A34). Local data only (watchArchived, confirmed plus queued
 /// archives and restores), so it works offline. Restore queues habit.restore; the row leaves at
@@ -97,43 +98,53 @@ class _ArchivedState extends State<_Archived> {
             const SizedBox(height: HabitSpace.s16),
           ],
           for (final habit in habits) ...[
-            SurfaceCard(
-              child: Row(
-                children: [
-                  ExcludeSemantics(
-                    child: IconTile(icon: HabitFormat.icon(account.view.types.lookup(habit.type))),
-                  ),
-                  const SizedBox(width: HabitSpace.s16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(habit.name, style: text.titleMedium ?? text.bodyLarge),
-                        const SizedBox(height: HabitSpace.s4),
-                        Text(
-                          _detail(l10n, format, habit),
-                          style: text.bodySmall?.copyWith(color: tokens.muted),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Semantics(
-                    container: true,
-                    label: l10n.archivedRestoreLabel(habit.name),
-                    button: true,
-                    excludeSemantics: true,
-                    onTap: _restoring.contains(habit.id) ? null : () => _restore(account, habit),
-                    child: TextButton(
-                      onPressed: _restoring.contains(habit.id)
-                          ? null
-                          : () => _restore(account, habit),
-                      style: TextButton.styleFrom(
-                        minimumSize: const Size(HabitSize.minTarget, HabitSize.minTarget),
+            // A51: swipe right restores (with Undo), left asks before deleting.
+            HabitSwipe(
+              habitId: habit.id,
+              rightLabel: l10n.swipeRestore,
+              rightIcon: Icons.unarchive_outlined,
+              onRight: () => restoreWithUndo(context, account, habit.id, habit.name),
+              onLeft: () => confirmAndDeleteHabit(context, account, habit.id, habit.name),
+              child: SurfaceCard(
+                child: Row(
+                  children: [
+                    ExcludeSemantics(
+                      child: IconTile(
+                        icon: HabitFormat.icon(account.view.types.lookup(habit.type)),
                       ),
-                      child: Text(l10n.archivedRestore),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: HabitSpace.s16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(habit.name, style: text.titleMedium ?? text.bodyLarge),
+                          const SizedBox(height: HabitSpace.s4),
+                          Text(
+                            _detail(l10n, format, habit),
+                            style: text.bodySmall?.copyWith(color: tokens.muted),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Semantics(
+                      container: true,
+                      label: l10n.archivedRestoreLabel(habit.name),
+                      button: true,
+                      excludeSemantics: true,
+                      onTap: _restoring.contains(habit.id) ? null : () => _restore(account, habit),
+                      child: TextButton(
+                        onPressed: _restoring.contains(habit.id)
+                            ? null
+                            : () => _restore(account, habit),
+                        style: TextButton.styleFrom(
+                          minimumSize: const Size(HabitSize.minTarget, HabitSize.minTarget),
+                        ),
+                        child: Text(l10n.archivedRestore),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: HabitSpace.s16),

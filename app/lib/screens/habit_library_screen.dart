@@ -10,6 +10,7 @@ import '../providers/account_context.dart';
 import '../providers/stream_model.dart';
 import '../widgets/habit_format.dart';
 import '../widgets/habit_ui.dart';
+import 'widgets/habit_swipe.dart';
 
 /// Screen 07: the habit library. Reads local data only (confirmed rows plus pending creates),
 /// so it works offline. Archived habits are counted, not listed, as in the design.
@@ -144,13 +145,33 @@ class _HabitRow extends StatelessWidget {
     );
     final name = p['name'] as String? ?? '';
 
+    // A51: swipe right archives (with Undo), left asks before deleting.
+    return HabitSwipe(
+      habitId: habit.id,
+      rightLabel: l10n.swipeArchive,
+      rightIcon: Icons.archive_outlined,
+      onRight: () => archiveWithUndo(context, account, habit.id, name),
+      onLeft: () => confirmAndDeleteHabit(context, account, habit.id, name),
+      child: _card(context, l10n, text, tokens, HabitFormat.icon(rules), name, detail),
+    );
+  }
+
+  Widget _card(
+    BuildContext context,
+    AppLocalizations l10n,
+    TextTheme text,
+    HabitTokens tokens,
+    IconData icon,
+    String name,
+    String detail,
+  ) {
     return SurfaceCard(
       onTap: () => context.go(Routes.habit(habit.id)),
       semanticsLabel: l10n.libraryOpen(name, detail),
       child: ExcludeSemantics(
         child: Row(
           children: [
-            IconTile(icon: HabitFormat.icon(rules)),
+            IconTile(icon: icon),
             const SizedBox(width: HabitSpace.s16),
             Expanded(
               child: Column(

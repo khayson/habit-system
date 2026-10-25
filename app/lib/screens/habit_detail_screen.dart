@@ -19,6 +19,7 @@ import '../providers/account_context.dart';
 import '../providers/stream_model.dart';
 import '../widgets/habit_format.dart';
 import '../widgets/habit_ui.dart';
+import 'widgets/habit_swipe.dart';
 import 'edit_habit_screen.dart';
 
 /// Screen 12: habit detail with the month heatmap. Offline-first: closed days from the server's
@@ -194,6 +195,28 @@ class _DetailState extends State<_Detail> {
             Text(l10n.streakPause, style: text.bodyLarge?.copyWith(color: tokens.muted)),
           const SizedBox(height: HabitSpace.s32),
           _ReminderRow(detail: detail),
+          // A51: without swiping, a quiet text action at the end, like 21's Delete account.
+          const SizedBox(height: HabitSpace.s32),
+          Center(
+            child: TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: tokens.muted,
+                textStyle: text.bodyMedium,
+                minimumSize: const Size(HabitSize.minTarget, HabitSize.minTarget),
+              ),
+              onPressed: () async {
+                final account = context.read<AccountContext>();
+                final deleted = await confirmAndDeleteHabit(
+                  context,
+                  account,
+                  detail.habit.id,
+                  detail.name,
+                );
+                if (deleted && context.mounted) context.go(Routes.habits);
+              },
+              child: Text(l10n.detailDeleteHabit),
+            ),
+          ),
         ],
       ),
     );

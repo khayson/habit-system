@@ -188,6 +188,12 @@ class HabitActions {
     onLocalWrite();
   }
 
+  /// A51: habit.delete (07, 22 and 12).
+  Future<void> deleteHabit(String habitId) async {
+    await writer.deleteHabit(habitId);
+    onLocalWrite();
+  }
+
   /// A34: habit.restore (screen 22, 4.2b).
   Future<void> restoreHabit(String habitId) async {
     await writer.restoreHabit(habitId);
