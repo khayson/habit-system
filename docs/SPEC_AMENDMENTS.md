@@ -460,3 +460,20 @@ No design exists. Khay Studios approved building it from the app's existing comp
   - A swipe left past it opens the "Delete {name}?" confirmation and the row springs back. Only "Delete habit" there deletes.
   - A shorter swipe shows the action and springs back. A light haptic marks the threshold.
   - Habit detail (12) has "Delete habit" too, and every swipeable row has screen-reader actions for Archive (or Restore) and Delete.
+
+## 22. Added after the Phase 6.6 review (2026-10-25)
+
+### A52 — Messages as the app's own toast, and icons from Hugeicons through one registry · ADOPT (Khay Studios, 2026-10-25)
+The architect's 6.7 prompt asked for messages inside each screen with no toasts or overlays. Khay Studios decided otherwise when asked (2026-10-25): **a modern floating toast**. Snackbars "look outdated", and a message must never open a new page. This decision replaces the prompt's inline-message parts.
+
+- **Messages:**
+  - No Material `SnackBar` or `ScaffoldMessenger` anywhere, and no toast package. One in-app toast (`AppToast`): a rounded pill near the top of the screen, under the status bar, over the app's root overlay, so it survives the navigation after a save.
+  - Contents: a tone icon, one line of text, and at most one action (for example Undo) with a 44 px target. The tone is shown by its icon as well as its colour (A12).
+  - Timing: about 4 seconds without an action, 6 with one, then it fades. It can be dismissed with its close button or a swipe up. While a screen reader is on it stays until it is dismissed or replaced. A new toast replaces the current one.
+  - Accessibility: announced as a polite live region; under reduced motion it appears and goes without sliding.
+  - An architecture test fails if `app/lib` mentions `SnackBar`, `ScaffoldMessenger`, `showSnackBar` or a toast package.
+  - The sign-in notices (A49, A50) stay as cards on that screen: they explain why the person is signed out.
+- **Icons:**
+  - Every icon in the app's own UI comes from the free Hugeicons stroke-rounded set (the `hugeicons` package on pub.dev), never the Pro package.
+  - One registry, `lib/widgets/app_icons.dart`: `AppIcons.<meaning>` constants and one `AppIcon` widget that takes a size, a colour and either a semantic label or no semantics. This is the same pattern as Khay Studios' schoolbook app.
+  - An architecture test fails on `Icons.` or a direct `HugeIcon` use outside that file. Material's own internal glyphs (a switch thumb, a date picker) and the Android notification drawable are out of scope.
