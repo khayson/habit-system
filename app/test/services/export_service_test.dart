@@ -101,7 +101,41 @@ void main() {
     expect(p.basename(file.path), 'habit-export.zip');
     expect(file.readAsBytesSync(), [80, 75, 3, 4]);
     expect(adapter.lastRequest!.headers['Authorization'], 'Bearer t');
+    expect(
+      adapter.lastRequest!.uri.toString(),
+      'http://api.test/api/v1/exports/j1/download?expires=1&signature=s',
+    );
   });
+
+  // 6.1 review L2: the token only ever goes to the configured API base.
+  for (final (what, url) in [
+    ('a foreign host', 'https://evil.test/api/v1/exports/j1/download?signature=s'),
+    ('another port', 'http://api.test:8080/api/v1/exports/j1/download?signature=s'),
+    ('another scheme', 'https://api.test/api/v1/exports/j1/download?signature=s'),
+    ('a path outside the base', 'http://api.test/other/exports/j1/download?signature=s'),
+  ]) {
+    test('refuses a download_url on $what without sending anything', () async {
+      final adapter = _BytesAdapter([80, 75]);
+      final dio = Dio(BaseOptions(baseUrl: 'http://api.test/api/v1'))..httpClientAdapter = adapter;
+      final dir = Directory.systemTemp.createTempSync('export_test_');
+      addTearDown(() => dir.deleteSync(recursive: true));
+      final exports = ExportService(ApiClient.withDio(dio, MemoryTokenStore('t')));
+      final job = ExportJob(
+        id: 'j1',
+        format: 'json',
+        status: ExportStatus.ready,
+        requestedAt: null,
+        downloadUrl: url,
+      );
+
+      await expectLater(
+        exports.download(job, dir.path),
+        throwsA(isA<AppException>().having((e) => e.code, 'code', 'unexpected_response')),
+      );
+      expect(adapter.lastRequest, isNull);
+      expect(dir.listSync(), isEmpty);
+    });
+  }
 }
 
 class _BytesAdapter implements HttpClientAdapter {

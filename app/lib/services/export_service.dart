@@ -33,16 +33,34 @@ class ExportService {
   /// Streams a ready job's file into [folder] with the bearer token and returns it. The caller
   /// hands it to the share sheet and deletes it afterwards.
   Future<File> download(ExportJob job, String folder) async {
-    final url = job.downloadUrl;
-    if (url == null) throw _unexpected;
+    final path = _underBase(job.downloadUrl);
+    if (path == null) throw _unexpected;
     final file = File(p.join(folder, 'habit-export.${job.format == 'csv' ? 'csv' : 'zip'}'));
     try {
-      await _api.dio.download(url, file.path);
+      await _api.dio.download(path, file.path);
     } on DioException catch (e) {
       if (file.existsSync()) file.deleteSync();
       throw AppException.fromDioException(e);
     }
     return file;
+  }
+
+  /// 6.1 review L2: the token only ever goes to the configured API base. [url]'s path and query,
+  /// relative to that base, when its scheme, host and port are the base's and its path lies
+  /// under the base path; otherwise null and nothing is sent.
+  String? _underBase(String? url) {
+    final target = url == null ? null : Uri.tryParse(url);
+    final base = Uri.parse(_api.dio.options.baseUrl);
+    final basePath = base.path.endsWith('/') ? base.path : '${base.path}/';
+    if (target == null ||
+        target.scheme != base.scheme ||
+        target.host != base.host ||
+        target.port != base.port ||
+        !target.path.startsWith(basePath)) {
+      return null;
+    }
+    final relative = target.path.substring(basePath.length - 1);
+    return target.hasQuery ? '$relative?${target.query}' : relative;
   }
 
   static ExportJob _job(dynamic data) {
