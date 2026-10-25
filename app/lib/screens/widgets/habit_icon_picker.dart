@@ -90,7 +90,12 @@ class _IconPickerState extends State<_IconPicker> {
                   onChanged: (value) => setState(() => _query = value),
                   decoration: InputDecoration(
                     hintText: l10n.iconPickerSearch,
-                    prefixIcon: AppIcon(AppIcons.search, color: tokens.muted),
+                    // The prefix slot is tight: centred, the glyph keeps its size.
+                    prefixIcon: Center(
+                      widthFactor: 1,
+                      heightFactor: 1,
+                      child: AppIcon(AppIcons.search, size: 22, color: tokens.muted),
+                    ),
                   ),
                 ),
               ),

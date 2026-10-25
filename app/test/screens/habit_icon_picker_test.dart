@@ -114,6 +114,8 @@ void main() {
 
     expect(find.text('Choose an icon'), findsOneWidget);
     expect(find.text('Suggested'), findsOneWidget);
+    // Found on the emulator: the search field's prefix slot stretched the glyph.
+    expect(tester.getSize(byAppIcon(AppIcons.search)), const Size(22, 22));
     final selected = cell('book-open-01');
     expect(selected, findsOneWidget);
     expect(find.descendant(of: selected, matching: byAppIcon(AppIcons.check)), findsOneWidget);
