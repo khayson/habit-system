@@ -79,8 +79,9 @@ it('keeps duplicate detection per owner: the same mutation id from two owners is
     expect(DB::table('mutation_receipts')->where('mutation_id', $mutationId)->count())->toBe(2);
 });
 
-it('requires authentication on every route except health, register, login and the deletion receipt', function () {
-    $public = ['api/v1/health', 'api/v1/auth/register', 'api/v1/auth/login'];
+it('requires authentication on every route except health, register, login, the reset routes and the deletion receipt', function () {
+    // Spec 05: a bearer token on every route except auth and reset routes (A50).
+    $public = ['api/v1/health', 'api/v1/auth/register', 'api/v1/auth/login', 'api/v1/auth/forgot-password', 'api/v1/auth/reset-password'];
     // A49: read with the deletion receipt, never a session; without one it is the same 404.
     $receipt = ['api/v1/account-deletions/{deletion}'];
 

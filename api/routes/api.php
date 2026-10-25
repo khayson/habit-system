@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\ExportController;
 use App\Http\Controllers\Api\V1\HabitController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\InsightsController;
+use App\Http\Controllers\Api\V1\PasswordResetController;
 use App\Http\Controllers\Api\V1\RewardsController;
 use App\Http\Controllers\Api\V1\SyncController;
 use Illuminate\Support\Facades\Route;
@@ -46,6 +47,12 @@ Route::post('/exports', [ExportController::class, 'store'])->middleware(['auth:s
 Route::put('/me/avatar', [AvatarController::class, 'put'])->middleware(['auth:sanctum', 'throttle:avatar-upload'])->name('me.avatar.put');
 
 Route::post('/sync', [SyncController::class, 'sync'])->middleware(['auth:sanctum', 'throttle:sync'])->name('sync');
+
+// A50: reset by a 6-digit code; per IP and per email per hour (config api.rate_limits).
+Route::middleware('throttle:password-reset')->group(function () {
+    Route::post('/auth/forgot-password', [PasswordResetController::class, 'forgot'])->name('auth.forgot-password');
+    Route::post('/auth/reset-password', [PasswordResetController::class, 'reset'])->name('auth.reset-password');
+});
 
 // A49: deleting the account checks the password under the login limits; the status is read with
 // the receipt (not a session), so it sits outside auth:sanctum.
