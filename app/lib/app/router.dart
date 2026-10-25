@@ -10,6 +10,7 @@ import '../core/file_sharer.dart';
 import '../models/export_job.dart';
 import '../screens/amount_entry_screen.dart';
 import '../screens/export_status_screen.dart';
+import '../screens/delete_account_screen.dart';
 import '../screens/privacy_screen.dart';
 import '../screens/completion_screen.dart';
 import '../screens/app_shell.dart';
@@ -59,6 +60,7 @@ abstract final class Routes {
   /// Screens 21, 29 and 30 (6.1, A48), full screens without the bottom bar, as designed.
   static const privacy = '/privacy';
   static String exportStatus(String id) => '/privacy/exports/$id';
+  static const deleteAccount = '/privacy/delete';
 
   /// Screen 22. Matched before '/habits/:id' (router test).
   static const archivedHabits = '/habits/archived';
@@ -133,7 +135,8 @@ List<RouteBase> appRoutes({
   PhotoPicker? photoPicker,
   FileSharer? fileSharer,
 }) => [
-  // 29 and 30 draw no bottom bar; 21 is inside the shell (6.1 review L1).
+  // 29 and 30 draw no bottom bar; 21 is inside the shell (6.1 review L1). So does 28 (A49).
+  GoRoute(path: Routes.deleteAccount, builder: (context, state) => const DeleteAccountScreen()),
   GoRoute(
     path: '/privacy/exports/:id',
     builder: (context, state) => ExportStatusScreen(

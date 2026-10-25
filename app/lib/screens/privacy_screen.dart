@@ -65,8 +65,8 @@ String _privacyFormat = 'json';
 void resetPrivacyFormatForTest() => _privacyFormat = 'json';
 
 /// Screen 21, "Your data, yours" (A48). Exports are explicit network actions: the latest job
-/// comes from GET /exports, nothing is written to the database. Restore (6.3) and Delete account
-/// (6.2) are not offered yet: ASSUMPTION(A48-phasing).
+/// comes from GET /exports, nothing is written to the database. Delete account opens 28 (A49).
+/// Restore (6.3) is not offered yet: ASSUMPTION(A48-phasing).
 class PrivacyScreen extends StatefulWidget {
   final FileSharer sharer;
   final DateTime Function() clock;
@@ -310,6 +310,14 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
                 ),
                 const SizedBox(height: HabitSpace.s12),
               ],
+              Center(
+                child: TextButton(
+                  style: TextButton.styleFrom(foregroundColor: tokens.muted),
+                  onPressed: _busy ? null : () => context.push(Routes.deleteAccount),
+                  child: Text(l10n.privacyDeleteAccount),
+                ),
+              ),
+              const SizedBox(height: HabitSpace.s12),
               PrimaryButton(label: l10n.privacyRequest, loading: _busy, onPressed: _request),
               const SizedBox(height: HabitSpace.s16),
               Text(

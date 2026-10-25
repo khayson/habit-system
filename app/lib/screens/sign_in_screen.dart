@@ -72,6 +72,18 @@ class _SignInScreenState extends State<SignInScreen> {
               padding: const EdgeInsets.all(HabitSpace.margin),
               children: [
                 ScreenHeader(title: l10n.signInTitle, subtitle: l10n.signInSubtitle),
+                // A49: after this device deleted the account.
+                if (context.watch<SessionProvider>().accountDeleted) ...[
+                  Semantics(
+                    liveRegion: true,
+                    child: InfoCard(
+                      title: l10n.signInAccountDeletedTitle,
+                      body: l10n.signInAccountDeletedBody,
+                      tone: Tone.info,
+                    ),
+                  ),
+                  const SizedBox(height: HabitSpace.s24),
+                ],
                 FieldLabel(l10n.fieldEmail),
                 TextFormField(
                   controller: _email,

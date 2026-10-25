@@ -2625,6 +2625,65 @@ class AppLocalizationsEn extends AppLocalizations {
   String get privacyDownloadExpired => 'This download has expired. Request a new export.';
 
   @override
+  String get privacyDeleteAccount => 'Delete account';
+
+  @override
+  String get deleteAccountTitle => 'Delete your account?';
+
+  @override
+  String get deleteAccountSubtitle => 'This permanently removes your saved routines and history.';
+
+  @override
+  String get deleteAccountExportTitle => 'Export before you leave';
+
+  @override
+  String get deleteAccountExportBody =>
+      'Download your history first if you want to keep it. Pending changes need to sync.';
+
+  @override
+  String deleteAccountPending(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count changes are still waiting to sync.',
+      one: '1 change is still waiting to sync.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get deleteAccountPasswordLabel => 'Confirm your password';
+
+  @override
+  String get deleteAccountNextTitle => 'What happens next';
+
+  @override
+  String get deleteAccountNextBody =>
+      'Sessions are revoked immediately. Owned data is queued for deletion under the retention policy.';
+
+  @override
+  String get deleteAccountKeep => 'Keep my account';
+
+  @override
+  String get deleteAccountConfirm => 'Delete account permanently';
+
+  @override
+  String get deleteAccountOffline => 'Deleting your account needs a connection.';
+
+  @override
+  String get deleteAccountError =>
+      'Your account could not be deleted right now. Nothing has changed.';
+
+  @override
+  String get deleteAccountTryAgain => 'Try again';
+
+  @override
+  String get signInAccountDeletedTitle => 'Your account is being deleted.';
+
+  @override
+  String get signInAccountDeletedBody => 'Sessions on your other devices have ended.';
+
+  @override
   String get privacyRequestError => 'The export could not be requested right now. Try again.';
 
   @override

@@ -4214,6 +4214,102 @@ abstract class AppLocalizations {
   /// **'This download has expired. Request a new export.'**
   String get privacyDownloadExpired;
 
+  /// Screen 21: opens screen 28 (A49).
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get privacyDeleteAccount;
+
+  /// No description provided for @deleteAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete your account?'**
+  String get deleteAccountTitle;
+
+  /// No description provided for @deleteAccountSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This permanently removes your saved routines and history.'**
+  String get deleteAccountSubtitle;
+
+  /// No description provided for @deleteAccountExportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export before you leave'**
+  String get deleteAccountExportTitle;
+
+  /// No description provided for @deleteAccountExportBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Download your history first if you want to keep it. Pending changes need to sync.'**
+  String get deleteAccountExportBody;
+
+  /// Screen 28: added to the export card while the outbox holds unacknowledged rows.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 change is still waiting to sync.} other{{count} changes are still waiting to sync.}}'**
+  String deleteAccountPending(int count);
+
+  /// No description provided for @deleteAccountPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm your password'**
+  String get deleteAccountPasswordLabel;
+
+  /// No description provided for @deleteAccountNextTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What happens next'**
+  String get deleteAccountNextTitle;
+
+  /// No description provided for @deleteAccountNextBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Sessions are revoked immediately. Owned data is queued for deletion under the retention policy.'**
+  String get deleteAccountNextBody;
+
+  /// No description provided for @deleteAccountKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep my account'**
+  String get deleteAccountKeep;
+
+  /// No description provided for @deleteAccountConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account permanently'**
+  String get deleteAccountConfirm;
+
+  /// No description provided for @deleteAccountOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting your account needs a connection.'**
+  String get deleteAccountOffline;
+
+  /// No description provided for @deleteAccountError.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account could not be deleted right now. Nothing has changed.'**
+  String get deleteAccountError;
+
+  /// No description provided for @deleteAccountTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get deleteAccountTryAgain;
+
+  /// No description provided for @signInAccountDeletedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is being deleted.'**
+  String get signInAccountDeletedTitle;
+
+  /// Screen 02 after a deletion (A49): one calm line, title plus body.
+  ///
+  /// In en, this message translates to:
+  /// **'Sessions on your other devices have ended.'**
+  String get signInAccountDeletedBody;
+
   /// No description provided for @privacyRequestError.
   ///
   /// In en, this message translates to:

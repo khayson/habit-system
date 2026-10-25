@@ -895,6 +895,36 @@
   "@privacyDownloadExpired": {
     "description": "6.1 review L4: the download answered 410 export_expired; the export list is reloaded."
   },
+  "privacyDeleteAccount": "Delete account",
+  "@privacyDeleteAccount": {
+    "description": "Screen 21: opens screen 28 (A49)."
+  },
+  "deleteAccountTitle": "Delete your account?",
+  "deleteAccountSubtitle": "This permanently removes your saved routines and history.",
+  "deleteAccountExportTitle": "Export before you leave",
+  "deleteAccountExportBody": "Download your history first if you want to keep it. Pending changes need to sync.",
+  "deleteAccountPending": "{count, plural, =1{1 change is still waiting to sync.} other{{count} changes are still waiting to sync.}}",
+  "@deleteAccountPending": {
+    "description": "Screen 28: added to the export card while the outbox holds unacknowledged rows.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteAccountPasswordLabel": "Confirm your password",
+  "deleteAccountNextTitle": "What happens next",
+  "deleteAccountNextBody": "Sessions are revoked immediately. Owned data is queued for deletion under the retention policy.",
+  "deleteAccountKeep": "Keep my account",
+  "deleteAccountConfirm": "Delete account permanently",
+  "deleteAccountOffline": "Deleting your account needs a connection.",
+  "deleteAccountError": "Your account could not be deleted right now. Nothing has changed.",
+  "deleteAccountTryAgain": "Try again",
+  "signInAccountDeletedTitle": "Your account is being deleted.",
+  "signInAccountDeletedBody": "Sessions on your other devices have ended.",
+  "@signInAccountDeletedBody": {
+    "description": "Screen 02 after a deletion (A49): one calm line, title plus body."
+  },
   "privacyRequestError": "The export could not be requested right now. Try again.",
   "exportStatusQueued": "queued",
   "exportStatusRunning": "preparing",

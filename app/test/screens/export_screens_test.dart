@@ -81,7 +81,7 @@ void main() {
       );
       expect(find.text('Download latest export'), ready ? findsOneWidget : findsNothing);
       expect(find.text('Restore from a JSON backup'), findsNothing, reason: '6.3');
-      expect(find.text('Delete account'), findsNothing, reason: '6.2');
+      expect(find.text('Delete account'), findsOneWidget, reason: '28, Phase 6.2');
       // 6.1 review L1: 21 draws the bottom bar with Profile selected.
       expect(find.text('Today'), findsOneWidget, reason: 'the bottom bar, as designed');
       expect(tester.getSemantics(find.text('Profile')).flagsCollection.isSelected, Tristate.isTrue);
