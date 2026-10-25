@@ -43,6 +43,7 @@ final readonly class AccountPurger
         ['user_freeze_policy_versions', 'user'],
         ['user_timezone_history', 'user'],
         ['export_jobs', 'user'],
+        ['password_reset_codes', 'user'],
         ['personal_access_tokens', 'token'],
     ];
 
