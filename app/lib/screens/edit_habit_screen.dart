@@ -21,6 +21,8 @@ import '../widgets/habit_format.dart';
 import '../widgets/habit_ui.dart';
 import '../widgets/schedule_text.dart';
 import 'frequency_screen.dart';
+import 'widgets/habit_icon_picker.dart';
+import '../widgets/habit_icons.dart';
 import '../widgets/app_icons.dart';
 import '../widgets/app_toast.dart';
 
@@ -64,6 +66,9 @@ class _EditState extends State<_Edit> {
   HabitDraft? _start;
   late String _category;
   late FrequencyChoice _frequency;
+
+  /// A53: the habit's icon key (kept as is, even one this app does not know).
+  String? _icon;
   HabitFormErrors _errors = HabitFormErrors.none;
   bool _busy = false;
 
@@ -83,7 +88,18 @@ class _EditState extends State<_Edit> {
     _name.text = draft.name;
     _category = draft.category;
     _frequency = FrequencyChoice(draft.frequencyType, draft.frequencyConfig);
+    _icon = draft.icon;
     _target.set(type.initial(draft.targetValue, draft.unit));
+  }
+
+  /// A53: the picker.
+  Future<void> _pickIcon() async {
+    final picked = await pickHabitIcon(context, current: HabitIconCatalog.keyFor(_icon, _category));
+    if (picked != null && mounted) {
+      setState(() {
+        _icon = picked;
+      });
+    }
   }
 
   void _leave() => context.canPop() ? context.pop() : context.go(Routes.habit(widget.habitId));
@@ -97,6 +113,7 @@ class _EditState extends State<_Edit> {
       category: _category,
       target: _target.value,
       frequency: _frequency,
+      icon: _icon,
     );
     setState(() => _errors = result.errors);
     final draft = result.draft;
@@ -117,7 +134,13 @@ class _EditState extends State<_Edit> {
     try {
       // Unchanged: the writer writes nothing; the screen just closes.
       await account.actions.updateHabit(widget.habitId, toSave);
-      if (mounted) _leave();
+      if (mounted) {
+        // 6.7 review: the toast is the only sign it worked, so only when something changed.
+        final changed = current == null || !toSave.sameAs(current, type.rules);
+        final toast = AppToast.of(context);
+        _leave();
+        if (changed) toast.show(l10n.editSaved);
+      }
     } on HabitEditFailure catch (e) {
       if (!mounted) return;
       switch (e.kind) {
@@ -351,6 +374,16 @@ class _EditState extends State<_Edit> {
               action: l10n.setupEdit,
               onAction: () => _chooseCategory(format),
               message: _errors.category,
+            ),
+            const SizedBox(height: HabitSpace.s16),
+            SettingRow(
+              key: const ValueKey('icon-row'),
+              actionKey: const ValueKey('icon-row-edit'),
+              icon: AppIcons.habit(_icon, category: _category),
+              title: l10n.habitIconRow,
+              summary: HabitIconCatalog.label(HabitIconCatalog.keyFor(_icon, _category)),
+              action: l10n.setupEdit,
+              onAction: _pickIcon,
             ),
             const SizedBox(height: HabitSpace.s16),
             SettingRow(

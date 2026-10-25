@@ -134,6 +134,16 @@
     }
   },
   "snackUndo": "Undo",
+  "habitIconRow": "Icon",
+  "@habitIconRow": {"description": "A53: the Icon row on create and edit habit."},
+  "iconPickerTitle": "Choose an icon",
+  "iconPickerSearch": "Search icons",
+  "iconPickerSuggested": "Suggested",
+  "iconPickerAll": "All icons",
+  "iconPickerNoMatch": "No icon matches \"{query}\".",
+  "@iconPickerNoMatch": {"placeholders": {"query": {"type": "String"}}},
+  "editSaved": "Changes saved.",
+  "@editSaved": {"description": "6.7 review: the toast after a habit edit is saved."},
   "toastClose": "Close message",
   "@toastClose": {
     "description": "A52: tooltip and label of the close button on a toast."

@@ -692,6 +692,48 @@ abstract class AppLocalizations {
   /// **'Undo'**
   String get snackUndo;
 
+  /// A53: the Icon row on create and edit habit.
+  ///
+  /// In en, this message translates to:
+  /// **'Icon'**
+  String get habitIconRow;
+
+  /// No description provided for @iconPickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an icon'**
+  String get iconPickerTitle;
+
+  /// No description provided for @iconPickerSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search icons'**
+  String get iconPickerSearch;
+
+  /// No description provided for @iconPickerSuggested.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested'**
+  String get iconPickerSuggested;
+
+  /// No description provided for @iconPickerAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All icons'**
+  String get iconPickerAll;
+
+  /// No description provided for @iconPickerNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No icon matches \"{query}\".'**
+  String iconPickerNoMatch(String query);
+
+  /// 6.7 review: the toast after a habit edit is saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes saved.'**
+  String get editSaved;
+
   /// A52: tooltip and label of the close button on a toast.
   ///
   /// In en, this message translates to:

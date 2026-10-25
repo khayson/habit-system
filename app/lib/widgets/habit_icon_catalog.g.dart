@@ -6144,5 +6144,5 @@ const List<(String, String)> habitIconFeatured = [
   ('call', 'Call'),
   ('user-group', 'Family'),
   ('sun-01', 'Outdoors'),
-  ('heart-check', 'Health'),
+  ('heart-check', 'Heart health'),
 ];

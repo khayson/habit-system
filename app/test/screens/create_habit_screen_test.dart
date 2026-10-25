@@ -88,7 +88,8 @@ void main() {
       isSemantics(label: 'Quantity', isButton: true, isSelected: false),
     );
     expect(
-      tester.getSemantics(find.text('Edit').first),
+      // A53: the Icon row comes first, then Schedule.
+      tester.getSemantics(find.text('Edit').at(1)),
       isSemantics(label: 'Edit Schedule', isButton: true),
     );
     handle.dispose();
@@ -172,7 +173,7 @@ void main() {
     await tester.pump();
     await tester.enterText(field('target-amount'), '30');
 
-    await tester.tap(find.text('Edit').first);
+    await tester.tap(find.bySemanticsLabel('Edit Schedule'));
     await settle(tester);
     expect(find.byType(FrequencyScreen), findsOneWidget);
     expect(find.text('Choose how often Pilates fits your week.'), findsOneWidget);

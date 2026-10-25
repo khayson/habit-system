@@ -17,6 +17,9 @@ abstract final class HabitIconCatalog {
 
   static bool knows(String key) => habitIconGlyphs.containsKey(key);
 
+  /// How many featured icons [search] lists first (the picker's "Suggested").
+  static int get featuredCount => habitIconFeatured.length;
+
   /// The keyword table's icon for [name] (the server's backfill uses the same table), or null.
   static String? suggest(String name) {
     final words = _words(name);

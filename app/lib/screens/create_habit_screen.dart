@@ -18,6 +18,8 @@ import '../widgets/habit_ui.dart';
 import '../widgets/schedule_text.dart';
 import 'frequency_screen.dart';
 import 'reminder_editor_screen.dart';
+import 'widgets/habit_icon_picker.dart';
+import '../widgets/habit_icons.dart';
 import '../widgets/app_icons.dart';
 
 /// Screen 08: create a habit of any type the app knows (A21 registry), with its target, category,
@@ -45,6 +47,10 @@ class _CreateHabitScreenState extends State<CreateHabitScreen> {
   String _category = _categories.first;
   FrequencyChoice _frequency = FrequencyChoice.daily;
   ReminderDraft? _reminder;
+
+  /// A53: the icon to send; suggested from the name until the person picks one.
+  String? _icon;
+  bool _iconPicked = false;
   HabitFormErrors _errors = HabitFormErrors.none;
   bool _busy = false;
 
@@ -68,6 +74,7 @@ class _CreateHabitScreenState extends State<CreateHabitScreen> {
       category: _category,
       target: _target.value,
       frequency: _frequency,
+      icon: _icon,
     );
     setState(() => _errors = result.errors);
     final draft = result.draft;
@@ -103,6 +110,17 @@ class _CreateHabitScreenState extends State<CreateHabitScreen> {
       }
     } finally {
       if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  /// A53: the picker; a pick is the person's own and stops the name suggestion.
+  Future<void> _pickIcon() async {
+    final picked = await pickHabitIcon(context, current: HabitIconCatalog.keyFor(_icon, _category));
+    if (picked != null && mounted) {
+      setState(() {
+        _icon = picked;
+        _iconPicked = true;
+      });
     }
   }
 
@@ -165,9 +183,10 @@ class _CreateHabitScreenState extends State<CreateHabitScreen> {
               focusNode: _nameFocus,
               textCapitalization: TextCapitalization.sentences,
               textInputAction: TextInputAction.next,
-              onChanged: (_) {
-                if (_errors.name != null) setState(() => _errors = _errors.without(name: true));
-              },
+              onChanged: (name) => setState(() {
+                if (_errors.name != null) _errors = _errors.without(name: true);
+                if (!_iconPicked) _icon = HabitIconCatalog.suggest(name);
+              }),
               decoration: InputDecoration(
                 hintText: l10n.newHabitName,
                 error: _errors.name == null ? null : FieldErrorText(_errors.name!),
@@ -211,6 +230,16 @@ class _CreateHabitScreenState extends State<CreateHabitScreen> {
               FieldErrorText(_errors.category!),
             ],
             const SizedBox(height: HabitSpace.s24),
+            SettingRow(
+              key: const ValueKey('icon-row'),
+              actionKey: const ValueKey('icon-row-edit'),
+              icon: AppIcons.habit(_icon, category: _category),
+              title: l10n.habitIconRow,
+              summary: HabitIconCatalog.label(HabitIconCatalog.keyFor(_icon, _category)),
+              action: l10n.setupEdit,
+              onAction: _pickIcon,
+            ),
+            const SizedBox(height: HabitSpace.s16),
             SettingRow(
               icon: AppIcons.frequency,
               title: l10n.newHabitSchedule,

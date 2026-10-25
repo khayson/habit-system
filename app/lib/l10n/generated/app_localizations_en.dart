@@ -337,6 +337,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get snackUndo => 'Undo';
 
   @override
+  String get habitIconRow => 'Icon';
+
+  @override
+  String get iconPickerTitle => 'Choose an icon';
+
+  @override
+  String get iconPickerSearch => 'Search icons';
+
+  @override
+  String get iconPickerSuggested => 'Suggested';
+
+  @override
+  String get iconPickerAll => 'All icons';
+
+  @override
+  String iconPickerNoMatch(String query) {
+    return 'No icon matches \"$query\".';
+  }
+
+  @override
+  String get editSaved => 'Changes saved.';
+
+  @override
   String get toastClose => 'Close message';
 
   @override
