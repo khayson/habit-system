@@ -79,6 +79,7 @@
       "type": "binary",
       "unit": null,
       "category": "health",
+      "icon": null,
       "target_value": 1,
       "frequency_type": "daily",
       "frequency_config": {},

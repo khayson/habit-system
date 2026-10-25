@@ -76,6 +76,8 @@ final readonly class EntityPresenter
             'type' => $habit->type,
             'unit' => $habit->unit,
             'category' => $habit->category,
+            // A53: the chosen icon (a Hugeicons key) or null; presentation only.
+            'icon' => $habit->icon ?? null,
             'target_value' => $type->formatValue($type->fromStorage((string) $habit->target_value)),
             'frequency_type' => $habit->frequency_type,
             'frequency_config' => (object) HabitRepository::json($habit->frequency_config),

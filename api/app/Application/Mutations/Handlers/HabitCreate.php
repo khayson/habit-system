@@ -13,6 +13,7 @@ use App\Domain\Calendar\LocalDate;
 use App\Domain\Clock;
 use App\Domain\Habit\DefinitionVersion;
 use App\Domain\Habit\Frequency;
+use App\Domain\Habit\HabitIcons;
 use App\Domain\Habit\HabitTypeRegistry;
 use App\Domain\Habit\InvalidHabitValue;
 use App\Domain\Habit\UnknownHabitType;
@@ -52,6 +53,7 @@ final readonly class HabitCreate
             'frequency_config' => ['present', 'array'],
             'start_local_date' => ['required', 'date_format:Y-m-d'],
             'date_mode' => ['nullable', Rule::in(['normal', 'backdate'])],
+            'icon' => HabitIcons::rules(),
         ])->validate();
 
         $typeKey = (string) $p['type'];
@@ -108,6 +110,7 @@ final readonly class HabitCreate
             'type' => $typeKey,
             'unit' => $definition->unit,
             'category' => $definition->category,
+            'icon' => $p['icon'] ?? null,
             'target_value' => $type->toStorage($target),
             'frequency_type' => $frequency->type->value,
             'frequency_config' => $frequencyConfig,

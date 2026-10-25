@@ -14,6 +14,7 @@ use App\Domain\Clock;
 use App\Domain\Habit\DefinitionVersion;
 use App\Domain\Habit\Frequency;
 use App\Domain\Habit\HabitArchived;
+use App\Domain\Habit\HabitIcons;
 use App\Domain\Habit\HabitSchedule;
 use App\Domain\Habit\HabitTypeRegistry;
 use App\Domain\Habit\InvalidHabitValue;
@@ -57,6 +58,7 @@ final readonly class HabitWrites
             'category' => ['required', Rule::in(DefinitionVersion::CATEGORIES)],
             'frequency_type' => ['required', 'string', 'max:24'],
             'frequency_config' => ['present', 'array'],
+            'icon' => HabitIcons::rules(),
         ])->validate();
         if ($habit->archived_at !== null) {
             throw new HabitArchived((string) $habit->id);
@@ -83,6 +85,8 @@ final readonly class HabitWrites
             throw ValidationException::withMessages(['frequency_config' => [$e->getMessage()]]);
         }
         $name = trim((string) $p['name']);
+        // A53: an absent icon (an app from before A53) leaves it unchanged; null clears it.
+        $icon = array_key_exists('icon', $p) ? $p['icon'] : $habit->icon;
         $desired = ['target' => $target, 'unit' => $unit, 'category' => (string) $p['category'], 'frequency' => $frequency->toArray()];
 
         $today = $this->today($ctx);
@@ -119,7 +123,7 @@ final readonly class HabitWrites
                 ]);
             }
         }
-        if (! $definitionChanged && $name === $habit->name) {
+        if (! $definitionChanged && $name === $habit->name && $icon === $habit->icon) {
             return new HandlerResult('habit', (string) $habit->id, (int) $habit->version);
         }
 
@@ -129,6 +133,7 @@ final readonly class HabitWrites
 
         return $this->journaled($habit, [
             'name' => $name,
+            'icon' => $icon,
             'target_value' => $top->target_value,
             'unit' => $top->unit,
             'category' => $top->category,
@@ -222,7 +227,7 @@ final readonly class HabitWrites
 
         $version = (int) $habit->version + 1;
         DB::table('habits')->where('id', $habit->id)->update([
-            'deleted_at' => $now, 'name' => '', 'unit' => null, 'version' => $version, 'updated_at' => $now,
+            'deleted_at' => $now, 'name' => '', 'unit' => null, 'icon' => null, 'version' => $version, 'updated_at' => $now,
         ]);
         $row = DB::table('habits')->where('id', $habit->id)->first() ?? throw new LogicException('Habit vanished inside its own transaction.');
         $this->journal->append($userId, 'habit', (string) $habit->id, 'delete', $version, $this->presenter->habit($row));
