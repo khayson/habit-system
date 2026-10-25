@@ -109,6 +109,10 @@ class ApiClient {
   ) async {
     try {
       final response = await request();
+      // A 204 has no envelope: success, with nothing to parse (A50's reset-password).
+      if (response.statusCode == 204) {
+        return ApiResponse(data: parser(null), meta: ApiMeta.fromJson(null));
+      }
       final body = response.data;
       if (body is! Map<String, dynamic>) {
         throw AppException.fromResponse(response.statusCode ?? 0, body);

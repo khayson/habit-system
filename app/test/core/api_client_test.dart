@@ -9,6 +9,7 @@ import 'package:habit/core/storage/token_store.dart';
 import 'package:habit/services/health_service.dart';
 
 import '../support/contract_fixtures.dart';
+import '../support/route_adapter.dart';
 
 class MemoryTokenStore implements TokenStore {
   String? token;
@@ -92,6 +93,18 @@ void main() {
     expect(status.serverTime, DateTime.utc(2026, 5, 28, 17, 22));
     expect(adapter.lastRequest!.path, '/health');
     expect(adapter.lastRequest!.headers['Accept'], 'application/json');
+  });
+
+  // A50: reset-password answers 204 with no body; that is a success, not a parse error.
+  test('a 204 with no body succeeds and hands the parser null', () async {
+    dio.httpClientAdapter = RouteAdapter()..on('POST /auth/reset-password', const Reply(204, null));
+
+    final response = await ApiClient.withDio(
+      dio,
+      MemoryTokenStore(),
+    ).post('/auth/reset-password', (d) => d);
+
+    expect(response.data, isNull);
   });
 
   test('sends the stored bearer token', () async {
