@@ -1,0 +1,457 @@
+{
+  "description": "A53: a habit's icon. The key is a free Hugeicons stroke-rounded name in kebab form (the app bundles all 6,063 of hugeicons 1.2.0 and searches them); the server checks the shape only. Category defaults for a null or unknown key, the keyword table the app's name suggestion and the server's one-time backfill share, the featured icons the picker shows first, and the habit.create / habit.update wire cases.",
+  "suites": [
+    "php",
+    "dart"
+  ],
+  "now": "2026-05-28T17:22:00Z",
+  "key_pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+  "max_length": 64,
+  "valid_keys": [
+    "book-02",
+    "glass-water",
+    "1st-bracket",
+    "music-3",
+    "3-d-view"
+  ],
+  "invalid_keys": [
+    "Book-02",
+    "book_02",
+    "book 02",
+    "-book",
+    "book-",
+    "book--02",
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    123,
+    true,
+    [
+      "book-02"
+    ]
+  ],
+  "category_defaults": {
+    "health": "heart-check",
+    "mindfulness": "yoga-03",
+    "learning": "book-02",
+    "productivity": "task-01",
+    "other": "star"
+  },
+  "keywords": [
+    {
+      "prefixes": [
+        "water"
+      ],
+      "icon": "glass-water"
+    },
+    {
+      "prefixes": [
+        "read"
+      ],
+      "icon": "book-open-01"
+    },
+    {
+      "prefixes": [
+        "book"
+      ],
+      "icon": "book-02"
+    },
+    {
+      "prefixes": [
+        "meditat"
+      ],
+      "icon": "yoga-02"
+    },
+    {
+      "prefixes": [
+        "run"
+      ],
+      "icon": "workout-run"
+    },
+    {
+      "prefixes": [
+        "walk"
+      ],
+      "icon": "walking"
+    },
+    {
+      "prefixes": [
+        "sleep"
+      ],
+      "icon": "bed"
+    },
+    {
+      "prefixes": [
+        "journal"
+      ],
+      "icon": "notebook"
+    },
+    {
+      "prefixes": [
+        "pray"
+      ],
+      "icon": "hand-prayer"
+    },
+    {
+      "prefixes": [
+        "gym",
+        "workout"
+      ],
+      "icon": "dumbbell-01"
+    },
+    {
+      "prefixes": [
+        "yoga"
+      ],
+      "icon": "yoga-01"
+    },
+    {
+      "prefixes": [
+        "code",
+        "coding"
+      ],
+      "icon": "code"
+    },
+    {
+      "prefixes": [
+        "study"
+      ],
+      "icon": "study-desk"
+    }
+  ],
+  "keyword_rules": [
+    "the name is lower-cased and split into words on every run of characters that are not letters or digits (Unicode)",
+    "entries are tried in order; the first entry with a prefix that starts any word wins",
+    "no match: no suggestion (null)"
+  ],
+  "suggest_examples": [
+    {
+      "name": "Water",
+      "icon": "glass-water"
+    },
+    {
+      "name": "Drink water",
+      "icon": "glass-water"
+    },
+    {
+      "name": "Reading",
+      "icon": "book-open-01"
+    },
+    {
+      "name": "Read a book",
+      "icon": "book-open-01"
+    },
+    {
+      "name": "Story book",
+      "icon": "book-02"
+    },
+    {
+      "name": "Meditation",
+      "icon": "yoga-02"
+    },
+    {
+      "name": "Morning run",
+      "icon": "workout-run"
+    },
+    {
+      "name": "Brunch",
+      "icon": null
+    },
+    {
+      "name": "WALK the dog",
+      "icon": "walking"
+    },
+    {
+      "name": "Sleep by 11",
+      "icon": "bed"
+    },
+    {
+      "name": "Journaling",
+      "icon": "notebook"
+    },
+    {
+      "name": "Pray Fajr",
+      "icon": "hand-prayer"
+    },
+    {
+      "name": "Gym session",
+      "icon": "dumbbell-01"
+    },
+    {
+      "name": "Home workout",
+      "icon": "dumbbell-01"
+    },
+    {
+      "name": "Yoga flow",
+      "icon": "yoga-01"
+    },
+    {
+      "name": "Coding kata",
+      "icon": "code"
+    },
+    {
+      "name": "Study Spanish",
+      "icon": "study-desk"
+    },
+    {
+      "name": "Pilates",
+      "icon": null
+    },
+    {
+      "name": "Stretch",
+      "icon": null
+    },
+    {
+      "name": "",
+      "icon": null
+    },
+    {
+      "name": "Café-reading",
+      "icon": "book-open-01"
+    }
+  ],
+  "featured": [
+    {
+      "key": "glass-water",
+      "label": "Water"
+    },
+    {
+      "key": "book-open-01",
+      "label": "Reading"
+    },
+    {
+      "key": "book-02",
+      "label": "Book"
+    },
+    {
+      "key": "workout-run",
+      "label": "Run"
+    },
+    {
+      "key": "walking",
+      "label": "Walk"
+    },
+    {
+      "key": "bicycle-01",
+      "label": "Bike"
+    },
+    {
+      "key": "dumbbell-01",
+      "label": "Workout"
+    },
+    {
+      "key": "yoga-01",
+      "label": "Yoga"
+    },
+    {
+      "key": "workout-stretching",
+      "label": "Stretch"
+    },
+    {
+      "key": "yoga-02",
+      "label": "Meditate"
+    },
+    {
+      "key": "yoga-03",
+      "label": "Mindfulness"
+    },
+    {
+      "key": "swimming",
+      "label": "Swim"
+    },
+    {
+      "key": "hiking",
+      "label": "Hike"
+    },
+    {
+      "key": "bed",
+      "label": "Sleep"
+    },
+    {
+      "key": "sunrise",
+      "label": "Wake up"
+    },
+    {
+      "key": "pill",
+      "label": "Medicine"
+    },
+    {
+      "key": "medicine-02",
+      "label": "Vitamins"
+    },
+    {
+      "key": "rice-bowl-01",
+      "label": "Meal"
+    },
+    {
+      "key": "apple",
+      "label": "Fruit"
+    },
+    {
+      "key": "salad",
+      "label": "Greens"
+    },
+    {
+      "key": "cooking-pot",
+      "label": "Cook"
+    },
+    {
+      "key": "coffee-01",
+      "label": "Coffee"
+    },
+    {
+      "key": "dental-tooth",
+      "label": "Teeth"
+    },
+    {
+      "key": "bath",
+      "label": "Bath"
+    },
+    {
+      "key": "notebook",
+      "label": "Journal"
+    },
+    {
+      "key": "pen-01",
+      "label": "Write"
+    },
+    {
+      "key": "study-desk",
+      "label": "Study"
+    },
+    {
+      "key": "translate",
+      "label": "Language"
+    },
+    {
+      "key": "code",
+      "label": "Code"
+    },
+    {
+      "key": "music-note-01",
+      "label": "Music"
+    },
+    {
+      "key": "paint-board",
+      "label": "Art"
+    },
+    {
+      "key": "hand-prayer",
+      "label": "Prayer"
+    },
+    {
+      "key": "hand-heart",
+      "label": "Gratitude"
+    },
+    {
+      "key": "clean",
+      "label": "Clean"
+    },
+    {
+      "key": "check-list",
+      "label": "Tasks"
+    },
+    {
+      "key": "plant-01",
+      "label": "Plants"
+    },
+    {
+      "key": "money-saving-jar",
+      "label": "Save money"
+    },
+    {
+      "key": "wallet-01",
+      "label": "Budget"
+    },
+    {
+      "key": "phone-off-01",
+      "label": "Phone off"
+    },
+    {
+      "key": "smartphone",
+      "label": "Screen time"
+    },
+    {
+      "key": "call",
+      "label": "Call"
+    },
+    {
+      "key": "user-group",
+      "label": "Family"
+    },
+    {
+      "key": "sun-01",
+      "label": "Outdoors"
+    },
+    {
+      "key": "heart-check",
+      "label": "Health"
+    }
+  ],
+  "mutations": {
+    "create_with_icon": {
+      "payload_icon": "book-open-01",
+      "expect": {
+        "status": "accepted",
+        "version": 1,
+        "icon": "book-open-01"
+      }
+    },
+    "create_without_icon": {
+      "expect": {
+        "status": "accepted",
+        "version": 1,
+        "icon": null
+      }
+    },
+    "update_icon_only": {
+      "from": "book-02",
+      "payload_icon": "book-open-01",
+      "expect": {
+        "status": "accepted",
+        "version": 2,
+        "definition_version": 1,
+        "definitions": 1,
+        "icon": "book-open-01"
+      }
+    },
+    "update_icon_absent_keeps": {
+      "from": "book-02",
+      "payload_name": "Evening reading",
+      "expect": {
+        "status": "accepted",
+        "version": 2,
+        "icon": "book-02"
+      }
+    },
+    "update_icon_null_clears": {
+      "from": "book-02",
+      "payload_icon": null,
+      "expect": {
+        "status": "accepted",
+        "version": 2,
+        "icon": null
+      }
+    },
+    "update_same_icon_noop": {
+      "from": "book-02",
+      "payload_icon": "book-02",
+      "expect": {
+        "status": "accepted",
+        "version": 1,
+        "journaled": false
+      }
+    },
+    "invalid": {
+      "expect": {
+        "status": "rejected",
+        "error_code": "validation_failed",
+        "field": "icon"
+      }
+    }
+  },
+  "rules": [
+    "habit entity (pull, bootstrap, export) always carries icon: a key or null",
+    "an icon change never adds a definition version and never changes definition_version",
+    "habit.update without the icon field leaves the icon unchanged (apps from before A53)",
+    "backfill: existing habits with a null icon get the keyword table's icon for their name; a chosen icon is never overwritten"
+  ]
+}

@@ -40,6 +40,8 @@ the format and then treat them as equal.
   `log_increment.json` and `next_effective_date.json`, as step-by-step cases the PHP suite replays.
   Phase 6.6 (A51): `habit_delete.json` (both suites: the mutation and ack, the stale conflict, a
   log write to a deleted habit, the journal a delete produces, the habit tombstone in a pull).
+  Phase 6.8 (A53): `icons.json` (both suites: the icon key's shape, category defaults, the keyword
+  table and its examples, the featured icons, and the icon cases of habit.create and habit.update).
 - `rewards/` — Phase 5.1 (A39 to A42): `rewards_response.json` (GET /rewards) and `freezes_response.json` (GET /freezes). `sync/reward_state_entity.json` is the read-only reward entity. Phase 5.2a (A43): `sync/ack_xp_delta.json` (xp_delta on log acks) and `next_refill_on` in `freezes_response.json`. Phase 5.2b: both rewards responses also feed the Dart `RewardsService` tests. Phase 5.2c (A46): `sync/ack_xp_delta_wire.json` (Dart only) pins how the engine's AckWatch reads xp_delta from an ack.
 - `exports/` — Phase 6.1 (A48): `export_job.json` (both suites: a job in each status and the list), `export_manifest.json` (php: canonical JSON and the HMAC under a test key, tampered cases), `export_csv.json` (php: A16 neutralisation and quoting). `envelope/error_410_export_expired.json` is the new error code.
 - `insights/` — Phase 5.3a (A47): `insights_responses.json`, GET /insights for a week, a month, a category filter, an empty window, a protected period, an archived habit and two timezones. PHP replays each case through HTTP; Dart decodes each expected body.
