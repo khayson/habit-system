@@ -224,6 +224,24 @@ void main() {
     await tearDownApp(tester, a);
   });
 
+  // 6.1 review L4.
+  testWidgets('an expired download reloads the list and says so', (tester) async {
+    final api = FakeExports()
+      ..jobs = [job(ExportStatus.ready)]
+      ..expireOnDownload = true;
+    final a = await account(tester, api);
+    await open(tester, a);
+
+    await tester.tap(find.text('Download latest export'));
+    await settle(tester);
+
+    expect(find.text('This download has expired. Request a new export.'), findsOneWidget);
+    expect(find.text('Latest export · expired'), findsOneWidget, reason: 'the list was reloaded');
+    expect(find.text('Download latest export'), findsNothing);
+    expect(find.text('Request new export'), findsOneWidget);
+    await tearDownApp(tester, a);
+  });
+
   testWidgets('Profile opens 21', (tester) async {
     final a = await account(tester, FakeExports());
     await tester.pumpWidget(testApp(initial: '/profile', account: a, fileSharer: FakeSharer()));
@@ -279,6 +297,9 @@ class FakeExports implements ExportService {
   final List<String> requested = [];
   final List<String> downloaded = [];
   bool failDownload = false;
+
+  /// The server answers 410 export_expired, and the job reads expired from then on.
+  bool expireOnDownload = false;
   int gets = 0;
 
   @override
@@ -300,10 +321,26 @@ class FakeExports implements ExportService {
 
   @override
   Future<File> download(ExportJob job, String folder) async {
+    if (expireOnDownload) {
+      jobs = [for (final j in jobs) j.id == job.id ? _expired(j) : j];
+      throw const AppException(
+        kind: AppErrorKind.api,
+        code: 'export_expired',
+        message: 'This download has expired. Request a new export.',
+        statusCode: 410,
+      );
+    }
     if (failDownload) {
       throw const AppException(kind: AppErrorKind.network, code: 'network', message: 'x');
     }
     downloaded.add(job.id);
     return File('$folder/habit-export.zip')..writeAsBytesSync([80, 75]);
   }
+
+  static ExportJob _expired(ExportJob j) => ExportJob(
+    id: j.id,
+    format: j.format,
+    status: ExportStatus.expired,
+    requestedAt: j.requestedAt,
+  );
 }

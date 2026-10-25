@@ -146,8 +146,15 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
     });
     try {
       await downloadAndShare(context.read<AccountContext>(), job, widget.sharer);
-    } on Object {
-      if (mounted) setState(() => _actionError = l10n.privacyDownloadError);
+    } on Object catch (e) {
+      final expired = e is AppException && e.code == 'export_expired';
+      if (mounted) {
+        setState(
+          () => _actionError = expired ? l10n.privacyDownloadExpired : l10n.privacyDownloadError,
+        );
+      }
+      // 6.1 review L4: the link's 24 hours are over; the list now reads expired.
+      if (expired && mounted) await _load();
     } finally {
       if (mounted) setState(() => _busy = false);
     }

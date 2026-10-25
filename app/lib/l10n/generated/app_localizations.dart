@@ -4208,6 +4208,12 @@ abstract class AppLocalizations {
   /// **'The download did not finish. Try again when you\'re online.'**
   String get privacyDownloadError;
 
+  /// 6.1 review L4: the download answered 410 export_expired; the export list is reloaded.
+  ///
+  /// In en, this message translates to:
+  /// **'This download has expired. Request a new export.'**
+  String get privacyDownloadExpired;
+
   /// No description provided for @privacyRequestError.
   ///
   /// In en, this message translates to:

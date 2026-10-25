@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -107,6 +108,34 @@ void main() {
     );
   });
 
+  // 6.1 review L4: the 410's code survives the streamed download response.
+  test('a 410 from the download is export_expired, and leaves no file', () async {
+    final expired = contractFixture('envelope/error_410_export_expired.json');
+    final body = utf8.encode(jsonEncode(materialize(expired['body'])));
+    final adapter = _BytesAdapter(body, status: expired['status'] as int);
+    final dio = Dio(BaseOptions(baseUrl: 'http://api.test/api/v1'))..httpClientAdapter = adapter;
+    final dir = Directory.systemTemp.createTempSync('export_test_');
+    addTearDown(() => dir.deleteSync(recursive: true));
+    final exports = ExportService(ApiClient.withDio(dio, MemoryTokenStore('t')));
+    const job = ExportJob(
+      id: 'j1',
+      format: 'json',
+      status: ExportStatus.ready,
+      requestedAt: null,
+      downloadUrl: 'http://api.test/api/v1/exports/j1/download?signature=s',
+    );
+
+    await expectLater(
+      exports.download(job, dir.path),
+      throwsA(
+        isA<AppException>()
+            .having((e) => e.code, 'code', 'export_expired')
+            .having((e) => e.statusCode, 'statusCode', 410),
+      ),
+    );
+    expect(dir.listSync(), isEmpty);
+  });
+
   // 6.1 review L2: the token only ever goes to the configured API base.
   for (final (what, url) in [
     ('a foreign host', 'https://evil.test/api/v1/exports/j1/download?signature=s'),
@@ -140,9 +169,10 @@ void main() {
 
 class _BytesAdapter implements HttpClientAdapter {
   final List<int> bytes;
+  final int status;
   RequestOptions? lastRequest;
 
-  _BytesAdapter(this.bytes);
+  _BytesAdapter(this.bytes, {this.status = 200});
 
   @override
   Future<ResponseBody> fetch(
@@ -151,7 +181,13 @@ class _BytesAdapter implements HttpClientAdapter {
     Future<void>? cancelFuture,
   ) async {
     lastRequest = options;
-    return ResponseBody.fromBytes(bytes, 200);
+    return ResponseBody.fromBytes(
+      bytes,
+      status,
+      headers: {
+        Headers.contentTypeHeader: [Headers.jsonContentType],
+      },
+    );
   }
 
   @override

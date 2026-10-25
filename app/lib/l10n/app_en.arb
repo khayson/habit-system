@@ -891,6 +891,10 @@
   "privacyFooter": "Exports are private. Download links are temporary.",
   "privacyLoadError": "Your exports could not be loaded right now.",
   "privacyDownloadError": "The download did not finish. Try again when you're online.",
+  "privacyDownloadExpired": "This download has expired. Request a new export.",
+  "@privacyDownloadExpired": {
+    "description": "6.1 review L4: the download answered 410 export_expired; the export list is reloaded."
+  },
   "privacyRequestError": "The export could not be requested right now. Try again.",
   "exportStatusQueued": "queued",
   "exportStatusRunning": "preparing",

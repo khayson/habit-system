@@ -2622,6 +2622,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get privacyDownloadError => 'The download did not finish. Try again when you\'re online.';
 
   @override
+  String get privacyDownloadExpired => 'This download has expired. Request a new export.';
+
+  @override
   String get privacyRequestError => 'The export could not be requested right now. Try again.';
 
   @override

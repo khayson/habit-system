@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../app/router.dart';
 import '../config/habit_tokens.dart';
+import '../core/exceptions/app_exception.dart';
 import '../core/file_sharer.dart';
 import '../data/account_calendar.dart';
 import '../l10n/generated/app_localizations.dart';
@@ -82,6 +83,16 @@ class _ExportStatusScreenState extends State<ExportStatusScreen> {
     }
   }
 
+  Future<void> _refetch() async {
+    final api = context.read<AccountContext?>()?.exportsApi;
+    try {
+      final fresh = await api?.get(widget.exportId);
+      if (mounted && fresh != null) setState(() => _job = fresh);
+    } on Object {
+      // The message already says what to do.
+    }
+  }
+
   void _back() => context.canPop() ? context.pop() : context.go(Routes.privacy);
 
   Future<void> _retry() async {
@@ -110,8 +121,13 @@ class _ExportStatusScreenState extends State<ExportStatusScreen> {
     });
     try {
       await downloadAndShare(context.read<AccountContext>(), job, widget.sharer);
-    } on Object {
-      if (mounted) setState(() => _error = l10n.privacyDownloadError);
+    } on Object catch (e) {
+      final expired = e is AppException && e.code == 'export_expired';
+      if (mounted) {
+        setState(() => _error = expired ? l10n.privacyDownloadExpired : l10n.privacyDownloadError);
+      }
+      // 6.1 review L4: the job now reads expired; fetch it once more.
+      if (expired && mounted) await _refetch();
     } finally {
       if (mounted) setState(() => _busy = false);
     }
