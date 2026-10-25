@@ -65,6 +65,9 @@
 //             E2 holds an unsent increment for it; after syncing neither device has the habit,
 //             E2's increment waits in its queue as deleted on another device (discard only),
 //             and XP is unchanged on both.
+//   habit-icons  A53: A creates a habit with an icon, B changes it, both end on B's key; a
+//             habit created with no icon stays null on the server and shows its category's
+//             default; an invalid key is refused as validation_failed on icon.
 // Exits non-zero at the first failed check, or unless both databases end identical.
 import 'dart:convert';
 import 'dart:io';
@@ -86,6 +89,7 @@ import 'package:habit/data/profile_view.dart';
 import 'package:habit/domain/calendar/local_date.dart';
 import 'package:habit/domain/calendar/timezone_timeline.dart';
 import 'package:habit/domain/habit_draft.dart';
+import 'package:habit/domain/habit_icons.dart';
 import 'package:habit/domain/habit_schedule.dart';
 import 'package:habit/domain/provisional_type_rules.dart';
 import 'package:habit/sync/avatar_sync.dart';
@@ -1082,6 +1086,65 @@ Future<void> main(List<String> args) async {
     _check(await e1.outbox().then((o) => o.isEmpty), "E1's delete is acknowledged");
     await e1.db.close();
     await e2.db.close();
+  });
+
+  await _scenario('habit-icons', () async {
+    await b.sync();
+    final reading = await a.writer.createHabitUnchecked(
+      name: 'Reading',
+      type: 'quantity',
+      target: '20.000',
+      unit: 'pages',
+      category: 'learning',
+      icon: 'book-02',
+      startLocalDate: today,
+    );
+    final plain = await a.writer.createHabitUnchecked(
+      name: 'Pilates',
+      type: 'binary',
+      target: 1,
+      category: 'health',
+      startLocalDate: today,
+    );
+    await a.sync();
+    await b.sync();
+    final onB = (await LocalView(b.db).habits()).firstWhere((h) => h.id == reading);
+    _check(onB.icon == 'book-02', "B pulled A's icon (${onB.icon})");
+    await b.writer.updateHabit(
+      reading,
+      HabitDraft.fromWire({...onB.editable!.toPayload(), 'icon': 'book-open-01'}),
+    );
+    await b.sync();
+    await a.sync();
+    for (final d in [a, b]) {
+      final h = await confirmedHabit(d, reading);
+      _check(h['icon'] == 'book-open-01', "${d.name} ends on B's key (${h['icon']})");
+      _check(h['definition_version'] == 1, '${d.name}: an icon is never a definition');
+      final p = (await LocalView(d.db).habits()).firstWhere((h) => h.id == plain);
+      _check(p.icon == null, '${d.name}: no icon stays null');
+      _check(
+        HabitIconCatalog.keyFor(p.icon, p.category) == 'heart-check',
+        "${d.name} shows health's default",
+      );
+    }
+    // A key of the wrong shape is refused, by field, and never written.
+    final bad = await a.writer.createHabitUnchecked(
+      name: 'Bad icon',
+      type: 'binary',
+      target: 1,
+      category: 'other',
+      icon: 'Not A Key',
+      startLocalDate: today,
+    );
+    await a.sync();
+    final row = (await a.outbox()).single;
+    final error = jsonDecode(row.lastError!) as Map;
+    _check(error['code'] == 'validation_failed', 'validation_failed (${error['code']})');
+    _check((error['fields'] as Map).containsKey('icon'), 'refused on icon');
+    _check(row.entityId == bad, 'the bad create is the one kept');
+    _check(await a.writer.discard(row.mutationId), 'discarded');
+    await a.sync();
+    await b.sync();
   });
 
   await a.sync();
