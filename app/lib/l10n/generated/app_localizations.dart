@@ -650,6 +650,12 @@ abstract class AppLocalizations {
   /// **'It was removed on another device first.'**
   String get reasonResourceDeleted;
 
+  /// A51: a queued change for a habit another device deleted; Discard only.
+  ///
+  /// In en, this message translates to:
+  /// **'This habit was deleted on another device.'**
+  String get reasonHabitDeleted;
+
   /// No description provided for @reasonParentRejected.
   ///
   /// In en, this message translates to:

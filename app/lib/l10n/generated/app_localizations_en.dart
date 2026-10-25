@@ -312,6 +312,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reasonResourceDeleted => 'It was removed on another device first.';
 
   @override
+  String get reasonHabitDeleted => 'This habit was deleted on another device.';
+
+  @override
   String get reasonParentRejected => 'Its habit was not saved.';
 
   @override

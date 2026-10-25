@@ -13,6 +13,7 @@ import 'account_calendar.dart';
 import 'app_database.dart';
 import 'conflicts.dart';
 import 'entity_codec.dart';
+import 'habit_removal.dart';
 import 'local_view.dart';
 import 'log_overlay.dart';
 import 'timer_draft_view.dart';
@@ -163,6 +164,59 @@ class LocalMutationService {
 
   /// habit.restore (A34). Writes nothing when the habit already shows as active.
   Future<void> restoreHabit(String habitId) => _archiveOrRestore(habitId, archive: false);
+
+  /// A51 habit.delete. In one transaction: the habit's unsent rows that are not in flight go
+  /// (its check-ins, edits, archive/restore and reminder changes can never apply after the
+  /// delete; the one place invariant 8 is relaxed, A51), the delete is queued on the newest
+  /// version this device has seen, and the habit, its check-ins, drafts and reminders leave this
+  /// device. A habit whose create never left the device needs no delete at all.
+  Future<void> deleteHabit(String habitId) {
+    return db.transaction(() async {
+      final confirmed = await (db.select(
+        db.habits,
+      )..where((h) => h.id.equals(habitId))).getSingleOrNull();
+      final rows =
+          await (db.select(db.outbox)..where(
+                (o) =>
+                    (o.entity.equals('habit') & o.entityId.equals(habitId)) |
+                    o.habitId.equals(habitId),
+              ))
+              .get();
+      final droppable = rows.where(
+        (r) => OutboxState.unacked.contains(r.state) && r.state != OutboxState.inFlight,
+      );
+      final keptCreate = rows.any(
+        (r) =>
+            r.operation == 'habit.create' &&
+            (r.state == OutboxState.inFlight || r.state == OutboxState.acked),
+      );
+      // The newest version seen: the confirmed row, or an acknowledged change not pulled yet.
+      int? baseVersion = confirmed?.version;
+      for (final row in rows) {
+        if (row.entity == 'habit' &&
+            row.state == OutboxState.acked &&
+            (row.ackVersion ?? 0) > (baseVersion ?? 0)) {
+          baseVersion = row.ackVersion;
+        }
+      }
+      for (final row in droppable) {
+        await (db.delete(db.outbox)..where((o) => o.seq.equals(row.seq))).go();
+      }
+      if (confirmed != null || keptCreate) {
+        await _append(
+          entity: 'habit',
+          entityId: habitId,
+          operation: 'habit.delete',
+          baseVersion: baseVersion,
+          calendar: await _calendar(),
+          localDate: null,
+          habitId: habitId,
+          payload: const {},
+        );
+      }
+      await removeHabitLocally(db, habitId);
+    });
+  }
 
   Future<void> _archiveOrRestore(String habitId, {required bool archive}) {
     return db.transaction(() async {

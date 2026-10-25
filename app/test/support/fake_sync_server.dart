@@ -222,6 +222,7 @@ class FakeSyncServer implements SyncTransport {
       'profile.set_auto_freeze' => _setAutoFreeze(m),
       'habit.update' => _habitUpdate(m),
       'habit.archive' || 'habit.restore' => _habitArchive(m),
+      'habit.delete' => _habitDelete(m),
       'reminder.create' || 'reminder.update' || 'reminder.delete' => _reminder(m),
       _ => _failed(m, 'rejected', {'code': 'unsupported_operation', 'message': 'x'}),
     };
@@ -366,6 +367,8 @@ class FakeSyncServer implements SyncTransport {
           'duplicate': false,
         };
       }
+      final deleted = _underDeletedHabit(m, habits[p['habit_id']]);
+      if (deleted != null) return deleted;
       if (existing != null) return conflict(existing);
       final days = [...(p['days_of_week'] as List).cast<int>()]..sort();
       return write({
@@ -463,6 +466,17 @@ class FakeSyncServer implements SyncTransport {
     if (habit == null) {
       return _failed(m, 'rejected', {'code': 'not_found', 'message': 'x'});
     }
+    // A51: habit writes on a deleted habit name it as the resource.
+    if (habit['deleted_at'] != null) {
+      return _failed(m, 'conflict', {
+        'code': 'resource_deleted',
+        'message': 'x',
+        'entity': 'habit',
+        'resource_id': habit['id'],
+        'current_version': habit['version'],
+        'current': _deepCopy(habit),
+      });
+    }
     if (m['base_version'] != habit['version']) {
       return _failed(m, 'conflict', {
         'code': 'version_conflict',
@@ -539,6 +553,54 @@ class FakeSyncServer implements SyncTransport {
     return _accepted(m, habit['id'] as String, habit['version'] as int);
   }
 
+  /// A51 habit.delete, as the real HabitWrites answers it: each live log and reminder is
+  /// journaled as a delete and removed, then the habit becomes a cleared tombstone.
+  Map<String, dynamic> _habitDelete(Map<String, dynamic> m) {
+    final habit = habits[m['entity_id']];
+    if (habit != null && habit['deleted_at'] != null) {
+      return _accepted(m, habit['id'] as String, habit['version'] as int);
+    }
+    final refused = _habitGuard(m);
+    if (refused != null) return refused;
+    final id = habit!['id'] as String;
+    const at = '2026-05-28T17:22:00Z';
+    for (final log in logs.values.where((l) => l['habit_id'] == id).toList()) {
+      if (log['deleted_at'] == null) {
+        final gone = {...log, 'deleted_at': at, 'version': (log['version'] as int) + 1};
+        _journal('habit_log', log['id'] as String, 'delete', gone['version'] as int, gone);
+      }
+      logs.remove(log['id']);
+    }
+    for (final reminder in reminders.values.where((r) => r['habit_id'] == id).toList()) {
+      if (reminder['deleted_at'] == null) {
+        final gone = {...reminder, 'deleted_at': at, 'version': (reminder['version'] as int) + 1};
+        _journal('reminder', reminder['id'] as String, 'delete', gone['version'] as int, gone);
+      }
+      reminders.remove(reminder['id']);
+    }
+    habit
+      ..['deleted_at'] = at
+      ..['name'] = ''
+      ..['unit'] = null
+      ..['definitions'] = <Object?>[]
+      ..['active_ranges'] = <Object?>[]
+      ..['version'] = (habit['version'] as int) + 1;
+    _journal('habit', id, 'delete', habit['version'] as int, habit);
+    return _accepted(m, id, habit['version'] as int);
+  }
+
+  /// A51: a log or reminder write under a deleted habit; the ack keeps its own entity id.
+  Map<String, dynamic>? _underDeletedHabit(Map<String, dynamic> m, Map<String, dynamic>? habit) {
+    if (habit == null || habit['deleted_at'] == null) return null;
+    return _failed(m, 'conflict', {
+      'code': 'resource_deleted',
+      'message': 'This habit was deleted on another device.',
+      'entity': 'habit',
+      'habit_id': habit['id'],
+      'current_version': habit['version'],
+    });
+  }
+
   /// A34 habit.archive / habit.restore: ranges close at the start of tomorrow and reopen at
   /// max(today, previous end).
   Map<String, dynamic> _habitArchive(Map<String, dynamic> m) {
@@ -576,6 +638,8 @@ class FakeSyncServer implements SyncTransport {
     if (!habits.containsKey(habitId)) {
       return {'mutation_id': m['mutation_id'], 'status': 'dependency_pending', 'duplicate': false};
     }
+    final deleted = _underDeletedHabit(m, habits[habitId]);
+    if (deleted != null) return deleted;
     if (habits[habitId]!['archived_at'] != null) {
       return _failed(m, 'rejected', {'code': 'habit_archived', 'message': 'x'});
     }
@@ -650,6 +714,8 @@ class FakeSyncServer implements SyncTransport {
     if (habit == null) {
       return {'mutation_id': m['mutation_id'], 'status': 'dependency_pending', 'duplicate': false};
     }
+    final deleted = _underDeletedHabit(m, habit);
+    if (deleted != null) return deleted;
     if (habit['archived_at'] != null) {
       return _failed(m, 'rejected', {'code': 'habit_archived', 'message': 'x'});
     }

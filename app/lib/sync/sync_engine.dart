@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 import '../data/app_database.dart';
 import '../data/calendar_store.dart';
 import '../data/entity_codec.dart';
+import '../data/habit_removal.dart';
 import '../domain/calendar/day_resolver.dart';
 import 'ack_watch.dart';
 import 'avatar_sync.dart';
@@ -836,6 +837,12 @@ class SyncEngine {
 
   /// Apply only if the incoming version is >= the confirmed one (bootstrap and pulls overlap).
   Future<void> _upsertHabit(String id, int version, Map<String, dynamic> payload) async {
+    // A51: a deleted habit leaves this device with its check-ins, drafts and reminders. Its
+    // unsent rows stay in the outbox; the server's answer says what happened to them.
+    if (payload['deleted_at'] != null) {
+      await removeHabitLocally(db, id);
+      return;
+    }
     final existing = await (db.select(db.habits)..where((h) => h.id.equals(id))).getSingleOrNull();
     if (existing != null && version < existing.version) return;
     await db
@@ -941,6 +948,8 @@ class SyncEngine {
       () => db.customUpdate(
         '''DELETE FROM outbox WHERE state = ? AND (
            (entity = 'habit' AND EXISTS (SELECT 1 FROM habits h WHERE h.id = outbox.entity_id AND h.version >= COALESCE(outbox.ack_version, 0)))
+        -- A51: an acknowledged delete has nothing left to confirm; the habit already left.
+        OR (operation = 'habit.delete')
         OR (entity = 'habit_log' AND EXISTS (SELECT 1 FROM habit_logs l WHERE l.id = outbox.entity_id AND l.version >= COALESCE(outbox.ack_version, 0)))
         OR (entity = 'reminder' AND EXISTS (SELECT 1 FROM reminders r WHERE r.id = outbox.entity_id AND r.version >= COALESCE(outbox.ack_version, 0)))
         OR (entity = 'user' AND EXISTS (SELECT 1 FROM sync_state s WHERE s.id = 1 AND CAST(json_extract(s.user_payload, '\$.version') AS INTEGER) >= COALESCE(outbox.ack_version, 0))))''',

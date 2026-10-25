@@ -13,6 +13,10 @@ import '../../providers/account_context.dart';
 String reasonText(AppLocalizations l10n, String? lastError) {
   final error = EntityCodec.decodeJson(lastError);
   final code = error is Map ? error['code'] : null;
+  // A51: the habit itself is gone, not just this item.
+  if (code == 'resource_deleted' && error is Map && error['entity'] == 'habit') {
+    return l10n.reasonHabitDeleted;
+  }
   return switch (code) {
     'version_conflict' => l10n.reasonVersionConflict,
     'resource_deleted' => l10n.reasonResourceDeleted,

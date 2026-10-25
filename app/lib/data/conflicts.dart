@@ -33,21 +33,29 @@ enum ConflictKind {
 const resolvableCodes = {'version_conflict', 'resource_deleted', 'habit_archived'};
 
 /// The kind of look a refused row needs, from the server's code and the row's entity alone
-/// (4.3c review L2). One function for the read model and [reviewable].
-ConflictKind conflictKindOf(Object? code, String entity) => switch ((code, entity)) {
-  ('version_conflict', 'habit_log') => ConflictKind.staleValue,
-  ('version_conflict', 'habit') => ConflictKind.staleHabitEdit,
-  ('resource_deleted', 'habit_log') => ConflictKind.deletedDay,
-  ('habit_archived', 'habit_log' || 'habit') => ConflictKind.archivedHabit,
-  _ => ConflictKind.other,
-};
+/// (4.3c review L2). One function for the read model and [reviewable]. A51: [refused] is the
+/// error's own `entity`; a write refused because its habit was deleted can only be discarded.
+ConflictKind conflictKindOf(Object? code, String entity, {Object? refused}) =>
+    switch ((code, entity)) {
+      ('resource_deleted', _) when refused == 'habit' => ConflictKind.other,
+      ('version_conflict', 'habit_log') => ConflictKind.staleValue,
+      ('version_conflict', 'habit') => ConflictKind.staleHabitEdit,
+      ('resource_deleted', 'habit_log') => ConflictKind.deletedDay,
+      ('habit_archived', 'habit_log' || 'habit') => ConflictKind.archivedHabit,
+      _ => ConflictKind.other,
+    };
 
 /// 4.3c: a row screen 19 can review; others (profile, time zone, reminders, anything else) can
 /// only be discarded.
 bool reviewable(OutboxRow row) {
   if (row.state != OutboxState.needsAttention) return false;
   final error = EntityCodec.decodeJson(row.lastError);
-  return conflictKindOf(error is Map ? error['code'] : null, row.entity) != ConflictKind.other;
+  return conflictKindOf(
+        error is Map ? error['code'] : null,
+        row.entity,
+        refused: error is Map ? error['entity'] : null,
+      ) !=
+      ConflictKind.other;
 }
 
 /// A37 USE MINE, decided once for the read model and the writer: the new row's base version,
@@ -228,7 +236,7 @@ extension ConflictQueries on LocalView {
         ? (row.operation == 'log.increment' ? payload['delta'] : payload['value'])
         : null;
 
-    var kind = conflictKindOf(code, row.entity);
+    var kind = conflictKindOf(code, row.entity, refused: error is Map ? error['entity'] : null);
     // An unknown type, or an answer the app cannot read, can only be discarded.
     if (habitId != null && rules == null && habit?.knownType != true) kind = ConflictKind.other;
     if (kind == ConflictKind.staleValue && current == null) kind = ConflictKind.other;

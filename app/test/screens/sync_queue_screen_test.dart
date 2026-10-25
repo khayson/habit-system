@@ -130,6 +130,31 @@ void main() {
     await tearDownApp(tester, account);
   });
 
+  // A51: a check-in for a habit deleted on another device can only be discarded.
+  testWidgets('a change for a habit deleted elsewhere says so and offers Discard only', (
+    tester,
+  ) async {
+    final server = FakeSyncServer();
+    final account = (await tester.runAsync(() => testAccount(server)))!;
+    await tester.runAsync(() async {
+      final habit = await account.actions.createOneTapHabit(name: 'Stretch', category: 'health');
+      await account.sync.sync(force: true);
+      await account.writer.setLogValue(habitId: habit, value: 1);
+      await account.session.db.customStatement(
+        "UPDATE outbox SET state = '${OutboxState.needsAttention}', "
+        "last_error = '{\"code\":\"resource_deleted\",\"entity\":\"habit\",\"habit_id\":\"$habit\"}'",
+      );
+    });
+    useTallPhone(tester);
+    await tester.pumpWidget(testApp(initial: '/sync', account: account));
+    await settle(tester);
+
+    expect(find.text('This habit was deleted on another device.'), findsOneWidget);
+    expect(find.text('Discard'), findsOneWidget);
+    expect(find.text('Review'), findsNothing, reason: 'nothing to review or keep');
+    await tearDownApp(tester, account);
+  });
+
   testWidgets('a profile edit that changed elsewhere first is described in words (3b)', (
     tester,
   ) async {

@@ -110,6 +110,10 @@
 
   "reasonVersionConflict": "It changed on another device first.",
   "reasonResourceDeleted": "It was removed on another device first.",
+  "reasonHabitDeleted": "This habit was deleted on another device.",
+  "@reasonHabitDeleted": {
+    "description": "A51: a queued change for a habit another device deleted; Discard only."
+  },
   "reasonParentRejected": "Its habit was not saved.",
   "reasonFutureEvent": "This device's clock was ahead when it was saved.",
   "reasonGeneric": "The server could not accept it.",
