@@ -141,4 +141,36 @@ void main() {
     expect((error['code'], error['entity'], error['habit_id']), ('resource_deleted', 'habit', id));
     expect(reviewable(kept), isFalse, reason: 'discard only');
   });
+
+  // 6.6 review L1: a delete's intent cannot be misread, so a stale one is re-sent once on the
+  // server's version; a second conflict needs attention.
+  test('a delete made stale by an edit elsewhere is re-sent once and lands', () async {
+    final id = await yoga(phone);
+    await phone.sync(force: true);
+    // Another device archives it after this phone's last sync.
+    server.habits[id]!
+      ..['archived_at'] = '2026-05-28T18:00:00Z'
+      ..['version'] = (server.habits[id]!['version'] as int) + 1;
+
+    await phone.writer.deleteHabit(id);
+    await phone.sync(force: true);
+
+    expect(server.habits[id]!['deleted_at'], isNotNull);
+    expect(await phone.outbox(), isEmpty);
+  });
+
+  test('a second conflict after the one re-send needs a look, discard only', () async {
+    final id = await yoga(phone);
+    await phone.sync(force: true);
+    // Edited elsewhere before each attempt: the re-sent delete is stale again.
+    server.alwaysStaleHabits.add(id);
+
+    await phone.writer.deleteHabit(id);
+    await phone.sync(force: true);
+    await phone.sync(force: true);
+
+    final kept = (await phone.outbox()).single;
+    expect(kept.state, OutboxState.needsAttention);
+    expect(reviewable(kept), isFalse, reason: 'the habit is gone here: discard only');
+  });
 }

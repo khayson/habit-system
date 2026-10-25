@@ -595,8 +595,9 @@ class SyncEngine {
     }
   }
 
-  /// Desired-state writes on the user entity (A26, A45).
-  static const _rebasesOnce = {'profile.set_timezone', 'profile.set_auto_freeze'};
+  /// Desired-state writes on the user entity (A26, A45), and a habit delete, whose intent cannot
+  /// be misread (A51, 6.6 review L1).
+  static const _rebasesOnce = {'profile.set_timezone', 'profile.set_auto_freeze', 'habit.delete'};
 
   static bool _rebasedOnce(OutboxRow row) {
     final error = EntityCodec.decodeJson(row.lastError);

@@ -30,6 +30,9 @@ class FakeSyncServer implements SyncTransport {
   /// The next mutation with this operation is rejected with this error (any code, known or not).
   final Map<String, Map<String, dynamic>> forceErrorFor = {};
 
+  /// Habits edited elsewhere before every write reaches them: each habit write is stale.
+  final Set<String> alwaysStaleHabits = {};
+
   // Scripting.
   final List<SyncTransportException> failNextSync = [];
   final List<SyncTransportException> failNextBootstrap = [];
@@ -476,6 +479,9 @@ class FakeSyncServer implements SyncTransport {
         'current_version': habit['version'],
         'current': _deepCopy(habit),
       });
+    }
+    if (alwaysStaleHabits.contains(habit['id'])) {
+      habit['version'] = (habit['version'] as int) + 1;
     }
     if (m['base_version'] != habit['version']) {
       return _failed(m, 'conflict', {

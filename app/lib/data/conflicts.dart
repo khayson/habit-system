@@ -35,8 +35,10 @@ const resolvableCodes = {'version_conflict', 'resource_deleted', 'habit_archived
 /// The kind of look a refused row needs, from the server's code and the row's entity alone
 /// (4.3c review L2). One function for the read model and [reviewable]. A51: [refused] is the
 /// error's own `entity`; a write refused because its habit was deleted can only be discarded.
-ConflictKind conflictKindOf(Object? code, String entity, {Object? refused}) =>
+ConflictKind conflictKindOf(Object? code, String entity, {Object? refused, String? operation}) =>
     switch ((code, entity)) {
+      // A51: a delete still in conflict after its one re-send; the habit is gone here.
+      _ when operation == 'habit.delete' => ConflictKind.other,
       ('resource_deleted', _) when refused == 'habit' => ConflictKind.other,
       ('version_conflict', 'habit_log') => ConflictKind.staleValue,
       ('version_conflict', 'habit') => ConflictKind.staleHabitEdit,
@@ -54,6 +56,7 @@ bool reviewable(OutboxRow row) {
         error is Map ? error['code'] : null,
         row.entity,
         refused: error is Map ? error['entity'] : null,
+        operation: row.operation,
       ) !=
       ConflictKind.other;
 }
@@ -236,7 +239,12 @@ extension ConflictQueries on LocalView {
         ? (row.operation == 'log.increment' ? payload['delta'] : payload['value'])
         : null;
 
-    var kind = conflictKindOf(code, row.entity, refused: error is Map ? error['entity'] : null);
+    var kind = conflictKindOf(
+      code,
+      row.entity,
+      refused: error is Map ? error['entity'] : null,
+      operation: row.operation,
+    );
     // An unknown type, or an answer the app cannot read, can only be discarded.
     if (habitId != null && rules == null && habit?.knownType != true) kind = ConflictKind.other;
     if (kind == ConflictKind.staleValue && current == null) kind = ConflictKind.other;
