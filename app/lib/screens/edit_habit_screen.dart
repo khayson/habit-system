@@ -22,6 +22,7 @@ import '../widgets/habit_ui.dart';
 import '../widgets/schedule_text.dart';
 import 'frequency_screen.dart';
 import '../widgets/app_icons.dart';
+import '../widgets/app_toast.dart';
 
 /// Screen 09: edit a habit (A34). Starts from the latest definition with any unsent edit
 /// (HabitView.editable), never the one in force; saves through habit.update, which the server
@@ -136,9 +137,9 @@ class _EditState extends State<_Edit> {
   }
 
   void _backToLibrary(String message) {
-    final messenger = ScaffoldMessenger.of(context);
+    final toast = AppToast.of(context);
     context.go(Routes.habits);
-    messenger.showSnackBar(SnackBar(content: Text(message)));
+    toast.show(message, tone: ToastTone.info);
   }
 
   Future<void> _archive(AccountContext account) async {
@@ -447,11 +448,7 @@ class EditBlockedNote extends StatelessWidget {
       HabitEditBlock.archived => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          InfoCard(
-            title: l10n.editBlockedArchived,
-            tone: Tone.info,
-            icon: AppIcons.archiveBox,
-          ),
+          InfoCard(title: l10n.editBlockedArchived, tone: Tone.info, icon: AppIcons.archiveBox),
           const SizedBox(height: HabitSpace.s8),
           TextButton(
             onPressed: () => context.push(Routes.archivedHabits),

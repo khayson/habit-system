@@ -13,6 +13,7 @@ import '../../services/photo_picker.dart';
 import '../../widgets/habit_ui.dart';
 import 'notice_banner.dart';
 import '../../widgets/app_icons.dart';
+import '../../widgets/app_toast.dart';
 
 /// Screen 20's sheets. None of them has a design of its own (design gaps, listed in the 3b.2
 /// packet); they use the app's existing sheet, field and button styles.
@@ -74,8 +75,8 @@ Future<void> showPhotoSheet(
     ]),
   );
   if (choice == null || !context.mounted) return;
-  final messenger = ScaffoldMessenger.of(context);
-  void say(String line) => messenger.showSnackBar(SnackBar(content: Text(line)));
+  final toast = AppToast.of(context);
+  void say(String line) => toast.show(line, tone: ToastTone.info);
   if (choice == 'remove') {
     try {
       await account.photos.remove();

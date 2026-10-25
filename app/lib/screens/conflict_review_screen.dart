@@ -20,6 +20,7 @@ import '../widgets/habit_ui.dart';
 import '../widgets/schedule_text.dart';
 import 'widgets/needs_attention.dart';
 import '../widgets/app_icons.dart';
+import '../widgets/app_toast.dart';
 
 /// Screen 19: review one change the server did not take (A37). It follows the queued row
 /// (watchConflicts), so a sync or another screen resolving it shows here at once. Keep synced is
@@ -89,12 +90,12 @@ class _ReviewState extends State<_Review> {
 
   void _back() => context.canPop() ? context.pop() : context.go(Routes.queue);
 
-  void _leave(String message) {
+  void _leave(String message, {ToastTone tone = ToastTone.positive}) {
     if (_leaving) return;
     _leaving = true;
-    final messenger = ScaffoldMessenger.of(context);
+    final toast = AppToast.of(context);
     _back();
-    messenger.showSnackBar(SnackBar(content: Text(message)));
+    toast.show(message, tone: tone);
   }
 
   Future<void> _act(Future<void> Function() action) async {
@@ -110,13 +111,25 @@ class _ReviewState extends State<_Review> {
   Future<void> _keep(AccountContext account) => _act(() async {
     final l10n = AppLocalizations.of(context);
     final result = await account.actions.keepSynced(widget.mutationId);
-    if (mounted) _leave(result == ResolveResult.done ? l10n.reviewKeptSynced : l10n.reviewGone);
+    if (mounted) {
+      final done = result == ResolveResult.done;
+      _leave(
+        done ? l10n.reviewKeptSynced : l10n.reviewGone,
+        tone: done ? ToastTone.positive : ToastTone.info,
+      );
+    }
   });
 
   Future<void> _mine(AccountContext account) => _act(() async {
     final l10n = AppLocalizations.of(context);
     final result = await account.actions.useMine(widget.mutationId);
-    if (mounted) _leave(result == ResolveResult.done ? l10n.reviewUsedMine : l10n.reviewGone);
+    if (mounted) {
+      final done = result == ResolveResult.done;
+      _leave(
+        done ? l10n.reviewUsedMine : l10n.reviewGone,
+        tone: done ? ToastTone.positive : ToastTone.info,
+      );
+    }
   });
 
   Future<void> _discard(AccountContext account) => _act(() async {
@@ -131,7 +144,7 @@ class _ReviewState extends State<_Review> {
       await account.actions.restoreHabit(habitId);
     } on HabitEditFailure {
       // The habit is gone, or another change to it needs a look first (4.3c review note e).
-      if (mounted) _leave(AppLocalizations.of(context).reviewGone);
+      if (mounted) _leave(AppLocalizations.of(context).reviewGone, tone: ToastTone.info);
     }
   });
 

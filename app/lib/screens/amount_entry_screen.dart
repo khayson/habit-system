@@ -16,6 +16,7 @@ import '../widgets/habit_form_text.dart';
 import '../widgets/habit_format.dart';
 import '../widgets/habit_ui.dart';
 import '../widgets/app_icons.dart';
+import '../widgets/app_toast.dart';
 
 /// Screen 34: add an amount to today (A35 log.increment). Local data only: works offline. The
 /// day's value and the target in force come from the local view, never the latest definition.
@@ -168,8 +169,7 @@ class _AmountState extends State<_Amount> {
     } on TimerFailure {
       // Archived since this screen opened (4.3b L2): say so; nothing was written.
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).timerArchived)));
+        AppToast.of(context).show(AppLocalizations.of(context).timerArchived, tone: ToastTone.info);
       }
       return;
     }

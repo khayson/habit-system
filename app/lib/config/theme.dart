@@ -80,7 +80,6 @@ abstract final class AppTheme {
       fontFamily: fontFamily,
       // A51: a snackbar's action (Undo) in the light positive tone, readable on the inverse bar
       // in both themes (inversePrimary, the pressed green, was 1.65:1 on light).
-      snackBarTheme: SnackBarThemeData(actionTextColor: t.positiveBg),
       brightness: brightness,
       colorScheme: scheme,
       textTheme: text,

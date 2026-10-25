@@ -17,6 +17,7 @@ import '../providers/stream_model.dart';
 import '../widgets/habit_format.dart';
 import '../widgets/habit_ui.dart';
 import '../widgets/app_icons.dart';
+import '../widgets/app_toast.dart';
 
 /// Screens 33 (running) and 36 (paused): one screen over the habit's timer draft (A36). The time
 /// shown comes from the draft's stored values and the injected clock, so closing or killing the
@@ -92,13 +93,13 @@ class _TimerState extends State<_Timer> {
   }
 
   /// Back to Today with a short line (the draft is gone: saved, empty or discarded elsewhere).
-  void _leave(String message) {
+  void _leave(String message, {ToastTone tone = ToastTone.positive}) {
     if (_leaving) return;
     _leaving = true;
     _wait?.cancel();
-    final messenger = ScaffoldMessenger.of(context);
+    final toast = AppToast.of(context);
     context.go(Routes.today);
-    messenger.showSnackBar(SnackBar(content: Text(message)));
+    toast.show(message, tone: tone);
   }
 
   Future<void> _run(Future<void> Function() action) async {
@@ -132,7 +133,7 @@ class _TimerState extends State<_Timer> {
       final write = await account.actions.finishTimer(widget.habitId);
       if (!mounted) return;
       if (write == null) {
-        _leave(l10n.timerNothingToSave);
+        _leave(l10n.timerNothingToSave, tone: ToastTone.info);
       } else {
         final seconds = elapsed?.inSeconds ?? 0;
         final saved = seconds < 60
@@ -244,7 +245,7 @@ class _TimerState extends State<_Timer> {
       // Finished or discarded elsewhere (or by this screen, which is already leaving).
       _tick(false);
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _leave(l10n.timerGone);
+        if (mounted) _leave(l10n.timerGone, tone: ToastTone.info);
       });
       return const Scaffold();
     }

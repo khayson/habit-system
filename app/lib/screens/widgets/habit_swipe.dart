@@ -10,6 +10,7 @@ import '../../l10n/generated/app_localizations.dart';
 import '../../providers/account_context.dart';
 import '../../widgets/habit_ui.dart';
 import '../../widgets/app_icons.dart';
+import '../../widgets/app_toast.dart';
 import '../privacy_screen.dart' show tonalButton;
 
 /// A51: a habit row that can be swiped (Habits 07 and Archived routines 22, never Today).
@@ -156,7 +157,7 @@ Future<void> _toggle(
   String name, {
   required bool archive,
 }) async {
-  final messenger = ScaffoldMessenger.of(context);
+  final toast = AppToast.of(context);
   final l10n = AppLocalizations.of(context);
   try {
     archive
@@ -168,19 +169,12 @@ Future<void> _toggle(
     }
     return;
   }
-  messenger
-    ..hideCurrentSnackBar()
-    ..showSnackBar(
-      SnackBar(
-        content: Text(archive ? l10n.archivedSnack(name) : l10n.restoredSnack(name)),
-        action: SnackBarAction(
-          label: l10n.snackUndo,
-          onPressed: () => archive
-              ? account.actions.restoreHabit(habitId)
-              : account.actions.archiveHabit(habitId),
-        ),
-      ),
-    );
+  toast.show(
+    archive ? l10n.archivedSnack(name) : l10n.restoredSnack(name),
+    actionLabel: l10n.snackUndo,
+    onAction: () =>
+        archive ? account.actions.restoreHabit(habitId) : account.actions.archiveHabit(habitId),
+  );
 }
 
 /// A51: "Delete {name}?" as a bottom sheet in 28's style. True when the person chose
@@ -241,12 +235,10 @@ Future<bool> confirmAndDeleteHabit(
   String habitId,
   String name,
 ) async {
-  final messenger = ScaffoldMessenger.of(context);
+  final toast = AppToast.of(context);
   final l10n = AppLocalizations.of(context);
   if (!await confirmDeleteHabit(context, name)) return false;
   await account.actions.deleteHabit(habitId);
-  messenger
-    ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(l10n.deletedSnack(name))));
+  toast.show(l10n.deletedSnack(name));
   return true;
 }

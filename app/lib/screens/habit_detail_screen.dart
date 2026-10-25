@@ -22,6 +22,7 @@ import '../widgets/habit_ui.dart';
 import 'widgets/habit_swipe.dart';
 import 'edit_habit_screen.dart';
 import '../widgets/app_icons.dart';
+import '../widgets/app_toast.dart';
 
 /// Screen 12: habit detail with the month heatmap. Offline-first: closed days from the server's
 /// period_evaluations, today and open days from local logs (provisional), not-due from the
@@ -186,7 +187,9 @@ class _DetailState extends State<_Detail> {
                           style: text.bodyLarge?.copyWith(color: tokens.muted),
                         ),
                       ),
-                      ExcludeSemantics(child: AppIcon(AppIcons.chevronRight, color: tokens.primary)),
+                      ExcludeSemantics(
+                        child: AppIcon(AppIcons.chevronRight, color: tokens.primary),
+                      ),
                     ],
                   ),
                 ),
@@ -299,8 +302,7 @@ class _LogActions extends StatelessWidget {
                       } on TimerFailure {
                         // Archived since this screen opened (4.3b L2): say so.
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context)
-                              .showSnackBar(SnackBar(content: Text(l10n.timerArchived)));
+                          AppToast.of(context).show(l10n.timerArchived, tone: ToastTone.info);
                         }
                         return;
                       }

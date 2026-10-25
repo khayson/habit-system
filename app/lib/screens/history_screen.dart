@@ -16,6 +16,7 @@ import '../providers/account_context.dart';
 import '../providers/stream_model.dart';
 import '../widgets/habit_format.dart';
 import '../widgets/habit_ui.dart';
+import '../widgets/app_toast.dart';
 
 /// Screen 13: history and past check-ins for one habit. Reached from 12 with a chosen local
 /// date. "Save past check-in" writes log.set_value with date_mode backdate + log_date through
@@ -149,7 +150,7 @@ class _HistoryState extends State<_History> {
       await account.actions.setValueOn(habitId: detail.habit.id, date: date, value: value);
       if (!mounted) return;
       setState(() => _refusal = null);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.historySaved)));
+      AppToast.of(context).show(l10n.historySaved);
     } on DayResolutionException catch (e) {
       if (mounted) setState(() => _refusal = _refusalText(l10n, e.reason));
     } finally {
