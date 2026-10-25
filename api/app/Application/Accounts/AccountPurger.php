@@ -44,6 +44,7 @@ final readonly class AccountPurger
         ['user_timezone_history', 'user'],
         ['export_jobs', 'user'],
         ['password_reset_codes', 'user'],
+        ['password_reset_failures', 'user'],
         ['personal_access_tokens', 'token'],
     ];
 

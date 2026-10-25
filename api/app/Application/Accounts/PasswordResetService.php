@@ -24,6 +24,9 @@ final readonly class PasswordResetService
 
     public const int COOLDOWN_SECONDS = 60;
 
+    /** 6.4 review L1: wrong tries per account in a rolling 24 hours before codes stop. */
+    public const int DAILY_WRONG_TRIES = 10;
+
     public function __construct(
         private ResetCodeHasher $hasher,
         private ChangeJournal $journal,
@@ -46,6 +49,11 @@ final readonly class PasswordResetService
                 $now = $this->clock->now();
                 $last = DB::table('password_reset_codes')->where('user_id', $user->id)->max('created_at');
                 if ($last !== null && WireTime::parse((string) $last) > $now->subSeconds(self::COOLDOWN_SECONDS)) {
+                    return null;
+                }
+                $wrong = DB::table('password_reset_failures')->where('user_id', $user->id)
+                    ->where('failed_at', '>', UtcTime::format($now->subDay()))->count();
+                if ($wrong >= self::DAILY_WRONG_TRIES) {
                     return null;
                 }
                 // A new code replaces any earlier unused one.
@@ -88,6 +96,11 @@ final readonly class PasswordResetService
                 }
                 if (! hash_equals((string) $row->code_hash, $hash)) {
                     DB::table('password_reset_codes')->where('id', $row->id)->increment('attempts');
+                    DB::table('password_reset_failures')->where('user_id', $user->id)
+                        ->where('failed_at', '<=', UtcTime::format($now->subDay()))->delete();
+                    DB::table('password_reset_failures')->insert([
+                        'id' => (string) Str::uuid7(), 'user_id' => $user->id, 'failed_at' => UtcTime::format($now),
+                    ]);
 
                     return false;
                 }

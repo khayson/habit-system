@@ -518,4 +518,13 @@ PHP,
         'replace' => "return ApiResponse::success(['status' => \$code === null ? 'unknown' : 'requested'], 202);",
         'tests' => 'tests/Feature/PasswordResetTest.php',
     ],
+
+    // Phase 6.6 ---------------------------------------------------------------------------
+    [
+        'name' => '6.6: no daily ceiling on wrong reset tries (6.4 review L1)',
+        'file' => 'app/Application/Accounts/PasswordResetService.php',
+        'search' => 'if ($wrong >= self::DAILY_WRONG_TRIES) {',
+        'replace' => 'if (false) {',
+        'tests' => 'tests/Feature/PasswordResetTest.php',
+    ],
 ];

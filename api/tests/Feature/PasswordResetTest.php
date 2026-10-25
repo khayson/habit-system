@@ -241,3 +241,38 @@ it('sends a plain email: the code, its 15 minutes, the reassurance, and no link'
             ->not->toContain('href');
     }
 });
+
+// 6.4 review L1: a ceiling on guessing over days. Ten wrong tries in a rolling 24 hours stop
+// new codes for that account (the same 202) until the first of them is 24 hours old.
+it('stops new codes after ten wrong tries in 24 hours, until the first of them ages out', function () {
+    $wrongTries = function (int $n) {
+        forgot($this, 'maya.chen@example.com');
+        $code = sentCode('maya.chen@example.com');
+        $wrong = $code === '000000' ? '000001' : '000000';
+        foreach (range(1, $n) as $_) {
+            assertInvalidCode(resetWith($this, 'maya.chen@example.com', $wrong));
+        }
+    };
+    $wrongTries(5);
+    $this->freezeClock('2026-05-28T17:30:00Z');
+    $wrongTries(4);
+    $this->freezeClock('2026-05-28T17:40:00Z');
+    $wrongTries(1);
+    expect(DB::table('password_reset_failures')->count())->toBe(10);
+
+    $this->freezeClock('2026-05-28T18:00:00Z');
+    $sent = Mail::sent(PasswordResetCodeMail::class)->count();
+    $blocked = forgot($this, 'maya.chen@example.com');
+    $unknown = forgot($this, 'nobody@example.com');
+    expect(bodyWithoutMeta($blocked))->toBe(bodyWithoutMeta($unknown))
+        ->and(Mail::sent(PasswordResetCodeMail::class)->count())->toBe($sent);
+
+    $this->freezeClock('2026-05-29T17:21:59Z');
+    forgot($this, 'maya.chen@example.com');
+    expect(Mail::sent(PasswordResetCodeMail::class)->count())->toBe($sent);
+
+    // The first wrong try (17:22 on the 28th) is 24 hours old: nine remain, codes flow again.
+    $this->freezeClock('2026-05-29T17:22:01Z');
+    forgot($this, 'maya.chen@example.com');
+    expect(Mail::sent(PasswordResetCodeMail::class)->count())->toBe($sent + 1);
+});
