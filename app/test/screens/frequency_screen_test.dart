@@ -7,6 +7,9 @@ import 'package:habit/domain/calendar/local_date.dart';
 import 'package:habit/domain/frequency_choice.dart';
 import 'package:habit/l10n/generated/app_localizations.dart';
 import 'package:habit/screens/frequency_screen.dart';
+import 'package:habit/widgets/app_icons.dart';
+
+import '../support/app_harness.dart' show byAppIcon;
 
 /// Phase 4.2b: screen 10. No account, no network: the screen only pops a choice.
 void main() {
@@ -106,7 +109,7 @@ void main() {
       ),
     );
     expect(find.bySemanticsLabel(RegExp(r'^Custom interval.*Not selected$')), findsOneWidget);
-    expect(find.byIcon(Icons.check), findsOneWidget, reason: 'one check; the others are circles');
+    expect(byAppIcon(AppIcons.check), findsOneWidget, reason: 'one check; the others are circles');
     expect(find.text('The week is still yours'), findsNothing);
     handle.dispose();
   });

@@ -16,6 +16,7 @@ import '../providers/completion_wait.dart';
 import '../providers/stream_model.dart';
 import '../widgets/habit_format.dart';
 import '../widgets/habit_ui.dart';
+import '../widgets/app_icons.dart';
 
 /// Screens 33 (running) and 36 (paused): one screen over the habit's timer draft (A36). The time
 /// shown comes from the draft's stored values and the injected clock, so closing or killing the
@@ -349,7 +350,7 @@ class _TimerState extends State<_Timer> {
                 title: l10n.timerPausedCardTitle,
                 body: l10n.timerPausedCardBody(elapsed.inMinutes),
                 tone: Tone.info,
-                icon: Icons.schedule,
+                icon: AppIcons.clock,
               ),
             if (_failure != null) ...[
               const SizedBox(height: HabitSpace.s16),
@@ -357,7 +358,7 @@ class _TimerState extends State<_Timer> {
                 title: _failure!,
                 body: _failureHint ? l10n.timerTooLongHint : null,
                 tone: Tone.warning,
-                icon: Icons.info_outline,
+                icon: AppIcons.info,
               ),
               const SizedBox(height: HabitSpace.s8),
               tonal(l10n.timerDiscard, _busy ? null : () => _discard(account)),

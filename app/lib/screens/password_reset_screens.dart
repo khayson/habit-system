@@ -14,6 +14,7 @@ import '../providers/session_provider.dart';
 import '../widgets/error_text.dart';
 import '../widgets/habit_ui.dart';
 import 'widgets/password_field.dart';
+import '../widgets/app_icons.dart';
 
 // A50: password reset by a 6-digit code (screens 25, 26 and 27). The design was drawn for an
 // email link; wherever it says "link" the app says "code" (each place is marked
@@ -89,7 +90,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 title: l10n.forgotPrivateTitle,
                 body: l10n.forgotPrivateBody,
                 tone: Tone.info,
-                icon: Icons.schedule,
+                icon: AppIcons.clock,
                 tintTitle: true,
               ),
               const SizedBox(height: HabitSpace.s48),
@@ -194,7 +195,7 @@ class _ResetSentScreenState extends State<ResetSentScreen> {
                   width: 152,
                   height: 152,
                   decoration: BoxDecoration(color: tokens.positiveBg, shape: BoxShape.circle),
-                  child: Icon(Icons.check, size: 56, color: tokens.primary),
+                  child: AppIcon(AppIcons.check, size: 56, color: tokens.primary),
                 ),
               ),
             ),
@@ -207,7 +208,7 @@ class _ResetSentScreenState extends State<ResetSentScreen> {
               title: l10n.resetSentNothingTitle,
               body: l10n.resetSentNothingBody,
               tone: Tone.info,
-              icon: Icons.schedule,
+              icon: AppIcons.clock,
               tintTitle: true,
             ),
             const SizedBox(height: HabitSpace.s48),
@@ -362,7 +363,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   title: l10n.resetRulesTitle,
                   body: l10n.resetRulesBody,
                   tone: Tone.info,
-                  icon: Icons.schedule,
+                  icon: AppIcons.clock,
                   tintTitle: true,
                 ),
                 const SizedBox(height: HabitSpace.s48),

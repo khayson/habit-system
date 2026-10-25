@@ -16,6 +16,7 @@ import '../providers/account_context.dart';
 import '../sync/outbox_states.dart';
 import '../widgets/habit_format.dart';
 import '../widgets/habit_ui.dart';
+import '../widgets/app_icons.dart';
 
 /// Words for an export job, from the account calendar (invariant 15).
 class ExportWords {
@@ -199,7 +200,7 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
                 child: SurfaceCard(
                   child: Row(
                     children: [
-                      const IconTile(icon: Icons.menu_book_outlined),
+                      const IconTile(icon: AppIcons.book),
                       const SizedBox(width: HabitSpace.s16),
                       Expanded(
                         child: Column(

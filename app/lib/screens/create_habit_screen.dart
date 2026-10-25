@@ -18,6 +18,7 @@ import '../widgets/habit_ui.dart';
 import '../widgets/schedule_text.dart';
 import 'frequency_screen.dart';
 import 'reminder_editor_screen.dart';
+import '../widgets/app_icons.dart';
 
 /// Screen 08: create a habit of any type the app knows (A21 registry), with its target, category,
 /// schedule (10) and an optional first reminder (11). Validated as the server would before
@@ -211,7 +212,7 @@ class _CreateHabitScreenState extends State<CreateHabitScreen> {
             ],
             const SizedBox(height: HabitSpace.s24),
             SettingRow(
-              icon: Icons.calendar_month_outlined,
+              icon: AppIcons.frequency,
               title: l10n.newHabitSchedule,
               summary: ScheduleText(context).summary(_frequency),
               action: l10n.setupEdit,
@@ -220,7 +221,7 @@ class _CreateHabitScreenState extends State<CreateHabitScreen> {
             ),
             const SizedBox(height: HabitSpace.s16),
             SettingRow(
-              icon: Icons.notifications_none,
+              icon: AppIcons.reminder,
               title: l10n.reminderRow,
               actionKey: const ValueKey('reminder-row-edit'),
               summary: reminder == null

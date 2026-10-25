@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../config/habit_tokens.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../../widgets/app_icons.dart';
 
 /// Password input with a 44 px show/hide toggle. The value is never logged.
 class PasswordField extends StatefulWidget {
@@ -52,7 +53,7 @@ class _PasswordFieldState extends State<PasswordField> {
             minWidth: HabitSize.minTarget,
             minHeight: HabitSize.minTarget,
           ),
-          icon: Icon(_visible ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+          icon: AppIcon(_visible ? AppIcons.hide : AppIcons.show),
           onPressed: () => setState(() => _visible = !_visible),
         ),
       ),

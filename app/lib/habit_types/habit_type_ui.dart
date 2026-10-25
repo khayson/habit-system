@@ -5,6 +5,7 @@ import '../domain/provisional_type_rules.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../widgets/habit_format.dart';
 import '../widgets/habit_ui.dart';
+import '../widgets/app_icons.dart';
 
 /// A21 / invariant 14: how each habit type is entered and shown on screens 08 and 09. The only
 /// UI code that knows the types; its keys come from [ProvisionalTypeRegistry]. A type this app
@@ -502,7 +503,7 @@ class UnknownTypeCard extends StatelessWidget {
       title: l10n.unknownTypeTitle,
       body: l10n.unknownTypeBody,
       tone: Tone.info,
-      icon: Icons.system_update_outlined,
+      icon: AppIcons.update,
     );
   }
 }

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../config/habit_tokens.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../providers/health_provider.dart';
+import '../widgets/app_icons.dart';
 
 /// Phase 0 connection check: calls GET /health and shows the server's time.
 class ServerStatusScreen extends StatefulWidget {
@@ -80,7 +81,7 @@ class _StatusCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _Badge(
-            icon: Icons.cloud_off_outlined,
+            icon: AppIcons.offline,
             label: l10n.statusOffline,
             background: tokens.warningBg,
             foreground: tokens.warningInk,
@@ -98,7 +99,7 @@ class _StatusCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _Badge(
-            icon: Icons.check_circle_outline,
+            icon: AppIcons.done,
             label: l10n.statusOnline,
             background: tokens.positiveBg,
             foreground: tokens.positiveInk,
@@ -127,7 +128,7 @@ class _StatusCard extends StatelessWidget {
             const SizedBox(height: HabitSpace.s16),
             OutlinedButton.icon(
               onPressed: health.isLoading ? null : health.check,
-              icon: const Icon(Icons.refresh),
+              icon: const AppIcon(AppIcons.refresh),
               label: Text(l10n.statusCheckAgain),
             ),
           ],
@@ -141,7 +142,7 @@ class _StatusCard extends StatelessWidget {
 
 /// Status always carries an icon and a word, never colour alone.
 class _Badge extends StatelessWidget {
-  final IconData icon;
+  final AppIconData icon;
   final String label;
   final Color background;
   final Color foreground;
@@ -164,7 +165,7 @@ class _Badge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 18, color: foreground),
+          AppIcon(icon, size: 18, color: foreground),
           const SizedBox(width: HabitSpace.s8),
           Flexible(
             child: Text(

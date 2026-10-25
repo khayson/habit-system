@@ -21,6 +21,7 @@ import 'package:habit/services/insights_service.dart';
 import 'package:habit/services/rewards_service.dart';
 import 'package:habit/sync/sync_engine.dart';
 import 'package:habit/sync/sync_transport.dart';
+import 'package:habit/widgets/app_icons.dart';
 import 'package:provider/provider.dart';
 
 import 'fake_notification_scheduler.dart';
@@ -166,3 +167,7 @@ class OfflineTransport implements SyncTransport {
 
 /// Keeps a connectivity stream open for a test.
 StreamController<bool> connectivityController() => StreamController<bool>.broadcast();
+
+/// A52: finds an icon by its registry entry (icons are Hugeicons paths, not IconData).
+Finder byAppIcon(AppIconData icon) =>
+    find.byWidgetPredicate((w) => w is AppIcon && identical(w.icon, icon), description: 'AppIcon');

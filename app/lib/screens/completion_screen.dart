@@ -12,6 +12,7 @@ import '../providers/account_context.dart';
 import '../providers/stream_model.dart';
 import '../widgets/habit_format.dart';
 import '../widgets/habit_ui.dart';
+import '../widgets/app_icons.dart';
 
 /// What the screen says about the habit, read from local data once.
 class _Completed {
@@ -128,7 +129,7 @@ class _CompletionBodyState extends State<_CompletionBody> {
                     width: 136,
                     height: 136,
                     decoration: BoxDecoration(color: tokens.positiveBg, shape: BoxShape.circle),
-                    child: Icon(Icons.check, size: 64, color: tokens.positiveInk),
+                    child: AppIcon(AppIcons.check, size: 64, color: tokens.positiveInk),
                   ),
                 ),
               ),

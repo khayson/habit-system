@@ -5,6 +5,7 @@ import '../config/habit_tokens.dart';
 import '../config/legal_config.dart';
 import '../core/url_opener.dart';
 import '../l10n/generated/app_localizations.dart';
+import '../widgets/app_icons.dart';
 
 /// A33: the Terms and Privacy Policy links under screen 03's consent line. Each opens the hosted
 /// page in the browser; if nothing can open it, a sheet shows the link to copy.
@@ -85,7 +86,7 @@ Future<void> showLinkFallback(BuildContext context, String url) {
                     await Clipboard.setData(ClipboardData(text: url));
                     setState(() => copied = true);
                   },
-                  icon: Icon(copied ? Icons.check : Icons.copy),
+                  icon: AppIcon(copied ? AppIcons.check : AppIcons.copy),
                   label: Text(copied ? l10n.legalLinkCopied : l10n.legalCopyLink),
                 ),
               ],

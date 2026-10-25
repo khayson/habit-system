@@ -13,6 +13,7 @@ import '../sync/outbox_states.dart';
 import '../widgets/habit_ui.dart';
 import 'privacy_screen.dart';
 import 'widgets/password_field.dart';
+import '../widgets/app_icons.dart';
 
 /// Screen 28, "Delete your account?" (A49). The password is the recent reauthentication; the
 /// server decides. Nothing on the device changes until it answers 202, then the session ends and
@@ -169,7 +170,7 @@ class _ExportCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.schedule, color: tokens.warningInk),
+          AppIcon(AppIcons.clock, color: tokens.warningInk),
           const SizedBox(width: HabitSpace.s12),
           Expanded(
             child: Column(

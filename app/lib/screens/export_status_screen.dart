@@ -15,6 +15,7 @@ import '../providers/account_context.dart';
 import '../widgets/habit_format.dart';
 import '../widgets/habit_ui.dart';
 import 'privacy_screen.dart';
+import '../widgets/app_icons.dart';
 
 /// Screens 29 (preparing, ready) and 30 (failed), A48. While open it asks GET /exports/{id}
 /// every [pollEvery] for at most [pollFor], then stops quietly; the status stays on 21.
@@ -157,7 +158,7 @@ class _ExportStatusScreenState extends State<ExportStatusScreen> {
               title: l10n.exportFailedCardTitle,
               body: l10n.exportFailedCardBody,
               tone: Tone.error,
-              icon: Icons.schedule,
+              icon: AppIcons.clock,
             ),
             const SizedBox(height: HabitSpace.s24),
             SurfaceCard(
@@ -185,7 +186,7 @@ class _ExportStatusScreenState extends State<ExportStatusScreen> {
               title: ready ? l10n.exportReadyTitle : l10n.exportQueuedTitle,
               body: ready ? l10n.exportReadyBody(kind, when) : l10n.exportQueuedBody(kind, when),
               tone: ready ? Tone.positive : Tone.info,
-              icon: ready ? Icons.check_circle_outline : Icons.schedule,
+              icon: ready ? AppIcons.done : AppIcons.clock,
             ),
             const SizedBox(height: HabitSpace.s24),
             InfoCard(title: l10n.exportIncludesTitle, body: l10n.exportIncludesBody),

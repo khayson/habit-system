@@ -7,6 +7,7 @@ import '../providers/account_context.dart';
 import '../providers/stream_model.dart';
 import '../providers/sync_provider.dart';
 import 'habit_ui.dart';
+import '../widgets/app_icons.dart';
 
 /// The honest sync status (design: "Local saved is not server synced"), most important first:
 /// paused, needs a look, syncing, offline, waiting, synced. Always text plus a symbol.
@@ -35,24 +36,24 @@ class SyncStatusChip extends StatelessWidget {
     );
   }
 
-  static (String, Tone, IconData) describe(
+  static (String, Tone, AppIconData) describe(
     AppLocalizations l10n,
     SyncProvider sync,
     StreamModel<QueueView> queue,
   ) {
     final q = queue.value;
-    if (q != null && q.paused) return (l10n.chipPaused, Tone.warning, Icons.pause_circle_outline);
+    if (q != null && q.paused) return (l10n.chipPaused, Tone.warning, AppIcons.paused);
     if (q != null && q.needsAttention.isNotEmpty) {
-      return (l10n.chipNeedsLook, Tone.warning, Icons.error_outline);
+      return (l10n.chipNeedsLook, Tone.warning, AppIcons.alert);
     }
-    if (sync.syncing) return (l10n.chipSyncing, Tone.info, Icons.sync);
-    if (sync.offline) return (l10n.chipOffline, Tone.warning, Icons.cloud_off_outlined);
+    if (sync.syncing) return (l10n.chipSyncing, Tone.info, AppIcons.sync);
+    if (sync.offline) return (l10n.chipOffline, Tone.warning, AppIcons.offline);
     if (q != null && q.waiting > 0) {
-      return (l10n.chipWaiting(q.waiting), Tone.info, Icons.schedule);
+      return (l10n.chipWaiting(q.waiting), Tone.info, AppIcons.clock);
     }
     if (q != null && q.state.lastSyncedAt == null) {
-      return (l10n.chipNotYet, Tone.info, Icons.cloud_queue);
+      return (l10n.chipNotYet, Tone.info, AppIcons.cloud);
     }
-    return (l10n.chipSynced, Tone.positive, Icons.cloud_done_outlined);
+    return (l10n.chipSynced, Tone.positive, AppIcons.synced);
   }
 }

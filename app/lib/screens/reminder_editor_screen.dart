@@ -12,6 +12,7 @@ import '../providers/account_context.dart';
 import '../services/habit_actions.dart';
 import '../widgets/habit_ui.dart';
 import 'widgets/notice_banner.dart';
+import '../widgets/app_icons.dart';
 
 /// A reminder as 08 and 11 edit it: a clock time on chosen ISO days (1 = Monday).
 class ReminderDraft {
@@ -362,7 +363,7 @@ class _ReminderEditorScreenState extends State<ReminderEditorScreen> with Widget
             SurfaceCard(
               child: Row(
                 children: [
-                  const ExcludeSemantics(child: IconTile(icon: Icons.notifications_none)),
+                  const ExcludeSemantics(child: IconTile(icon: AppIcons.reminder)),
                   const SizedBox(width: HabitSpace.s16),
                   Expanded(
                     child: Column(
@@ -443,7 +444,7 @@ class _OtherReminders extends StatelessWidget {
     return SurfaceCard(
       child: Row(
         children: [
-          const ExcludeSemantics(child: IconTile(icon: Icons.schedule)),
+          const ExcludeSemantics(child: IconTile(icon: AppIcons.clock)),
           const SizedBox(width: HabitSpace.s16),
           Expanded(
             child: Column(

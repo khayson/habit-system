@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:habit/app/router.dart';
 import 'package:habit/config/legal_config.dart';
+import 'package:habit/widgets/app_icons.dart';
 
 import '../support/app_harness.dart';
 import '../support/fake_url_opener.dart';
@@ -108,7 +109,7 @@ void main() {
     await settle(tester);
     expect(clipboard, ['https://khayson.github.io/habit-system/privacy/']);
     expect(find.text('Link copied'), findsOneWidget);
-    expect(find.byIcon(Icons.check), findsOneWidget, reason: 'a symbol, not colour alone');
+    expect(byAppIcon(AppIcons.check), findsOneWidget, reason: 'a symbol, not colour alone');
   });
 
   testWidgets('no overflow at text scale 2.0, on the screen or in the sheet', (tester) async {

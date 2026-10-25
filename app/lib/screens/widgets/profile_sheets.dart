@@ -12,6 +12,7 @@ import '../../services/countries.dart';
 import '../../services/photo_picker.dart';
 import '../../widgets/habit_ui.dart';
 import 'notice_banner.dart';
+import '../../widgets/app_icons.dart';
 
 /// Screen 20's sheets. None of them has a design of its own (design gaps, listed in the 3b.2
 /// packet); they use the app's existing sheet, field and button styles.
@@ -53,20 +54,20 @@ Future<void> showPhotoSheet(
     builder: (sheet) => _sheet(sheet, l10n.photoSheetTitle, [
       OutlinedButton.icon(
         onPressed: () => Navigator.pop(sheet, 'gallery'),
-        icon: const Icon(Icons.photo_library_outlined),
+        icon: const AppIcon(AppIcons.photoLibrary),
         label: Text(l10n.photoChoose),
       ),
       const SizedBox(height: HabitSpace.s12),
       OutlinedButton.icon(
         onPressed: () => Navigator.pop(sheet, 'camera'),
-        icon: const Icon(Icons.photo_camera_outlined),
+        icon: const AppIcon(AppIcons.camera),
         label: Text(l10n.photoTake),
       ),
       if (profile.photoPath != null || profile.hasAvatar) ...[
         const SizedBox(height: HabitSpace.s12),
         TextButton.icon(
           onPressed: () => Navigator.pop(sheet, 'remove'),
-          icon: const Icon(Icons.delete_outline),
+          icon: const AppIcon(AppIcons.delete),
           label: Text(l10n.photoRemove),
         ),
       ],
@@ -245,7 +246,7 @@ class _EditProfileState extends State<_EditProfile> {
                       style: text.bodyLarge,
                     ),
                   ),
-                  Icon(Icons.expand_more, color: tokens.muted),
+                  AppIcon(AppIcons.expand, color: tokens.muted),
                 ],
               ),
             ),
@@ -308,7 +309,7 @@ class _CountryPickerState extends State<_CountryPicker> {
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
                 hintText: l10n.countrySearch,
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: const AppIcon(AppIcons.search),
               ),
             ),
           ),
@@ -325,7 +326,7 @@ class _CountryPickerState extends State<_CountryPicker> {
                 for (final c in matches)
                   ListTile(
                     title: Text(c.name, style: text.bodyLarge),
-                    trailing: c.code == widget.current ? const Icon(Icons.check) : null,
+                    trailing: c.code == widget.current ? const AppIcon(AppIcons.check) : null,
                     selected: c.code == widget.current,
                     onTap: () => Navigator.pop(context, _CountryChoice(c.code)),
                   ),
@@ -443,7 +444,7 @@ class _RemindersState extends State<_Reminders> {
                         ],
                       ),
                     ),
-                    Icon(Icons.chevron_right, color: tokens.primary),
+                    AppIcon(AppIcons.chevronRight, color: tokens.primary),
                   ],
                 ),
               ),

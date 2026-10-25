@@ -9,6 +9,7 @@ import '../l10n/generated/app_localizations.dart';
 import '../widgets/habit_form_text.dart';
 import '../widgets/habit_ui.dart';
 import '../widgets/schedule_text.dart';
+import '../widgets/app_icons.dart';
 
 /// What 08 and 09 hand to screen 10: the habit's name, its current schedule and today in the
 /// account calendar (the interval start date's range).
@@ -240,7 +241,7 @@ class _FrequencyScreenState extends State<FrequencyScreen> {
             FieldLabel(l10n.freqStartDate),
             OutlinedButton.icon(
               onPressed: _pickAnchor,
-              icon: const Icon(Icons.event_outlined),
+              icon: const AppIcon(AppIcons.startDate),
               label: Text(schedule.date(_anchor)),
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size(HabitSize.minTarget, HabitSize.minTarget),
@@ -283,7 +284,7 @@ class _OptionCard extends StatelessWidget {
           child: Row(
             children: [
               IconTile(
-                icon: Icons.calendar_month_outlined,
+                icon: AppIcons.frequency,
                 iconColor: selected ? tokens.primary : tokens.muted,
               ),
               const SizedBox(width: HabitSpace.s16),
@@ -298,8 +299,8 @@ class _OptionCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: HabitSpace.s8),
-              Icon(
-                selected ? Icons.check : Icons.circle_outlined,
+              AppIcon(
+                selected ? AppIcons.check : AppIcons.unselected,
                 size: selected ? 22 : 14,
                 color: selected ? tokens.primary : tokens.muted,
               ),
@@ -366,8 +367,8 @@ class _DayToggle extends StatelessWidget {
                     SizedBox.square(
                       dimension: 14,
                       child: Center(
-                        child: Icon(
-                          selected ? Icons.check : Icons.circle_outlined,
+                        child: AppIcon(
+                          selected ? AppIcons.check : AppIcons.unselected,
                           size: selected ? 14 : 8,
                           color: selected ? tokens.primary : tokens.muted,
                         ),

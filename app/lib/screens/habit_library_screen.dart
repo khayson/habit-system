@@ -11,6 +11,7 @@ import '../providers/stream_model.dart';
 import '../widgets/habit_format.dart';
 import '../widgets/habit_ui.dart';
 import 'widgets/habit_swipe.dart';
+import '../widgets/app_icons.dart';
 
 /// Screen 07: the habit library. Reads local data only (confirmed rows plus pending creates),
 /// so it works offline. Archived habits are counted, not listed, as in the design.
@@ -111,7 +112,7 @@ class _LibraryState extends State<_Library> {
             width: double.infinity,
             child: FilledButton.icon(
               onPressed: () => context.push(Routes.newHabit),
-              icon: const Icon(Icons.add),
+              icon: const AppIcon(AppIcons.add),
               label: Text(l10n.libraryCreate),
             ),
           ),
@@ -149,7 +150,7 @@ class _HabitRow extends StatelessWidget {
     return HabitSwipe(
       habitId: habit.id,
       rightLabel: l10n.swipeArchive,
-      rightIcon: Icons.archive_outlined,
+      rightIcon: AppIcons.archive,
       onRight: () => archiveWithUndo(context, account, habit.id, name),
       onLeft: () => confirmAndDeleteHabit(context, account, habit.id, name),
       child: _card(context, l10n, text, tokens, HabitFormat.icon(rules), name, detail),
@@ -161,7 +162,7 @@ class _HabitRow extends StatelessWidget {
     AppLocalizations l10n,
     TextTheme text,
     HabitTokens tokens,
-    IconData icon,
+    AppIconData icon,
     String name,
     String detail,
   ) {
@@ -183,7 +184,7 @@ class _HabitRow extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, color: tokens.primary),
+            AppIcon(AppIcons.chevronRight, color: tokens.primary),
           ],
         ),
       ),

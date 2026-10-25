@@ -9,6 +9,14 @@ import 'package:path/path.dart' as p;
 /// Raw database construction. Only lib/data/database_opener.dart may do this (ADR 0001).
 final rawDatabaseOpen = RegExp(r'\bNativeDatabase\b|\bdriftDatabase\s*\(|\bDriftIsolate\b');
 
+/// A52: Material and toast-package messages; the app has its own toast.
+final snackOrToast = RegExp(
+  r'\bSnackBar\w*\b|\bScaffoldMessenger\b|\bshowSnackBar\b|package:(fluttertoast|another_flushbar|toastification|bot_toast|oktoast)',
+);
+
+/// A52: icons drawn other than through the registry (lib/widgets/app_icons.dart).
+final iconOutsideRegistry = RegExp(r'(?<![A-Za-z_])Icons\.|\bHugeIcons?\b|package:hugeicons');
+
 Map<String, String> dartSources(String dir) {
   return {
     for (final file in Directory(dir).listSync(recursive: true).whereType<File>())
@@ -168,6 +176,35 @@ void main() {
     test('the opener itself still uses the shared-server path', () {
       final opener = dartSources('lib')['lib/data/database_opener.dart']!;
       expect(opener, contains('shareAcrossIsolates: true'));
+    });
+  });
+
+  group('A52: messages and icons', () {
+    test('self-test', () {
+      expect(snackOrToast.hasMatch('SnackBar(content: x)'), isTrue);
+      expect(snackOrToast.hasMatch('ScaffoldMessenger.of(context)'), isTrue);
+      expect(snackOrToast.hasMatch("import 'package:fluttertoast/fluttertoast.dart';"), isTrue);
+      expect(snackOrToast.hasMatch('AppToast.show(context)'), isFalse);
+      expect(iconOutsideRegistry.hasMatch('Icon(Icons.check)'), isTrue);
+      expect(iconOutsideRegistry.hasMatch('HugeIcon(icon: x)'), isTrue);
+      expect(iconOutsideRegistry.hasMatch('AppIcon(AppIcons.check)'), isFalse);
+    });
+
+    test('no snackbar, ScaffoldMessenger or toast package in app/lib', () {
+      final offenders = dartSources('lib').entries
+          .where((e) => snackOrToast.hasMatch(e.value))
+          .map((e) => e.key)
+          .toList();
+      expect(offenders, isEmpty);
+    });
+
+    test('every icon comes through lib/widgets/app_icons.dart', () {
+      final offenders = dartSources('lib').entries
+          .where((e) => e.key != 'lib/widgets/app_icons.dart')
+          .where((e) => iconOutsideRegistry.hasMatch(e.value))
+          .map((e) => e.key)
+          .toList();
+      expect(offenders, isEmpty);
     });
   });
 }

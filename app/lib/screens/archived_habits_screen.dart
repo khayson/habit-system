@@ -12,6 +12,7 @@ import '../providers/stream_model.dart';
 import '../widgets/habit_format.dart';
 import '../widgets/habit_ui.dart';
 import 'widgets/habit_swipe.dart';
+import '../widgets/app_icons.dart';
 
 /// Screen 22: archived routines (A34). Local data only (watchArchived, confirmed plus queued
 /// archives and restores), so it works offline. Restore queues habit.restore; the row leaves at
@@ -84,7 +85,7 @@ class _ArchivedState extends State<_Archived> {
               liveRegion: true,
               child: Row(
                 children: [
-                  Icon(Icons.check_circle_outline, color: tokens.positiveInk),
+                  AppIcon(AppIcons.done, color: tokens.positiveInk),
                   const SizedBox(width: HabitSpace.s8),
                   Expanded(
                     child: Text(
@@ -102,7 +103,7 @@ class _ArchivedState extends State<_Archived> {
             HabitSwipe(
               habitId: habit.id,
               rightLabel: l10n.swipeRestore,
-              rightIcon: Icons.unarchive_outlined,
+              rightIcon: AppIcons.restore,
               onRight: () => restoreWithUndo(context, account, habit.id, habit.name),
               onLeft: () => confirmAndDeleteHabit(context, account, habit.id, habit.name),
               child: SurfaceCard(
@@ -161,7 +162,7 @@ class _ArchivedState extends State<_Archived> {
             ),
             child: Column(
               children: [
-                Icon(Icons.eco_outlined, size: 48, color: tokens.primary),
+                AppIcon(AppIcons.leaf, size: 48, color: tokens.primary),
                 const SizedBox(height: HabitSpace.s16),
                 Semantics(
                   header: true,

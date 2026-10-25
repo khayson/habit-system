@@ -19,6 +19,7 @@ import '../widgets/habit_format.dart';
 import '../widgets/habit_ui.dart';
 import '../widgets/schedule_text.dart';
 import 'widgets/needs_attention.dart';
+import '../widgets/app_icons.dart';
 
 /// Screen 19: review one change the server did not take (A37). It follows the queued row
 /// (watchConflicts), so a sync or another screen resolving it shows here at once. Keep synced is
@@ -149,7 +150,7 @@ class _ReviewState extends State<_Review> {
             padding: const EdgeInsets.all(HabitSpace.margin),
             children: [
               ScreenHeader(title: l10n.reviewTitle, onBack: _back),
-              InfoCard(title: l10n.reviewGone, tone: Tone.info, icon: Icons.check_circle_outline),
+              InfoCard(title: l10n.reviewGone, tone: Tone.info, icon: AppIcons.done),
               const SizedBox(height: HabitSpace.s16),
               TextButton(
                 onPressed: _back,
@@ -180,7 +181,7 @@ class _ReviewState extends State<_Review> {
                 title: plan.safeTitle!,
                 body: plan.safeBody,
                 tone: Tone.warning,
-                icon: Icons.shield_outlined,
+                icon: AppIcons.privacy,
               ),
               const SizedBox(height: HabitSpace.s24),
             ],

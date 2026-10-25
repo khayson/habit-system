@@ -21,6 +21,7 @@ import '../widgets/habit_format.dart';
 import '../widgets/habit_ui.dart';
 import 'widgets/habit_swipe.dart';
 import 'edit_habit_screen.dart';
+import '../widgets/app_icons.dart';
 
 /// Screen 12: habit detail with the month heatmap. Offline-first: closed days from the server's
 /// period_evaluations, today and open days from local logs (provisional), not-due from the
@@ -185,7 +186,7 @@ class _DetailState extends State<_Detail> {
                           style: text.bodyLarge?.copyWith(color: tokens.muted),
                         ),
                       ),
-                      ExcludeSemantics(child: Icon(Icons.chevron_right, color: tokens.primary)),
+                      ExcludeSemantics(child: AppIcon(AppIcons.chevronRight, color: tokens.primary)),
                     ],
                   ),
                 ),
@@ -357,7 +358,7 @@ class _ReminderRow extends StatelessWidget {
       child: ExcludeSemantics(
         child: Row(
           children: [
-            const IconTile(icon: Icons.notifications_none),
+            const IconTile(icon: AppIcons.reminder),
             const SizedBox(width: HabitSpace.s16),
             Expanded(
               child: Column(
@@ -369,7 +370,7 @@ class _ReminderRow extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, color: tokens.primary),
+            AppIcon(AppIcons.chevronRight, color: tokens.primary),
           ],
         ),
       ),

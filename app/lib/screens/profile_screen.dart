@@ -22,6 +22,7 @@ import '../widgets/habit_ui.dart';
 import '../widgets/legal_links.dart';
 import 'timezone_screen.dart';
 import 'widgets/profile_sheets.dart';
+import '../widgets/app_icons.dart';
 
 /// Screen 20 (A20): the avatar card, Timezone and Reminders rows and "Signed in as", as
 /// designed. Privacy and export (21, Phase 6) and Archived habits (22, Phase 4) arrive with
@@ -143,7 +144,7 @@ class _ProfileState extends State<_Profile> with WidgetsBindingObserver {
             ),
           const SizedBox(height: HabitSpace.s24),
           _Row(
-            icon: Icons.schedule,
+            icon: AppIcons.clock,
             title: l10n.profileTimezone,
             subtitle: _zoneLine(l10n, zone),
             // I2: the city is shown (as screen 04 names it); the IANA id is read out.
@@ -155,7 +156,7 @@ class _ProfileState extends State<_Profile> with WidgetsBindingObserver {
           ),
           const SizedBox(height: HabitSpace.s16),
           _Row(
-            icon: Icons.notifications_none,
+            icon: AppIcons.reminder,
             title: l10n.profileReminders,
             subtitle: l10n.profileRemindersLine(
               l10n.profileRemindersCount(reminders.fold(0, (n, r) => n + r.enabled)),
@@ -174,7 +175,7 @@ class _ProfileState extends State<_Profile> with WidgetsBindingObserver {
           // Design 20's Privacy and export row (screen 21, 6.1).
           const SizedBox(height: HabitSpace.s16),
           _Row(
-            icon: Icons.shield_outlined,
+            icon: AppIcons.privacy,
             title: l10n.profilePrivacy,
             subtitle: l10n.profilePrivacyLine,
             onTap: () => context.push(Routes.privacy),
@@ -183,7 +184,7 @@ class _ProfileState extends State<_Profile> with WidgetsBindingObserver {
           // existing style, below Reminders.
           const SizedBox(height: HabitSpace.s16),
           _Row(
-            icon: Icons.emoji_events_outlined,
+            icon: AppIcons.rewards,
             title: l10n.profileRowProgress,
             subtitle: rewards == null
                 ? l10n.profileRowProgressEmpty
@@ -192,7 +193,7 @@ class _ProfileState extends State<_Profile> with WidgetsBindingObserver {
           ),
           const SizedBox(height: HabitSpace.s16),
           _Row(
-            icon: Icons.ac_unit,
+            icon: AppIcons.freeze,
             title: l10n.profileRowFreezes,
             subtitle: freezesRowLine(l10n, rewards?.freezeBalance, profile),
             onTap: () => context.push(Routes.freezes),
@@ -294,7 +295,7 @@ class _AvatarCard extends StatelessWidget {
           ),
           if (profile.editQueued) ...[
             const SizedBox(height: HabitSpace.s8),
-            _Note(icon: Icons.schedule, text: l10n.profileEditQueued),
+            _Note(icon: AppIcons.clock, text: l10n.profileEditQueued),
           ],
           if (profile.uploadRejected) ...[
             const SizedBox(height: HabitSpace.s12),
@@ -305,7 +306,7 @@ class _AvatarCard extends StatelessWidget {
             ),
           ] else if (profile.uploadPending) ...[
             const SizedBox(height: HabitSpace.s8),
-            _Note(icon: Icons.cloud_upload_outlined, text: l10n.photoWaiting),
+            _Note(icon: AppIcons.uploading, text: l10n.photoWaiting),
           ],
           const SizedBox(height: HabitSpace.s8),
           TextButton(onPressed: onEdit, child: Text(l10n.profileEdit)),
@@ -318,7 +319,7 @@ class _AvatarCard extends StatelessWidget {
 /// A waiting state on the card: a symbol and words (never colour alone), wrapping at any text
 /// size.
 class _Note extends StatelessWidget {
-  final IconData icon;
+  final AppIconData icon;
   final String text;
 
   const _Note({required this.icon, required this.text});
@@ -330,7 +331,7 @@ class _Note extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: HabitSize.icon, color: tokens.infoInk),
+        AppIcon(icon, size: HabitSize.icon, color: tokens.infoInk),
         const SizedBox(width: HabitSpace.s8),
         Flexible(child: Text(text, style: style)),
       ],
@@ -354,7 +355,7 @@ String freezesRowLine(AppLocalizations l10n, int? balance, ProfileState? profile
 /// One of the design's rows: an icon tile, a title and a muted line, then an action or a
 /// chevron.
 class _Row extends StatelessWidget {
-  final IconData icon;
+  final AppIconData icon;
   final String title;
   final String subtitle;
 
@@ -397,7 +398,7 @@ class _Row extends StatelessWidget {
         if (trailing != null)
           trailing!
         else if (onTap != null)
-          Icon(Icons.chevron_right, color: tokens.primary),
+          AppIcon(AppIcons.chevronRight, color: tokens.primary),
       ],
     );
     return SurfaceCard(

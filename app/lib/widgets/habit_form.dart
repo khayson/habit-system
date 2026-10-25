@@ -7,6 +7,7 @@ import '../habit_types/habit_type_ui.dart';
 import '../l10n/generated/app_localizations.dart';
 import 'habit_form_text.dart';
 import 'habit_ui.dart';
+import '../widgets/app_icons.dart';
 
 /// One worded message per field of 08 / 09, from the registry's parse and HabitDraft.problems.
 class HabitFormErrors {
@@ -101,7 +102,7 @@ class HabitFormErrors {
 /// The design's setting row (08 / 09: Category, Schedule, Reminder): icon tile, title, summary
 /// and a 44 px text action. [message] is an inline problem shown under the summary.
 class SettingRow extends StatelessWidget {
-  final IconData icon;
+  final AppIconData icon;
   final String title;
   final String summary;
   final String? action;

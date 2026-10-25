@@ -14,6 +14,7 @@ import '../sync/outbox_states.dart';
 import '../widgets/habit_ui.dart';
 import '../widgets/sync_status_chip.dart';
 import 'widgets/needs_attention.dart';
+import '../widgets/app_icons.dart';
 
 /// Screen 18: what is saved on this device and not yet confirmed. Counts by state, the queued
 /// changes, "Discard" for changes that need a decision, "Try again" for ones backing off, the
@@ -82,20 +83,20 @@ class SyncQueueScreen extends StatelessWidget {
           title: l10n.queuePausedTitle,
           body: l10n.queuePausedBody(queue.state.statusCode ?? '—'),
           tone: Tone.warning,
-          icon: Icons.pause_circle_outline,
+          icon: AppIcons.paused,
         )
       else if (account.sync.offline)
         InfoCard(
           title: l10n.queueOfflineTitle,
           body: l10n.queueOfflineBody,
           tone: Tone.info,
-          icon: Icons.cloud_off_outlined,
+          icon: AppIcons.offline,
         )
       else if (queue.items.isEmpty)
         InfoCard(
           title: l10n.queueSyncedTitle,
           body: l10n.queueSyncedBody,
-          icon: Icons.cloud_done_outlined,
+          icon: AppIcons.synced,
         ),
       const SizedBox(height: HabitSpace.s24),
       for (final item in queue.items) ...[
@@ -107,7 +108,7 @@ class SyncQueueScreen extends StatelessWidget {
         onPressed: account.sync.syncing ? null : () => account.sync.sync(force: true),
         icon: account.sync.syncing
             ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
-            : const Icon(Icons.sync),
+            : const AppIcon(AppIcons.sync),
         label: Text(l10n.queueSyncNow),
       ),
       const SizedBox(height: HabitSpace.s24),
@@ -168,7 +169,7 @@ class _QueueRow extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              IconTile(icon: row.entity == 'habit' ? Icons.add_task : Icons.check, tone: tone),
+              IconTile(icon: row.entity == 'habit' ? AppIcons.newHabit : AppIcons.check, tone: tone),
               const SizedBox(width: HabitSpace.s16),
               Expanded(
                 child: Column(

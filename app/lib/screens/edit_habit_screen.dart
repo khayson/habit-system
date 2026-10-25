@@ -21,6 +21,7 @@ import '../widgets/habit_format.dart';
 import '../widgets/habit_ui.dart';
 import '../widgets/schedule_text.dart';
 import 'frequency_screen.dart';
+import '../widgets/app_icons.dart';
 
 /// Screen 09: edit a habit (A34). Starts from the latest definition with any unsent edit
 /// (HabitView.editable), never the one in force; saves through habit.update, which the server
@@ -230,8 +231,8 @@ class _EditState extends State<_Edit> {
                     selected: c == _category,
                     minTileHeight: HabitSize.control,
                     contentPadding: const EdgeInsets.symmetric(horizontal: HabitSpace.margin),
-                    leading: Icon(
-                      c == _category ? Icons.check : Icons.circle_outlined,
+                    leading: AppIcon(
+                      c == _category ? AppIcons.check : AppIcons.unselected,
                       size: c == _category ? 24 : 16,
                       color: HabitTokens.of(sheet).primary,
                     ),
@@ -293,13 +294,13 @@ class _EditState extends State<_Edit> {
           children: [
             header,
             if (habit.definitionEditQueued) ...[
-              InfoCard(title: l10n.editWaiting, tone: Tone.info, icon: Icons.sync),
+              InfoCard(title: l10n.editWaiting, tone: Tone.info, icon: AppIcons.sync),
               const SizedBox(height: HabitSpace.s16),
             ] else if (pendingFrom != null) ...[
               InfoCard(
                 title: l10n.editStarts(format.dayMonth(pendingFrom)),
                 tone: Tone.info,
-                icon: Icons.event_outlined,
+                icon: AppIcons.startDate,
               ),
               const SizedBox(height: HabitSpace.s16),
             ],
@@ -343,7 +344,7 @@ class _EditState extends State<_Edit> {
             ),
             const SizedBox(height: HabitSpace.s24),
             SettingRow(
-              icon: Icons.eco_outlined,
+              icon: AppIcons.leaf,
               title: l10n.editCategory,
               summary: format.category(_category, long: true),
               action: l10n.setupEdit,
@@ -352,7 +353,7 @@ class _EditState extends State<_Edit> {
             ),
             const SizedBox(height: HabitSpace.s16),
             SettingRow(
-              icon: Icons.calendar_month_outlined,
+              icon: AppIcons.frequency,
               title: l10n.newHabitSchedule,
               summary: ScheduleText(context).summary(_frequency),
               action: l10n.setupEdit,
@@ -361,7 +362,7 @@ class _EditState extends State<_Edit> {
             ),
             const SizedBox(height: HabitSpace.s16),
             SettingRow(
-              icon: Icons.notifications_none,
+              icon: AppIcons.reminder,
               title: l10n.editReminders,
               summary: _reminderSummary(context, detail),
               action: l10n.setupEdit,
@@ -432,7 +433,7 @@ class EditBlockedNote extends StatelessWidget {
       HabitEditBlock.needsAttention => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          InfoCard(title: l10n.editBlockedAttention, tone: Tone.warning, icon: Icons.error_outline),
+          InfoCard(title: l10n.editBlockedAttention, tone: Tone.warning, icon: AppIcons.alert),
           const SizedBox(height: HabitSpace.s8),
           TextButton(
             onPressed: () => _review(context),
@@ -449,7 +450,7 @@ class EditBlockedNote extends StatelessWidget {
           InfoCard(
             title: l10n.editBlockedArchived,
             tone: Tone.info,
-            icon: Icons.inventory_2_outlined,
+            icon: AppIcons.archiveBox,
           ),
           const SizedBox(height: HabitSpace.s8),
           TextButton(

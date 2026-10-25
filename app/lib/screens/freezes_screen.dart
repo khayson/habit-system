@@ -16,6 +16,7 @@ import '../providers/stream_model.dart';
 import '../widgets/habit_format.dart';
 import '../widgets/habit_ui.dart';
 import 'widgets/ledger_list.dart';
+import '../widgets/app_icons.dart';
 
 /// The wallet facts only GET /freezes knows (A43): held in memory for this screen.
 class WalletFacts {
@@ -153,7 +154,7 @@ class _WalletCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          ExcludeSemantics(child: Icon(Icons.ac_unit, size: 56, color: tokens.infoInk)),
+          ExcludeSemantics(child: AppIcon(AppIcons.freeze, size: 56, color: tokens.infoInk)),
           const SizedBox(height: HabitSpace.s16),
           Text(
             balance == null
@@ -243,7 +244,7 @@ class _AutoProtectRow extends StatelessWidget {
             constraints: const BoxConstraints(minHeight: HabitSize.minTarget),
             child: TextButton.icon(
               onPressed: () => context.push(Routes.queue),
-              icon: const Icon(Icons.error_outline),
+              icon: const AppIcon(AppIcons.alert),
               label: Text(l10n.autoProtectNeedsLook),
             ),
           ),
@@ -251,7 +252,7 @@ class _AutoProtectRow extends StatelessWidget {
           const SizedBox(height: HabitSpace.s8),
           Row(
             children: [
-              Icon(Icons.schedule, size: HabitSize.icon, color: tokens.infoInk),
+              AppIcon(AppIcons.clock, size: HabitSize.icon, color: tokens.infoInk),
               const SizedBox(width: HabitSpace.s8),
               Expanded(
                 child: Text(
@@ -297,7 +298,7 @@ class _FreezeRowView extends StatelessWidget {
       _ => date,
     };
     return LedgerRow(
-      icon: Icons.ac_unit,
+      icon: AppIcons.freeze,
       tone: Tone.info,
       title: title,
       detail: detail,

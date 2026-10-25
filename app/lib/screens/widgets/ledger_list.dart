@@ -5,11 +5,12 @@ import '../../config/habit_tokens.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../providers/ledger_pager.dart';
 import '../../widgets/habit_ui.dart';
+import '../../widgets/app_icons.dart';
 
 /// One history row on 16 or 17: an icon tile, a title and a muted line, the amount at the end.
 /// Read out as one label: title, detail, amount.
 class LedgerRow extends StatelessWidget {
-  final IconData icon;
+  final AppIconData icon;
   final Tone tone;
   final String title;
   final String detail;

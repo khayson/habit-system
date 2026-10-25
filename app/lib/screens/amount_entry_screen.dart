@@ -15,6 +15,7 @@ import '../providers/stream_model.dart';
 import '../widgets/habit_form_text.dart';
 import '../widgets/habit_format.dart';
 import '../widgets/habit_ui.dart';
+import '../widgets/app_icons.dart';
 
 /// Screen 34: add an amount to today (A35 log.increment). Local data only: works offline. The
 /// day's value and the target in force come from the local view, never the latest definition.
@@ -201,7 +202,7 @@ class _AmountState extends State<_Amount> {
             children: [
               ScreenHeader(title: detail?.name ?? '', onBack: _leave),
               if (blocked != null)
-                InfoCard(title: blocked, tone: Tone.info, icon: Icons.info_outline)
+                InfoCard(title: blocked, tone: Tone.info, icon: AppIcons.info)
               else
                 const UnknownTypeCard(),
               const SizedBox(height: HabitSpace.s16),
@@ -295,8 +296,8 @@ class _AmountState extends State<_Amount> {
             Row(
               children: [
                 ExcludeSemantics(
-                  child: Icon(
-                    reached ? Icons.check_circle_outline : Icons.radio_button_unchecked,
+                  child: AppIcon(
+                    reached ? AppIcons.done : AppIcons.notDone,
                     size: 18,
                     color: reached ? tokens.positiveInk : tokens.muted,
                   ),
@@ -378,10 +379,10 @@ class _Stepper extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final text = Theme.of(context).textTheme;
     final tokens = HabitTokens.of(context);
-    Widget button(IconData icon, String tooltip, VoidCallback? onPressed) => IconButton(
+    Widget button(AppIconData icon, String tooltip, VoidCallback? onPressed) => IconButton(
       onPressed: onPressed,
       tooltip: tooltip,
-      icon: Icon(icon, color: onPressed == null ? tokens.disabledInk : tokens.primary),
+      icon: AppIcon(icon, color: onPressed == null ? tokens.disabledInk : tokens.primary),
       constraints: const BoxConstraints(
         minWidth: HabitSize.minTarget,
         minHeight: HabitSize.minTarget,
@@ -398,13 +399,13 @@ class _Stepper extends StatelessWidget {
       child: SurfaceCard(
         child: Row(
           children: [
-            button(Icons.remove, l10n.amountLess, canLower ? onLower : null),
+            button(AppIcons.remove, l10n.amountLess, canLower ? onLower : null),
             Expanded(
               child: ExcludeSemantics(
                 child: Text(amount, textAlign: TextAlign.center, style: text.titleMedium),
               ),
             ),
-            button(Icons.add, l10n.amountMore, onRaise),
+            button(AppIcons.add, l10n.amountMore, onRaise),
           ],
         ),
       ),

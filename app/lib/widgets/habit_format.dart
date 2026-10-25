@@ -5,6 +5,7 @@ import '../domain/calendar/local_date.dart';
 import '../domain/habit_schedule.dart';
 import '../domain/provisional_type_rules.dart';
 import '../l10n/generated/app_localizations.dart';
+import '../widgets/app_icons.dart';
 
 /// How habits read on screens 05, 07, 12 and 13 ("Duration · 10 min · daily"). Driven by the
 /// type rules' [TypeDisplay], never by a type key (invariant 14).
@@ -16,11 +17,11 @@ class HabitFormat {
     : l10n = AppLocalizations.of(context),
       locale = Localizations.localeOf(context).toLanguageTag();
 
-  static IconData icon(ProvisionalTypeRules? rules) => switch (rules?.display) {
-    TypeDisplay.yesNo => Icons.check,
-    TypeDisplay.quantity => Icons.water_drop_outlined,
-    TypeDisplay.duration => Icons.schedule,
-    null => Icons.help_outline,
+  static AppIconData icon(ProvisionalTypeRules? rules) => switch (rules?.display) {
+    TypeDisplay.yesNo => AppIcons.yesNo,
+    TypeDisplay.quantity => AppIcons.quantity,
+    TypeDisplay.duration => AppIcons.duration,
+    null => AppIcons.unknownType,
   };
 
   String typeLabel(ProvisionalTypeRules? rules) => switch (rules?.display) {

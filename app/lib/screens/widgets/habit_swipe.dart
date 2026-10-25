@@ -9,6 +9,7 @@ import '../../data/local_mutation_service.dart' show HabitEditFailure, HabitEdit
 import '../../l10n/generated/app_localizations.dart';
 import '../../providers/account_context.dart';
 import '../../widgets/habit_ui.dart';
+import '../../widgets/app_icons.dart';
 import '../privacy_screen.dart' show tonalButton;
 
 /// A51: a habit row that can be swiped (Habits 07 and Archived routines 22, never Today).
@@ -25,7 +26,7 @@ class HabitSwipe extends StatelessWidget {
 
   final String habitId;
   final String rightLabel;
-  final IconData rightIcon;
+  final AppIconData rightIcon;
   final Future<void> Function() onRight;
   final Future<void> Function() onLeft;
   final Widget child;
@@ -76,7 +77,7 @@ class HabitSwipe extends StatelessWidget {
         ),
         secondaryBackground: _Background(
           label: l10n.swipeDelete,
-          icon: Icons.delete_outline,
+          icon: AppIcons.delete,
           color: tokens.errorBg,
           ink: tokens.errorInk,
           alignment: AlignmentDirectional.centerEnd,
@@ -90,7 +91,7 @@ class HabitSwipe extends StatelessWidget {
 /// What a swipe reveals: an icon and the action in words, never colour alone.
 class _Background extends StatelessWidget {
   final String label;
-  final IconData icon;
+  final AppIconData icon;
   final Color color;
   final Color ink;
   final AlignmentGeometry alignment;
@@ -117,7 +118,7 @@ class _Background extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: ink),
+            AppIcon(icon, color: ink),
             const SizedBox(width: HabitSpace.s8),
             Text(
               label,

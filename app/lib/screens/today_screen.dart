@@ -21,6 +21,7 @@ import '../widgets/habit_ui.dart';
 import '../widgets/sync_status_chip.dart';
 import 'timezone_screen.dart';
 import 'widgets/needs_attention.dart';
+import '../widgets/app_icons.dart';
 
 /// Screen 05, with screen 23 as its first-run empty state. Lists the habits due today (schedule,
 /// active range, zero-length dates excluded) in creation order. Reads local data only and works
@@ -65,7 +66,7 @@ class _TodayBody extends StatelessWidget {
 
     final Widget body;
     if (model.error != null && !model.hasValue) {
-      body = _Message(text: l10n.todayLoadError, icon: Icons.error_outline);
+      body = _Message(text: l10n.todayLoadError, icon: AppIcons.alert);
     } else if (today == null) {
       body = _Message(text: l10n.todayOpening, icon: null);
     } else if (today.items.isEmpty) {
@@ -202,12 +203,12 @@ class _HabitRow extends StatelessWidget {
     }
 
     final String subtitle;
-    final IconData trailing;
+    final AppIconData trailing;
     final Tone tone;
     if (item.needsAttention) {
-      (subtitle, trailing, tone) = (l10n.todayNeedsLook, Icons.error_outline, Tone.warning);
+      (subtitle, trailing, tone) = (l10n.todayNeedsLook, AppIcons.alert, Tone.warning);
     } else if (item.rules == null) {
-      (subtitle, trailing, tone) = (l10n.todayUnknownType, Icons.system_update_alt, Tone.info);
+      (subtitle, trailing, tone) = (l10n.todayUnknownType, AppIcons.update, Tone.info);
     } else if (item.complete) {
       final at = item.completedAt;
       subtitle = at == null
@@ -215,19 +216,19 @@ class _HabitRow extends StatelessWidget {
           : (item.pending
                 ? l10n.todayCompletedAtWaiting(format.time(at))
                 : l10n.todayCompletedAt(format.time(at)));
-      (trailing, tone) = (Icons.check, Tone.positive);
+      (trailing, tone) = (AppIcons.check, Tone.positive);
     } else if (!item.rules!.oneTap) {
-      (subtitle, trailing, tone) = (l10n.todayOtherType, Icons.hourglass_empty, Tone.info);
+      (subtitle, trailing, tone) = (l10n.todayOtherType, AppIcons.waiting, Tone.info);
     } else if (item.habit.provisional && item.log.syncState == null) {
       (subtitle, trailing, tone) = (
         l10n.todayNewHabitWaiting,
-        Icons.radio_button_unchecked,
+        AppIcons.notDone,
         Tone.neutral,
       );
     } else {
       (subtitle, trailing, tone) = (
         item.pending ? l10n.todayNotDoneWaiting : l10n.todayNotDone,
-        Icons.radio_button_unchecked,
+        AppIcons.notDone,
         Tone.neutral,
       );
     }
@@ -273,14 +274,14 @@ class _HabitRow extends StatelessWidget {
             IconButton(
               onPressed: onAction,
               tooltip: action,
-              icon: Icon(trailing, color: ink),
+              icon: AppIcon(trailing, color: ink),
               constraints: const BoxConstraints(
                 minWidth: HabitSize.minTarget,
                 minHeight: HabitSize.minTarget,
               ),
             )
           else
-            ExcludeSemantics(child: Icon(trailing, color: ink)),
+            ExcludeSemantics(child: AppIcon(trailing, color: ink)),
         ],
       ),
     );
@@ -332,7 +333,7 @@ class _AmountRow extends StatelessWidget {
         style: text.bodySmall?.copyWith(color: tokens.muted),
       );
       said = l10n.todayProgressDone(spoken);
-      trailing = ExcludeSemantics(child: Icon(Icons.check, color: tokens.positiveInk));
+      trailing = ExcludeSemantics(child: AppIcon(AppIcons.check, color: tokens.positiveInk));
     } else {
       line = Text(progress, style: text.bodySmall?.copyWith(color: tokens.muted));
       said = spoken;
@@ -576,7 +577,7 @@ class _EmptyToday extends StatelessWidget {
             width: 200,
             height: 200,
             decoration: BoxDecoration(color: tokens.positiveBg, shape: BoxShape.circle),
-            child: Icon(Icons.eco_outlined, size: 96, color: tokens.primary),
+            child: AppIcon(AppIcons.leaf, size: 96, color: tokens.primary),
           ),
         ),
         const SizedBox(height: HabitSpace.s32),
@@ -596,7 +597,7 @@ class _EmptyToday extends StatelessWidget {
 
 class _Message extends StatelessWidget {
   final String text;
-  final IconData? icon;
+  final AppIconData? icon;
 
   const _Message({required this.text, required this.icon});
 
@@ -609,7 +610,7 @@ class _Message extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (icon == null) const CircularProgressIndicator() else Icon(icon, size: 32),
+            if (icon == null) const CircularProgressIndicator() else AppIcon(icon!, size: 32),
             const SizedBox(height: HabitSpace.s16),
             Text(text, style: style, textAlign: TextAlign.center),
           ],

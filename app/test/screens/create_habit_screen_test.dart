@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:habit/providers/account_context.dart';
 import 'package:habit/screens/frequency_screen.dart';
 import 'package:habit/sync/sync_transport.dart';
+import 'package:habit/widgets/app_icons.dart';
 
 import '../support/app_harness.dart';
 import '../support/contract_fixtures.dart';
@@ -136,7 +137,7 @@ void main() {
     expect(find.text('This field is needed.'), findsOneWidget);
     expect(find.text('Use up to 3 decimal places.'), findsOneWidget);
     expect(find.text('Add a unit, such as ml or pages.'), findsOneWidget);
-    expect(find.byIcon(Icons.info_outline), findsNWidgets(3), reason: 'a symbol with each');
+    expect(byAppIcon(AppIcons.info), findsNWidgets(3), reason: 'a symbol with each');
     expect(find.text('1.2345'), findsOneWidget, reason: 'typed text is kept');
     final name = tester.widget<EditableText>(
       find.descendant(of: find.byType(TextFormField), matching: find.byType(EditableText)),

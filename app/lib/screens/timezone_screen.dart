@@ -15,6 +15,7 @@ import '../providers/session_provider.dart';
 import '../providers/stream_model.dart';
 import '../widgets/habit_format.dart';
 import '../widgets/habit_ui.dart';
+import '../widgets/app_icons.dart';
 
 /// Screen 04: the habit timezone. Edit writes profile.set_timezone through the writer (queued
 /// offline, applied by the server from the start of the next day, A26); choosing the zone in
@@ -87,7 +88,7 @@ class _Timezone extends StatelessWidget {
               semanticsLabel: zone.isEmpty ? null : l10n.setupZoneLabel(zone),
               child: Row(
                 children: [
-                  const ExcludeSemantics(child: IconTile(icon: Icons.schedule)),
+                  const ExcludeSemantics(child: IconTile(icon: AppIcons.clock)),
                   const SizedBox(width: HabitSpace.s16),
                   Expanded(
                     child: ExcludeSemantics(
@@ -245,7 +246,7 @@ class _ReminderBlockState extends State<_ReminderBlock> with WidgetsBindingObser
           child: Row(
             children: [
               ExcludeSemantics(
-                child: IconTile(icon: Icons.notifications_none, iconColor: tokens.warningInk),
+                child: IconTile(icon: AppIcons.reminder, iconColor: tokens.warningInk),
               ),
               const SizedBox(width: HabitSpace.s16),
               Expanded(
@@ -388,7 +389,7 @@ class _ZonePickerState extends State<ZonePicker> {
                     l10n.zoneRow(TimezoneScreen.cityName(zone), ZonePicker.offset(zone, _now)),
                   ),
                   subtitle: Text(zone),
-                  trailing: selected ? Icon(Icons.check, color: tokens.primary) : null,
+                  trailing: selected ? AppIcon(AppIcons.check, color: tokens.primary) : null,
                   onTap: () => Navigator.of(context).pop(zone),
                 );
               },

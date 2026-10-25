@@ -10,6 +10,9 @@ import 'package:habit/providers/health_provider.dart';
 import 'package:habit/screens/server_status_screen.dart';
 import 'package:habit/services/health_service.dart';
 import 'package:provider/provider.dart';
+import 'package:habit/widgets/app_icons.dart';
+
+import '../support/app_harness.dart' show byAppIcon;
 
 class FakeHealthService implements HealthService {
   Future<HealthStatus> Function() next;
@@ -47,11 +50,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Connected'), findsOneWidget);
-    expect(
-      find.byIcon(Icons.check_circle_outline),
-      findsOneWidget,
-      reason: 'status is not colour alone',
-    );
+    expect(byAppIcon(AppIcons.done), findsOneWidget, reason: 'status is not colour alone');
     expect(find.text('2026-05-28T17:22:00Z'), findsOneWidget);
     expect(find.text(okStatus.requestId), findsOneWidget);
   });
@@ -82,7 +81,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Not connected'), findsOneWidget);
-    expect(find.byIcon(Icons.cloud_off_outlined), findsOneWidget);
+    expect(byAppIcon(AppIcons.offline), findsOneWidget);
 
     fail = false;
     await tester.tap(find.text('Check again'));

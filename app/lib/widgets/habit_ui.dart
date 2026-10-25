@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../config/habit_tokens.dart';
 import '../l10n/generated/app_localizations.dart';
+import '../widgets/app_icons.dart';
 
 /// Shared building blocks for the design file's screens. Every status carries text (and usually
 /// a symbol), never colour alone; every target is at least 44 px; text scales.
@@ -60,7 +61,7 @@ class ScreenHeader extends StatelessWidget {
                 IconButton(
                   onPressed: onBack,
                   tooltip: AppLocalizations.of(context).back,
-                  icon: Icon(Icons.arrow_back, color: tokens.muted),
+                  icon: AppIcon(AppIcons.back, color: tokens.muted),
                   constraints: const BoxConstraints(
                     minWidth: HabitSize.minTarget,
                     minHeight: HabitSize.minTarget,
@@ -90,7 +91,7 @@ class InfoCard extends StatelessWidget {
   final String title;
   final String? body;
   final Tone tone;
-  final IconData? icon;
+  final AppIconData? icon;
 
   /// The title in the tone's ink, as 25, 26 and 27 draw it.
   final bool tintTitle;
@@ -119,7 +120,7 @@ class InfoCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (icon != null) ...[
-            Icon(icon, color: tone.ink(tokens)),
+            AppIcon(icon!, color: tone.ink(tokens)),
             const SizedBox(width: HabitSpace.s12),
           ],
           Expanded(
@@ -150,7 +151,7 @@ class InfoCard extends StatelessWidget {
 class StatusChip extends StatelessWidget {
   final String label;
   final Tone tone;
-  final IconData icon;
+  final AppIconData icon;
   final VoidCallback? onTap;
   final String? semanticsLabel;
 
@@ -178,7 +179,7 @@ class StatusChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 18, color: ink),
+          AppIcon(icon, size: 18, color: ink),
           const SizedBox(width: HabitSpace.s8),
           Text(label, style: text.titleSmall?.copyWith(color: ink)),
         ],
@@ -201,7 +202,7 @@ class StatusChip extends StatelessWidget {
 
 /// The 44 px tinted square holding a habit or status icon.
 class IconTile extends StatelessWidget {
-  final IconData icon;
+  final AppIconData icon;
   final Tone tone;
 
   /// The icon's own colour where the design gives one (04's orange bell on the usual tile).
@@ -219,7 +220,7 @@ class IconTile extends StatelessWidget {
         color: tone == Tone.neutral ? tokens.positiveBg : tone.background(tokens),
         borderRadius: BorderRadius.circular(HabitRadius.r12),
       ),
-      child: Icon(
+      child: AppIcon(
         icon,
         color: iconColor ?? (tone.ink(tokens) == tokens.ink ? tokens.primary : tone.ink(tokens)),
       ),
@@ -357,7 +358,7 @@ class ErrorBanner extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.error_outline, color: tokens.errorInk),
+            AppIcon(AppIcons.alert, color: tokens.errorInk),
             const SizedBox(width: HabitSpace.s12),
             Expanded(
               child: Text(message, style: text.bodySmall?.copyWith(color: tokens.errorInk)),
@@ -466,7 +467,7 @@ class FieldErrorText extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.only(top: 1),
-            child: Icon(Icons.info_outline, size: 16, color: tokens.errorInk),
+            child: AppIcon(AppIcons.info, size: 16, color: tokens.errorInk),
           ),
           const SizedBox(width: HabitSpace.s4),
           Flexible(child: Text(message, style: style)),
@@ -503,10 +504,10 @@ class CountStepper extends StatelessWidget {
     final tokens = HabitTokens.of(context);
     final canLower = value > min;
     final canRaise = value < max;
-    Widget button(IconData icon, String tooltip, bool enabled, int to) => IconButton.outlined(
+    Widget button(AppIconData icon, String tooltip, bool enabled, int to) => IconButton.outlined(
       onPressed: enabled ? () => onChanged(to) : null,
       tooltip: tooltip,
-      icon: Icon(icon),
+      icon: AppIcon(icon),
       constraints: const BoxConstraints(
         minWidth: HabitSize.minTarget,
         minHeight: HabitSize.minTarget,
@@ -526,7 +527,7 @@ class CountStepper extends StatelessWidget {
           onDecrease: canLower ? () => onChanged(value - 1) : null,
           child: Row(
             children: [
-              button(Icons.remove, l10n.freqFewer, canLower, value - 1),
+              button(AppIcons.remove, l10n.freqFewer, canLower, value - 1),
               Expanded(
                 child: ExcludeSemantics(
                   child: Text(
@@ -536,7 +537,7 @@ class CountStepper extends StatelessWidget {
                   ),
                 ),
               ),
-              button(Icons.add, l10n.freqMore, canRaise, value + 1),
+              button(AppIcons.add, l10n.freqMore, canRaise, value + 1),
             ],
           ),
         ),

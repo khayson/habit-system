@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../app/router.dart';
 import '../config/habit_tokens.dart';
 import '../l10n/generated/app_localizations.dart';
+import '../widgets/app_icons.dart';
 
 /// The design file's bottom navigation (screens 05, 07, 12): Today, Habits, Insights, Profile.
 /// Insights is drawn as in the design and arrives with its phase; until then it is disabled
@@ -40,25 +41,25 @@ class AppShell extends StatelessWidget {
             child: Row(
               children: [
                 _Tab(
-                  icon: Icons.home_outlined,
+                  icon: AppIcons.today,
                   label: l10n.navToday,
                   selected: !habits && !profile && !insights,
                   onTap: () => context.go(Routes.today),
                 ),
                 _Tab(
-                  icon: Icons.calendar_today_outlined,
+                  icon: AppIcons.habits,
                   label: l10n.navHabits,
                   selected: habits,
                   onTap: () => context.go(Routes.habits),
                 ),
                 _Tab(
-                  icon: Icons.signal_cellular_alt_outlined,
+                  icon: AppIcons.insights,
                   label: l10n.navInsights,
                   selected: insights,
                   onTap: () => context.go(Routes.insights),
                 ),
                 _Tab(
-                  icon: Icons.person_outline,
+                  icon: AppIcons.profile,
                   label: l10n.navProfile,
                   selected: profile,
                   onTap: () => context.go(Routes.profile),
@@ -73,7 +74,7 @@ class AppShell extends StatelessWidget {
 }
 
 class _Tab extends StatelessWidget {
-  final IconData icon;
+  final AppIconData icon;
   final String label;
   final bool selected;
   final VoidCallback? onTap;
@@ -101,7 +102,7 @@ class _Tab extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(icon, color: color, size: 28),
+                AppIcon(icon, color: color, size: 28),
                 const SizedBox(height: HabitSpace.s4),
                 Text(
                   label,
