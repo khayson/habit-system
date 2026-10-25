@@ -106,6 +106,12 @@ you saw.
 | 82 | Sign in to the same throwaway account on a second phone. On the first, check in offline, open 28, read the card ("… changes are still waiting to sync."), reconnect and delete with the right password. | The first phone opens sign in with "Your account is being deleted." and "Sessions on your other devices have ended." Its reminders stop. Signing in with the old password fails like a wrong password. |
 | 83 | Open the app on the second phone (or wait for its next sync). | It signs out the way an expired session does, to sign in, with no error wording. |
 | 84 | With TalkBack and at 200% text, open 28 and move to the destructive button. | TalkBack reads "Delete account permanently, button" (and "disabled" before a password); the password field reads its label and the show/hide button; nothing is clipped; dark theme keeps the button readable. |
+| 85 | Phase 6.4. On the deployed API with Brevo configured, sign in, tap Forgot password?, keep the email and tap Send reset code. | 25 reads "Enter your email to get a reset code." and "Private and secure"; 26 opens with "Resend reset email in 60 s" counting down. |
+| 86 | Check the inbox of that address (and its spam folder). | One email with a 6-digit code in large type, "It expires in 15 minutes." and the "If you did not ask for this…" line; no link. Note whether it landed in spam. |
+| 87 | Wait for the countdown, tap Resend reset email. | "We asked for a new code. It replaces the earlier one."; the countdown restarts; a second email arrives; the first code no longer works. |
+| 88 | On 27, type a wrong code five times (with a valid new password), then the right one. | Each time "This code is not valid. Request a new one." under the code with "Request a new code"; after the fifth wrong try the right code is refused too; Request a new code opens 25 with the email. |
+| 89 | With the account also signed in on a second phone, reset with a fresh code. | Sign in opens with the email and "Your password has changed. Sign in with the new one."; the new password works; the second phone signs out at its next sync, as an expired session does. |
+| 90 | With TalkBack and at 200% text, go through 25, 26 and 27. | The code field reads "Reset code"; the countdown reads "Resend reset email, available in … seconds"; nothing is clipped; dark theme keeps the cards readable. |
 
 ## Results
 
@@ -195,3 +201,9 @@ you saw.
 | 82 | | | | |
 | 83 | | | | |
 | 84 | | | | |
+| 85 | | | | |
+| 86 | | | | |
+| 87 | | | | |
+| 88 | | | | |
+| 89 | | | | |
+| 90 | | | | |
