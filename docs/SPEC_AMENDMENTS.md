@@ -477,3 +477,37 @@ The architect's 6.7 prompt asked for messages inside each screen with no toasts 
   - Every icon in the app's own UI comes from the free Hugeicons stroke-rounded set (the `hugeicons` package on pub.dev), never the Pro package.
   - One registry, `lib/widgets/app_icons.dart`: `AppIcons.<meaning>` constants and one `AppIcon` widget that takes a size, a colour and either a semantic label or no semantics. This is the same pattern as Khay Studios' schoolbook app.
   - An architecture test fails on `Icons.` or a direct `HugeIcon` use outside that file. Material's own internal glyphs (a switch thumb, a date picker) and the Android notification drawable are out of scope.
+
+## 23. Added after the Phase 6.7 review (2026-10-25)
+
+### A53 — A chosen icon for each habit, from the whole Hugeicons set · ADOPT (Khay Studios, 2026-10-25)
+A habit's icon shows what the habit is (a book for reading, a drop for water), chosen by the person. Its type no longer picks it. The architect's 6.8 prompt proposed a fixed catalog of about 40 keys. When it was run, Khay Studios decided the choice "shouldn't be limited": the picker offers **every free Hugeicons stroke-rounded icon (6,063 in hugeicons 1.2.0) with a search**. This replaces the prompt's fixed-catalog parts. No design exists for the picker. It is built from existing components (the Schedule and Reminder rows on 24, a bottom sheet), and Khay Studios approved that.
+
+- **The key:**
+  - `habits.icon` is `varchar(64)`, null by default.
+  - A non-null key is the icon's Hugeicons name in lower-case kebab form, for example `book-02` or `water-energy`.
+  - The server checks only the key's shape: `^[a-z0-9]+(-[a-z0-9]+)*$`, at most 64 characters. It does not check a list. So a newer app with a newer icon set can sync to an older server, and an older app keeps syncing (A21). Anything else is 422 `validation_failed` on `icon`.
+- **Writes:**
+  - `habit.create` accepts `icon` (optional, a key or null).
+  - In `habit.update`, an `icon` that is absent leaves the icon unchanged, so apps from before this amendment never clear it. `null` clears it; a key sets it.
+  - Changing only the icon raises the habit's `version`. It is presentation only: never a definition version, and it never changes periods, XP, streaks or freezes.
+  - The key travels in the habit entity, bootstrap and exports.
+- **Showing it:**
+  - A null icon, or a key the app does not know, shows the category's default. An unknown key is kept unchanged on the next edit unless the person picks another (invariant 13).
+  - The type's icon stays only where the type itself is shown (the type switch on 24).
+- **The contract fixture** `contract-fixtures/habit/icons.json` holds:
+  - the key shape;
+  - each category's default key;
+  - the keyword table (word prefixes of the habit's name, to a key);
+  - the about 40 featured keys the picker shows first under "Suggested", each with an English label;
+  - name-to-icon examples that both suites check.
+  The server's copy of the table and the app's generated catalog are tested against it, never copied by hand.
+- **Suggestion and backfill:**
+  - On create, the name suggests an icon from the keyword table until the person picks one; after that, the name no longer changes it.
+  - A one-time migration gives existing habits the same table's icon and leaves the rest null. It never overwrites a chosen icon.
+- **Search:**
+  - Each icon's searchable words are the words of its name, plus the keyword table's words and the featured labels pointing to it.
+  - Search runs on the device, offline.
+  - English only for now: icon names are not translated.
+- **App size:** the whole set is bundled (no network fetch) so the picker works offline. The increase in app size is measured and reported in the 6.8 packet.
+- **No new third party:** the icon set is the same MIT-licensed package A52 adopted, and an icon choice is not personal data beyond the habit itself.
