@@ -178,6 +178,30 @@ class AuthService {
     await open?.db.close();
   }
 
+  /// A50: asks for a 6-digit reset code. The server answers every email the same way, so success
+  /// says nothing about whether an account exists.
+  Future<void> requestPasswordReset(String email) async =>
+      _api.post('/auth/forgot-password', (_) => null, data: {'email': email});
+
+  /// A50: sets a new password with the emailed code (`reset_token` is the spec's field name). The
+  /// server revokes every session of the account; nothing on this device changes here; any
+  /// signed-in device of that account signs out at its next 401.
+  Future<void> resetPassword({
+    required String email,
+    required String code,
+    required String password,
+    required String confirmation,
+  }) async => _api.post(
+    '/auth/reset-password',
+    (_) => null,
+    data: {
+      'email': email,
+      'reset_token': code,
+      'password': password,
+      'password_confirmation': confirmation,
+    },
+  );
+
   /// A49: DELETE /me with the password. Network only: nothing on the device changes here, so a
   /// wrong password or no connection leaves everything as it was.
   Future<DeletionReceipt> requestAccountDeletion(String password) async => (await _api.delete(

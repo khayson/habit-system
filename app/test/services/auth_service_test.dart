@@ -91,6 +91,66 @@ void main() {
     );
   });
 
+  group('A50: password reset by code', () {
+    final forgot = contractFixture('auth/forgot_password.json');
+    final reset = contractFixture('auth/reset_password.json');
+
+    test('both fixtures declare the Dart suite', () {
+      expect(forgot['suites'], contains('dart'));
+      expect(reset['suites'], contains('dart'));
+    });
+
+    test('asks for a code with the fixture body and needs no session', () async {
+      final accepted = forgot['accepted'] as Map<String, dynamic>;
+      http.on(
+        'POST /auth/forgot-password',
+        Reply(accepted['status'] as int, materialize(accepted['body'])),
+      );
+
+      await auth.requestPasswordReset((forgot['request'] as Map)['email'] as String);
+
+      final sent = http.sent('POST /auth/forgot-password').single;
+      expectContract(forgot['request'], sent.data);
+      expect(sent.headers['Authorization'], isNull);
+    });
+
+    test('resets with the fixture body; the 204 changes nothing on the device', () async {
+      final request = reset['request'] as Map<String, dynamic>;
+      http.on('POST /auth/reset-password', Reply((reset['reset'] as Map)['status'] as int));
+
+      await auth.resetPassword(
+        email: request['email'] as String,
+        code: request['reset_token'] as String,
+        password: request['password'] as String,
+        confirmation: request['password_confirmation'] as String,
+      );
+
+      expectContract(request, http.sent('POST /auth/reset-password').single.data);
+      expect((tokens.token, accounts.userId), (null, null));
+    });
+
+    for (final (name, field) in [('invalid_code', 'reset_token'), ('weak_password', 'password')]) {
+      test('$name is the field error from the server', () async {
+        final error = reset[name] as Map<String, dynamic>;
+        http.on(
+          'POST /auth/reset-password',
+          Reply(error['status'] as int, materialize(error['body'])),
+        );
+        final expected = (((error['body'] as Map)['error'] as Map)['fields'] as Map)[field];
+
+        await expectLater(
+          auth.resetPassword(
+            email: 'm@example.com',
+            code: '000000',
+            password: 'x',
+            confirmation: 'x',
+          ),
+          throwsA(isA<AppException>().having((e) => e.fields[field], field, expected)),
+        );
+      });
+    }
+  });
+
   group('A49: account deletion', () {
     final fixture = contractFixture('auth/delete_me.json');
     final statuses = contractFixture('auth/account_deletion_status.json');
