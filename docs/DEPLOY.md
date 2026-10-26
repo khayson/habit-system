@@ -11,7 +11,7 @@ You will need about two hours the first time. Do the steps in order; each one en
 | Database | Neon, Frankfurt | free |
 | Photos and exports | Cloudflare R2, bucket `habit-files` (done) | free |
 | Email | Brevo | free (300 emails a day) |
-| Server | Render free web service, Frankfurt | free |
+| Server | Render free web service, Frankfurt (New Web Service form, as for the movies app) | free |
 | Timer | cron-job.org | free |
 | App download | GitHub Releases and GitHub Pages | free |
 
@@ -104,28 +104,71 @@ Never reuse these elsewhere, and never change APP_KEY after the first deploy: it
 
 ## 5. Render: the server
 
-1. Go to https://render.com and sign up with GitHub. Allow Render to see the `khayson/habit-system` repository.
-2. **New**, then **Blueprint**. Pick `khayson/habit-system`, branch `main`. Render reads `render.yaml` and shows one service, **habit-api** (free, Frankfurt, Docker).
-3. Render asks for each value marked secret. Paste from your notes:
+This is the same **New Web Service** form you used for the movies app. `render.yaml` in the repository lists the same settings, for reference only.
 
-   | Field | Paste |
+1. In Render: **Projects**, then **habit-system**, then **Production**, then **New**, then **Web Service**. Pick the repository `khayson/habit-system`.
+2. Fill the form:
+
+   | Field | Value |
    |---|---|
-   | APP_KEY | APP_KEY |
-   | APP_URL | `https://habit-api.onrender.com` (step 7 below says how to correct it) |
-   | DB_URL | DB_URL |
-   | R2_ENDPOINT | R2_ENDPOINT |
-   | R2_ACCESS_KEY_ID | R2_ACCESS_KEY_ID |
-   | R2_SECRET_ACCESS_KEY | R2_SECRET_ACCESS_KEY |
-   | MAIL_USERNAME | MAIL_USERNAME |
-   | MAIL_PASSWORD | MAIL_PASSWORD |
-   | MAIL_FROM_ADDRESS | MAIL_FROM_ADDRESS |
-   | EXPORT_SIGNING_KEYS | EXPORT_SIGNING_KEYS |
-   | TICK_SECRET | TICK_SECRET |
+   | Name | `habit-system` (your address becomes `https://habit-system.onrender.com`, or with a suffix if the name is taken) |
+   | Project / Environment | habit-system / Production |
+   | Language | **Docker** |
+   | Branch | `main` |
+   | Region | **Frankfurt (EU Central)**, not Oregon. The database is in Frankfurt, and every request talks to it. |
+   | Root Directory | `api` |
+   | Dockerfile Path | `./Dockerfile` (relative to the root directory, so it means `api/Dockerfile`) |
+   | Instance type | **Free** ($0, 0.1 CPU, 512 MB) |
 
-4. Click **Apply**. The first build takes about 5 to 10 minutes. Watch **Logs**: the image builds, then the start script caches config and runs the migrations, and nginx starts.
-5. When the service shows **Live**, open `https://<your service>.onrender.com/api/v1/health` in a browser. It should show `"status":"ok"` and `"min_app_version":1`.
-6. **Keep this service alone in the workspace.** Render gives 750 free hours a month, enough for one service running all month.
-7. **If the address differs** (for example `habit-api-x1y2.onrender.com`): open the service, then **Environment**, set **APP_URL** to the real address, and save. Render redeploys. Use the real address everywhere below.
+3. **Environment Variables**: click **Add from .env** and paste the block below. First replace each `<…>` with the value from your password manager, in the paste box only. Never save the filled block in a file.
+
+   ```
+   APP_NAME="Habit System"
+   APP_ENV=production
+   APP_DEBUG=false
+   APP_KEY=<APP_KEY from step 4>
+   APP_URL=https://habit-system.onrender.com
+   LOG_CHANNEL=stderr
+   LOG_LEVEL=warning
+   TRUSTED_PROXIES=*
+   DB_CONNECTION=pgsql
+   DB_URL=<DB_URL from step 1>
+   CACHE_STORE=database
+   QUEUE_CONNECTION=database
+   SESSION_DRIVER=array
+   AVATAR_DISK=r2
+   EXPORT_DISK=r2
+   R2_BUCKET=habit-files
+   R2_ENDPOINT=<R2_ENDPOINT from step 2>
+   R2_ACCESS_KEY_ID=<R2_ACCESS_KEY_ID from step 2>
+   R2_SECRET_ACCESS_KEY=<R2_SECRET_ACCESS_KEY from step 2>
+   MAIL_MAILER=smtp
+   MAIL_SCHEME=smtp
+   MAIL_HOST=smtp-relay.brevo.com
+   MAIL_PORT=587
+   MAIL_USERNAME=<MAIL_USERNAME from step 3>
+   MAIL_PASSWORD=<MAIL_PASSWORD from step 3>
+   MAIL_FROM_ADDRESS=<MAIL_FROM_ADDRESS from step 3>
+   MAIL_FROM_NAME="Habit System"
+   EXPORT_SIGNING_KEYS=<EXPORT_SIGNING_KEYS from step 4>
+   EXPORT_SIGNING_KID=prod-1
+   TICK_SECRET=<TICK_SECRET from step 4>
+   TICK_MAX_SECONDS=25
+   MIN_APP_VERSION=1
+   ```
+
+   Do not add `PORT`: Render sets it and the image listens on it.
+4. Open **Advanced**:
+   - **Health Check Path:** `/api/v1/health`.
+   - **Auto-Deploy:** On Commit.
+   - Leave the Docker Command empty (the image starts itself), and add no disk.
+5. Click **Deploy web service**. The first build takes about 5 to 10 minutes. Watch **Logs**: the image builds, then the start script caches config and runs the migrations, and nginx starts. The database already has its tables (they were created from this computer on 2026-10-26), so the migrations report nothing to do.
+6. When the service shows **Live**, open `https://<your service>.onrender.com/api/v1/health` in a browser. It should show `"status":"ok"` and `"min_app_version":1`.
+7. **If the address differs** from `https://habit-system.onrender.com`: open the service, then **Environment**, set **APP_URL** to the real address, and save. Render redeploys. Use the real address everywhere below.
+8. **Free hours are shared by the workspace.** Render gives 750 free instance hours a month for all free services together. The movies service in Oregon counts too. Two services kept awake all month need about 1,490 hours, so the free hours would run out around day 25 and both would stop until the next month. Choose one:
+   - let the movies service sleep when idle (no timer keeping it awake);
+   - move one of them to its own Render workspace;
+   - accept that habit-system pauses near the end of a month.
 
 Check: `/api/v1/health` shows ok. If it shows `unavailable`, see step 10.
 
