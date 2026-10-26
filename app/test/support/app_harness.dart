@@ -18,6 +18,7 @@ import 'package:habit/services/photo_picker.dart';
 import 'package:habit/services/auth_service.dart';
 import 'package:habit/services/export_service.dart';
 import 'package:habit/services/insights_service.dart';
+import 'package:habit/services/notices_service.dart';
 import 'package:habit/services/rewards_service.dart';
 import 'package:habit/sync/sync_engine.dart';
 import 'package:habit/sync/sync_transport.dart';
@@ -46,7 +47,9 @@ Future<AccountContext> testAccount(
   RewardsService? rewardsApi,
   InsightsService? insightsApi,
   ExportService? exportsApi,
+  NoticesService? noticesApi,
   SyncTransport? transport,
+  String? filesRoot,
 }) async {
   // Widget tests: streams must close synchronously or closing the database waits forever on a
   // query parked in fake async (drift docs, "Testing").
@@ -69,6 +72,8 @@ Future<AccountContext> testAccount(
     rewardsApi: rewardsApi,
     insightsApi: insightsApi,
     exportsApi: exportsApi,
+    noticesApi: noticesApi,
+    filesRoot: filesRoot,
   );
 }
 

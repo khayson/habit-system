@@ -31,6 +31,8 @@ import '../sync/avatar_transport.dart';
 import '../sync/background_sync.dart';
 import '../sync/http_avatar_transport.dart';
 import '../sync/http_sync_transport.dart';
+import '../data/notice_board.dart';
+import '../services/notices_service.dart';
 import '../sync/ack_watch.dart';
 import '../sync/sync_engine.dart';
 import '../sync/sync_transport.dart';
@@ -62,6 +64,9 @@ class AccountContext {
   /// Export jobs and downloads (screens 21, 29, 30; A48); null where there is no server.
   final ExportService? exportsApi;
 
+  /// GET /notices (A57); null where there is no server.
+  final NoticesService? noticesApi;
+
   /// The device's notification scheduler (Phase 3.2b); one per device, shared by accounts.
   final NotificationScheduler notifications;
 
@@ -77,6 +82,7 @@ class AccountContext {
     this.rewardsApi,
     this.insightsApi,
     this.exportsApi,
+    this.noticesApi,
     NotificationScheduler? notifications,
     this.background,
     required SyncTransport transport,
@@ -151,6 +157,13 @@ class AccountContext {
     await background?.cancel(session.userId);
   }
 
+  /// A57: Today's carousel: cached notices and dismissed cards, in this account's folder.
+  late final NoticeBoard notices = NoticeBoard(
+    folder: filesRoot,
+    fetch: noticesApi?.fetch,
+    clock: _clock,
+  );
+
   late final HabitActions actions = HabitActions(
     writer,
     onLocalWrite: sync.scheduleAfterWrite,
@@ -170,6 +183,7 @@ class AccountContext {
     rewardsApi: RewardsService(api),
     insightsApi: InsightsService(api),
     exportsApi: ExportService(api),
+    noticesApi: NoticesService(api),
     background: const WorkmanagerSyncScheduler(),
     transport: HttpSyncTransport(api.dio, currentToken: api.currentToken),
     avatarTransport: HttpAvatarTransport(api.dio),
@@ -191,6 +205,7 @@ class AccountContext {
     _open = false;
     _reminders?.dispose();
     ackWatch.dispose();
+    notices.dispose();
     sync.dispose();
     queue.dispose();
   }

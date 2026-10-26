@@ -169,10 +169,7 @@ class _TodayList extends StatelessWidget {
         const SizedBox(height: HabitSpace.s24),
         WeekStrip(today: today.date),
         const SizedBox(height: HabitSpace.s24),
-        if (!today.hasReminders) ...[
-          _ReminderCard(habitId: today.items.first.habit.id),
-          const SizedBox(height: HabitSpace.s16),
-        ],
+        _Carousel(reminderHabitId: today.hasReminders ? null : today.items.first.habit.id),
         Container(
           padding: const EdgeInsets.all(HabitSpace.s16),
           decoration: BoxDecoration(
@@ -565,6 +562,237 @@ class _ReminderCard extends StatelessWidget {
           const SizedBox(width: HabitSpace.s12),
           const ExcludeSemantics(
             child: IconTile(icon: AppIcons.reminder, tile: HabitTile.peach, size: 72),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A57: Today's carousel: Khay Studios' notices, the reminder card while no reminder is set,
+/// then two tips. Swipe or tap a dot to move (no auto-advance); notices and tips can be
+/// dismissed on this device. The cards share one height, the tallest, so nothing jumps.
+class _Carousel extends StatefulWidget {
+  final String? reminderHabitId;
+
+  const _Carousel({required this.reminderHabitId});
+
+  @override
+  State<_Carousel> createState() => _CarouselState();
+}
+
+class _CarouselState extends State<_Carousel> {
+  static const _tips = ['tip:circle', 'tip:days'];
+
+  /// The card on show, by id, so a notice arriving later never moves it; null is the first.
+  String? _current;
+
+  @override
+  void initState() {
+    super.initState();
+    // Throttled by the board (15 minutes); a failure is silent.
+    unawaited(context.read<AccountContext?>()?.notices.refresh());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final account = context.watch<AccountContext?>();
+    if (account == null) return const SizedBox.shrink();
+    final l10n = AppLocalizations.of(context);
+    final board = account.notices;
+    return ListenableBuilder(
+      listenable: board,
+      builder: (context, _) {
+        final reminder = widget.reminderHabitId;
+        final ids = <String>[
+          for (final n in board.visible) 'notice:${n.id}',
+          if (reminder != null) 'reminder',
+          if (board.loaded)
+            for (final tip in _tips)
+              if (!board.isDismissed(tip)) tip,
+        ];
+        final cards = <Widget>[
+          for (final n in board.visible)
+            _InfoSlide(
+              tag: l10n.carouselNoticeTag,
+              title: n.title,
+              body: n.body,
+              tile: HabitTile.lime,
+              icon: AppIcons.info,
+              onDismiss: () => board.dismiss(n.id),
+            ),
+          if (reminder != null) _ReminderCard(habitId: reminder),
+          if (board.loaded)
+            for (final tip in _tips)
+              if (!board.isDismissed(tip))
+                _InfoSlide(
+                  tag: l10n.carouselTipTag,
+                  title: tip == 'tip:circle' ? l10n.tipCircleTitle : l10n.tipDaysTitle,
+                  body: tip == 'tip:circle' ? l10n.tipCircleBody : l10n.tipDaysBody,
+                  tile: HabitTile.pink,
+                  icon: tip == 'tip:circle' ? AppIcons.done : AppIcons.frequency,
+                  onDismiss: () => board.dismiss(tip),
+                ),
+        ];
+        if (cards.isEmpty) return const SizedBox.shrink();
+        final index = _current == null ? 0 : ids.indexOf(_current!).clamp(0, cards.length - 1);
+        void go(int i) => setState(() => _current = ids[i.clamp(0, cards.length - 1)]);
+        return Padding(
+          padding: const EdgeInsets.only(bottom: HabitSpace.s16),
+          child: Column(
+            children: [
+              GestureDetector(
+                onHorizontalDragEnd: (d) {
+                  final v = d.primaryVelocity ?? 0;
+                  if (v < -200) go(index + 1);
+                  if (v > 200) go(index - 1);
+                },
+                child: Stack(
+                  children: [
+                    for (var i = 0; i < cards.length; i++)
+                      IgnorePointer(
+                        ignoring: i != index,
+                        child: ExcludeSemantics(
+                          excluding: i != index,
+                          child: AnimatedOpacity(
+                            opacity: i == index ? 1 : 0,
+                            duration: const Duration(milliseconds: 200),
+                            child: cards[i],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              if (cards.length > 1)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    for (var i = 0; i < cards.length; i++)
+                      _CarouselDot(
+                        selected: i == index,
+                        label: l10n.carouselShow(i + 1, cards.length),
+                        onTap: () => go(i),
+                      ),
+                  ],
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// A 44 px target around a small dot; the chosen one is long and dark, so it never rests on
+/// colour alone.
+class _CarouselDot extends StatelessWidget {
+  final bool selected;
+  final String label;
+  final VoidCallback onTap;
+
+  const _CarouselDot({required this.selected, required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = HabitTokens.of(context);
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const StadiumBorder(),
+        child: SizedBox(
+          width: HabitSize.minTarget,
+          height: HabitSize.minTarget,
+          child: Center(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: selected ? 20 : 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: selected ? tokens.selected : tokens.border,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A notice or a tip in the carousel: a small tag, a title and a body on a pastel card, with a
+/// dismiss ✕.
+class _InfoSlide extends StatelessWidget {
+  final String tag;
+  final String title;
+  final String body;
+  final HabitTile tile;
+  final AppIconData icon;
+  final VoidCallback onDismiss;
+
+  const _InfoSlide({
+    required this.tag,
+    required this.title,
+    required this.body,
+    required this.tile,
+    required this.icon,
+    required this.onDismiss,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final text = Theme.of(context).textTheme;
+    final tokens = HabitTokens.of(context);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(
+        HabitSpace.s16,
+        HabitSpace.s16,
+        HabitSpace.s4,
+        HabitSpace.s16,
+      ),
+      decoration: BoxDecoration(
+        color: tile.background(tokens),
+        borderRadius: BorderRadius.circular(HabitRadius.r20),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ExcludeSemantics(
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: tokens.surface,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: AppIcon(icon, size: 22, color: tile.ink(tokens)),
+            ),
+          ),
+          const SizedBox(width: HabitSpace.s12),
+          Expanded(
+            child: Semantics(
+              container: true,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(tag, style: text.labelMedium?.copyWith(color: tokens.ink)),
+                  const SizedBox(height: HabitSpace.s4),
+                  Text(title, style: text.titleMedium?.copyWith(color: tokens.ink)),
+                  const SizedBox(height: HabitSpace.s4),
+                  Text(body, style: text.bodySmall?.copyWith(color: tokens.ink)),
+                ],
+              ),
+            ),
+          ),
+          IconButton(
+            onPressed: onDismiss,
+            tooltip: l10n.carouselDismiss(title),
+            icon: AppIcon(AppIcons.close, size: 20, color: tokens.ink),
           ),
         ],
       ),

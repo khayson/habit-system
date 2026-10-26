@@ -17,6 +17,7 @@ abstract final class ApiConfig {
   static const String rewards = '/rewards';
   static const String freezes = '/freezes';
   static const String insights = '/insights';
+  static const String notices = '/notices';
   static const String exports = '/exports';
   static String export(String id) => '/exports/$id';
 

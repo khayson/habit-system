@@ -530,6 +530,54 @@ abstract class AppLocalizations {
   /// **'{name} is done for today. Open it to change the amount.'**
   String todayDoneToast(String name);
 
+  /// A57: small tag above a notice Khay Studios published.
+  ///
+  /// In en, this message translates to:
+  /// **'From the Habit team'**
+  String get carouselNoticeTag;
+
+  /// A57: small tag above a built-in tip card.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip'**
+  String get carouselTipTag;
+
+  /// A57: a carousel page dot, for TalkBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Show card {n} of {total}'**
+  String carouselShow(int n, int total);
+
+  /// A57: the ✕ on a notice or tip card.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss {title}'**
+  String carouselDismiss(String title);
+
+  /// A57: built-in tip card title.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the circle'**
+  String get tipCircleTitle;
+
+  /// A57: built-in tip card body.
+  ///
+  /// In en, this message translates to:
+  /// **'The circle beside a habit checks it in, or adds progress to an amount.'**
+  String get tipCircleBody;
+
+  /// A57: built-in tip card title.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat on your days'**
+  String get tipDaysTitle;
+
+  /// A57: built-in tip card body.
+  ///
+  /// In en, this message translates to:
+  /// **'A habit can repeat on the days you choose. Pick them with the round day chips.'**
+  String get tipDaysBody;
+
   /// A56: the heading above Today's habits.
   ///
   /// In en, this message translates to:

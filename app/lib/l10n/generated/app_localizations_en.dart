@@ -253,6 +253,36 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get carouselNoticeTag => 'From the Habit team';
+
+  @override
+  String get carouselTipTag => 'Tip';
+
+  @override
+  String carouselShow(int n, int total) {
+    return 'Show card $n of $total';
+  }
+
+  @override
+  String carouselDismiss(String title) {
+    return 'Dismiss $title';
+  }
+
+  @override
+  String get tipCircleTitle => 'Tap the circle';
+
+  @override
+  String get tipCircleBody =>
+      'The circle beside a habit checks it in, or adds progress to an amount.';
+
+  @override
+  String get tipDaysTitle => 'Repeat on your days';
+
+  @override
+  String get tipDaysBody =>
+      'A habit can repeat on the days you choose. Pick them with the round day chips.';
+
+  @override
   String get todayRoutine => 'Daily routine';
 
   @override
