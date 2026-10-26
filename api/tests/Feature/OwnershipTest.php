@@ -79,17 +79,27 @@ it('keeps duplicate detection per owner: the same mutation id from two owners is
     expect(DB::table('mutation_receipts')->where('mutation_id', $mutationId)->count())->toBe(2);
 });
 
-it('requires authentication on every route except health, register, login, the reset routes and the deletion receipt', function () {
+it('requires authentication on every route except health, register, login, the reset routes, the deletion receipt and the tick', function () {
     // Spec 05: a bearer token on every route except auth and reset routes (A50).
     $public = ['api/v1/health', 'api/v1/auth/register', 'api/v1/auth/login', 'api/v1/auth/forgot-password', 'api/v1/auth/reset-password'];
     // A49: read with the deletion receipt, never a session; without one it is the same 404.
     $receipt = ['api/v1/account-deletions/{deletion}'];
+    // A54: the outside timer carries a shared secret, never a session; without it, a plain 404.
+    $tick = 'api/v1/internal/tick';
 
     $routes = collect(Route::getRoutes()->getRoutes())->filter(fn (RoutingRoute $r) => str_starts_with($r->uri(), 'api/v1/') && ! str_starts_with($r->uri(), 'api/v1/__test'));
     expect($routes)->not->toBeEmpty();
 
     foreach ($routes as $route) {
         if (in_array($route->uri(), $public, true)) {
+            continue;
+        }
+        if ($route->uri() === $tick) {
+            expect(in_array('auth:sanctum', $route->gatherMiddleware(), true))->toBeFalse("{$route->uri()} must not take a session");
+            $this->app['auth']->forgetGuards();
+            $this->flushHeaders();
+            $this->postJson('/'.$tick)->assertNotFound()->assertJsonPath('error.code', 'not_found');
+
             continue;
         }
         if (in_array($route->uri(), $receipt, true)) {

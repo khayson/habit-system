@@ -16,7 +16,9 @@ uses(RefreshDatabase::class);
 const TICK_SECRET_FOR_TEST = 'tick-secret-for-tests-only-0123456789abcdef';
 
 beforeEach(function () {
-    config(['api.tick_secret' => TICK_SECRET_FOR_TEST, 'queue.default' => 'database']);
+    // The test process itself is large by the end of the suite; the worker's memory limit is
+    // for production's small processes.
+    config(['api.tick_secret' => TICK_SECRET_FOR_TEST, 'queue.default' => 'database', 'api.tick_memory_mb' => 4096]);
     Cache::forget('tick-ran');
     Cache::forget('tick-scheduled');
 });
