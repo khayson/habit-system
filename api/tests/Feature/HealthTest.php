@@ -32,3 +32,9 @@ it('answers JSON even without an Accept header', function () {
         ->assertOk()
         ->assertHeader('Content-Type', 'application/json');
 });
+
+// A54 (the 6.6 review's I2): the lowest app build the server accepts, in every success meta.
+it('carries min_app_version from MIN_APP_VERSION in the success meta', function () {
+    config(['api.min_app_version' => 7]);
+    $this->getJson('/api/v1/health')->assertOk()->assertJsonPath('meta.min_app_version', 7);
+});

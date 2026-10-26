@@ -18,6 +18,9 @@ return [
         'avatar_uploads_per_hour' => (int) env('RATE_LIMIT_AVATAR_UPLOADS_PER_HOUR', 10),
     ],
 
+    // A54: the lowest app build number this server accepts; travels in every success meta.
+    'min_app_version' => (int) env('MIN_APP_VERSION', 1),
+
     // A20: the private disk avatar objects live on (never a public one).
     'avatar_disk' => env('AVATAR_DISK', 'local'),
 

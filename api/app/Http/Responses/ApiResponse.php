@@ -7,7 +7,7 @@ use Illuminate\Http\JsonResponse;
 
 /**
  * Builds the spec envelopes:
- *   success: { data, meta: { api_version, server_time, request_id, ...extra } }
+ *   success: { data, meta: { api_version, server_time, request_id, min_app_version, ...extra } }
  *   error:   { error: { code, message, ...extra }, meta: { request_id, server_time } }
  */
 final class ApiResponse
@@ -30,6 +30,8 @@ final class ApiResponse
                 'api_version' => self::API_VERSION,
                 'server_time' => $context->serverTime(),
                 'request_id' => $context->requestId(),
+                // A54: the lowest app build this server accepts (older apps show "Please update").
+                'min_app_version' => (int) config('api.min_app_version'),
                 ...$meta,
             ],
         ], $status, $headers, self::JSON_FLAGS);

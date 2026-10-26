@@ -1,8 +1,8 @@
 {
-  "description": "GET /api/v1/health. Success envelope: data + meta {api_version, server_time, request_id}.",
+  "description": "GET /api/v1/health. Success envelope: data + meta {api_version, server_time, request_id, min_app_version (A54: the lowest app build the server accepts; MIN_APP_VERSION, default 1)}.",
   "status": 200,
   "body": {
     "data": { "status": "ok" },
-    "meta": { "api_version": "v1", "server_time": "{{timestamp}}", "request_id": "{{uuid}}" }
+    "meta": { "api_version": "v1", "server_time": "{{timestamp}}", "request_id": "{{uuid}}", "min_app_version": 1 }
   }
 }
