@@ -160,7 +160,8 @@ it('keeps every text and background pair at 4.5:1 or more, light and dark', func
 it('uses the app\'s colour roles (habit_tokens.dart)', function () {
     $dart = (string) file_get_contents(dirname(__DIR__, 4).'/app/lib/config/habit_tokens.dart');
     $map = ['background' => 'background', 'surface' => 'surface', 'ink' => 'ink', 'muted' => 'muted',
-        'border' => 'border', 'link' => 'primary', 'focus' => 'focus', 'warning' => 'warningInk'];
+        // A56: links are the app's text-action colour (accent); orange text would fail 4.5:1.
+        'border' => 'border', 'link' => 'accent', 'focus' => 'focus', 'warning' => 'warningInk'];
     foreach (['light', 'dark'] as $palette) {
         preg_match('/static const '.$palette.' = HabitTokens\((.*?)\);/s', $dart, $block);
         foreach ($map as $role => $token) {

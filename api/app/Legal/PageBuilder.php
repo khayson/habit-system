@@ -21,16 +21,16 @@ final class PageBuilder
 {
     /**
      * The app's colour roles (app/lib/config/habit_tokens.dart) as the pages use them. `link`
-     * is the app's primary; `warning` marks a fact not filled in yet.
+     * is the app's accent, its text-action colour (A56); `warning` marks a fact not filled in yet.
      */
     public const array PALETTES = [
         'light' => [
-            'background' => '#FAFAFA', 'surface' => '#FFFFFF', 'ink' => '#323B35', 'muted' => '#647269',
-            'border' => '#E6EBE7', 'link' => '#2F7B45', 'focus' => '#236899', 'warning' => '#A85816',
+            'background' => '#F7F2EF', 'surface' => '#FFFFFF', 'ink' => '#1E1F22', 'muted' => '#646464',
+            'border' => '#ECE4DE', 'link' => '#682E08', 'focus' => '#292C31', 'warning' => '#87470A',
         ],
         'dark' => [
-            'background' => '#142018', 'surface' => '#1D2D22', 'ink' => '#EEF6EE', 'muted' => '#B8C8BC',
-            'border' => '#53685A', 'link' => '#8BD799', 'focus' => '#A1D7F3', 'warning' => '#ECCC93',
+            'background' => '#1A1411', 'surface' => '#262019', 'ink' => '#F7F2EF', 'muted' => '#C2B8B0',
+            'border' => '#3E342D', 'link' => '#E8A070', 'focus' => '#F7F2EF', 'warning' => '#FFD9A0',
         ],
     ];
 
