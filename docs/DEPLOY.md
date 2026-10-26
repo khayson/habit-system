@@ -287,6 +287,23 @@ Without the secret the address answers a plain 404. On a machine with the API, `
 
 If you added the service before this step existed: generate `OPS_SECRET` (step 4), add it under Render, **Environment**, then **Save and deploy**.
 
+## 9c. Publishing a notice on Today (A57)
+
+A notice is a short plain-text card in everyone's Today carousel: a title of up to 60 characters and a body of up to 280. It has no links or images. Keep it calm, with no pressure or loss wording.
+
+Open the service in Render, then **Shell**, and run:
+
+```sh
+php artisan notices:publish --title="Weekly habits are here" --body="A habit can now count the days you choose each week." --ends=2026-11-15T00:00:00Z
+php artisan notices:list
+php artisan notices:retire <id>
+```
+
+- `--starts` and `--ends` are optional ISO-8601 times with a zone. Without `--starts`, the notice starts now.
+- The app shows at most 5 at once, newest first, and refreshes them at most every 15 minutes.
+- Each person can dismiss a notice on their phone.
+- `notices:retire` ends a notice now. One that has not started yet is removed.
+
 ## 10. When something fails
 
 **Where to look first:** Render, then **habit-api**, then **Logs**. The server logs warnings and errors only, never passwords, tokens or emails.

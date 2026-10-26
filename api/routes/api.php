@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\ExportController;
 use App\Http\Controllers\Api\V1\HabitController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\InsightsController;
+use App\Http\Controllers\Api\V1\NoticesController;
 use App\Http\Controllers\Api\V1\OpsStatusController;
 use App\Http\Controllers\Api\V1\PasswordResetController;
 use App\Http\Controllers\Api\V1\RewardsController;
@@ -39,6 +40,8 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::get('/rewards', [RewardsController::class, 'rewards'])->name('rewards');
     Route::get('/freezes', [RewardsController::class, 'freezes'])->name('freezes');
     Route::get('/insights', [InsightsController::class, 'show'])->name('insights');
+    // A57: Khay Studios' notices, the same for every account.
+    Route::get('/notices', [NoticesController::class, 'index'])->name('notices');
     Route::get('/exports', [ExportController::class, 'index'])->name('exports.index');
     Route::get('/exports/{export}', [ExportController::class, 'show'])->name('exports.show');
     Route::get('/exports/{export}/download', [ExportController::class, 'download'])->name('exports.download');

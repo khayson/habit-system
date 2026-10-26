@@ -604,4 +604,18 @@ PHP,
         'replace' => 'if (false) {',
         'tests' => 'tests/Feature/OpsStatusTest.php',
     ],
+    [
+        'name' => 'A57: ended notices are still sent',
+        'file' => 'app/Application/Notices/NoticeBoard.php',
+        'search' => "->orWhere('ends_at', '>', \$now))\n            ->orderByDesc('starts_at')",
+        'replace' => "->orWhereNotNull('ends_at'))\n            ->orderByDesc('starts_at')",
+        'tests' => 'tests/Feature/NoticesTest.php',
+    ],
+    [
+        'name' => 'A57: notices not started yet are sent',
+        'file' => 'app/Application/Notices/NoticeBoard.php',
+        'search' => "->where('starts_at', '<=', \$now)\n",
+        'replace' => '',
+        'tests' => 'tests/Feature/NoticesTest.php',
+    ],
 ];
