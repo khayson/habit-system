@@ -32,6 +32,8 @@ it('builds a production image that runs as a non-root user and migrates at start
         ->and($start)->toContain('php artisan config:cache')
         ->and($start)->toContain('php artisan migrate --force')
         ->and($start)->toContain('${PORT:-10000}')
+        // Render mounts an empty /tmp at run time: the start script makes nginx's folders itself.
+        ->and($start)->toMatch('#mkdir -p /tmp/nginx\n.*/tmp/nginx/nginx\.conf#s')
         ->and($start)->not->toContain("\r");
     foreach (['.env', 'vendor', 'tests', 'phpunit.xml'] as $path) {
         expect($ignore)->toMatch('/^'.preg_quote($path, '/').'$/m', $path);
