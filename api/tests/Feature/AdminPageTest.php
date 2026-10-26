@@ -218,3 +218,47 @@ it('never gives the API a session cookie', function () {
     $response = $this->getJson('/api/v1/health')->assertOk();
     expect(collect($response->headers->getCookies())->map->getName()->all())->toBe([]);
 });
+
+it('a mangled password hash in the settings refuses sign-in calmly, never a server error', function (string $hash) {
+    $secret = configureAdmin();
+    config(['admin.password_hash' => $hash]);
+    $this->freezeClock('2026-10-26T10:00:00Z');
+
+    $this->from('/admin/login')->post('/admin/login', [
+        'email' => ADMIN_EMAIL, 'password' => ADMIN_PASSWORD, 'code' => adminCode($secret, '2026-10-26T10:00:00Z'),
+    ])->assertRedirect('/admin/login')->assertSessionHasErrors('login');
+})->with([
+    'prefix pasted too' => ['ADMIN_PASSWORD_HASH=$2y$12$abcdefghijklmnopqrstuuJ8m0p7Qm5bq8Zl0Yw1x2y3z4A5B6C7D'],
+    'quoted' => ['"$2y$12$abcdefghijklmnopqrstuuJ8m0p7Qm5bq8Zl0Yw1x2y3z4A5B6C7D"'],
+    'cut short' => ['$2y$12$abcdefghij'],
+    'not a hash' => ['my password'],
+]);
+
+it('reads settings pasted with their "KEY=" prefix, quotes or spaces as meant', function () {
+    $secret = Totp::newSecret();
+    $hash = Hash::make(ADMIN_PASSWORD);
+    $env = [
+        'ADMIN_EMAIL' => ' ADMIN_EMAIL=Admin@Example.test ',
+        'ADMIN_PASSWORD_HASH' => '"ADMIN_PASSWORD_HASH='.$hash.'"',
+        'ADMIN_TOTP_SECRET' => "'".$secret."'",
+    ];
+    foreach ($env as $key => $value) {
+        putenv("{$key}={$value}");
+        $_ENV[$key] = $_SERVER[$key] = $value;
+    }
+    try {
+        config(['admin' => require config_path('admin.php')]);
+    } finally {
+        foreach (array_keys($env) as $key) {
+            putenv($key);
+            unset($_ENV[$key], $_SERVER[$key]);
+        }
+    }
+    expect(config('admin.email'))->toBe(ADMIN_EMAIL)
+        ->and(config('admin.password_hash'))->toBe($hash)
+        ->and(config('admin.totp_secret'))->toBe($secret);
+    Cache::forget('admin:totp:last-step');
+
+    adminSignIn($this, $secret);
+    $this->get('/admin')->assertOk();
+});

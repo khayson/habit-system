@@ -5,6 +5,7 @@ namespace App\Application\Admin;
 use App\Domain\Clock;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 /**
  * A58: the one admin's sign-in: email, password (bcrypt hash from the environment) and a
@@ -31,7 +32,7 @@ final readonly class AdminAuth
             return false;
         }
         $emailOk = hash_equals((string) config('admin.email'), mb_strtolower(trim($email)));
-        $passwordOk = Hash::check($password, (string) config('admin.password_hash'));
+        $passwordOk = $this->passwordMatches($password, (string) config('admin.password_hash'));
         $step = Totp::matchStep((string) config('admin.totp_secret'), trim($code), $this->clock->now()->getTimestamp());
         if (! $emailOk || ! $passwordOk || $step === null) {
             return false;
@@ -44,5 +45,20 @@ final readonly class AdminAuth
         Cache::forever(self::LAST_STEP, $step);
 
         return true;
+    }
+
+    /**
+     * A setting that is not a bcrypt hash (a cut-off copy, say) refuses sign-in instead of
+     * throwing, and says so in the log (never the value).
+     */
+    private function passwordMatches(string $password, string $hash): bool
+    {
+        if (password_get_info($hash)['algoName'] !== 'bcrypt') {
+            Log::warning('admin sign-in: ADMIN_PASSWORD_HASH is not a bcrypt hash; run php artisan admin:setup again');
+
+            return false;
+        }
+
+        return Hash::check($password, $hash);
     }
 }
