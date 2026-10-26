@@ -285,7 +285,7 @@ class _OptionCard extends StatelessWidget {
             children: [
               IconTile(
                 icon: AppIcons.frequency,
-                iconColor: selected ? tokens.primary : tokens.muted,
+                iconColor: selected ? tokens.accent : tokens.muted,
               ),
               const SizedBox(width: HabitSpace.s16),
               Expanded(
@@ -302,7 +302,7 @@ class _OptionCard extends StatelessWidget {
               AppIcon(
                 selected ? AppIcons.check : AppIcons.unselected,
                 size: selected ? 22 : 14,
-                color: selected ? tokens.primary : tokens.muted,
+                color: selected ? tokens.accent : tokens.muted,
               ),
             ],
           ),

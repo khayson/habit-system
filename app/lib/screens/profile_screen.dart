@@ -131,7 +131,7 @@ class _ProfileState extends State<_Profile> with WidgetsBindingObserver {
           ScreenHeader(
             title: l10n.profileTitle,
             subtitle: l10n.profileSubtitle,
-            onBack: () => context.canPop() ? context.pop() : context.go(Routes.today),
+            onClose: () => context.canPop() ? context.pop() : context.go(Routes.today),
           ),
           if (profile != null)
             _AvatarCard(
@@ -398,7 +398,7 @@ class _Row extends StatelessWidget {
         if (trailing != null)
           trailing!
         else if (onTap != null)
-          AppIcon(AppIcons.chevronRight, color: tokens.primary),
+          AppIcon(AppIcons.chevronRight, color: tokens.accent),
       ],
     );
     return SurfaceCard(

@@ -184,7 +184,7 @@ class _UseCategory extends StatelessWidget {
                   AppIcon(AppIcons.habit(null, category: category), size: 24, color: tokens.ink),
                   const SizedBox(width: HabitSpace.s12),
                   Expanded(child: Text(l10n.iconPickerUseCategory, style: text.bodyLarge)),
-                  if (selected) AppIcon(AppIcons.check, size: 20, color: tokens.primary),
+                  if (selected) AppIcon(AppIcons.check, size: 20, color: tokens.accent),
                 ],
               ),
             ),
@@ -234,14 +234,14 @@ class _Cell extends StatelessWidget {
                   child: AppIcon(
                     AppIcons.habit(iconKey),
                     size: 26,
-                    color: selected ? tokens.primary : tokens.ink,
+                    color: selected ? tokens.accent : tokens.ink,
                   ),
                 ),
                 if (selected)
                   Positioned(
                     top: 2,
                     right: 2,
-                    child: AppIcon(AppIcons.check, size: 14, color: tokens.primary),
+                    child: AppIcon(AppIcons.check, size: 14, color: tokens.accent),
                   ),
               ],
             ),

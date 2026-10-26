@@ -217,7 +217,7 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
                       ),
                       Text(
                         l10n.privacyIncludedAll,
-                        style: text.bodyMedium?.copyWith(color: tokens.primary),
+                        style: text.bodyMedium?.copyWith(color: tokens.accent),
                       ),
                     ],
                   ),

@@ -382,7 +382,7 @@ class _Stepper extends StatelessWidget {
     Widget button(AppIconData icon, String tooltip, VoidCallback? onPressed) => IconButton(
       onPressed: onPressed,
       tooltip: tooltip,
-      icon: AppIcon(icon, color: onPressed == null ? tokens.disabledInk : tokens.primary),
+      icon: AppIcon(icon, color: onPressed == null ? tokens.disabledInk : tokens.accent),
       constraints: const BoxConstraints(
         minWidth: HabitSize.minTarget,
         minHeight: HabitSize.minTarget,

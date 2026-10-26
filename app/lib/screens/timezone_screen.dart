@@ -119,7 +119,7 @@ class _Timezone extends StatelessWidget {
               const SizedBox(height: HabitSpace.s12),
               Semantics(
                 liveRegion: true,
-                child: Text(line, style: text.bodyMedium?.copyWith(color: tokens.primary)),
+                child: Text(line, style: text.bodyMedium?.copyWith(color: tokens.accent)),
               ),
             ],
             const SizedBox(height: HabitSpace.s16),
@@ -389,7 +389,7 @@ class _ZonePickerState extends State<ZonePicker> {
                     l10n.zoneRow(TimezoneScreen.cityName(zone), ZonePicker.offset(zone, _now)),
                   ),
                   subtitle: Text(zone),
-                  trailing: selected ? AppIcon(AppIcons.check, color: tokens.primary) : null,
+                  trailing: selected ? AppIcon(AppIcons.check, color: tokens.accent) : null,
                   onTap: () => Navigator.of(context).pop(zone),
                 );
               },

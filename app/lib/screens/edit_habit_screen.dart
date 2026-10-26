@@ -259,7 +259,7 @@ class _EditState extends State<_Edit> {
                     leading: AppIcon(
                       c == _category ? AppIcons.check : AppIcons.unselected,
                       size: c == _category ? 24 : 16,
-                      color: HabitTokens.of(sheet).primary,
+                      color: HabitTokens.of(sheet).accent,
                     ),
                     title: Text(format.category(c, long: true)),
                     onTap: () => Navigator.pop(sheet, c),

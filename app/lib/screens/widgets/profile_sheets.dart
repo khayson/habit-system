@@ -445,7 +445,7 @@ class _RemindersState extends State<_Reminders> {
                         ],
                       ),
                     ),
-                    AppIcon(AppIcons.chevronRight, color: tokens.primary),
+                    AppIcon(AppIcons.chevronRight, color: tokens.accent),
                   ],
                 ),
               ),
