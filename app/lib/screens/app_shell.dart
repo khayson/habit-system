@@ -85,7 +85,8 @@ class _Tab extends StatelessWidget {
   Widget build(BuildContext context) {
     final tokens = HabitTokens.of(context);
     final text = Theme.of(context).textTheme;
-    final color = selected ? tokens.primary : tokens.muted;
+    // A56: the accent brown, not the orange: orange text on white is 2.7:1. Weight marks it too.
+    final color = selected ? tokens.accent : tokens.muted;
     return Expanded(
       child: Semantics(
         button: true,
@@ -106,7 +107,10 @@ class _Tab extends StatelessWidget {
                 const SizedBox(height: HabitSpace.s4),
                 Text(
                   label,
-                  style: text.bodySmall?.copyWith(color: color),
+                  style: text.bodySmall?.copyWith(
+                    color: color,
+                    fontWeight: selected ? FontWeight.w700 : null,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
