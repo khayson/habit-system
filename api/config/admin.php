@@ -12,9 +12,16 @@ $setting = function (string $key): string {
     return trim($value, " \t\n\r\0\x0B\"'");
 };
 
+// The hash may come as "base64:…" (what admin:setup prints): a bcrypt hash's "$" signs are
+// eaten by tools that read "$name" as a variable, such as a .env import box.
+$hash = $setting('ADMIN_PASSWORD_HASH');
+if (str_starts_with($hash, 'base64:')) {
+    $hash = (string) base64_decode(substr($hash, 7), true);
+}
+
 return [
     'email' => strtolower($setting('ADMIN_EMAIL')),
-    'password_hash' => $setting('ADMIN_PASSWORD_HASH'),
+    'password_hash' => $hash,
     'totp_secret' => strtoupper(str_replace(' ', '', $setting('ADMIN_TOTP_SECRET'))),
 
     // The session ends after this long idle, and after the absolute limit in all.

@@ -262,3 +262,16 @@ it('reads settings pasted with their "KEY=" prefix, quotes or spaces as meant', 
     adminSignIn($this, $secret);
     $this->get('/admin')->assertOk();
 });
+
+it('reads the hash in the base64 form admin:setup prints, which has no "$" to lose', function () {
+    $hash = Hash::make(ADMIN_PASSWORD);
+    putenv('ADMIN_PASSWORD_HASH=base64:'.base64_encode($hash));
+    $_ENV['ADMIN_PASSWORD_HASH'] = $_SERVER['ADMIN_PASSWORD_HASH'] = 'base64:'.base64_encode($hash);
+    try {
+        $admin = require config_path('admin.php');
+    } finally {
+        putenv('ADMIN_PASSWORD_HASH');
+        unset($_ENV['ADMIN_PASSWORD_HASH'], $_SERVER['ADMIN_PASSWORD_HASH']);
+    }
+    expect($admin['password_hash'])->toBe($hash);
+});

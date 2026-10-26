@@ -35,7 +35,8 @@ final class AdminSetup extends Command
         $this->line('Add these three under Render, Environment, then Save and deploy:');
         $this->line('');
         $this->line('ADMIN_EMAIL='.$email);
-        $this->line('ADMIN_PASSWORD_HASH='.Hash::make($password));
+        // base64, so no "$" sign can be eaten by a .env import box on the way into Render.
+        $this->line('ADMIN_PASSWORD_HASH=base64:'.base64_encode(Hash::make($password)));
         $this->line('ADMIN_TOTP_SECRET='.$secret);
         $this->line('');
         $this->line('In your authenticator app, add an account with this key (or open the link on the phone):');

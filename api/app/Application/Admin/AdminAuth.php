@@ -54,7 +54,12 @@ final readonly class AdminAuth
     private function passwordMatches(string $password, string $hash): bool
     {
         if (password_get_info($hash)['algoName'] !== 'bcrypt') {
-            Log::warning('admin sign-in: ADMIN_PASSWORD_HASH is not a bcrypt hash; run php artisan admin:setup again');
+            // Only its length and whether it starts like one (60 characters, "$2y$"): never any of
+            // its characters, in case a password was pasted there by mistake.
+            Log::warning('admin sign-in: ADMIN_PASSWORD_HASH is not a bcrypt hash; run php artisan admin:setup again', [
+                'length' => strlen($hash),
+                'starts_like_bcrypt' => str_starts_with($hash, '$2'),
+            ]);
 
             return false;
         }
