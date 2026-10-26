@@ -13,6 +13,7 @@ import '../habit_types/habit_type_ui.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../providers/account_context.dart';
 import '../widgets/habit_form.dart';
+import '../widgets/habit_form_parts.dart';
 import '../widgets/habit_format.dart';
 import '../widgets/habit_ui.dart';
 import '../widgets/schedule_text.dart';
@@ -146,17 +147,19 @@ class _CreateHabitScreenState extends State<CreateHabitScreen> {
         today: calendar.today(now),
       ),
     );
-    if (choice != null && mounted) {
-      setState(() {
-        _frequency = choice;
-        _errors = HabitFormErrors(
-          name: _errors.name,
-          amount: _errors.amount,
-          unit: _errors.unit,
-          category: _errors.category,
-        );
-      });
-    }
+    if (choice != null && mounted) _setFrequency(choice);
+  }
+
+  void _setFrequency(FrequencyChoice choice) {
+    setState(() {
+      _frequency = choice;
+      _errors = HabitFormErrors(
+        name: _errors.name,
+        amount: _errors.amount,
+        unit: _errors.unit,
+        category: _errors.category,
+      );
+    });
   }
 
   @override
@@ -172,11 +175,21 @@ class _CreateHabitScreenState extends State<CreateHabitScreen> {
         child: ListView(
           padding: const EdgeInsets.all(HabitSpace.margin),
           children: [
+            // A56: the mockup's title and ✕, no subtitle.
             ScreenHeader(
               title: l10n.newHabitTitle,
-              subtitle: l10n.newHabitSubtitle,
-              onBack: () => context.canPop() ? context.pop() : context.go(Routes.today),
+              onClose: () => context.canPop() ? context.pop() : context.go(Routes.today),
             ),
+            KeyedSubtree(
+              key: const ValueKey('icon-row'),
+              child: HabitIconHero(
+                icon: AppIcons.habit(_icon, category: _category),
+                tile: HabitTile.forCategory(_category),
+                name: HabitIconCatalog.label(HabitIconCatalog.keyFor(_icon, _category)),
+                onEdit: _pickIcon,
+              ),
+            ),
+            const SizedBox(height: HabitSpace.s16),
             FieldLabel(l10n.newHabitName),
             TextFormField(
               controller: _name,
@@ -230,16 +243,9 @@ class _CreateHabitScreenState extends State<CreateHabitScreen> {
               FieldErrorText(_errors.category!),
             ],
             const SizedBox(height: HabitSpace.s24),
-            SettingRow(
-              key: const ValueKey('icon-row'),
-              actionKey: const ValueKey('icon-row-edit'),
-              icon: AppIcons.habit(_icon, category: _category),
-              title: l10n.habitIconRow,
-              summary: HabitIconCatalog.label(HabitIconCatalog.keyFor(_icon, _category)),
-              action: l10n.setupEdit,
-              onAction: _pickIcon,
-            ),
-            const SizedBox(height: HabitSpace.s16),
+            FieldLabel(l10n.newHabitRepeatDays),
+            RepeatDays(frequency: _frequency, onChanged: _setFrequency),
+            const SizedBox(height: HabitSpace.s12),
             SettingRow(
               icon: AppIcons.frequency,
               title: l10n.newHabitSchedule,
@@ -249,10 +255,8 @@ class _CreateHabitScreenState extends State<CreateHabitScreen> {
               message: _errors.schedule,
             ),
             const SizedBox(height: HabitSpace.s16),
-            SettingRow(
-              icon: AppIcons.reminder,
+            ReminderSwitchRow(
               title: l10n.reminderRow,
-              actionKey: const ValueKey('reminder-row-edit'),
               summary: reminder == null
                   ? l10n.reminderRowNone
                   : l10n.reminderRowSet(
@@ -260,14 +264,15 @@ class _CreateHabitScreenState extends State<CreateHabitScreen> {
                         DateTime(2026, 1, 1, reminder.minuteOfDay ~/ 60, reminder.minuteOfDay % 60),
                       ),
                     ),
-              action: l10n.setupEdit,
-              onAction: () async {
+              on: reminder != null,
+              onEdit: () async {
                 final draft = await context.push<ReminderDraft>(
                   Routes.reminderEditor,
                   extra: (_reminder, _name.text),
                 );
                 if (draft != null && mounted) setState(() => _reminder = draft);
               },
+              onClear: () => setState(() => _reminder = null),
             ),
             const SizedBox(height: HabitSpace.s32),
             PrimaryButton(

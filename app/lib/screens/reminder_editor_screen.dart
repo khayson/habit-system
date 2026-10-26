@@ -339,21 +339,23 @@ class _ReminderEditorScreenState extends State<ReminderEditorScreen> with Widget
                   const SizedBox(height: HabitSpace.s16),
                   Text(_repeat(l10n, locale), style: text.bodyLarge?.copyWith(color: tokens.muted)),
                   const SizedBox(height: HabitSpace.s8),
-                  Wrap(
-                    alignment: WrapAlignment.center,
+                  Row(
                     children: [
-                      for (var d = 1; d <= 7; d++)
-                        _Day(
-                          letter: DateFormat.EEEEE(locale).format(DateTime(2026, 1, 4 + d)),
-                          name: DateFormat.EEEE(locale).format(DateTime(2026, 1, 4 + d)),
-                          on: _draft.days.contains(d),
-                          onTap: () => setState(() {
-                            final days = {..._draft.days};
-                            days.contains(d) ? days.remove(d) : days.add(d);
-                            _draft = _draft.copyWith(days: days.toList()..sort());
-                            _error = null;
-                          }),
+                      for (var d = 1; d <= 7; d++) ...[
+                        Expanded(
+                          child: _Day(
+                            letter: DateFormat.EEEEE(locale).format(DateTime(2026, 1, 4 + d)),
+                            name: DateFormat.EEEE(locale).format(DateTime(2026, 1, 4 + d)),
+                            on: _draft.days.contains(d),
+                            onTap: () => setState(() {
+                              final days = {..._draft.days};
+                              days.contains(d) ? days.remove(d) : days.add(d);
+                              _draft = _draft.copyWith(days: days.toList()..sort());
+                              _error = null;
+                            }),
+                          ),
                         ),
+                      ],
                     ],
                   ),
                 ],
@@ -486,32 +488,13 @@ class _Day extends StatelessWidget {
   const _Day({required this.letter, required this.name, required this.on, required this.onTap});
 
   @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final tokens = HabitTokens.of(context);
-    final text = Theme.of(context).textTheme;
-    return Semantics(
-      button: true,
-      toggled: on,
-      label: l10n.reminderDayLabel(name, on ? l10n.reminderDayOn : l10n.reminderDayOff),
-      excludeSemantics: true,
-      child: InkWell(
-        onTap: onTap,
-        customBorder: const CircleBorder(),
-        child: SizedBox.square(
-          dimension: HabitSize.minTarget,
-          child: Center(
-            child: Text(
-              letter,
-              style: text.titleMedium?.copyWith(
-                color: on ? tokens.primary : tokens.muted,
-                fontWeight: on ? FontWeight.w600 : FontWeight.w400,
-                decoration: on ? null : TextDecoration.lineThrough,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => DayChip(
+    letter: letter,
+    label: AppLocalizations.of(context).reminderDayLabel(
+      name,
+      on ? AppLocalizations.of(context).reminderDayOn : AppLocalizations.of(context).reminderDayOff,
+    ),
+    selected: on,
+    onTap: onTap,
+  );
 }

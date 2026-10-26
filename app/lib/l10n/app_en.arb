@@ -239,6 +239,8 @@
   "categoryLearning": "Learning",
   "categoryProductivity": "Productivity",
   "categoryOther": "Other",
+  "newHabitRepeatDays": "Repeat days",
+  "@newHabitRepeatDays": {"description": "A56: label over the seven round weekday chips on New and Edit habit."},
   "newHabitSchedule": "Schedule",
   "newHabitDaily": "Every day",
   "navToday": "Today",

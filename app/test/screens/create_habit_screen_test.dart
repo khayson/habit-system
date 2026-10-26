@@ -61,7 +61,7 @@ void main() {
     final account = await open(tester);
     for (final t in [
       'A new routine',
-      'Choose something small and specific.',
+      'Repeat days',
       'Habit type',
       'Yes / no',
       'Quantity',
@@ -88,8 +88,8 @@ void main() {
       isSemantics(label: 'Quantity', isButton: true, isSelected: false),
     );
     expect(
-      // A53: the Icon row comes first, then Schedule.
-      tester.getSemantics(find.text('Edit').at(1)),
+      // A56: the icon is the large tile above the name; Schedule keeps its Edit.
+      tester.getSemantics(find.text('Edit')),
       isSemantics(label: 'Edit Schedule', isButton: true),
     );
     handle.dispose();
@@ -198,6 +198,29 @@ void main() {
     expect(payload['frequency_config'], {
       'days': [1, 3, 5],
     });
+    await tearDownApp(tester, account);
+  });
+
+  testWidgets('A56: the round day chips make a weekdays schedule; all seven is every day', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    final account = await open(tester);
+    await tester.enterText(find.byType(TextFormField), 'Walk');
+    expect(find.bySemanticsLabel('Saturday, on'), findsOneWidget, reason: 'every day by default');
+    for (final day in ['Saturday, on', 'Sunday, on']) {
+      await tester.ensureVisible(find.bySemanticsLabel(day));
+      await tester.tap(find.bySemanticsLabel(day));
+      await tester.pump();
+    }
+    expect(find.bySemanticsLabel('Sunday, off'), findsOneWidget);
+    await create(tester);
+    final payload = (await creates(tester, account)).single;
+    expect(payload['frequency_type'], 'weekdays');
+    expect(payload['frequency_config'], {
+      'days': [1, 2, 3, 4, 5],
+    });
+    handle.dispose();
     await tearDownApp(tester, account);
   });
 

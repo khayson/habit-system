@@ -579,6 +579,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get categoryOther => 'Other';
 
   @override
+  String get newHabitRepeatDays => 'Repeat days';
+
+  @override
   String get newHabitSchedule => 'Schedule';
 
   @override

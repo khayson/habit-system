@@ -49,6 +49,7 @@ abstract final class AppIcons {
   // Habits and their actions.
   static const AppIconData add = HugeIcons.strokeRoundedAdd01;
   static const AppIconData remove = HugeIcons.strokeRoundedMinusSign;
+  static const AppIconData edit = HugeIcons.strokeRoundedPencilEdit01;
   static const AppIconData newHabit = HugeIcons.strokeRoundedTaskAdd01;
   static const AppIconData frequency = HugeIcons.strokeRoundedCalendar03;
   static const AppIconData startDate = HugeIcons.strokeRoundedCalendar01;

@@ -326,7 +326,12 @@ void main() {
     await seed(tester, pendingVersion: true);
     await show(tester, '/habits/$habitId/edit');
     expect(tester.takeException(), isNull);
-    await tester.ensureVisible(find.text('Edit').first);
+    // A56: the large icon sits above the form, so the category's Edit starts below the fold.
+    await tester.scrollUntilVisible(
+      find.text('Category'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     await settle(tester);
     await tester.tap(find.text('Edit').first);
     await settle(tester);

@@ -287,6 +287,72 @@ class IconTile extends StatelessWidget {
 }
 
 /// A56: the mockups' close control, a ✕ in a white circle (48 px).
+/// A56: the mockups' round weekday chip (New habit's repeat days): white when off, the dark
+/// "selected" circle when on, the letter bold. Announced by [label] with its toggled state.
+class DayChip extends StatelessWidget {
+  final String letter;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const DayChip({
+    super.key,
+    required this.letter,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = HabitTokens.of(context);
+    final text = Theme.of(context).textTheme;
+    // The whole square is the target (44 px or more); the circle is inset 2 px, so a row of
+    // chips needs no gaps between targets.
+    return Semantics(
+      button: true,
+      toggled: selected,
+      label: label,
+      child: AspectRatio(
+        aspectRatio: 1,
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            onTap: onTap,
+            customBorder: const CircleBorder(),
+            child: Padding(
+              padding: const EdgeInsets.all(2),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: selected ? tokens.selected : tokens.surface,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: ExcludeSemantics(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Padding(
+                        padding: const EdgeInsets.all(HabitSpace.s4),
+                        child: Text(
+                          letter,
+                          style: text.bodyLarge?.copyWith(
+                            color: selected ? tokens.onSelected : tokens.ink,
+                            fontWeight: selected ? FontWeight.w700 : null,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class CircleCloseButton extends StatelessWidget {
   final VoidCallback onPressed;
 

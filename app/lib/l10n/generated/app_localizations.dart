@@ -1124,6 +1124,12 @@ abstract class AppLocalizations {
   /// **'Other'**
   String get categoryOther;
 
+  /// A56: label over the seven round weekday chips on New and Edit habit.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat days'**
+  String get newHabitRepeatDays;
+
   /// No description provided for @newHabitSchedule.
   ///
   /// In en, this message translates to:

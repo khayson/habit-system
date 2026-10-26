@@ -17,6 +17,7 @@ import '../l10n/generated/app_localizations.dart';
 import '../providers/account_context.dart';
 import '../providers/stream_model.dart';
 import '../widgets/habit_form.dart';
+import '../widgets/habit_form_parts.dart';
 import '../widgets/habit_format.dart';
 import '../widgets/habit_ui.dart';
 import '../widgets/schedule_text.dart';
@@ -293,7 +294,7 @@ class _EditState extends State<_Edit> {
     final header = ScreenHeader(
       title: l10n.editTitle(_start?.name ?? detail.name),
       subtitle: l10n.editSubtitle,
-      onBack: _leave,
+      onClose: _leave,
     );
     if (draft == null || type == null) {
       return Scaffold(
@@ -328,6 +329,17 @@ class _EditState extends State<_Edit> {
               ),
               const SizedBox(height: HabitSpace.s16),
             ],
+            // A56: the large icon on its tile, as New habit draws it.
+            KeyedSubtree(
+              key: const ValueKey('icon-row'),
+              child: HabitIconHero(
+                icon: AppIcons.habit(_icon, category: _category),
+                tile: HabitTile.forCategory(_category),
+                name: HabitIconCatalog.label(HabitIconCatalog.keyFor(_icon, _category)),
+                onEdit: _pickIcon,
+              ),
+            ),
+            const SizedBox(height: HabitSpace.s16),
             FieldLabel(l10n.newHabitName),
             TextFormField(
               controller: _name,
@@ -375,17 +387,13 @@ class _EditState extends State<_Edit> {
               onAction: () => _chooseCategory(format),
               message: _errors.category,
             ),
-            const SizedBox(height: HabitSpace.s16),
-            SettingRow(
-              key: const ValueKey('icon-row'),
-              actionKey: const ValueKey('icon-row-edit'),
-              icon: AppIcons.habit(_icon, category: _category),
-              title: l10n.habitIconRow,
-              summary: HabitIconCatalog.label(HabitIconCatalog.keyFor(_icon, _category)),
-              action: l10n.setupEdit,
-              onAction: _pickIcon,
+            const SizedBox(height: HabitSpace.s24),
+            FieldLabel(l10n.newHabitRepeatDays),
+            RepeatDays(
+              frequency: _frequency,
+              onChanged: (choice) => setState(() => _frequency = choice),
             ),
-            const SizedBox(height: HabitSpace.s16),
+            const SizedBox(height: HabitSpace.s12),
             SettingRow(
               icon: AppIcons.frequency,
               title: l10n.newHabitSchedule,

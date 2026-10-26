@@ -312,7 +312,7 @@ class _OptionCard extends StatelessWidget {
   }
 }
 
-/// A 44 px weekday toggle: the day's letter, and a check when chosen. Announced by its full
+/// A weekday toggle in the 4 + 3 grid: the round [DayChip] (A56), 56 px. Announced by its full
 /// name with its toggled state.
 class _DayToggle extends StatelessWidget {
   final String letter;
@@ -328,59 +328,10 @@ class _DayToggle extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    final tokens = HabitTokens.of(context);
-    return Semantics(
-      button: true,
-      toggled: selected,
-      label: name,
-      child: Material(
-        color: selected ? tokens.surface : Colors.transparent,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(HabitRadius.r12),
-          side: BorderSide(color: selected ? tokens.primary : tokens.border),
-        ),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(HabitRadius.r12),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              minWidth: HabitSize.minTarget,
-              minHeight: HabitSize.control,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: HabitSpace.s4, vertical: 2),
-              child: ExcludeSemantics(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      letter,
-                      style: text.bodyLarge?.copyWith(
-                        color: selected ? tokens.primary : tokens.ink,
-                        fontWeight: selected ? FontWeight.w600 : null,
-                      ),
-                    ),
-                    // A fixed slot, so a chosen day is never taller than the others.
-                    SizedBox.square(
-                      dimension: 14,
-                      child: Center(
-                        child: AppIcon(
-                          selected ? AppIcons.check : AppIcons.unselected,
-                          size: selected ? 14 : 8,
-                          color: selected ? tokens.primary : tokens.muted,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Center(
+    child: SizedBox.square(
+      dimension: 56,
+      child: DayChip(letter: letter, label: name, selected: selected, onTap: onTap),
+    ),
+  );
 }
