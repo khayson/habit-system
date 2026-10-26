@@ -542,11 +542,11 @@ abstract class AppLocalizations {
   /// **'Tip'**
   String get carouselTipTag;
 
-  /// A57: a carousel page dot, for TalkBack.
+  /// A57: the carousel's page dots, read by TalkBack when the card changes.
   ///
   /// In en, this message translates to:
-  /// **'Show card {n} of {total}'**
-  String carouselShow(int n, int total);
+  /// **'Card {n} of {total}'**
+  String carouselPosition(int n, int total);
 
   /// A57: the ✕ on a notice or tip card.
   ///

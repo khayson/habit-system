@@ -157,6 +157,12 @@ void main() {
         await settle(tester);
 
         expect(tester.takeException(), isNull);
+        // A57: the carousel above can push the summary below the fold at large text.
+        await tester.scrollUntilVisible(
+          find.text('1,250,000 XP · Level 1251'),
+          200,
+          scrollable: find.byType(Scrollable).first,
+        );
         expect(find.text('1,250,000 XP · Level 1251'), findsOneWidget);
         expect(
           find.text('Includes changes waiting to sync. Rewards update after syncing.'),
@@ -257,6 +263,13 @@ void main() {
     );
     await settle(tester);
 
+    expect(tester.takeException(), isNull);
+    // A57: the carousel above can push the summary below the fold at large text.
+    await tester.scrollUntilVisible(
+      find.text('0 of 1 habits complete'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.text('0 of 1 habits complete'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tearDownApp(tester, account);

@@ -7,10 +7,16 @@ import 'package:habit/services/notices_service.dart';
 import '../support/app_harness.dart';
 import '../support/fake_sync_server.dart';
 
-/// A57: Today's carousel: a notice from the server, the reminder card, two tips; dots to move,
+/// A57: Today's carousel: a notice from the server, the reminder card, two tips; swipe to move,
 /// a ✕ to dismiss, nothing when the server is out of reach but the built-in cards.
 void main() {
   setUpAll(loadTestZones);
+
+  /// A swipe ends in a short spring to the nearest card; taps wait until it stops.
+  Future<void> snap(WidgetTester tester) async {
+    await settle(tester);
+    await tester.pump(const Duration(seconds: 1));
+  }
 
   testWidgets('notice, reminder card and tips; a dot moves; a dismissal sticks', (tester) async {
     useTallPhone(tester);
@@ -30,28 +36,28 @@ void main() {
 
     expect(find.text('From the Habit team'), findsOneWidget);
     expect(find.text('Weekly habits are here'), findsOneWidget);
-    for (final n in [1, 2, 3, 4]) {
-      expect(find.bySemanticsLabel('Show card $n of 4'), findsOneWidget, reason: 'card $n');
-    }
+    expect(find.bySemanticsLabel('Card 1 of 4'), findsOneWidget);
 
-    await tester.tap(find.bySemanticsLabel('Show card 2 of 4'));
-    await settle(tester);
-    expect(find.bySemanticsLabel(RegExp('Set a reminder')), findsWidgets);
+    // Swipe right to left: the reminder card; then back.
+    await tester.drag(find.text('Weekly habits are here'), const Offset(-300, 0));
+    await snap(tester);
+    expect(find.bySemanticsLabel('Card 2 of 4'), findsOneWidget);
     expect(
       find.text('Set now').hitTestable(),
       findsOneWidget,
       reason: 'the reminder card is shown',
     );
+    await tester.drag(find.text('Set now'), const Offset(300, 0));
+    await snap(tester);
+    expect(find.bySemanticsLabel('Card 1 of 4'), findsOneWidget);
 
-    await tester.tap(find.bySemanticsLabel('Show card 1 of 4'));
-    await settle(tester);
     await tester.runAsync(() async {
       await tester.tap(find.byTooltip('Dismiss Weekly habits are here'));
       await Future<void>.delayed(const Duration(milliseconds: 50));
     });
     await settle(tester);
     expect(find.text('Weekly habits are here'), findsNothing);
-    expect(find.bySemanticsLabel('Show card 1 of 3'), findsOneWidget);
+    expect(find.bySemanticsLabel('Card 1 of 3'), findsOneWidget);
     expect(account.notices.isDismissed('n1'), isTrue);
 
     handle.dispose();

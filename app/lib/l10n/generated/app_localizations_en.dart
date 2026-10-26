@@ -259,8 +259,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get carouselTipTag => 'Tip';
 
   @override
-  String carouselShow(int n, int total) {
-    return 'Show card $n of $total';
+  String carouselPosition(int n, int total) {
+    return 'Card $n of $total';
   }
 
   @override

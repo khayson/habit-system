@@ -570,8 +570,8 @@ class _ReminderCard extends StatelessWidget {
 }
 
 /// A57: Today's carousel: Khay Studios' notices, the reminder card while no reminder is set,
-/// then two tips. Swipe or tap a dot to move (no auto-advance); notices and tips can be
-/// dismissed on this device. The cards share one height, the tallest, so nothing jumps.
+/// then two tips. A pager: swipe to move, the next card peeking in (no auto-advance); notices
+/// and tips can be dismissed on this device. The cards share one height, the tallest.
 class _Carousel extends StatefulWidget {
   final String? reminderHabitId;
 
@@ -587,12 +587,33 @@ class _CarouselState extends State<_Carousel> {
   /// The card on show, by id, so a notice arriving later never moves it; null is the first.
   String? _current;
 
+  final _scroll = ScrollController();
+  double _extent = 1;
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
   @override
   void initState() {
     super.initState();
     // Throttled by the board (15 minutes); a failure is silent.
     unawaited(context.read<AccountContext?>()?.notices.refresh());
+    _scroll.addListener(_onScroll);
   }
+
+  /// The card nearest the start is the one on show.
+  void _onScroll() {
+    final cards = _ids;
+    if (cards.isEmpty) return;
+    final i = (_scroll.offset / _extent).round().clamp(0, cards.length - 1);
+    if (cards[i] != _current && !(_current == null && i == 0)) setState(() => _current = cards[i]);
+  }
+
+  /// The ids of the cards last built, in order.
+  List<String> _ids = const [];
 
   @override
   Widget build(BuildContext context) {
@@ -611,6 +632,7 @@ class _CarouselState extends State<_Carousel> {
             for (final tip in _tips)
               if (!board.isDismissed(tip)) tip,
         ];
+        _ids = ids;
         final cards = <Widget>[
           for (final n in board.visible)
             _InfoSlide(
@@ -636,47 +658,62 @@ class _CarouselState extends State<_Carousel> {
         ];
         if (cards.isEmpty) return const SizedBox.shrink();
         final index = _current == null ? 0 : ids.indexOf(_current!).clamp(0, cards.length - 1);
-        void go(int i) => setState(() => _current = ids[i.clamp(0, cards.length - 1)]);
         return Padding(
           padding: const EdgeInsets.only(bottom: HabitSpace.s16),
-          child: Column(
-            children: [
-              GestureDetector(
-                onHorizontalDragEnd: (d) {
-                  final v = d.primaryVelocity ?? 0;
-                  if (v < -200) go(index + 1);
-                  if (v > 200) go(index - 1);
-                },
-                child: Stack(
-                  children: [
-                    for (var i = 0; i < cards.length; i++)
-                      IgnorePointer(
-                        ignoring: i != index,
-                        child: ExcludeSemantics(
-                          excluding: i != index,
-                          child: AnimatedOpacity(
-                            opacity: i == index ? 1 : 0,
-                            duration: const Duration(milliseconds: 200),
-                            child: cards[i],
-                          ),
-                        ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final width = constraints.maxWidth;
+              final many = cards.length > 1;
+              // Each card takes most of the width, so the next one peeks in: there is more.
+              final cardWidth = many ? width * 0.88 : width;
+              final extent = cardWidth + HabitSpace.s12;
+              _extent = extent;
+              // A notice arriving or a card dismissed shifts positions: keep the card on show.
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (_scroll.hasClients && (_scroll.offset / extent).round() != index) {
+                  _scroll.jumpTo((index * extent).clamp(0, _scroll.position.maxScrollExtent));
+                }
+              });
+              return Column(
+                children: [
+                  SingleChildScrollView(
+                    controller: _scroll,
+                    scrollDirection: Axis.horizontal,
+                    physics: many
+                        ? _SnapPhysics(extent: extent)
+                        : const NeverScrollableScrollPhysics(),
+                    // The row is as tall as its tallest card, so large text never clips.
+                    child: IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          for (var i = 0; i < cards.length; i++) ...[
+                            if (i > 0) const SizedBox(width: HabitSpace.s12),
+                            SizedBox(width: cardWidth, child: cards[i]),
+                          ],
+                          // Room to bring the last card to the start, like the others.
+                          if (many) SizedBox(width: width - cardWidth),
+                        ],
                       ),
-                  ],
-                ),
-              ),
-              if (cards.length > 1)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    for (var i = 0; i < cards.length; i++)
-                      _CarouselDot(
-                        selected: i == index,
-                        label: l10n.carouselShow(i + 1, cards.length),
-                        onTap: () => go(i),
+                    ),
+                  ),
+                  if (many) ...[
+                    const SizedBox(height: HabitSpace.s12),
+                    Semantics(
+                      liveRegion: true,
+                      label: l10n.carouselPosition(index + 1, cards.length),
+                      excludeSemantics: true,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          for (var i = 0; i < cards.length; i++) _CarouselDot(selected: i == index),
+                        ],
                       ),
+                    ),
                   ],
-                ),
-            ],
+                ],
+              );
+            },
           ),
         );
       },
@@ -684,41 +721,51 @@ class _CarouselState extends State<_Carousel> {
   }
 }
 
-/// A 44 px target around a small dot; the chosen one is long and dark, so it never rests on
-/// colour alone.
+/// Snaps a horizontal scroll to whole cards ([extent] apart), as a pager does.
+class _SnapPhysics extends ScrollPhysics {
+  final double extent;
+
+  const _SnapPhysics({required this.extent, super.parent});
+
+  @override
+  _SnapPhysics applyTo(ScrollPhysics? ancestor) =>
+      _SnapPhysics(extent: extent, parent: buildParent(ancestor));
+
+  @override
+  Simulation? createBallisticSimulation(ScrollMetrics position, double velocity) {
+    final tolerance = toleranceFor(position);
+    var page = position.pixels / extent;
+    if (velocity < -tolerance.velocity) {
+      page -= 0.5;
+    } else if (velocity > tolerance.velocity) {
+      page += 0.5;
+    }
+    final target = (page.roundToDouble() * extent).clamp(
+      position.minScrollExtent,
+      position.maxScrollExtent,
+    );
+    if ((target - position.pixels).abs() < tolerance.distance) return null;
+    return ScrollSpringSimulation(spring, position.pixels, target, velocity, tolerance: tolerance);
+  }
+}
+
+/// A page dot; the one on show is long and dark, so it never rests on colour alone.
 class _CarouselDot extends StatelessWidget {
   final bool selected;
-  final String label;
-  final VoidCallback onTap;
 
-  const _CarouselDot({required this.selected, required this.label, required this.onTap});
+  const _CarouselDot({required this.selected});
 
   @override
   Widget build(BuildContext context) {
     final tokens = HabitTokens.of(context);
-    return Semantics(
-      button: true,
-      selected: selected,
-      label: label,
-      excludeSemantics: true,
-      child: InkWell(
-        onTap: onTap,
-        customBorder: const StadiumBorder(),
-        child: SizedBox(
-          width: HabitSize.minTarget,
-          height: HabitSize.minTarget,
-          child: Center(
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              width: selected ? 20 : 8,
-              height: 8,
-              decoration: BoxDecoration(
-                color: selected ? tokens.selected : tokens.border,
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ),
-          ),
-        ),
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      margin: const EdgeInsets.symmetric(horizontal: 3),
+      width: selected ? 20 : 8,
+      height: 8,
+      decoration: BoxDecoration(
+        color: selected ? tokens.selected : tokens.muted.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(4),
       ),
     );
   }
