@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- A56: the launch screen before Android 12: the app's cream with the stacked-cards icon. -->
+<!-- A56: the launch screen before Android 12: the logo's green, filling the screen, with the stacked-cards icon. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#FFF7F2EF" />
+            <solid android:color="#FF2F7B45" />
         </shape>
     </item>
     <item>

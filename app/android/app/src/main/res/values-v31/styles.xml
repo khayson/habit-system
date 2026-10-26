@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- A56: Android 12+ splash: the stacked cards, animated (under 1 s, no added delay), on its green circle over the app's background. -->
+    <!-- A56: Android 12+ splash: the stacked cards, animated (under 1 s, no added delay), on the logo's green, which fills the whole screen. -->
     <style name="LaunchTheme" parent="@android:style/Theme.Light.NoTitleBar">
-        <item name="android:windowSplashScreenBackground">#FFF7F2EF</item>
+        <item name="android:windowSplashScreenBackground">#FF2F7B45</item>
         <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_animated</item>
         <item name="android:windowSplashScreenAnimationDuration">1000</item>
         <item name="android:windowSplashScreenIconBackgroundColor">#FF2F7B45</item>
