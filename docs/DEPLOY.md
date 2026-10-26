@@ -306,6 +306,34 @@ php artisan notices:retire <id>
 - Each person can dismiss a notice on their phone.
 - `notices:retire` ends a notice now. One that has not started yet is removed.
 
+## 9d. The admin page (A58)
+
+`https://<your service>.onrender.com/admin` shows:
+- the system's numbers, with "Run the timer now" and "Retry failed jobs";
+- accounts: search them, see an account's details and devices, sign it out everywhere, suspend or resume it, delete it, or send that person a notice;
+- notices: publish them (for everyone or chosen emails) and retire them.
+
+It never shows anyone's habits, check-ins, notes, rewards, photos or exports. Every action is written to the audit list on the first page.
+
+**Set it up once (about 5 minutes):**
+
+1. In your own PowerShell window, in the `api` folder, run:
+
+   ```powershell
+   php artisan admin:setup you@example.com
+   ```
+
+   Type a password of 16 or more characters twice. It prints three lines, `ADMIN_EMAIL=…`, `ADMIN_PASSWORD_HASH=…` and `ADMIN_TOTP_SECRET=…`, then an `otpauth://` link.
+2. In Google Authenticator (or 1Password, Authy, Microsoft Authenticator), add an account and choose **Enter a setup key**. Paste the `ADMIN_TOTP_SECRET` value and choose time-based.
+3. In Render, open **Environment** and add the three keys with their values. Then choose **Save and deploy**.
+4. Open `/admin`, then sign in with the email, the password and the 6-digit code from the app.
+
+Keep the three values out of the repository, chats and screenshots. Until all three are set, `/admin` answers a plain 404.
+
+- **Sessions:** a session ends after 30 minutes idle or 8 hours in all.
+- **Lost phone:** run step 1 again to get a new secret, update Render, and set up the authenticator again.
+- **Suspending someone:** it signs them out. When they try to sign in, the app says the account is paused. **Resume** undoes it.
+
 ## 10. When something fails
 
 **Where to look first:** Render, then **habit-api**, then **Logs**. The server logs warnings and errors only, never passwords, tokens or emails.

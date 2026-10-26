@@ -9,6 +9,8 @@
 const DEPLOY_SECRETS = [
     'APP_KEY', 'APP_URL', 'DB_URL', 'R2_ENDPOINT', 'R2_ACCESS_KEY_ID', 'R2_SECRET_ACCESS_KEY',
     'MAIL_USERNAME', 'MAIL_PASSWORD', 'MAIL_FROM_ADDRESS', 'EXPORT_SIGNING_KEYS', 'TICK_SECRET', 'OPS_SECRET',
+    // A58: the admin page's sign-in.
+    'ADMIN_EMAIL', 'ADMIN_PASSWORD_HASH', 'ADMIN_TOTP_SECRET',
 ];
 
 it('asks Render for every secret and stores none', function () {

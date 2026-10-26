@@ -88,3 +88,10 @@ services:
       # A55: the read-only ops status's own secret (not the tick's).
       - key: OPS_SECRET
         sync: false
+      # A58: the admin page's sign-in; `php artisan admin:setup <email>` prints all three.
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD_HASH
+        sync: false
+      - key: ADMIN_TOTP_SECRET
+        sync: false

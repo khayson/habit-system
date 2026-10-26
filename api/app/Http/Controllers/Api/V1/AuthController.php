@@ -58,6 +58,11 @@ final class AuthController
         if ($user === null || ! $passwordOk) {
             throw ValidationException::withMessages(['email' => ['Email or password is incorrect.']]);
         }
+        // A58: suspended by Khay Studios. Told only after the right password, so the status is
+        // never revealed to anyone else.
+        if ($user->suspended_at !== null) {
+            return ApiResponse::error(403, 'account_suspended', 'This account is paused. Contact the Habit team to ask about it.');
+        }
 
         return ApiResponse::success($this->session($user, $this->accounts->login($user, $data['device_name'], $data['device_id'] ?? null)));
     }

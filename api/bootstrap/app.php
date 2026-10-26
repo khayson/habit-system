@@ -1,6 +1,8 @@
 <?php
 
 use App\Exceptions\ApiExceptionRenderer;
+use App\Http\Middleware\Admin\AdminSecurityHeaders;
+use App\Http\Middleware\Admin\UseAdminSession;
 use App\Http\Middleware\AssignRequestId;
 use App\Http\Middleware\StrictTransportSecurity;
 use App\Http\Middleware\TrustRenderProxy;
@@ -9,11 +11,14 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\TrustProxies;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         api: __DIR__.'/../routes/api.php',
+        // A58: the admin page; the only web routes.
+        web: __DIR__.'/../routes/admin.php',
         commands: __DIR__.'/../routes/console.php',
         apiPrefix: 'api/v1',
     )
@@ -24,6 +29,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(StrictTransportSecurity::class);
         // API only: never redirect guests to a login page.
         $middleware->redirectGuestsTo(fn () => null);
+        // A58: the web group serves only /admin: its own cookie session and strict headers.
+        $middleware->web(prepend: [UseAdminSession::class], append: [AdminSecurityHeaders::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->dontFlash(['password', 'password_confirmation', 'current_password', 'token', 'reset_token', 'push_token']);
@@ -34,5 +41,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
             return false;
         });
-        $exceptions->render(fn (Throwable $e) => (new ApiExceptionRenderer)($e));
+        // A58: the admin pages keep Laravel's own HTML handling (redirect back with errors);
+        // everything else is the API's JSON envelope.
+        $exceptions->render(fn (Throwable $e, Request $request) => $request->is('admin', 'admin/*') ? null : (new ApiExceptionRenderer)($e));
     })->create();

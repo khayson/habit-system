@@ -23,6 +23,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property int $xp
  * @property int $freeze_balance
  * @property int $change_seq
+ * @property string|null $suspended_at A58: set while Khay Studios has suspended the account
  */
 class User extends Authenticatable
 {
