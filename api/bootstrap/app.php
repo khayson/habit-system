@@ -2,9 +2,12 @@
 
 use App\Exceptions\ApiExceptionRenderer;
 use App\Http\Middleware\AssignRequestId;
+use App\Http\Middleware\StrictTransportSecurity;
+use App\Http\Middleware\TrustRenderProxy;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Middleware\TrustProxies;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -14,6 +17,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->prepend(AssignRequestId::class);
+        // A54: Render's proxy (client IP and scheme), and HSTS outside local and testing.
+        $middleware->replace(TrustProxies::class, TrustRenderProxy::class);
+        $middleware->append(StrictTransportSecurity::class);
         // API only: never redirect guests to a login page.
         $middleware->redirectGuestsTo(fn () => null);
     })

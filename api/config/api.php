@@ -25,6 +25,9 @@ return [
     'tick_max_seconds' => (int) env('TICK_MAX_SECONDS', 50),
     'tick_memory_mb' => (int) env('TICK_MEMORY_MB', 128),
 
+    // A54: Render's proxy addresses are not fixed and nothing else reaches the service.
+    'trusted_proxies' => (string) env('TRUSTED_PROXIES', '*'),
+
     // A54: the lowest app build number this server accepts; travels in every success meta.
     'min_app_version' => (int) env('MIN_APP_VERSION', 1),
 
