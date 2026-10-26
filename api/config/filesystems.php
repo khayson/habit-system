@@ -52,6 +52,24 @@ return [
             'report' => false,
         ],
 
+        // A54: photos (A20) and exports (A48) in production: the private Cloudflare R2 bucket
+        // habit-files (public access disabled). R2_ENDPOINT is https://<account id>.r2.cloudflarestorage.com.
+        // The API streams objects to their owner; it never makes a public or presigned URL, so
+        // this disk has no url.
+        'r2' => [
+            'driver' => 's3',
+            'key' => env('R2_ACCESS_KEY_ID'),
+            'secret' => env('R2_SECRET_ACCESS_KEY'),
+            'region' => 'auto',
+            'bucket' => env('R2_BUCKET', 'habit-files'),
+            'endpoint' => env('R2_ENDPOINT'),
+            'use_path_style_endpoint' => true,
+            'visibility' => 'private',
+            // As on the local disk: the stores check each result and log a failure themselves.
+            'throw' => false,
+            'report' => false,
+        ],
+
     ],
 
     /*
