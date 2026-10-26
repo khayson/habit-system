@@ -4,15 +4,20 @@
 # one request per process lifetime, as static state and defer() assume.
 
 FROM php:8.4-fpm-alpine AS base
-COPY --from=mlocati/php-extension-installer:2.7 /usr/bin/install-php-extensions /usr/local/bin/
 # pdo_pgsql (Neon), zip (exports), gd with JPEG and WebP (avatars, A20), opcache, pcntl (worker
-# time limits in the tick).
-RUN install-php-extensions pdo_pgsql zip gd opcache pcntl \
-    && apk add --no-cache nginx \
-    && rm -f /usr/local/bin/install-php-extensions
+# time limits in the tick). Built with the image's own docker-php-ext-install; the build
+# packages are removed in the same layer, the runtime libraries stay.
+RUN apk add --no-cache libpq libzip libpng libjpeg-turbo libwebp freetype nginx \
+    && apk add --no-cache --virtual .build-deps $PHPIZE_DEPS linux-headers \
+        postgresql-dev libzip-dev libpng-dev libjpeg-turbo-dev libwebp-dev freetype-dev \
+    && docker-php-ext-configure gd --with-jpeg --with-webp --with-freetype \
+    && docker-php-ext-install -j"$(nproc)" pdo_pgsql zip gd opcache pcntl \
+    && apk del .build-deps \
+    && rm -rf /tmp/pear
 
 FROM base AS vendor
 COPY --from=composer:2.8 /usr/bin/composer /usr/bin/composer
+ENV COMPOSER_ALLOW_SUPERUSER=1
 WORKDIR /app
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --prefer-dist --no-interaction --no-progress --no-scripts --no-autoloader
