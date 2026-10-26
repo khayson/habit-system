@@ -690,6 +690,7 @@
   "@reviewDeletedElsewhere": {"placeholders": {"version": {"type": "int"}}},
   "reviewArchivedElsewhere": "Archived on another device",
   "reviewChangedElsewhere": "Changed on another device",
+  "reviewFieldIcon": "Icon",
   "reviewNote": "Your choice becomes a reviewed edit against the latest version. If it changes again, you will review it again.",
   "reviewNoteFields": "Fields that differ take the values you choose.",
   "reviewKeepSynced": "Keep synced value · {value}",

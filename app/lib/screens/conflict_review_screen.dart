@@ -331,7 +331,10 @@ class _Card {
   final List<String> values;
   final String? line;
 
-  const _Card(this.values, this.line);
+  /// A glyph drawn before a value, by its index (the habit's icon, A53); the text says it.
+  final Map<int, AppIconData> icons;
+
+  const _Card(this.values, this.line, {this.icons = const {}});
 }
 
 /// What 19 shows for one conflict: the variant, the copy and both cards.
@@ -513,6 +516,11 @@ class _Plan {
           HabitField.target => l10n.reviewFieldTarget,
           HabitField.unit => l10n.reviewFieldUnit,
           HabitField.schedule => l10n.reviewFieldSchedule,
+          HabitField.icon => l10n.reviewFieldIcon,
+        };
+        Map<int, AppIconData> glyphs(String? Function(HabitFieldDiff) key) => {
+          for (final (i, f) in fields.indexed)
+            if (key(f) != null) i: AppIcons.habit(key(f)),
         };
         return _Plan(
           variant: _Variant.staleHabit,
@@ -520,13 +528,17 @@ class _Plan {
           subtitle: l10n.reviewHabitSubtitle(habit),
           safeTitle: l10n.reviewEditSafeTitle,
           safeBody: l10n.reviewEditSafeBody,
-          mine: _Card([
-            for (final f in fields) l10n.reviewFieldLine(label(f.field), f.mine),
-          ], edited()),
+          mine: _Card(
+            [for (final f in fields) l10n.reviewFieldLine(label(f.field), f.mine)],
+            edited(),
+            icons: glyphs((f) => f.mineIcon),
+          ),
           // Note c: with no field to compare, say only that it changed there.
-          synced: _Card([
-            for (final f in fields) l10n.reviewFieldLine(label(f.field), f.synced),
-          ], fields.isEmpty ? l10n.reviewChangedElsewhere : l10n.reviewEditedElsewhere(server)),
+          synced: _Card(
+            [for (final f in fields) l10n.reviewFieldLine(label(f.field), f.synced)],
+            fields.isEmpty ? l10n.reviewChangedElsewhere : l10n.reviewEditedElsewhere(server),
+            icons: glyphs((f) => f.syncedIcon),
+          ),
           syncedTitle: l10n.reviewLatestVersion,
           note: '${l10n.reviewNote} ${l10n.reviewNoteFields}',
         );
@@ -571,8 +583,17 @@ class _ValueCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: HabitSpace.s8),
-            for (final v in card.values)
-              Text(v, style: single ? text.headlineMedium : text.bodyLarge),
+            for (final (i, v) in card.values.indexed)
+              if (card.icons[i] case final glyph?)
+                Row(
+                  children: [
+                    AppIcon(glyph, size: 20, color: tokens.ink),
+                    const SizedBox(width: HabitSpace.s8),
+                    Expanded(child: Text(v, style: single ? text.headlineMedium : text.bodyLarge)),
+                  ],
+                )
+              else
+                Text(v, style: single ? text.headlineMedium : text.bodyLarge),
             if (card.line != null && card.line!.isNotEmpty) ...[
               const SizedBox(height: HabitSpace.s8),
               Text(card.line!, style: text.bodySmall?.copyWith(color: tokens.muted)),

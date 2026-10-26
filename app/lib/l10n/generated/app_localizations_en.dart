@@ -1977,6 +1977,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reviewChangedElsewhere => 'Changed on another device';
 
   @override
+  String get reviewFieldIcon => 'Icon';
+
+  @override
   String get reviewNote =>
       'Your choice becomes a reviewed edit against the latest version. If it changes again, you will review it again.';
 

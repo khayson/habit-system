@@ -3266,6 +3266,12 @@ abstract class AppLocalizations {
   /// **'Changed on another device'**
   String get reviewChangedElsewhere;
 
+  /// No description provided for @reviewFieldIcon.
+  ///
+  /// In en, this message translates to:
+  /// **'Icon'**
+  String get reviewFieldIcon;
+
   /// No description provided for @reviewNote.
   ///
   /// In en, this message translates to:

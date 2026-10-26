@@ -9,6 +9,7 @@ import 'package:habit/providers/account_context.dart';
 import 'package:habit/screens/conflict_review_screen.dart';
 import 'package:habit/screens/sync_queue_screen.dart';
 import 'package:habit/sync/outbox_states.dart';
+import 'package:habit/widgets/habit_icon_glyphs.g.dart';
 
 import '../support/app_harness.dart';
 import '../support/fake_sync_server.dart';
@@ -303,13 +304,14 @@ void main() {
     await tearDownApp(tester, account);
   });
 
-  HabitDraft draft(String name, {Object target = '2.000'}) => HabitDraft(
+  HabitDraft draft(String name, {Object target = '2.000', String? icon}) => HabitDraft(
     name: name,
     category: 'health',
     targetValue: target,
     unit: 'L',
     frequencyType: 'daily',
     frequencyConfig: const {},
+    icon: icon,
   );
 
   testWidgets('note f: a first entry of the day reads "first entry of the day"', (tester) async {
@@ -357,6 +359,27 @@ void main() {
       expect(find.text(t), findsOneWidget, reason: t);
     }
     expect(find.textContaining('Fields that differ take the values you choose.'), findsOneWidget);
+    await tearDownApp(tester, account);
+  });
+
+  // 6.8 review L1: an icon-only difference is shown, both icons with their labels.
+  testWidgets('stale habit edit: an icon-only difference shows an Icon row', (tester) async {
+    await seed(tester);
+    await tester.runAsync(() async {
+      await tablet.writer.updateHabit(habitId, draft('Water', icon: 'glass-water'));
+      await tablet.sync(force: true);
+    });
+    await tester.runAsync(
+      () => account.writer.updateHabit(habitId, draft('Water', icon: 'droplet')),
+    );
+    await syncNow(tester, account);
+    final row = await attention(tester);
+    await open(tester, row.mutationId);
+    expect(find.text('Icon: Droplet'), findsOneWidget);
+    expect(find.text('Icon: Water'), findsOneWidget);
+    expect(byAppIcon(habitIconGlyphs['droplet']!), findsOneWidget);
+    expect(byAppIcon(habitIconGlyphs['glass-water']!), findsOneWidget);
+    expect(find.text('Changed on another device'), findsNothing, reason: 'a field to compare');
     await tearDownApp(tester, account);
   });
 

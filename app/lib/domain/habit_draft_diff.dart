@@ -1,4 +1,5 @@
 import 'habit_draft.dart';
+import 'habit_icons.dart';
 import 'provisional_type_rules.dart';
 
 /// One field where two versions of a habit differ, with both display texts (screen 19).
@@ -7,13 +8,18 @@ class HabitFieldDiff {
   final String mine;
   final String synced;
 
-  const HabitFieldDiff(this.field, this.mine, this.synced);
+  /// A53 (6.8 review L1): for [HabitField.icon], the key each side shows (its own icon or its
+  /// category's default), so the screen can draw both icons beside their labels.
+  final String? mineIcon;
+  final String? syncedIcon;
+
+  const HabitFieldDiff(this.field, this.mine, this.synced, {this.mineIcon, this.syncedIcon});
 }
 
-enum HabitField { name, category, target, unit, schedule }
+enum HabitField { name, category, target, unit, schedule, icon }
 
 /// 4.3c A4: the fields where this device's habit edit and the synced habit differ, in the order
-/// name, category, target, unit, schedule. A habit.update carries the whole draft, so "use mine"
+/// name, category, target, unit, schedule, icon (A53). A habit.update carries the whole draft, so "use mine"
 /// puts back every field listed here (4.3b review I4). Pure Dart: the screen passes the display
 /// formatters (the type registry's target text, the schedule text, the category label).
 class HabitDraftDiff {
@@ -91,6 +97,19 @@ class HabitDraftDiff {
           HabitField.schedule,
           schedule(mine.frequencyType, mine.frequencyConfig),
           schedule(synced.frequencyType, synced.frequencyConfig),
+        ),
+      );
+    }
+    if (a['icon'] != b['icon']) {
+      final mineKey = HabitIconCatalog.keyFor(mine.icon, mine.category);
+      final syncedKey = HabitIconCatalog.keyFor(synced.icon, synced.category);
+      out.add(
+        HabitFieldDiff(
+          HabitField.icon,
+          HabitIconCatalog.label(mineKey),
+          HabitIconCatalog.label(syncedKey),
+          mineIcon: mineKey,
+          syncedIcon: syncedKey,
         ),
       );
     }
