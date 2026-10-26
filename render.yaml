@@ -79,5 +79,8 @@ services:
       # A54: the outside timer's secret, and the lowest app build the server accepts.
       - key: TICK_SECRET
         sync: false
+      # cron-job.org's free plan waits 30 seconds for an answer; the worker stops before that.
+      - key: TICK_MAX_SECONDS
+        value: "25"
       - key: MIN_APP_VERSION
         value: "1"

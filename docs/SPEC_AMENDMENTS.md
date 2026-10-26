@@ -529,7 +529,7 @@ No money and no domain. Claude Code prepares the repository and `docs/DEPLOY.md`
   - **The app:** a signed release APK on a GitHub Release, with a download page on GitHub Pages beside the legal pages.
 - **The tick** (the free tier has no cron and no worker): `POST /api/v1/internal/tick`.
   - **Secret:** the request carries `X-Tick-Secret`, compared with `TICK_SECRET` by `hash_equals`. A missing header, a wrong secret, or no `TICK_SECRET` configured all answer **404** `not_found`, never 401, so the endpoint is not advertised. It sits outside Sanctum and is throttled per IP.
-  - **Work:** `schedule:run`, then `queue:work --stop-when-empty` with `--max-time=50` and a memory limit; answers 204.
+  - **Work:** `schedule:run`, then `queue:work --stop-when-empty` with a time limit (`TICK_MAX_SECONDS`: 25 in production, because cron-job.org's free plan waits only 30 seconds for an answer; work left over waits for the next tick) and a memory limit; answers 204.
   - **No double runs:** one tick at a time holds a cache lock. A tick that finds the lock taken answers 204 and does nothing. The scheduled commands keep `withoutOverlapping`, and the queue's own reservation keeps a job from running twice.
   - **Caller:** cron-job.org every 5 minutes. That also keeps the free service from sleeping.
 - **Health** (`GET /api/v1/health`): outside `local` and `testing` it answers **503** `unavailable` when any of these holds:
