@@ -10,12 +10,16 @@ use App\Http\Controllers\Api\V1\InsightsController;
 use App\Http\Controllers\Api\V1\PasswordResetController;
 use App\Http\Controllers\Api\V1\RewardsController;
 use App\Http\Controllers\Api\V1\SyncController;
+use App\Http\Controllers\Api\V1\TickController;
 use Illuminate\Support\Facades\Route;
 
 // Prefix /api/v1 is set in bootstrap/app.php. Throttles come after auth:sanctum so authenticated
 // limits are keyed by user, not by a shared carrier IP.
 
 Route::get('/health', HealthController::class)->middleware('throttle:api')->name('health');
+
+// A54: the outside timer (no cron on Render's free tier). No API auth: a shared secret, 404 otherwise.
+Route::post('/internal/tick', TickController::class)->middleware('throttle:tick')->name('internal.tick');
 
 Route::middleware('throttle:auth')->group(function () {
     Route::post('/auth/register', [AuthController::class, 'register'])->name('auth.register');

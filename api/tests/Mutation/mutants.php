@@ -590,4 +590,11 @@ PHP,
         'replace' => '',
         'tests' => 'tests/Feature/HealthRulesTest.php',
     ],
+    [
+        'name' => '7a: the tick secret check is removed',
+        'file' => 'app/Http/Controllers/Api/V1/TickController.php',
+        'search' => "if (\$secret === '' || ! hash_equals(\$secret, \$given)) {",
+        'replace' => 'if (false) {',
+        'tests' => 'tests/Feature/TickTest.php',
+    ],
 ];

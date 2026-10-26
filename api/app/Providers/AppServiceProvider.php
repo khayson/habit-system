@@ -68,6 +68,9 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('exports', fn (Request $request) => Limit::perHour($limit('exports_per_hour'))->by($byUserOrIp($request)));
 
+        // A54: the outside timer calls every 5 minutes; anything faster is someone else.
+        RateLimiter::for('tick', fn (Request $request) => Limit::perMinute($limit('tick_per_minute'))->by('ip:'.$request->ip()));
+
         RateLimiter::for('avatar-upload', fn (Request $request) => Limit::perHour($limit('avatar_uploads_per_hour'))->by($byUserOrIp($request)));
     }
 }

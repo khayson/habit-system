@@ -14,9 +14,16 @@ return [
         'password_reset_per_hour_per_ip' => (int) env('RATE_LIMIT_PASSWORD_RESET_PER_HOUR_PER_IP', 20),
         'password_reset_per_hour_per_email' => (int) env('RATE_LIMIT_PASSWORD_RESET_PER_HOUR_PER_EMAIL', 5),
         'sync_per_minute' => (int) env('RATE_LIMIT_SYNC_PER_MINUTE', 60),
+        'tick_per_minute' => (int) env('RATE_LIMIT_TICK_PER_MINUTE', 6),
         'exports_per_hour' => (int) env('RATE_LIMIT_EXPORTS_PER_HOUR', 6),
         'avatar_uploads_per_hour' => (int) env('RATE_LIMIT_AVATAR_UPLOADS_PER_HOUR', 10),
     ],
+
+    // A54: the outside timer's shared secret (X-Tick-Secret on POST /internal/tick); empty
+    // disables the endpoint. The worker's limits keep one tick inside a minute.
+    'tick_secret' => (string) env('TICK_SECRET', ''),
+    'tick_max_seconds' => (int) env('TICK_MAX_SECONDS', 50),
+    'tick_memory_mb' => (int) env('TICK_MEMORY_MB', 128),
 
     // A54: the lowest app build number this server accepts; travels in every success meta.
     'min_app_version' => (int) env('MIN_APP_VERSION', 1),
