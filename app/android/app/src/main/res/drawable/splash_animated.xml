@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A56: the Android 12+ splash animation, under one second: the three cards drop into
+     place, then the check pops in. Paths copied from ic_launcher_foreground.xml (the icon kit),
+     scaled to 64 per cent so the system's circle never clips them. -->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    <aapt:attr name="android:drawable">
+        <vector android:width="108dp" android:height="108dp"
+            android:viewportWidth="432" android:viewportHeight="432">
+            <group android:pivotX="216" android:pivotY="216" android:scaleX="0.64" android:scaleY="0.64">
+                <group android:name="back" android:translateY="-48">
+                    <path android:name="back_path" android:fillColor="#FFE7F4E7" android:fillAlpha="0"
+                        android:pathData="M279.75,104.42 L132.63,127.72 L130.58,128.12 L128.56,128.64 L126.57,129.30 L124.64,130.09 L122.76,131.00 L120.94,132.03 L119.20,133.18 L117.53,134.44 L115.95,135.81 L114.47,137.28 L113.08,138.84 L111.80,140.49 L110.63,142.22 L109.57,144.02 L108.63,145.89 L107.82,147.81 L107.14,149.78 L106.58,151.80 L106.16,153.84 L105.88,155.91 L105.73,158.00 L105.71,160.09 L105.84,162.17 L106.09,164.24 L115.73,225.05 L116.12,227.10 L116.65,229.12 L117.30,231.10 L118.09,233.04 L119.00,234.91 L120.04,236.73 L121.18,238.47 L122.45,240.14 L123.81,241.72 L125.28,243.21 L126.84,244.59 L128.49,245.88 L130.22,247.05 L132.02,248.10 L133.89,249.04 L135.81,249.85 L137.79,250.54 L139.80,251.09 L141.85,251.51 L143.92,251.80 L146.00,251.95 L148.09,251.96 L150.17,251.84 L152.25,251.58 L299.37,228.28 L301.42,227.88 L303.44,227.36 L305.43,226.70 L307.36,225.91 L309.24,225.00 L311.06,223.97 L312.80,222.82 L314.47,221.56 L316.05,220.19 L317.53,218.72 L318.92,217.16 L320.20,215.51 L321.37,213.78 L322.43,211.98 L323.37,210.11 L324.18,208.19 L324.86,206.22 L325.42,204.20 L325.84,202.16 L326.12,200.09 L326.27,198.00 L326.29,195.91 L326.16,193.83 L325.91,191.76 L316.27,130.95 L315.88,128.90 L315.35,126.88 L314.70,124.90 L313.91,122.96 L313.00,121.09 L311.96,119.27 L310.82,117.53 L309.55,115.86 L308.19,114.28 L306.72,112.79 L305.16,111.41 L303.51,110.12 L301.78,108.95 L299.98,107.90 L298.11,106.96 L296.19,106.15 L294.21,105.46 L292.20,104.91 L290.15,104.49 L288.08,104.20 L286.00,104.05 L283.91,104.04 L281.83,104.16 Z"/>
+                </group>
+                <group android:name="middle" android:translateY="-30">
+                    <path android:name="middle_path" android:fillColor="#FF8BD799" android:fillAlpha="0"
+                        android:pathData="M291.86,151.64 L131.13,162.88 L128.95,163.10 L126.80,163.47 L124.67,163.97 L122.58,164.62 L120.53,165.40 L118.54,166.31 L116.62,167.35 L114.76,168.51 L112.99,169.79 L111.30,171.19 L109.71,172.69 L108.23,174.30 L106.84,175.99 L105.58,177.78 L104.43,179.64 L103.41,181.58 L102.51,183.57 L101.75,185.62 L101.12,187.72 L100.64,189.85 L100.29,192.02 L100.09,194.19 L100.02,196.38 L100.10,198.57 L104.45,260.74 L104.68,262.91 L105.04,265.07 L105.55,267.20 L106.19,269.29 L106.97,271.34 L107.88,273.32 L108.92,275.25 L110.09,277.10 L111.37,278.88 L112.76,280.56 L114.27,282.15 L115.87,283.64 L117.57,285.02 L119.35,286.29 L121.22,287.44 L123.15,288.46 L125.15,289.35 L127.20,290.12 L129.30,290.74 L131.43,291.23 L133.59,291.58 L135.77,291.78 L137.96,291.84 L140.14,291.76 L300.87,280.52 L303.05,280.30 L305.20,279.93 L307.33,279.43 L309.42,278.78 L311.47,278.00 L313.46,277.09 L315.38,276.05 L317.24,274.89 L319.01,273.61 L320.70,272.21 L322.29,270.71 L323.77,269.10 L325.16,267.41 L326.42,265.62 L327.57,263.76 L328.59,261.82 L329.49,259.83 L330.25,257.78 L330.88,255.68 L331.36,253.55 L331.71,251.38 L331.91,249.21 L331.98,247.02 L331.90,244.83 L327.55,182.66 L327.32,180.49 L326.96,178.33 L326.45,176.20 L325.81,174.11 L325.03,172.06 L324.12,170.08 L323.08,168.15 L321.91,166.30 L320.63,164.52 L319.24,162.84 L317.73,161.25 L316.13,159.76 L314.43,158.38 L312.65,157.11 L310.78,155.96 L308.85,154.94 L306.85,154.05 L304.80,153.28 L302.70,152.66 L300.57,152.17 L298.41,151.82 L296.23,151.62 L294.04,151.56 Z"/>
+                </group>
+                <group android:name="front" android:translateY="36">
+                    <path android:name="front_path" android:fillColor="#FFFFFFFF" android:fillAlpha="0"
+                        android:pathData="M302.64,206.50 L129.36,206.50 L127.07,206.57 L124.80,206.80 L122.54,207.17 L120.31,207.69 L118.12,208.36 L115.98,209.16 L113.90,210.11 L111.88,211.18 L109.94,212.39 L108.08,213.72 L106.31,215.18 L104.64,216.74 L103.08,218.41 L101.62,220.18 L100.29,222.04 L99.08,223.98 L98.01,226.00 L97.06,228.08 L96.26,230.22 L95.59,232.41 L95.07,234.64 L94.70,236.90 L94.47,239.17 L94.40,241.46 L94.40,304.54 L94.47,306.83 L94.70,309.10 L95.07,311.36 L95.59,313.59 L96.26,315.78 L97.06,317.92 L98.01,320.00 L99.08,322.02 L100.29,323.96 L101.62,325.82 L103.08,327.59 L104.64,329.26 L106.31,330.82 L108.08,332.28 L109.94,333.61 L111.88,334.82 L113.90,335.89 L115.98,336.84 L118.12,337.64 L120.31,338.31 L122.54,338.83 L124.80,339.20 L127.07,339.43 L129.36,339.50 L302.64,339.50 L304.93,339.43 L307.20,339.20 L309.46,338.83 L311.69,338.31 L313.88,337.64 L316.02,336.84 L318.10,335.89 L320.12,334.82 L322.06,333.61 L323.92,332.28 L325.69,330.82 L327.36,329.26 L328.92,327.59 L330.38,325.82 L331.71,323.96 L332.92,322.02 L333.99,320.00 L334.94,317.92 L335.74,315.78 L336.41,313.59 L336.93,311.36 L337.30,309.10 L337.53,306.83 L337.60,304.54 L337.60,241.46 L337.53,239.17 L337.30,236.90 L336.93,234.64 L336.41,232.41 L335.74,230.22 L334.94,228.08 L333.99,226.00 L332.92,223.98 L331.71,222.04 L330.38,220.18 L328.92,218.41 L327.36,216.74 L325.69,215.18 L323.92,213.72 L322.06,212.39 L320.12,211.18 L318.10,210.11 L316.02,209.16 L313.88,208.36 L311.69,207.69 L309.46,207.17 L307.20,206.80 L304.93,206.57 Z"/>
+                </group>
+                <group android:name="check" android:pivotX="190" android:pivotY="275" android:scaleX="0" android:scaleY="0">
+                    <path android:name="check_path" android:fillColor="#FF2F7B45" android:fillAlpha="0"
+                        android:pathData="M172.64,312.57 L173.23,313.10 L173.86,313.60 L174.52,314.05 L175.21,314.45 L175.92,314.81 L176.66,315.12 L177.41,315.39 L178.18,315.60 L178.96,315.76 L179.75,315.87 L180.55,315.93 L181.35,315.94 L182.14,315.89 L182.94,315.79 L183.72,315.64 L184.49,315.44 L185.25,315.19 L185.99,314.89 L186.71,314.54 L187.40,314.14 L188.07,313.70 L188.70,313.22 L189.31,312.70 L189.87,312.14 L243.07,255.90 L243.60,255.30 L244.09,254.67 L244.53,254.01 L244.94,253.33 L245.29,252.61 L245.60,251.88 L245.86,251.13 L246.07,250.36 L246.23,249.58 L246.34,248.79 L246.39,248.00 L246.40,247.20 L246.35,246.41 L246.25,245.62 L246.10,244.84 L245.89,244.07 L245.64,243.31 L245.34,242.58 L244.99,241.86 L244.60,241.17 L244.16,240.51 L243.68,239.87 L243.16,239.27 L242.60,238.71 L242.00,238.18 L241.37,237.69 L240.71,237.25 L240.03,236.84 L239.31,236.49 L238.58,236.18 L237.83,235.92 L237.06,235.71 L236.28,235.55 L235.49,235.44 L234.70,235.39 L233.90,235.38 L233.11,235.43 L232.32,235.53 L231.54,235.68 L230.77,235.89 L230.01,236.14 L229.28,236.44 L228.56,236.79 L227.87,237.18 L227.21,237.62 L226.57,238.10 L225.97,238.62 L225.41,239.18 L180.60,286.55 L155.24,262.31 L154.65,261.78 L154.02,261.29 L153.36,260.84 L152.68,260.43 L151.97,260.07 L151.24,259.76 L150.49,259.50 L149.72,259.29 L148.94,259.12 L148.15,259.01 L147.36,258.95 L146.56,258.94 L145.77,258.99 L144.98,259.08 L144.20,259.23 L143.43,259.43 L142.67,259.68 L141.93,259.97 L141.22,260.32 L140.52,260.71 L139.86,261.15 L139.22,261.62 L138.62,262.14 L138.05,262.70 L137.52,263.29 L137.03,263.92 L136.58,264.58 L136.17,265.26 L135.81,265.97 L135.50,266.70 L135.24,267.45 L135.03,268.22 L134.86,269.00 L134.75,269.79 L134.69,270.58 L134.68,271.38 L134.73,272.17 L134.82,272.96 L134.97,273.74 L135.17,274.51 L135.42,275.27 L135.71,276.01 L136.06,276.72 L136.45,277.42 L136.89,278.08 L137.36,278.72 L137.88,279.32 L138.44,279.89 Z"/>
+                </group>
+            </group>
+        </vector>
+    </aapt:attr>
+    <target android:name="back">
+        <aapt:attr name="android:animation">
+            <objectAnimator android:propertyName="translateY" android:valueFrom="-48" android:valueTo="0"
+                android:startOffset="0" android:duration="330"
+                android:interpolator="@android:interpolator/decelerate_cubic"/>
+        </aapt:attr>
+    </target>
+    <target android:name="middle">
+        <aapt:attr name="android:animation">
+            <objectAnimator android:propertyName="translateY" android:valueFrom="-30" android:valueTo="0"
+                android:startOffset="130" android:duration="330"
+                android:interpolator="@android:interpolator/decelerate_cubic"/>
+        </aapt:attr>
+    </target>
+    <target android:name="front">
+        <aapt:attr name="android:animation">
+            <objectAnimator android:propertyName="translateY" android:valueFrom="36" android:valueTo="0"
+                android:startOffset="260" android:duration="360"
+                android:interpolator="@android:interpolator/decelerate_cubic"/>
+        </aapt:attr>
+    </target>
+    <target android:name="back_path">
+        <aapt:attr name="android:animation">
+            <objectAnimator android:propertyName="fillAlpha" android:valueFrom="0" android:valueTo="1"
+                android:startOffset="0" android:duration="200"/>
+        </aapt:attr>
+    </target>
+    <target android:name="middle_path">
+        <aapt:attr name="android:animation">
+            <objectAnimator android:propertyName="fillAlpha" android:valueFrom="0" android:valueTo="1"
+                android:startOffset="130" android:duration="200"/>
+        </aapt:attr>
+    </target>
+    <target android:name="front_path">
+        <aapt:attr name="android:animation">
+            <objectAnimator android:propertyName="fillAlpha" android:valueFrom="0" android:valueTo="1"
+                android:startOffset="260" android:duration="200"/>
+        </aapt:attr>
+    </target>
+    <target android:name="check_path">
+        <aapt:attr name="android:animation">
+            <objectAnimator android:propertyName="fillAlpha" android:valueFrom="0" android:valueTo="1"
+                android:startOffset="620" android:duration="120"/>
+        </aapt:attr>
+    </target>
+    <target android:name="check">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator android:propertyName="scaleX" android:valueFrom="0" android:valueTo="1"
+                    android:startOffset="620" android:duration="340"
+                    android:interpolator="@android:interpolator/overshoot"/>
+                <objectAnimator android:propertyName="scaleY" android:valueFrom="0" android:valueTo="1"
+                    android:startOffset="620" android:duration="340"
+                    android:interpolator="@android:interpolator/overshoot"/>
+            </set>
+        </aapt:attr>
+    </target>
+</animated-vector>
