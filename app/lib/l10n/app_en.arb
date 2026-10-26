@@ -145,6 +145,10 @@
   "@iconPickerNoMatch": {"placeholders": {"query": {"type": "String"}}},
   "editSaved": "Changes saved.",
   "@editSaved": {"description": "6.7 review: the toast after a habit edit is saved."},
+  "updateTitle": "A new version is ready",
+  "@updateTitle": {"description": "A54: the server needs a newer app build."},
+  "updateBody": "This version can no longer sync. Your habits are safe on this phone and sync again after you update.",
+  "updateButton": "Get the update",
   "toastClose": "Close message",
   "@toastClose": {
     "description": "A52: tooltip and label of the close button on a toast."

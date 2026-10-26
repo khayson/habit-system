@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import '../../config/api_config.dart';
 import '../exceptions/app_exception.dart';
 import '../storage/token_store.dart';
+import '../version_gate.dart';
 import 'api_response.dart';
 
 /// The single Dio instance. API calls happen only in services, through this client.
@@ -14,6 +15,9 @@ class ApiClient {
   /// Called after the server rejects the stored token (401). The token is already cleared;
   /// local data and the outbox are left untouched.
   VoidCallback? onUnauthenticated;
+
+  /// A54: told every response body, so a server that needs a newer build stops this one.
+  VersionGate? versionGate;
 
   static ApiClient? _instance;
 
@@ -45,6 +49,10 @@ class ApiClient {
             options.extra[_sentTokenKey] = token;
           }
           handler.next(options);
+        },
+        onResponse: (response, handler) {
+          versionGate?.observe(response.data);
+          handler.next(response);
         },
         onError: (error, handler) async {
           await _handleUnauthorized(error);

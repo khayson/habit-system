@@ -740,6 +740,24 @@ abstract class AppLocalizations {
   /// **'Changes saved.'**
   String get editSaved;
 
+  /// A54: the server needs a newer app build.
+  ///
+  /// In en, this message translates to:
+  /// **'A new version is ready'**
+  String get updateTitle;
+
+  /// No description provided for @updateBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This version can no longer sync. Your habits are safe on this phone and sync again after you update.'**
+  String get updateBody;
+
+  /// No description provided for @updateButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Get the update'**
+  String get updateButton;
+
   /// A52: tooltip and label of the close button on a toast.
   ///
   /// In en, this message translates to:

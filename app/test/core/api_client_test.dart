@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:habit/core/exceptions/app_exception.dart';
 import 'package:habit/core/network/api_client.dart';
+import 'package:habit/core/version_gate.dart';
 import 'package:habit/core/storage/token_store.dart';
 import 'package:habit/services/health_service.dart';
 
@@ -93,6 +94,19 @@ void main() {
     expect(status.serverTime, DateTime.utc(2026, 5, 28, 17, 22));
     expect(adapter.lastRequest!.path, '/health');
     expect(adapter.lastRequest!.headers['Accept'], 'application/json');
+  });
+
+  // A54: every response's meta reaches the version gate (sync goes through the same Dio).
+  test('the version gate sees min_app_version on every response', () async {
+    final body = fixtureBody('success_health');
+    (body['meta'] as Map<String, dynamic>)['min_app_version'] = 2;
+    dio.httpClientAdapter = CannedAdapter(200, body);
+    final gate = VersionGate(build: 1);
+    final api = ApiClient.withDio(dio, MemoryTokenStore())..versionGate = gate;
+
+    await HealthService(api).check();
+
+    expect(gate.updateRequired, isTrue);
   });
 
   // A50: reset-password answers 204 with no body; that is a success, not a parse error.

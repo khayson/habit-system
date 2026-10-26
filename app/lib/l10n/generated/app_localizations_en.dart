@@ -363,6 +363,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editSaved => 'Changes saved.';
 
   @override
+  String get updateTitle => 'A new version is ready';
+
+  @override
+  String get updateBody =>
+      'This version can no longer sync. Your habits are safe on this phone and sync again after you update.';
+
+  @override
+  String get updateButton => 'Get the update';
+
+  @override
   String get toastClose => 'Close message';
 
   @override

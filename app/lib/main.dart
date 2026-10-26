@@ -7,11 +7,13 @@ import 'package:provider/provider.dart';
 import 'app/app.dart';
 import 'app/router.dart';
 import 'config/api_config.dart';
+import 'config/app_version.dart';
 import 'config/legal_config.dart';
 import 'core/network/api_client.dart';
 import 'core/storage/account_store.dart';
 import 'core/storage/token_store.dart';
 import 'core/time_zones.dart';
+import 'core/version_gate.dart';
 import 'data/database_opener.dart';
 import 'providers/account_context.dart';
 import 'providers/health_provider.dart';
@@ -23,6 +25,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   ApiConfig.ensureSafe();
   LegalConfig.ensureSafe();
+  AppVersion.ensureSafe();
   LicenseRegistry.addLicense(_interLicense);
 
   // Phase 3b: each account's files (the profile photo) live next to its database.
@@ -40,6 +43,9 @@ Future<void> main() async {
     ),
   );
   api.onUnauthenticated = session.handleUnauthenticated;
+  // A54: a server that needs a newer build shows "Please update" instead of the app.
+  final versionGate = VersionGate(build: AppVersion.build);
+  api.versionGate = versionGate;
   // Reads the keystore and opens the account database lazily: no network, no artificial delay.
   await session.load();
 
@@ -49,7 +55,7 @@ Future<void> main() async {
         ChangeNotifierProvider.value(value: session),
         ChangeNotifierProvider(create: (_) => HealthProvider(HealthService(api))),
       ],
-      child: HabitApp(router: buildRouter(session)),
+      child: HabitApp(router: buildRouter(session), versionGate: versionGate),
     ),
   );
 

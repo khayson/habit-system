@@ -2,16 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../config/app_version.dart';
 import '../config/theme.dart';
+import '../core/url_launcher_opener.dart';
+import '../core/version_gate.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../providers/account_context.dart';
 import '../providers/session_provider.dart';
 import '../widgets/app_toast.dart';
+import '../widgets/version_gated.dart';
 
 class HabitApp extends StatelessWidget {
   final GoRouter router;
 
-  const HabitApp({super.key, required this.router});
+  /// A54: the server's minimum build against this one.
+  final VersionGate versionGate;
+
+  const HabitApp({super.key, required this.router, required this.versionGate});
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +37,12 @@ class HabitApp extends StatelessWidget {
           value: session.account,
           child: AppToastScope(
             owner: session.account,
-            child: _Foreground(account: session.account, child: child ?? const SizedBox()),
+            child: VersionGated(
+              gate: versionGate,
+              opener: const UrlLauncherOpener(),
+              downloadUrl: AppVersion.downloadPageUrl,
+              child: _Foreground(account: session.account, child: child ?? const SizedBox()),
+            ),
           ),
         ),
       ),
