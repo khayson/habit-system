@@ -1,0 +1,7 @@
+# A54: copy to android/key.properties (git-ignored) and fill in. Never commit the copy or the
+# keystore. storeFile is an absolute path OUTSIDE the repository, e.g.
+# C:\Users\<you>\keys\habit-release.jks (backslashes doubled), or C:/Users/<you>/keys/habit-release.jks
+storeFile=C:/path/outside/the/repo/habit-release.jks
+storePassword=<the keystore password>
+keyAlias=habit
+keyPassword=<the key password>
