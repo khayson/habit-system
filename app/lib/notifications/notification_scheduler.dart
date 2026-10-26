@@ -60,7 +60,8 @@ class LocalNotificationsScheduler implements NotificationScheduler {
   Future<void> _init() => _ready ??= _plugin
       .initialize(
         settings: const InitializationSettings(
-          android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+          // The stacked-cards silhouette (Android tints it); the launcher icon would show as a square.
+          android: AndroidInitializationSettings('@drawable/ic_stat_habit'),
         ),
       )
       .then((_) async {
