@@ -57,7 +57,7 @@ final class PageBuilder
      * @param  array{terms: LegalDocument, privacy: LegalDocument}  $documents
      * @return array{files: array<string, string>, warnings: list<string>}
      */
-    public function build(array $documents, LegalFacts $facts, bool $publish): array
+    public function build(array $documents, LegalFacts $facts, bool $publish, bool $allowDraft = false): array
     {
         $this->warnings = [];
         $problems = [];
@@ -69,7 +69,9 @@ final class PageBuilder
         foreach ($facts->missing() as $key) {
             $problems[] = "facts.json: {$key} is not filled in";
         }
-        if ($publish && $problems !== []) {
+        // ASSUMPTION(7a-draft-pages): A54 publishes the pages for testers before every fact is
+        // filled; they then say plainly, on every page, that they are drafts.
+        if ($publish && ! $allowDraft && $problems !== []) {
             throw new LegalBuildException("Cannot publish:\n- ".implode("\n- ", $problems));
         }
         foreach ($problems as $problem) {
@@ -77,6 +79,8 @@ final class PageBuilder
         }
 
         $appName = $facts->get('app_name') ?? 'Habit System';
+        $draft = $problems === [] ? '' : '<p class="draft" role="note"><strong>Draft: this document is not final yet.</strong> '
+            .'Some details, such as the contact address, are still to be added. The final version will say so here.</p>';
         $files = [];
         foreach ($documents as $slug => $document) {
             $body = $this->fill($this->markdown->convert($document->body)->getContent(), $facts, $document->slug);
@@ -84,7 +88,7 @@ final class PageBuilder
             $meta = '<p class="meta">Version '.self::e($document->version).' · Effective '.self::e($document->effective).'</p>';
             $files["{$slug}/index.html"] = $this->page(
                 title: $document->title.' · '.$appName,
-                main: $this->insertAfterH1($body, $meta),
+                main: $this->insertAfterH1($body, $meta.$draft),
                 appName: $appName,
                 root: '../',
             );
@@ -97,7 +101,7 @@ final class PageBuilder
         }
         $files['index.html'] = $this->page(
             title: $appName,
-            main: '<h1>'.self::e($appName).'</h1><ul class="docs">'.$list.'</ul>',
+            main: '<h1>'.self::e($appName).'</h1>'.$draft.'<ul class="docs">'.$list.'</ul>',
             appName: $appName,
             root: '',
         );
@@ -109,6 +113,47 @@ final class PageBuilder
         );
 
         return ['files' => $files, 'warnings' => array_values(array_unique($this->warnings))];
+    }
+
+    /**
+     * A54: download/index.html, beside the legal pages. The buttons point at the latest
+     * release's assets, so the page never goes stale; the SHA-256 lines come from
+     * download.json. No script, font, image or tracker.
+     */
+    public function downloadPage(LegalFacts $facts, DownloadInfo $download): string
+    {
+        $appName = $facts->get('app_name') ?? 'Habit System';
+        $arm64 = $download->file('arm64-v8a') ?? throw new LegalBuildException('download.json: no arm64-v8a APK.');
+        $arm32 = $download->file('armeabi-v7a');
+        $rows = '';
+        $pending = false;
+        foreach ($download->apks as $apk) {
+            $pending = $pending || $apk['sha256'] === null;
+            $rows .= '<tr><td>'.self::e($apk['file']).'</td><td><code>'
+                .($apk['sha256'] === null ? '–' : self::e($apk['sha256'])).'</code></td></tr>';
+        }
+        $main = '<h1>'.self::e($appName).'</h1>'
+            .'<p>A calm habit tracker for Android. Check in on your routines in a tap, see your streaks and '
+            .'progress, and keep going offline: everything syncs to your own account when you are back online. '
+            .'No ads, no social feed.</p>'
+            .'<p><a class="button" href="'.self::e($download->latest($arm64)).'">Download for Android</a></p>'
+            .($arm32 === null ? '' : '<p class="meta">An older phone? Get <a href="'.self::e($download->latest($arm32)).'">the 32-bit version</a>. '
+                .'Or see <a href="'.self::e($download->releasesUrl.'/latest').'">every release</a>.</p>')
+            .'<h2>How to install</h2><ol>'
+            .'<li>Open the download on your phone. The file ends in <code>.apk</code>.</li>'
+            .'<li>If Android asks, allow your browser or Files app to <strong>Install unknown apps</strong> '
+            .'(Settings, Apps, Special app access, Install unknown apps), then go back.</li>'
+            .'<li>Tap <strong>Install</strong>, then <strong>Open</strong>.</li>'
+            .'<li>Later versions install the same way, over this one. Your habits stay.</li>'
+            .'</ol>'
+            .'<h2>Good to know</h2>'
+            .'<p>Password reset emails can land in your spam folder. If one has not arrived after a few minutes, look there.</p>'
+            .'<p>Read the <a href="../privacy/">Privacy</a> policy and the <a href="../terms/">Terms</a> before you create an account.</p>'
+            .'<h2>Check the file (optional)</h2>'
+            .'<p>Each file\'s SHA-256 fingerprint'.($pending ? ' (for a file not listed here yet, it is listed in the release notes)' : '').':</p>'
+            .'<div class="table-wrap"><table><thead><tr><th>File</th><th>SHA-256</th></tr></thead><tbody>'.$rows.'</tbody></table></div>';
+
+        return $this->page(title: 'Download · '.$appName, main: $main, appName: $appName, root: '../');
     }
 
     private function fill(string $html, LegalFacts $facts, string $slug): string
@@ -181,6 +226,10 @@ final class PageBuilder
             .'th,td{border:1px solid var(--border);padding:.5rem;text-align:left;vertical-align:top}'
             .'th{background:var(--surface)}'
             .'.missing{color:var(--warning);font-weight:600}'
+            .'.draft{border-left:4px solid var(--warning);padding:.5rem 1rem;background:var(--surface)}'
+            .'.button{display:inline-block;min-height:44px;line-height:44px;padding:0 1.5rem;border-radius:22px;'
+            .'background:var(--link);color:var(--background);font-weight:600;text-decoration:none}'
+            .'code{overflow-wrap:anywhere}'
             .'footer{margin-top:3rem;padding-bottom:2rem;border-top:1px solid var(--border)}'
             .'footer ul{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:1.5rem}'
             .'footer a{display:inline-block;min-height:44px;line-height:44px}'

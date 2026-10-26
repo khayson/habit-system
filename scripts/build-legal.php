@@ -3,13 +3,15 @@
 /*
  * A33: builds the public Terms of Service and Privacy Policy pages from docs/legal.
  *
- *   php scripts/build-legal.php --out=<dir> [--publish]
+ *   php scripts/build-legal.php --out=<dir> [--publish [--allow-draft]]
  *
- * Writes index.html, terms/index.html, privacy/index.html and 404.html. Without --publish, a
- * fact not filled in or a draft document is a warning (the gap shows as [[name]]). With
- * --publish, either fails. Any failure exits non-zero.
+ * Writes index.html, terms/index.html, privacy/index.html, 404.html and (A54) the download page
+ * download/index.html. Without --publish, a fact not filled in or a draft document is a warning
+ * (the gap shows as [[name]]). With --publish, either fails, unless --allow-draft: then every
+ * draft page says so. Any failure exits non-zero.
  */
 
+use App\Legal\DownloadInfo;
 use App\Legal\LegalBuildException;
 use App\Legal\LegalDocument;
 use App\Legal\LegalFacts;
@@ -18,9 +20,10 @@ use App\Legal\PageBuilder;
 $root = dirname(__DIR__);
 require $root.'/api/vendor/autoload.php';
 
-$options = getopt('', ['out:', 'publish']);
+$options = getopt('', ['out:', 'publish', 'allow-draft']);
 $out = $options['out'] ?? null;
 $publish = array_key_exists('publish', $options);
+$allowDraft = array_key_exists('allow-draft', $options);
 if (! is_string($out) || $out === '') {
     fwrite(STDERR, "Usage: php scripts/build-legal.php --out=<dir> [--publish]\n");
     exit(2);
@@ -39,7 +42,10 @@ try {
         'terms' => LegalDocument::parse('terms', $read('terms.md')),
         'privacy' => LegalDocument::parse('privacy', $read('privacy.md')),
     ];
-    $result = (new PageBuilder)->build($documents, LegalFacts::fromJson($read('facts.json')), $publish);
+    $facts = LegalFacts::fromJson($read('facts.json'));
+    $builder = new PageBuilder;
+    $result = $builder->build($documents, $facts, $publish, $allowDraft);
+    $result['files']['download/index.html'] = $builder->downloadPage($facts, DownloadInfo::fromJson($read('download.json')));
 
     foreach ($result['files'] as $path => $html) {
         $target = rtrim($out, '/\\').'/'.$path;

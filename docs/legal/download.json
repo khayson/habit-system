@@ -1,0 +1,7 @@
+{
+  "releases_url": "https://github.com/khayson/habit-system/releases",
+  "apks": [
+    { "abi": "arm64-v8a", "file": "app-arm64-v8a-release.apk", "sha256": null },
+    { "abi": "armeabi-v7a", "file": "app-armeabi-v7a-release.apk", "sha256": null }
+  ]
+}

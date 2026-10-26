@@ -1,9 +1,10 @@
 name: Legal pages
 
-# A33: the public Terms of Service and Privacy Policy pages, built from docs/legal.
-# Pull requests and pushes build them as an artifact (draft warnings are fine). Publishing is
-# only ever a manual run with "publish" ticked, which fails unless every fact is filled and
-# both documents are final. A push never deploys.
+# A33: the public Terms of Service and Privacy Policy pages, built from docs/legal, and (A54)
+# the app's download page beside them. Pull requests and pushes build them as an artifact (draft
+# warnings are fine). Publishing is only ever a manual run: "publish" fails unless every fact is
+# filled and both documents are final; "publish_draft" publishes for testers before that, with
+# every draft page saying it is a draft. A push never deploys.
 
 on:
   pull_request:
@@ -23,6 +24,10 @@ on:
     inputs:
       publish:
         description: Publish to GitHub Pages (every fact filled, status final)
+        type: boolean
+        default: false
+      publish_draft:
+        description: Publish drafts for testers (each draft page says so)
         type: boolean
         default: false
 
@@ -52,24 +57,27 @@ jobs:
         working-directory: api
         run: composer install --no-interaction --prefer-dist --no-progress --no-dev
       - name: Build (draft warnings allowed)
-        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.publish) }}
+        if: ${{ !(github.event_name == 'workflow_dispatch' && (inputs.publish || inputs.publish_draft)) }}
         run: php scripts/build-legal.php --out=_site
       - name: Build for publishing (fails on a missing fact or a draft)
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish }}
         run: php scripts/build-legal.php --out=_site --publish
+      - name: Build drafts for publishing (each draft page says so)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish_draft && !inputs.publish }}
+        run: php scripts/build-legal.php --out=_site --publish --allow-draft
       - name: Upload the pages
         uses: actions/upload-artifact@v7
         with:
           name: legal-pages
           path: _site
       - name: Upload for GitHub Pages
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish }}
+        if: ${{ github.event_name == 'workflow_dispatch' && (inputs.publish || inputs.publish_draft) }}
         uses: actions/upload-pages-artifact@v5
         with:
           path: _site
 
   deploy:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish }}
+    if: ${{ github.event_name == 'workflow_dispatch' && (inputs.publish || inputs.publish_draft) }}
     needs: build
     runs-on: ubuntu-24.04
     permissions:
