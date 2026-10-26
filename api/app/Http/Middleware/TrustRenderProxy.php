@@ -11,6 +11,7 @@ use Illuminate\Http\Middleware\TrustProxies;
  */
 final class TrustRenderProxy extends TrustProxies
 {
+    /** @return '*'|list<string>|null */
     protected function proxies()
     {
         $proxies = trim(config()->string('api.trusted_proxies'));
