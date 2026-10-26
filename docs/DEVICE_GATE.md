@@ -8,13 +8,19 @@ aggressive-OEM device too if one is available (Xiaomi, Tecno/Infinix, Samsung).
 **Known limit, not a failure:** reminders are planned 14 days ahead and replanned whenever the
 app opens. If the app is not opened for 14 days, they stop until it is opened again.
 
+**Phase 7a: run it against the deployed server with the release APK.** Install the APK from the
+download page (docs/DEPLOY.md step 8); it talks to the live server on Render, with mail through
+Brevo and photos and exports in Cloudflare R2. Use throwaway accounts for every step that
+deletes something. Steps 111 on check what only the deployed server can show.
+
 Record each result in the table at the end: pass or fail, the device and Android version, the
 date, and a note for anything unexpected. A failure is a finding for the next review, with what
 you saw.
 
 ## Setup
 
-1. Build and install a debug build that reaches your API (see DEV_SETUP.md, "Android").
+1. Install the release APK from the download page (docs/DEPLOY.md step 8). For a debug build
+   against a local API instead, see DEV_SETUP.md, "Android".
 2. Turn on automatic date and time, then create a fresh account.
 3. Keep the phone plugged in only where a step says so; battery steps need it unplugged.
 
@@ -132,6 +138,12 @@ you saw.
 | 108 | Open an old habit you never gave an icon (created before this update). | It shows its category's icon, or a fitting one if its name has an obvious word ("Water", "Reading", "Run"). |
 | 109 | With TalkBack on, open the icon sheet and move through a few icons. | Each icon is read by its name ("Reading", "Water", "Book open 2"); the current one is read as selected; the search field and the headings are reachable. |
 | 110 | At 200% text and in dark theme, open the icon sheet and search. | The title, the search field and the headings wrap without clipping; the icons stay at least a fingertip's size; the selected one shows a check and a border, not only a colour. |
+| 111 | Phase 7a. In Render, set MIN_APP_VERSION to 2 and wait for the redeploy; open the app (force-close it first). | Only "A new version is ready" shows, with "Get the update" and the download address; nothing else can be opened. The button opens the download page. Set MIN_APP_VERSION back to 1; after a force-close the app opens normally and nothing was lost. |
+| 112 | On sign in, tap "Forgot password" for an account whose email you read, and wait up to 5 minutes. | A reset email from your Brevo sender arrives (look in spam too); the 6-digit code it holds resets the password, and the new password signs in. |
+| 113 | Set a profile photo, then sign in to the same account on a second phone and sync. | The photo shows on both. In Cloudflare, the bucket habit-files holds the photo objects; the bucket's public access stays disabled, and no photo address works in a browser without the app. |
+| 114 | On Privacy and export, export your data as JSON, wait (up to 5 minutes: the tick), then download and share the file. | The export becomes ready by itself, downloads and opens as a zip with export.json inside. After 24 hours it shows as expired. |
+| 115 | Leave the app and the phone alone for 30 minutes, then open the app and check in. | The check-in syncs within a minute (cron-job.org keeps the server awake); no error is shown, and offline use was never blocked. |
+| 116 | Delete a throwaway account that has a photo; after 10 minutes look in the habit-files bucket. | Its photo objects are gone (the purge ran on a tick); other accounts' objects are untouched. |
 
 ## Results
 
@@ -247,3 +259,9 @@ you saw.
 | 108 | | | | |
 | 109 | | | | |
 | 110 | | | | |
+| 111 | | | | |
+| 112 | | | | |
+| 113 | | | | |
+| 114 | | | | |
+| 115 | | | | |
+| 116 | | | | |
