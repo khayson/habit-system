@@ -37,11 +37,18 @@ void main() {
     expect(find.text('From the Habit team'), findsOneWidget);
     expect(find.text('Weekly habits are here'), findsOneWidget);
     expect(find.bySemanticsLabel('Card 1 of 4'), findsOneWidget);
+    // What follows the carousel moves with the card on show's height.
+    final belowNotice = tester.getRect(find.text('0 of 1 habits complete')).top;
 
     // Swipe right to left: the reminder card; then back.
     await tester.drag(find.text('Weekly habits are here'), const Offset(-300, 0));
     await snap(tester);
     expect(find.bySemanticsLabel('Card 2 of 4'), findsOneWidget);
+    expect(
+      tester.getRect(find.text('0 of 1 habits complete')).top,
+      greaterThan(belowNotice),
+      reason: 'the reminder card is taller than the notice; the dots sit under the card on show',
+    );
     expect(
       find.text('Set now').hitTestable(),
       findsOneWidget,

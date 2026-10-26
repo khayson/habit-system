@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:path/path.dart' as p;
@@ -571,7 +573,7 @@ class _ReminderCard extends StatelessWidget {
 
 /// A57: Today's carousel: Khay Studios' notices, the reminder card while no reminder is set,
 /// then two tips. A pager: swipe to move, the next card peeking in (no auto-advance); notices
-/// and tips can be dismissed on this device. The cards share one height, the tallest.
+/// and tips can be dismissed on this device. Each card keeps its own height.
 class _Carousel extends StatefulWidget {
   final String? reminderHabitId;
 
@@ -590,6 +592,11 @@ class _CarouselState extends State<_Carousel> {
   final _scroll = ScrollController();
   double _extent = 1;
 
+  /// Each card keeps its own height; the carousel shows the height of the card on show (blended
+  /// while swiping), so the dots sit right under it.
+  final _keys = <String, GlobalKey>{};
+  Map<String, double> _heights = const {};
+
   @override
   void dispose() {
     _scroll.dispose();
@@ -604,12 +611,36 @@ class _CarouselState extends State<_Carousel> {
     _scroll.addListener(_onScroll);
   }
 
-  /// The card nearest the start is the one on show.
+  /// The card nearest the start is the one on show; the height follows the swipe.
   void _onScroll() {
     final cards = _ids;
     if (cards.isEmpty) return;
     final i = (_scroll.offset / _extent).round().clamp(0, cards.length - 1);
-    if (cards[i] != _current && !(_current == null && i == 0)) setState(() => _current = cards[i]);
+    setState(() {
+      if (cards[i] != _current && !(_current == null && i == 0)) _current = cards[i];
+    });
+  }
+
+  /// Reads each card's laid-out height after a frame.
+  void _measure() {
+    if (!mounted) return;
+    final heights = <String, double>{
+      for (final id in _ids)
+        if (_keys[id]?.currentContext?.size case final size?) id: size.height,
+    };
+    if (!mapEquals(heights, _heights)) setState(() => _heights = heights);
+  }
+
+  /// The visible height at scroll position [page] (in cards), as a share of the tallest card.
+  double _heightFactor(double page) {
+    final heights = [for (final id in _ids) _heights[id]];
+    if (heights.isEmpty || heights.any((h) => h == null)) return 1;
+    final tallest = heights.map((h) => h!).reduce(math.max);
+    if (tallest <= 0) return 1;
+    final i = page.floor().clamp(0, heights.length - 1);
+    final next = (i + 1).clamp(0, heights.length - 1);
+    final t = (page - i).clamp(0.0, 1.0);
+    return (heights[i]! + (heights[next]! - heights[i]!) * t) / tallest;
   }
 
   /// The ids of the cards last built, in order.
@@ -673,27 +704,39 @@ class _CarouselState extends State<_Carousel> {
                 if (_scroll.hasClients && (_scroll.offset / extent).round() != index) {
                   _scroll.jumpTo((index * extent).clamp(0, _scroll.position.maxScrollExtent));
                 }
+                _measure();
               });
+              final page = _scroll.hasClients ? _scroll.offset / extent : index.toDouble();
               return Column(
                 children: [
-                  SingleChildScrollView(
-                    controller: _scroll,
-                    scrollDirection: Axis.horizontal,
-                    physics: many
-                        ? _SnapPhysics(extent: extent)
-                        : const NeverScrollableScrollPhysics(),
-                    // The row is as tall as its tallest card, so large text never clips.
-                    child: IntrinsicHeight(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          for (var i = 0; i < cards.length; i++) ...[
-                            if (i > 0) const SizedBox(width: HabitSpace.s12),
-                            SizedBox(width: cardWidth, child: cards[i]),
+                  // Cards keep their own heights; only the card on show sets the visible height.
+                  ClipRect(
+                    child: Align(
+                      alignment: AlignmentDirectional.topStart,
+                      heightFactor: _heightFactor(page),
+                      child: SingleChildScrollView(
+                        controller: _scroll,
+                        scrollDirection: Axis.horizontal,
+                        physics: many
+                            ? _SnapPhysics(extent: extent)
+                            : const NeverScrollableScrollPhysics(),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            for (var i = 0; i < cards.length; i++) ...[
+                              if (i > 0) const SizedBox(width: HabitSpace.s12),
+                              SizedBox(
+                                width: cardWidth,
+                                child: KeyedSubtree(
+                                  key: _keys.putIfAbsent(ids[i], GlobalKey.new),
+                                  child: cards[i],
+                                ),
+                              ),
+                            ],
+                            // Room to bring the last card to the start, like the others.
+                            if (many) SizedBox(width: width - cardWidth),
                           ],
-                          // Room to bring the last card to the start, like the others.
-                          if (many) SizedBox(width: width - cardWidth),
-                        ],
+                        ),
                       ),
                     ),
                   ),
