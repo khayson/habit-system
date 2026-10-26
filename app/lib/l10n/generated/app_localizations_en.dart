@@ -2636,14 +2636,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get insightsByCategory => 'By category';
 
   @override
-  String insightsCategoryCount(int completed, int eligible) {
-    return '$completed / $eligible';
-  }
-
-  @override
   String insightsCategoryLabel(String category, int completed, int eligible, int percent) {
     return '$category, $completed of $eligible, $percent percent';
   }
+
+  @override
+  String get insightsSummaryWeek => 'XP this week';
+
+  @override
+  String get insightsSummaryMonth => 'XP this month';
+
+  @override
+  String get insightsConsistency => 'Consistency';
+
+  @override
+  String get insightsShare => 'Share progress';
+
+  @override
+  String get insightsShareFailed => 'The image could not be prepared. Try again.';
 
   @override
   String get insightsMonthFooter =>

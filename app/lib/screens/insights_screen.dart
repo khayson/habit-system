@@ -1,17 +1,24 @@
+import 'dart:io';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
 
 import '../app/router.dart';
 import '../config/habit_tokens.dart';
 import '../core/exceptions/app_exception.dart';
+import '../core/file_sharer.dart';
 import '../data/local_view.dart';
 import '../domain/calendar/local_date.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../models/insights.dart';
 import '../providers/account_context.dart';
 import '../sync/outbox_states.dart';
+import '../widgets/app_toast.dart';
 import '../widgets/habit_format.dart';
 import '../widgets/habit_ui.dart';
 
@@ -19,7 +26,11 @@ import '../widgets/habit_ui.dart';
 /// /insights sent and computes no rule: the last answer this session at once, then a fresh one.
 /// An explicit network action (CLAUDE.md, Flutter rules): loading, error and Try again apply.
 class InsightsScreen extends StatefulWidget {
-  const InsightsScreen({super.key});
+  /// A56: "Share progress" hands an image of the summary card to the system share sheet; the
+  /// person chooses where it goes. Nothing is posted by the app.
+  final FileSharer sharer;
+
+  const InsightsScreen({super.key, this.sharer = const SharePlusFileSharer()});
 
   @override
   State<InsightsScreen> createState() => _InsightsScreenState();
@@ -113,6 +124,36 @@ class _InsightsScreenState extends State<InsightsScreen> {
     }
   }
 
+  final _summaryKey = GlobalKey();
+  bool _sharing = false;
+
+  /// Renders the summary card (categories and totals only, no habit names) to a PNG in a
+  /// temporary folder, shares it, then deletes it.
+  Future<void> _share() async {
+    final toast = AppToast.of(context);
+    final failed = AppLocalizations.of(context).insightsShareFailed;
+    final pixelRatio = MediaQuery.devicePixelRatioOf(context);
+    final boundary = _summaryKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+    if (boundary == null) return;
+    setState(() => _sharing = true);
+    File? file;
+    try {
+      final image = await boundary.toImage(pixelRatio: pixelRatio);
+      final png = await image.toByteData(format: ui.ImageByteFormat.png);
+      image.dispose();
+      if (png == null) throw StateError('no png');
+      final root = await widget.sharer.temporaryRoot();
+      file = File(p.join(root.path, 'habit-progress-$_period.png'));
+      await file.writeAsBytes(png.buffer.asUint8List(), flush: true);
+      await widget.sharer.share(file.path);
+    } catch (_) {
+      toast.show(failed, tone: ToastTone.info);
+    } finally {
+      if (file != null && await file.exists()) await file.delete();
+      if (mounted) setState(() => _sharing = false);
+    }
+  }
+
   void _switch(int index) {
     final period = index == 0 ? 'week' : 'month';
     if (period == _period) return;
@@ -142,8 +183,8 @@ class _InsightsScreenState extends State<InsightsScreen> {
             ScreenHeader(
               title: week ? l10n.insightsWeekTitle : l10n.insightsMonthTitle,
               subtitle: shown == null || shown.period != _period ? null : _subtitle(context, shown),
-              // Design 14 and 15 draw Back; like Profile, a tab root goes back to Today.
-              onBack: () => context.go(Routes.today),
+              // A56: the mockup's ✕ closes Insights; like Profile, a tab root goes back to Today.
+              onClose: () => context.go(Routes.today),
             ),
             SegmentedTabs(
               labels: [l10n.insightsWeek, l10n.insightsMonth],
@@ -204,10 +245,31 @@ class _InsightsScreenState extends State<InsightsScreen> {
                   ),
                 ),
               ],
-            ] else if (week)
-              _Week(insights: shown, habits: _habits)
-            else
-              _Month(insights: shown),
+            ] else ...[
+              if (shown.byCategory.isNotEmpty) ...[
+                Semantics(
+                  header: true,
+                  child: Text(l10n.insightsByCategory, style: text.titleLarge),
+                ),
+                const SizedBox(height: HabitSpace.s16),
+                _CategoryBars(rows: shown.byCategory),
+                const SizedBox(height: HabitSpace.s24),
+              ],
+              RepaintBoundary(
+                key: _summaryKey,
+                child: _Summary(insights: shown),
+              ),
+              const SizedBox(height: HabitSpace.s16),
+              FilledButton(onPressed: _sharing ? null : _share, child: Text(l10n.insightsShare)),
+              const SizedBox(height: HabitSpace.s24),
+              if (week)
+                _Week(insights: shown, habits: _habits)
+              else
+                Text(
+                  l10n.insightsMonthFooter,
+                  style: text.bodySmall?.copyWith(color: tokens.muted),
+                ),
+            ],
           ],
         ),
       ),
@@ -236,31 +298,257 @@ class _InsightsScreenState extends State<InsightsScreen> {
 DateTime _utc(LocalDate date) =>
     DateTime.fromMillisecondsSinceEpoch(date.midnightMillis, isUtc: true);
 
-class _Tile extends StatelessWidget {
-  final String big;
-  final String? small;
+/// A56: the mockups' tall bars, one per category the server counted: the share of closed,
+/// eligible periods completed, the percentage inside the bar and the category below. The bars
+/// show what GET /insights sent; nothing is computed here.
+class _CategoryBars extends StatelessWidget {
+  static const double height = 240;
 
-  const _Tile({required this.big, this.small});
+  /// A few categories still read as bars, not blocks (well under [height]).
+  static const double maxWidth = 72;
+
+  /// The shortest fill: room for its percentage.
+  static const double minFill = 48;
+
+  final List<CategoryInsight> rows;
+
+  const _CategoryBars({required this.rows});
 
   @override
   Widget build(BuildContext context) {
+    final tokens = HabitTokens.of(context);
+    final colors = [
+      (tokens.chartBrown, tokens.onAccent),
+      (tokens.chartRust, tokens.onAccent),
+      (tokens.chartLime, tokens.ink),
+      (tokens.chartPink, tokens.ink),
+    ];
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (var i = 0; i < rows.length; i++) ...[
+          if (i > 0) const SizedBox(width: HabitSpace.s8),
+          Expanded(
+            child: _CategoryBar(
+              row: rows[i],
+              fill: colors[i % colors.length].$1,
+              onFill: colors[i % colors.length].$2,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _CategoryBar extends StatelessWidget {
+  final CategoryInsight row;
+  final Color fill;
+  final Color onFill;
+
+  const _CategoryBar({required this.row, required this.fill, required this.onFill});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final text = Theme.of(context).textTheme;
     final tokens = HabitTokens.of(context);
+    final format = HabitFormat(context);
+    final percent = row.percent;
     return Semantics(
       container: true,
-      label: [big, ?small].join(', '),
+      label: l10n.insightsCategoryLabel(
+        format.category(row.category, long: true),
+        row.completed,
+        row.eligible,
+        percent ?? 0,
+      ),
       excludeSemantics: true,
-      child: SurfaceCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(big, style: small == null ? text.titleMedium : text.headlineMedium),
-            if (small != null) ...[
-              const SizedBox(height: HabitSpace.s4),
-              Text(small!, style: text.bodySmall?.copyWith(color: tokens.muted)),
+      child: Column(
+        children: [
+          SizedBox(
+            height: _CategoryBars.height,
+            width: _CategoryBars.maxWidth,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final width = constraints.maxWidth;
+                // Never shorter than the percentage it carries.
+                final filled = percent == null
+                    ? 0.0
+                    : (constraints.maxHeight * percent / 100).clamp(
+                        _CategoryBars.minFill,
+                        constraints.maxHeight,
+                      );
+                return ClipRRect(
+                  borderRadius: BorderRadius.circular(width / 2),
+                  child: CustomPaint(
+                    painter: _HatchPainter(background: tokens.background, line: tokens.chartTrack),
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: percent == null
+                          ? null
+                          : Container(
+                              height: filled,
+                              width: width,
+                              alignment: Alignment.bottomCenter,
+                              padding: const EdgeInsets.only(bottom: HabitSpace.s12),
+                              decoration: BoxDecoration(
+                                color: fill,
+                                borderRadius: BorderRadius.circular(width / 2),
+                              ),
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: HabitSpace.s4),
+                                  child: Text(
+                                    l10n.insightsPercent(percent),
+                                    style: text.titleSmall?.copyWith(
+                                      color: onFill,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: HabitSpace.s12),
+          Text(
+            format.category(row.category),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: text.bodyMedium?.copyWith(color: tokens.ink),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The bars' empty track: thin diagonal lines on the background, as drawn.
+class _HatchPainter extends CustomPainter {
+  final Color background;
+  final Color line;
+
+  const _HatchPainter({required this.background, required this.line});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawRect(Offset.zero & size, Paint()..color = background);
+    final paint = Paint()
+      ..color = line
+      ..strokeWidth = 1.5;
+    const gap = 10.0;
+    for (var x = -size.height; x < size.width; x += gap) {
+      canvas.drawLine(Offset(x, size.height), Offset(x + size.height, 0), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_HatchPainter old) => old.background != background || old.line != line;
+}
+
+/// A56: the white summary card under the bars: XP earned this period, then the consistency the
+/// server counted. It is also the image [InsightsScreen] hands to the share sheet.
+class _Summary extends StatelessWidget {
+  final Insights insights;
+
+  const _Summary({required this.insights});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final text = Theme.of(context).textTheme;
+    final tokens = HabitTokens.of(context);
+    final format = HabitFormat(context);
+    final week = insights.period == 'week';
+    final totals = insights.totals;
+    final percent = totals.percent;
+    final through = insights.window.through;
+    final periods = week
+        ? l10n.insightsClosedPeriods(totals.completed, totals.eligible)
+        : l10n.insightsEligiblePeriods(totals.completed, totals.eligible);
+    final caption = text.bodySmall?.copyWith(color: tokens.muted);
+    return Container(
+      padding: const EdgeInsets.all(HabitSpace.s24),
+      decoration: BoxDecoration(
+        color: tokens.surface,
+        borderRadius: BorderRadius.circular(HabitRadius.r24),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      week ? l10n.insightsSummaryWeek : l10n.insightsSummaryMonth,
+                      style: text.titleMedium,
+                    ),
+                    if (week) ...[
+                      const SizedBox(height: HabitSpace.s4),
+                      Text(
+                        through == null
+                            ? l10n.insightsNoClosedDays
+                            : l10n.insightsThrough(format.dayMonth(LocalDate.parse(through))),
+                        style: caption,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: HabitSpace.s12),
+              Text(
+                l10n.insightsXp(insights.xpEarned),
+                style: text.titleLarge?.copyWith(color: tokens.accent, fontWeight: FontWeight.w700),
+              ),
             ],
-          ],
-        ),
+          ),
+          const SizedBox(height: HabitSpace.s16),
+          Divider(height: 1, color: tokens.border),
+          const SizedBox(height: HabitSpace.s16),
+          if (percent == null)
+            Text(l10n.insightsNoClosedPeriods, style: text.bodyLarge, textAlign: TextAlign.center)
+          else
+            Semantics(
+              container: true,
+              label: '${l10n.insightsPercent(percent)}, $periods',
+              excludeSemantics: true,
+              child: IntrinsicHeight(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        children: [
+                          Text(l10n.insightsConsistency, style: caption),
+                          const SizedBox(height: HabitSpace.s4),
+                          Text(
+                            l10n.insightsPercent(percent),
+                            style: text.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                    ),
+                    VerticalDivider(width: HabitSpace.s24, color: tokens.border),
+                    Expanded(
+                      child: Center(
+                        child: Text(periods, style: text.bodyLarge, textAlign: TextAlign.center),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -277,56 +565,13 @@ class _Week extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final text = Theme.of(context).textTheme;
     final tokens = HabitTokens.of(context);
-    final format = HabitFormat(context);
-    final totals = insights.totals;
-    final through = insights.window.through;
-    final percent = totals.percent;
     final days = insights.days ?? const <InsightsDay>[];
     final scale = InsightsDay.scale(days);
     final locale = Localizations.localeOf(context).toLanguageTag();
 
-    final tiles = [
-      _Tile(
-        big: percent == null ? l10n.insightsNoClosedPeriods : l10n.insightsPercent(percent),
-        small: percent == null
-            ? null
-            : l10n.insightsClosedPeriods(totals.completed, totals.eligible),
-      ),
-      _Tile(
-        big: l10n.insightsXp(insights.xpEarned),
-        small: through == null
-            ? l10n.insightsNoClosedDays
-            : l10n.insightsThrough(format.dayMonth(LocalDate.parse(through))),
-      ),
-    ];
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Side by side as drawn; stacked when large text needs the width.
-        LayoutBuilder(
-          builder: (context, constraints) =>
-              MediaQuery.textScalerOf(context).scale(1) > 1.5 || constraints.maxWidth < 320
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    tiles[0],
-                    const SizedBox(height: HabitSpace.s12),
-                    tiles[1],
-                  ],
-                )
-              : IntrinsicHeight(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(child: tiles[0]),
-                      const SizedBox(width: HabitSpace.s12),
-                      Expanded(child: tiles[1]),
-                    ],
-                  ),
-                ),
-        ),
-        const SizedBox(height: HabitSpace.s16),
         SurfaceCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -362,6 +607,7 @@ class _Week extends StatelessWidget {
                 children: [
                   IconTile(
                     icon: HabitFormat.icon(habits[open.habitId]?.$2, habits[open.habitId]?.$3),
+                    tile: HabitTile.forCategory(habits[open.habitId]?.$3),
                   ),
                   const SizedBox(width: HabitSpace.s16),
                   Expanded(
@@ -457,115 +703,6 @@ class _DayBar extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _Month extends StatelessWidget {
-  final Insights insights;
-
-  const _Month({required this.insights});
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final text = Theme.of(context).textTheme;
-    final tokens = HabitTokens.of(context);
-    final format = HabitFormat(context);
-    final totals = insights.totals;
-    final percent = totals.percent;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Semantics(
-          container: true,
-          label: percent == null
-              ? l10n.insightsNoClosedPeriods
-              : '${l10n.insightsPercent(percent)}, ${l10n.insightsEligiblePeriods(totals.completed, totals.eligible)}',
-          excludeSemantics: true,
-          child: Container(
-            padding: const EdgeInsets.all(HabitSpace.s32),
-            decoration: BoxDecoration(
-              color: tokens.positiveBg,
-              borderRadius: BorderRadius.circular(HabitRadius.r24),
-            ),
-            child: Column(
-              children: [
-                Text(
-                  percent == null ? l10n.insightsNoClosedPeriods : l10n.insightsPercent(percent),
-                  style: percent == null
-                      ? text.titleMedium?.copyWith(color: tokens.positiveInk)
-                      : text.displaySmall?.copyWith(
-                          color: tokens.positiveInk,
-                          fontWeight: FontWeight.w700,
-                        ),
-                  textAlign: TextAlign.center,
-                ),
-                if (percent != null) ...[
-                  const SizedBox(height: HabitSpace.s8),
-                  Text(
-                    l10n.insightsEligiblePeriods(totals.completed, totals.eligible),
-                    style: text.bodyMedium?.copyWith(color: tokens.positiveInk),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-        if (insights.byCategory.isNotEmpty) ...[
-          const SizedBox(height: HabitSpace.s32),
-          Semantics(header: true, child: Text(l10n.insightsByCategory, style: text.titleLarge)),
-          const SizedBox(height: HabitSpace.s16),
-          for (final row in insights.byCategory) ...[
-            Semantics(
-              container: true,
-              label: l10n.insightsCategoryLabel(
-                format.category(row.category, long: true),
-                row.completed,
-                row.eligible,
-                row.percent ?? 0,
-              ),
-              excludeSemantics: true,
-              child: SurfaceCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            format.category(row.category, long: true),
-                            style: text.titleMedium,
-                          ),
-                        ),
-                        Text(
-                          l10n.insightsCategoryCount(row.completed, row.eligible),
-                          style: text.bodyMedium?.copyWith(color: tokens.muted),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: HabitSpace.s12),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(HabitRadius.r4),
-                      child: LinearProgressIndicator(
-                        value: row.eligible == 0 ? 0 : row.completed / row.eligible,
-                        minHeight: 8,
-                        color: tokens.progress,
-                        backgroundColor: tokens.border,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: HabitSpace.s12),
-          ],
-        ],
-        const SizedBox(height: HabitSpace.s16),
-        Text(l10n.insightsMonthFooter, style: text.bodySmall?.copyWith(color: tokens.muted)),
-      ],
     );
   }
 }

@@ -254,7 +254,11 @@ List<RouteBase> appRoutes({
         path: Routes.archivedHabits,
         builder: (context, state) => ArchivedHabitsScreen(clock: clock),
       ),
-      GoRoute(path: Routes.insights, builder: (context, state) => const InsightsScreen()),
+      GoRoute(
+        path: Routes.insights,
+        builder: (context, state) =>
+            InsightsScreen(sharer: fileSharer ?? const SharePlusFileSharer()),
+      ),
       GoRoute(
         path: Routes.privacy,
         builder: (context, state) =>

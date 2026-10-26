@@ -1,8 +1,10 @@
+import 'dart:io';
 import 'dart:ui' show Tristate;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:habit/core/exceptions/app_exception.dart';
+import 'package:habit/core/file_sharer.dart';
 import 'package:habit/models/insights.dart';
 import 'package:habit/providers/account_context.dart';
 import 'package:habit/screens/insights_screen.dart';
@@ -263,12 +265,15 @@ void main() {
         ..answers['week'] = answer('week')
         ..answers['month'] = month,
     );
+    final handle = tester.ensureSemantics();
     await open(tester, a);
     await tester.tap(find.text('Month'));
     await settle(tester);
 
     expect(find.text('Other'), findsOneWidget);
-    expect(find.text('1 / 2'), findsOneWidget);
+    expect(find.text('50%'), findsOneWidget);
+    expect(find.bySemanticsLabel('Other, 1 of 2, 50 percent'), findsOneWidget);
+    handle.dispose();
     await tearDownApp(tester, a);
     resetInsightsPeriodForTest();
   });
@@ -287,6 +292,34 @@ void main() {
     expect(tab.flagsCollection.isSelected, Tristate.isTrue);
     expect(tab.flagsCollection.isEnabled, Tristate.isTrue);
     expect(find.bySemanticsLabel(RegExp('later update')), findsNothing);
+    handle.dispose();
+    await tearDownApp(tester, a);
+  });
+
+  testWidgets('A56: the bars are per category, and Share progress hands an image to the sheet', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    final a = await account(tester, FakeInsights()..answers['week'] = answer('week'));
+    final sharer = _RecordingSharer();
+    await tester.pumpWidget(testApp(initial: '/insights', account: a, fileSharer: sharer));
+    await settle(tester);
+
+    expect(find.text('By category'), findsOneWidget);
+    expect(find.bySemanticsLabel('Health, 1 of 6, 17 percent'), findsOneWidget);
+    expect(find.text('17%'), findsOneWidget, reason: 'the percentage is written in the bar');
+    expect(find.text('XP this week'), findsOneWidget);
+
+    await tester.ensureVisible(find.text('Share progress'));
+    await tester.runAsync(() async {
+      await tester.tap(find.text('Share progress'));
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+    });
+    await tester.pump();
+    expect(sharer.shared, hasLength(1));
+    expect(sharer.shared.single.$1, endsWith('.png'));
+    expect(sharer.shared.single.$2, greaterThan(0), reason: 'a real image was written');
+    expect(File(sharer.shared.single.$1).existsSync(), isFalse, reason: 'deleted afterwards');
     handle.dispose();
     await tearDownApp(tester, a);
   });
@@ -321,6 +354,17 @@ void main() {
       resetInsightsPeriodForTest();
     });
   }
+}
+
+/// Records each shared path with the file's size at the moment it was shared.
+class _RecordingSharer implements FileSharer {
+  final List<(String, int)> shared = [];
+
+  @override
+  Future<Directory> temporaryRoot() async => Directory.systemTemp;
+
+  @override
+  Future<void> share(String path) async => shared.add((path, File(path).lengthSync()));
 }
 
 /// Answers from the fixture, kept per period like the real service.

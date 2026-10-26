@@ -4232,17 +4232,41 @@ abstract class AppLocalizations {
   /// **'By category'**
   String get insightsByCategory;
 
-  /// No description provided for @insightsCategoryCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{completed} / {eligible}'**
-  String insightsCategoryCount(int completed, int eligible);
-
   /// No description provided for @insightsCategoryLabel.
   ///
   /// In en, this message translates to:
   /// **'{category}, {completed} of {eligible}, {percent} percent'**
   String insightsCategoryLabel(String category, int completed, int eligible, int percent);
+
+  /// A56: the Insights summary card's title, Week.
+  ///
+  /// In en, this message translates to:
+  /// **'XP this week'**
+  String get insightsSummaryWeek;
+
+  /// A56: the Insights summary card's title, Month.
+  ///
+  /// In en, this message translates to:
+  /// **'XP this month'**
+  String get insightsSummaryMonth;
+
+  /// A56: caption under the percentage on the Insights summary card.
+  ///
+  /// In en, this message translates to:
+  /// **'Consistency'**
+  String get insightsConsistency;
+
+  /// A56: opens the system share sheet with an image of the summary card; nothing is posted by the app.
+  ///
+  /// In en, this message translates to:
+  /// **'Share progress'**
+  String get insightsShare;
+
+  /// A56: toast when the share image fails.
+  ///
+  /// In en, this message translates to:
+  /// **'The image could not be prepared. Try again.'**
+  String get insightsShareFailed;
 
   /// No description provided for @insightsMonthFooter.
   ///
