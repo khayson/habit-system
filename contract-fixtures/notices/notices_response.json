@@ -1,0 +1,27 @@
+{
+  "description": "A57: GET /notices. Notices active at server time (starts_at <= now and, when set, ends_at > now), newest starts_at first, at most 5. The same for every account; no personal data. Plain text only. The envelope's meta is covered by envelope/.",
+  "status": 200,
+  "body": {
+    "data": [
+      {
+        "id": "{{uuid}}",
+        "title": "Weekly habits are here",
+        "body": "A habit can now count the days you choose each week. Open a habit and pick Schedule.",
+        "starts_at": "{{timestamp}}",
+        "ends_at": "{{timestamp}}"
+      },
+      {
+        "id": "{{uuid}}",
+        "title": "Thank you for testing",
+        "body": "Your notes on what feels unclear shape the next update.",
+        "starts_at": "{{timestamp}}",
+        "ends_at": null
+      }
+    ]
+  },
+  "rules": {
+    "max_items": 5,
+    "title_max": 60,
+    "body_max": 280
+  }
+}
