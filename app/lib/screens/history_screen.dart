@@ -333,7 +333,10 @@ class _CheckInRow extends StatelessWidget {
       child: Row(
         children: [
           ExcludeSemantics(
-            child: IconTile(icon: HabitFormat.icon(detail.habit.icon, detail.habit.category)),
+            child: IconTile(
+              icon: HabitFormat.icon(detail.habit.icon, detail.habit.category),
+              tile: HabitTile.forCategory(detail.habit.category),
+            ),
           ),
           const SizedBox(width: HabitSpace.s16),
           Expanded(

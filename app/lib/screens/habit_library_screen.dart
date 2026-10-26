@@ -159,6 +159,7 @@ class _HabitRow extends StatelessWidget {
         text,
         tokens,
         HabitFormat.icon(habit.icon, habit.category),
+        HabitTile.forCategory(habit.category),
         name,
         detail,
       ),
@@ -171,6 +172,7 @@ class _HabitRow extends StatelessWidget {
     TextTheme text,
     HabitTokens tokens,
     AppIconData icon,
+    HabitTile tile,
     String name,
     String detail,
   ) {
@@ -180,7 +182,7 @@ class _HabitRow extends StatelessWidget {
       child: ExcludeSemantics(
         child: Row(
           children: [
-            IconTile(icon: icon),
+            IconTile(icon: icon, tile: tile),
             const SizedBox(width: HabitSpace.s16),
             Expanded(
               child: Column(
@@ -192,7 +194,7 @@ class _HabitRow extends StatelessWidget {
                 ],
               ),
             ),
-            AppIcon(AppIcons.chevronRight, color: tokens.primary),
+            AppIcon(AppIcons.chevronRight, color: tokens.accent),
           ],
         ),
       ),
@@ -233,7 +235,7 @@ class _ArchivedLink extends StatelessWidget {
             ),
             child: Text(
               l10n.libraryArchivedLink(archived),
-              style: style?.copyWith(color: tokens.primary, decoration: TextDecoration.underline),
+              style: style?.copyWith(color: tokens.accent, decoration: TextDecoration.underline),
             ),
           ),
         ),
