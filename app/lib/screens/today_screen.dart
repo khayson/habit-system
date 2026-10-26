@@ -26,6 +26,7 @@ import '../widgets/week_strip.dart';
 import 'timezone_screen.dart';
 import 'widgets/needs_attention.dart';
 import '../widgets/app_icons.dart';
+import '../widgets/app_toast.dart';
 
 /// Screen 05, with screen 23 as its first-run empty state. Lists the habits due today (schedule,
 /// active range, zero-length dates excluded) in creation order. Reads local data only and works
@@ -274,10 +275,29 @@ class _HabitRow extends StatelessWidget {
     // 4.3b C2 / C3: quantity and duration cards (design 05). Attention and unknown types keep
     // their rows (4.3c handles attention).
     if (!item.needsAttention && item.rules != null && type != null && type.hasAmountEntry) {
+      // A56: the circle works for every habit, as the card's own action does: a running timer
+      // opens, an open day adds progress, a finished day says so instead of doing nothing.
+      final unit =
+          item.habit.schedule.unitOn(LocalDate.parse(item.log.date)) ??
+          item.habit.payload['unit'] as String?;
+      final VoidCallback onDot;
+      final String dotTip;
+      if (item.timer != null && type.rules.supportsTimer) {
+        onDot = () => context.push(Routes.timer(item.habit.id));
+        dotTip = l10n.todayOpenTimer;
+      } else if (item.complete) {
+        onDot = () =>
+            AppToast.of(context).show(l10n.todayDoneToast(item.name), tone: ToastTone.info);
+        dotTip = l10n.todayDoneTip(item.name);
+      } else {
+        onDot = () =>
+            context.push(Routes.amount(item.habit.id), extra: type.suggestStep(item.target, unit));
+        dotTip = l10n.todayDotAdd(item.name);
+      }
       return _Timeline(
         first: first,
         last: last,
-        dot: _Dot(done: item.complete),
+        dot: _Dot(done: item.complete, onPressed: onDot, tooltip: dotTip),
         card: _AmountRow(item: item, type: type, clock: clock),
       );
     }

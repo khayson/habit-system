@@ -67,6 +67,29 @@ void main() {
     await settle(tester);
   }
 
+  testWidgets('A56: on Today the circle of an amount habit opens amount entry', (tester) async {
+    await seed(tester);
+    await tester.pumpWidget(testApp(initial: '/today', account: account));
+    await settle(tester);
+    await tester.tap(find.byTooltip('Add progress to Water'));
+    await settle(tester);
+    expect(find.byType(AmountEntryScreen), findsOneWidget);
+    await tearDownApp(tester, account);
+  });
+
+  testWidgets('A56: the circle of a finished amount habit says it is done, in a toast', (
+    tester,
+  ) async {
+    await seed(tester, saved: '2.000');
+    await tester.pumpWidget(testApp(initial: '/today', account: account));
+    await settle(tester);
+    await tester.tap(find.byTooltip('Water is done for today'));
+    await tester.pump();
+    expect(find.text('Water is done for today. Open it to change the amount.'), findsOneWidget);
+    expect(find.byType(AmountEntryScreen), findsNothing);
+    await tearDownApp(tester, account);
+  });
+
   testWidgets('copy: progress from today and the target in force; the step prefilled', (
     tester,
   ) async {

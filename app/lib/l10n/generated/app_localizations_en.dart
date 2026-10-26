@@ -238,6 +238,21 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String todayDotAdd(String name) {
+    return 'Add progress to $name';
+  }
+
+  @override
+  String todayDoneTip(String name) {
+    return '$name is done for today';
+  }
+
+  @override
+  String todayDoneToast(String name) {
+    return '$name is done for today. Open it to change the amount.';
+  }
+
+  @override
   String get todayRoutine => 'Daily routine';
 
   @override

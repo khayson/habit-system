@@ -512,6 +512,24 @@ abstract class AppLocalizations {
   /// **'Undo check-in for {name}'**
   String todayUndo(String name);
 
+  /// A56: tooltip on the Today circle of an amount or duration habit.
+  ///
+  /// In en, this message translates to:
+  /// **'Add progress to {name}'**
+  String todayDotAdd(String name);
+
+  /// A56: tooltip on the Today circle of a finished amount or duration habit.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is done for today'**
+  String todayDoneTip(String name);
+
+  /// A56: toast when the circle of a finished amount habit is tapped.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is done for today. Open it to change the amount.'**
+  String todayDoneToast(String name);
+
   /// A56: the heading above Today's habits.
   ///
   /// In en, this message translates to:
