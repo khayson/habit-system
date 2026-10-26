@@ -19,6 +19,8 @@ it('asks Render for every secret and stores none', function () {
     expect($yaml)->toContain('plan: free')
         ->and($yaml)->toContain('region: frankfurt')
         ->and($yaml)->toContain('healthCheckPath: /api/v1/health')
+        // Render's free tier blocks outbound SMTP on 25, 465 and 587.
+        ->and($yaml)->toMatch('/- key: MAIL_PORT\s+value: "2525"/')
         ->and($yaml)->not->toMatch('/postgres(ql)?:\/\/|sk_|xkeysib-|BEGIN [A-Z ]*KEY/');
 });
 

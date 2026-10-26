@@ -525,7 +525,7 @@ No money and no domain. Claude Code prepares the repository and `docs/DEPLOY.md`
     - writes rely on row locks (`SELECT … FOR UPDATE`, A1), `SET TRANSACTION` and advisory behaviour that PgBouncer's transaction mode can break between statements.
   - **Cache and queue:** the `database` driver on Neon, using the existing tables. The cache store carries the scheduler's `withoutOverlapping` locks and the rate limiters.
   - **Files:** photos (A20) and exports (A48) go to the Cloudflare R2 bucket `habit-files` (Western Europe, public access disabled), through an `r2` disk on the S3 driver (path-style, region `auto`). The API keeps streaming each object to its owner. It never makes a public or presigned R2 URL.
-  - **Email:** Brevo's SMTP relay (`smtp-relay.brevo.com`, port 587, STARTTLS) from a verified sender address.
+  - **Email:** Brevo's SMTP relay (`smtp-relay.brevo.com`, STARTTLS) from a verified sender address, on **port 2525**. Render's free web services cannot open outbound connections on 25, 465 or 587 (Render changelog, September 2025; found on the first deploy as a `TransportException`). Brevo's web API over HTTPS is the fallback if 2525 is ever blocked too.
   - **The app:** a signed release APK on a GitHub Release, with a download page on GitHub Pages beside the legal pages.
 - **The tick** (the free tier has no cron and no worker): `POST /api/v1/internal/tick`.
   - **Secret:** the request carries `X-Tick-Secret`, compared with `TICK_SECRET` by `hash_equals`. A missing header, a wrong secret, or no `TICK_SECRET` configured all answer **404** `not_found`, never 401, so the endpoint is not advertised. It sits outside Sanctum and is throttled per IP.

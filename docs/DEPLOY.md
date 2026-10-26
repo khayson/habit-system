@@ -145,7 +145,7 @@ This is the same **New Web Service** form you used for the movies app. `render.y
    MAIL_MAILER=smtp
    MAIL_SCHEME=smtp
    MAIL_HOST=smtp-relay.brevo.com
-   MAIL_PORT=587
+   MAIL_PORT=2525
    MAIL_USERNAME=<MAIL_USERNAME from step 3>
    MAIL_PASSWORD=<MAIL_PASSWORD from step 3>
    MAIL_FROM_ADDRESS=<MAIL_FROM_ADDRESS from step 3>
@@ -280,6 +280,8 @@ It checks health, registers a throwaway account, syncs a habit, makes an export 
 - cron-job.org shows 404: the URL or the `X-Tick-Secret` header is wrong.
 - It shows timeouts all the time: the service may be failing its health check; look at the Render logs.
 - Exports and account deletions wait until the next tick (up to 5 minutes), so that much delay is normal.
+
+**`reset email failed` with `TransportException` in the log.** The server cannot talk to Brevo. Render's free tier blocks the SMTP ports 25, 465 and 587, so `MAIL_PORT` must be **2525**. If it is 2525 and this still happens, check `MAIL_USERNAME` (the SMTP login, `…@smtp-brevo.com`) and `MAIL_PASSWORD` (an SMTP key, not an API key).
 
 **Mail lands in spam.** Expected without your own domain. Ask testers to mark it "not spam". A domain with SPF and DKIM set up in Brevo fixes it later.
 

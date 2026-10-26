@@ -54,7 +54,8 @@ services:
         sync: false
       - key: R2_SECRET_ACCESS_KEY
         sync: false
-      # Brevo SMTP relay, STARTTLS on 587.
+      # Brevo SMTP relay, STARTTLS on 2525: Render's free tier blocks outbound 25, 465 and 587
+      # (Render changelog, September 2025); Brevo also listens on 2525.
       - key: MAIL_MAILER
         value: smtp
       - key: MAIL_SCHEME
@@ -62,7 +63,7 @@ services:
       - key: MAIL_HOST
         value: smtp-relay.brevo.com
       - key: MAIL_PORT
-        value: "587"
+        value: "2525"
       - key: MAIL_USERNAME
         sync: false
       - key: MAIL_PASSWORD
