@@ -583,4 +583,11 @@ PHP,
         'replace' => "'frequency' => \$frequency->toArray(), 'icon' => \$icon];",
         'tests' => 'tests/Feature/HabitIconTest.php',
     ],
+    [
+        'name' => '7a: the mail health rule is removed',
+        'file' => 'app/Http/Controllers/Api/V1/HealthController.php',
+        'search' => "            \$this->checkMail();\n",
+        'replace' => '',
+        'tests' => 'tests/Feature/HealthRulesTest.php',
+    ],
 ];

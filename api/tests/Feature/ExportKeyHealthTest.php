@@ -14,7 +14,8 @@ const PUBLISHED_TEST_SECRET = 'test-export-signing-secret-not-for-production';
 function healthIn(object $test, string $env, string $keys, string $kid = 'prod-1'): TestResponse
 {
     app()['env'] = $env;
-    config(['api.export_signing_keys' => $keys, 'api.export_signing_kid' => $kid]);
+    // A54: mail is healthy here, so only the export key decides.
+    config(['api.export_signing_keys' => $keys, 'api.export_signing_kid' => $kid, 'mail.default' => 'smtp', 'mail.from.address' => 'hello@habits.khaystudios.test']);
 
     return $test->getJson('/api/v1/health');
 }
