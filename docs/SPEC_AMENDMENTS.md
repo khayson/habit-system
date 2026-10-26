@@ -572,3 +572,40 @@ No admin page: the API never lets anyone read another person's data, and that st
   - `GET /api/v1/internal/status`, built like the tick: an `X-Ops-Secret` header compared with `OPS_SECRET` by `hash_equals`. A missing or wrong secret, or no `OPS_SECRET` configured, answers a plain 404. It is throttled per IP and uses its own secret, separate from the tick's.
 - **Recorded for it:** the tick stores its last run time, and the reset-email path counts failures per day. Both live in the cache store, the database in production, with no personal data.
 - **Admin access stays outside the app.** The Neon, Render, Cloudflare, Brevo and GitHub accounts are the real admin logins, with two-factor sign-in on each. Testers delete their own accounts in the app; Neon's SQL editor is for real breakage only.
+
+## 25. Added on 2026-10-26 (Khay Studios' redesign)
+
+### A56 — The app's look follows the 2026-10-26 mockups, their colours included · ADOPT (Khay Studios, 2026-10-26)
+Khay Studios supplied mockups (`docs/spec/redesign/`: Today, Insights, New habit) and asked for every screen to be restructured to them "with the exact color system and design". They replace `habit-design-system.pdf` as the source for how the app looks. The PDF still documents screens and states the mockups do not show; behaviour, copy rules and every invariant are unchanged.
+
+- **Colours (light):**
+  - cream background `#F7F2EF`; white cards `#FFFFFF`;
+  - ink `#1E1F22`; muted text `#6B6B6B`;
+  - orange `#FF7616` for primary buttons, toggles and done checks;
+  - dark brown `#682E08` for small buttons and the + button;
+  - near-black `#292C31` for selection (the chosen day);
+  - pastel tiles: peach `#FFD5BC`, lime `#E5EFBA`, pink `#FFDEF8`;
+  - chart colours: brown `#523632`, rust `#99470F`, lime `#8AA232`, pink `#E586CA`, on a hatched track `#E4DDD5`.
+
+  Dark values are derived from these (the mockups have no dark version).
+- **Contrast (Khay Studios' choice):**
+  - The orange is used exactly, but labels on it are near-black, not white: white on `#FF7616` is 2.7:1, near-black is 6.2:1.
+  - The mockups' light-grey captions (2.5:1) are darkened to `#6B6B6B`, which reads 4.8:1 on cream.
+  - Every other rule stays: 4.5:1 for text, 44 px targets, status never by colour alone.
+- **Shapes:**
+  - rounded white cards on cream, with no borders;
+  - pill buttons;
+  - a ✕ in a white circle to close a screen, and a back arrow where the screen is a step in a flow;
+  - round day chips, a dark circle for the selected one;
+  - square pastel tiles behind each habit's icon;
+  - type is a rounded geometric sans.
+- **Today:** "Morning, <name>" with the date and the avatar, a week strip, a reminder card while no reminder is set, a "Daily routine" timeline (a done check or an open circle, the habit's tile, name and streak, and its target at the right), and a dark-brown + button for a new habit.
+- **Insights:** a tall bar per habit with its completion, on a hatched track, plus a summary card for the period (XP earned and two totals), with **Share progress**.
+- **New and Edit habit:** the habit's icon large in a tile (tap to choose), then:
+  - the name;
+  - the goal (type and amount);
+  - repeat days as seven round chips;
+  - a reminders switch;
+  - an orange Save button.
+- **Artwork:** where the mockups draw illustrations (a mascot, a bell, a calendar), the app shows its own Hugeicons or the stacked-cards mark in coloured tiles. The avatar is the profile photo or the initial.
+- **Share progress (changes invariant 12):** the app draws a picture of the person's own summary (numbers and habit names only) and opens Android's share sheet. The person chooses where it goes; the app posts nothing, uploads nothing and keeps no copy. The privacy policy says so. There is still no public profile, feed or social feature.
