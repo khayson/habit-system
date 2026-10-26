@@ -553,3 +553,22 @@ No money and no domain. Claude Code prepares the repository and `docs/DEPLOY.md`
   - Brevo free sends 300 emails a day, and reset emails can land in spam.
   - The APK is installed by hand: allow "install unknown apps".
   - These limits are reviewed before inviting more than a few testers.
+
+### A55 — A read-only ops status, counts only · ADOPT (architect's design for 7b; Khay Studios asked for it now, 2026-10-26)
+No admin page: the API never lets anyone read another person's data, and that stays true. Instead, a read-only status shows whether the system is healthy, in numbers only.
+
+- **What it reports:**
+  - live accounts, and account deletions still pending;
+  - check-ins logged today (UTC);
+  - queued jobs (and how old the oldest is) and failed jobs;
+  - when the last tick ran;
+  - reset-email failures in the last 7 days, and when the last one happened;
+  - the database's size against Neon's free 0.5 GB (`OPS_DB_LIMIT_BYTES`);
+  - `min_app_version` and the server time.
+
+  No id, name, email, habit name, note or token appears in it. The privacy policy is unchanged.
+- **Two ways to read it:**
+  - `php artisan ops:status` (a table, or `--json`);
+  - `GET /api/v1/internal/status`, built like the tick: an `X-Ops-Secret` header compared with `OPS_SECRET` by `hash_equals`. A missing or wrong secret, or no `OPS_SECRET` configured, answers a plain 404. It is throttled per IP and uses its own secret, separate from the tick's.
+- **Recorded for it:** the tick stores its last run time, and the reset-email path counts failures per day. Both live in the cache store, the database in production, with no personal data.
+- **Admin access stays outside the app.** The Neon, Render, Cloudflare, Brevo and GitHub accounts are the real admin logins, with two-factor sign-in on each. Testers delete their own accounts in the app; Neon's SQL editor is for real breakage only.
