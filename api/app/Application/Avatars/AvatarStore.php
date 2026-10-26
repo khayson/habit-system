@@ -109,7 +109,7 @@ final class AvatarStore
                 Log::warning('avatar object delete failed', ['key' => $key]);
             }
         } catch (Throwable $e) {
-            Log::warning('avatar object delete failed', ['key' => $key, 'error' => $e->getMessage()]);
+            Log::warning('avatar object delete failed', ['key' => $key, 'exception' => $e::class]);
         }
     }
 }
