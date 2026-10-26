@@ -511,3 +511,45 @@ A habit's icon shows what the habit is (a book for reading, a drop for water), c
   - English only for now: icon names are not translated.
 - **App size:** the whole set is bundled (no network fetch) so the picker works offline. The increase in app size is measured and reported in the 6.8 packet.
 - **No new third party:** the icon set is the same MIT-licensed package A52 adopted, and an icon choice is not personal data beyond the habit itself.
+
+## 24. Added after the Phase 6.8 review (2026-10-26)
+
+### A54 — Production v1 on free tiers · ADOPT (Khay Studios, 2026-10-25 and 26)
+No money and no domain. Claude Code prepares the repository and `docs/DEPLOY.md`. Khay Studios does every dashboard step and holds every secret. No secret, key, token, connection string or keystore is ever in the repository, a commit message, a log line or a review packet.
+
+- **What runs where:**
+  - **API:** one Render free web service in Frankfurt, a Docker image of `api/` (PHP 8.4, nginx with php-fpm in the same container, non-root). It is reachable only through Render's proxy, at `https://<service>.onrender.com`.
+  - **Startup:** the start script caches config, routes and views, runs `migrate --force` (the free tier has no pre-deploy step), then starts the web server. There is exactly one instance; never scale it out.
+  - **Database:** Neon free PostgreSQL in Frankfurt (AWS eu-central-1), through `DB_URL` with Neon's **direct** (not pooled) connection string and `sslmode=require`. Direct, because:
+    - one instance needs no pooler;
+    - writes rely on row locks (`SELECT … FOR UPDATE`, A1), `SET TRANSACTION` and advisory behaviour that PgBouncer's transaction mode can break between statements.
+  - **Cache and queue:** the `database` driver on Neon, using the existing tables. The cache store carries the scheduler's `withoutOverlapping` locks and the rate limiters.
+  - **Files:** photos (A20) and exports (A48) go to the Cloudflare R2 bucket `habit-files` (Western Europe, public access disabled), through an `r2` disk on the S3 driver (path-style, region `auto`). The API keeps streaming each object to its owner. It never makes a public or presigned R2 URL.
+  - **Email:** Brevo's SMTP relay (`smtp-relay.brevo.com`, port 587, STARTTLS) from a verified sender address.
+  - **The app:** a signed release APK on a GitHub Release, with a download page on GitHub Pages beside the legal pages.
+- **The tick** (the free tier has no cron and no worker): `POST /api/v1/internal/tick`.
+  - **Secret:** the request carries `X-Tick-Secret`, compared with `TICK_SECRET` by `hash_equals`. A missing header, a wrong secret, or no `TICK_SECRET` configured all answer **404** `not_found`, never 401, so the endpoint is not advertised. It sits outside Sanctum and is throttled per IP.
+  - **Work:** `schedule:run`, then `queue:work --stop-when-empty` with `--max-time=50` and a memory limit; answers 204.
+  - **No double runs:** one tick at a time holds a cache lock. A tick that finds the lock taken answers 204 and does nothing. The scheduled commands keep `withoutOverlapping`, and the queue's own reservation keeps a job from running twice.
+  - **Caller:** cron-job.org every 5 minutes. That also keeps the free service from sleeping.
+- **Health** (`GET /api/v1/health`): outside `local` and `testing` it answers **503** `unavailable` when any of these holds:
+  - the export signing key is a test or short key (6.1 review L3);
+  - `SELECT 1` on the database fails within about 2 seconds;
+  - `MAIL_MAILER` is `log` or `array`;
+  - `MAIL_FROM_ADDRESS` is empty or ends in `example.com` (the 6.4 review's answer).
+
+  The body says only `ok` or `unavailable`; the reason goes to the log. Render's health check uses this path, so a bad configuration never takes traffic.
+- **Minimum app version** (the 6.6 review's I2):
+  - `MIN_APP_VERSION` (an integer build number, default 1) travels in every success envelope's `meta.min_app_version`, `/health` included.
+  - An app whose own build number is lower shows a calm full-screen "Please update" view. Its only way forward is a button to the download page (`DOWNLOAD_PAGE_URL`, a dart-define).
+  - The first release's build number is the first value.
+- **Proxies and HTTPS:** Render's proxy is trusted (`TRUSTED_PROXIES`, default `*`; the service has no other entrance), so `request()->ip()` is the client's address and the per-IP throttles work. URLs use `APP_URL` (https). Responses carry `Strict-Transport-Security` outside local and testing.
+- **Logs:** `LOG_CHANNEL=stderr`, level `warning`, `APP_DEBUG=false`. No request body, token, code, password or email is ever logged (invariant 11; a test reads every log call).
+- **Limits Khay Studios accepted:**
+  - Render's free service sleeps after about 15 idle minutes, and a missed tick means a cold start of up to a minute. It has 750 free hours a month, so only one free service should run in the workspace.
+  - Queued work (exports, the account purge, period closing) waits for the next tick: up to about 5 minutes.
+  - Neon free has 0.5 GB of storage, and its compute suspends when idle; the first query wakes it.
+  - R2 free has 10 GB.
+  - Brevo free sends 300 emails a day, and reset emails can land in spam.
+  - The APK is installed by hand: allow "install unknown apps".
+  - These limits are reviewed before inviting more than a few testers.
