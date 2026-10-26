@@ -9,6 +9,8 @@ String formErrorText(AppLocalizations l10n, Object error) {
     return l10n.errorNetwork;
   }
   if (error.statusCode == 429) return l10n.errorRateLimited;
+  // A58: suspended by Khay Studios; the app's own words, not the server's.
+  if (error.code == 'account_suspended') return l10n.errorAccountSuspended;
   if (error.kind == AppErrorKind.api && error.fields.isEmpty) return error.message;
   return l10n.errorGeneric;
 }

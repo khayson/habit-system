@@ -578,6 +578,12 @@ abstract class AppLocalizations {
   /// **'A habit can repeat on the days you choose. Pick them with the round day chips.'**
   String get tipDaysBody;
 
+  /// A58: sign-in refused because Khay Studios suspended the account (account_suspended). Calm, no blame.
+  ///
+  /// In en, this message translates to:
+  /// **'This account is paused. To ask about it, contact the Habit team.'**
+  String get errorAccountSuspended;
+
   /// A56: the heading above Today's habits.
   ///
   /// In en, this message translates to:

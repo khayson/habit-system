@@ -283,6 +283,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'A habit can repeat on the days you choose. Pick them with the round day chips.';
 
   @override
+  String get errorAccountSuspended =>
+      'This account is paused. To ask about it, contact the Habit team.';
+
+  @override
   String get todayRoutine => 'Daily routine';
 
   @override

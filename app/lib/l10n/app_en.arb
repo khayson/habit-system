@@ -104,6 +104,8 @@
   "@tipDaysTitle": {"description": "A57: built-in tip card title."},
   "tipDaysBody": "A habit can repeat on the days you choose. Pick them with the round day chips.",
   "@tipDaysBody": {"description": "A57: built-in tip card body."},
+  "errorAccountSuspended": "This account is paused. To ask about it, contact the Habit team.",
+  "@errorAccountSuspended": {"description": "A58: sign-in refused because Khay Studios suspended the account (account_suspended). Calm, no blame."},
   "todayRoutine": "Daily routine",
   "@todayRoutine": {"description": "A56: the heading above Today's habits."},
   "todaySeeAll": "See all",
