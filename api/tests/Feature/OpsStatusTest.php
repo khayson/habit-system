@@ -35,7 +35,7 @@ it('is 404 without the secret, with a wrong one, with the tick secret, and when 
     opsStatus($this)->assertNotFound();
 });
 
-it('reports accounts, today\'s check-ins, the queue, the database and the app version, in numbers only', function () {
+it('reports accounts, the last 24 hours of check-ins, the queue, the database and the app version, in numbers only', function () {
     $maya = $this->registerUser('Maya');
     $sam = $this->registerUser('Sam');
     $habit = (string) Str::uuid7();
@@ -51,9 +51,9 @@ it('reports accounts, today\'s check-ins, the queue, the database and the app ve
 
     $response = opsStatus($this)->assertOk();
     $data = $response->json('data');
-    expect(array_keys($data))->toBe(['accounts', 'check_ins_today', 'queue', 'last_tick_at', 'mail_failures', 'database', 'min_app_version'])
+    expect(array_keys($data))->toBe(['accounts', 'check_ins_last_24h', 'queue', 'last_tick_at', 'mail_failures', 'database', 'min_app_version'])
         ->and($data['accounts'])->toBe(['live' => 2, 'deletions_pending' => 1])
-        ->and($data['check_ins_today'])->toBe(1)
+        ->and($data['check_ins_last_24h'])->toBe(1)
         ->and($data['queue'])->toBe(['waiting' => 1, 'oldest_waiting_seconds' => 600, 'failed' => 1])
         ->and($data['last_tick_at'])->toBeNull()
         ->and($data['mail_failures'])->toBe(['last_7_days' => 0, 'last_at' => null])

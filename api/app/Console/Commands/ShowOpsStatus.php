@@ -23,7 +23,7 @@ final class ShowOpsStatus extends Command
         $this->table(['', ''], [
             ['Live accounts', $s['accounts']['live']],
             ['Deletions pending', $s['accounts']['deletions_pending']],
-            ['Check-ins today (UTC)', $s['check_ins_today']],
+            ['Check-ins (last 24 hours)', $s['check_ins_last_24h']],
             ['Jobs waiting', $s['queue']['waiting']],
             ['Oldest waiting', $s['queue']['oldest_waiting_seconds'] === null ? '–' : $s['queue']['oldest_waiting_seconds'].' s'],
             ['Jobs failed', $s['queue']['failed']],

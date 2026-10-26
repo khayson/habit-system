@@ -265,7 +265,7 @@ It checks health, registers a throwaway account, syncs a habit, makes an export 
 
 A read-only status in numbers only:
 - accounts, and deletions pending;
-- today's check-ins;
+- check-ins in the last 24 hours;
 - jobs waiting and failed;
 - when the timer last ran;
 - reset-email failures in the last 7 days;

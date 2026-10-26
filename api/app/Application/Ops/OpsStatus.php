@@ -16,7 +16,7 @@ final readonly class OpsStatus
     /**
      * @return array{
      *     accounts: array{live: int, deletions_pending: int},
-     *     check_ins_today: int,
+     *     check_ins_last_24h: int,
      *     queue: array{waiting: int, oldest_waiting_seconds: ?int, failed: int},
      *     last_tick_at: ?string,
      *     mail_failures: array{last_7_days: int, last_at: ?string},
@@ -36,8 +36,9 @@ final readonly class OpsStatus
                 'live' => DB::table('users')->whereNull('deleted_at')->count(),
                 'deletions_pending' => DB::table('account_deletions')->where('status', '!=', 'completed')->count(),
             ],
-            'check_ins_today' => DB::table('habit_logs')->whereNull('deleted_at')
-                ->where('created_at', '>=', $now->startOfDay()->toDateTimeString().'+00')->count(),
+            // A rolling window: no day boundary to compute (R4, invariant 15).
+            'check_ins_last_24h' => DB::table('habit_logs')->whereNull('deleted_at')
+                ->where('created_at', '>=', $now->subDay()->toDateTimeString().'+00')->count(),
             'queue' => [
                 'waiting' => DB::table('jobs')->count(),
                 'oldest_waiting_seconds' => $oldest === null ? null : max(0, $now->getTimestamp() - (int) $oldest),

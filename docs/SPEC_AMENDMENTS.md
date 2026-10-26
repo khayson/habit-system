@@ -559,7 +559,7 @@ No admin page: the API never lets anyone read another person's data, and that st
 
 - **What it reports:**
   - live accounts, and account deletions still pending;
-  - check-ins logged today (UTC);
+  - check-ins logged in the last 24 hours (a rolling window, so no day boundary is computed: R4);
   - queued jobs (and how old the oldest is) and failed jobs;
   - when the last tick ran;
   - reset-email failures in the last 7 days, and when the last one happened;
