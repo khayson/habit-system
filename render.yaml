@@ -85,3 +85,6 @@ services:
         value: "25"
       - key: MIN_APP_VERSION
         value: "1"
+      # A55: the read-only ops status's own secret (not the tick's).
+      - key: OPS_SECRET
+        sync: false

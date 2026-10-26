@@ -15,6 +15,7 @@ return [
         'password_reset_per_hour_per_email' => (int) env('RATE_LIMIT_PASSWORD_RESET_PER_HOUR_PER_EMAIL', 5),
         'sync_per_minute' => (int) env('RATE_LIMIT_SYNC_PER_MINUTE', 60),
         'tick_per_minute' => (int) env('RATE_LIMIT_TICK_PER_MINUTE', 6),
+        'ops_per_minute' => (int) env('RATE_LIMIT_OPS_PER_MINUTE', 10),
         'exports_per_hour' => (int) env('RATE_LIMIT_EXPORTS_PER_HOUR', 6),
         'avatar_uploads_per_hour' => (int) env('RATE_LIMIT_AVATAR_UPLOADS_PER_HOUR', 10),
     ],
@@ -27,6 +28,11 @@ return [
 
     // A54: Render's proxy addresses are not fixed and nothing else reaches the service.
     'trusted_proxies' => (string) env('TRUSTED_PROXIES', '*'),
+
+    // A55: the read-only ops status's own secret (X-Ops-Secret on GET /internal/status); empty
+    // disables it. The database limit is Neon's free 0.5 GB.
+    'ops_secret' => (string) env('OPS_SECRET', ''),
+    'ops_db_limit_bytes' => (int) env('OPS_DB_LIMIT_BYTES', 536870912),
 
     // A54: the lowest app build number this server accepts; travels in every success meta.
     'min_app_version' => (int) env('MIN_APP_VERSION', 1),

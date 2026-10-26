@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Application\Accounts\PasswordResetService;
+use App\Application\Ops\OpsMetrics;
+use App\Domain\Clock;
 use App\Http\Requests\ForgotPasswordRequest;
 use App\Http\Requests\ResetPasswordRequest;
 use App\Http\Responses\ApiResponse;
@@ -36,6 +38,8 @@ final class PasswordResetController
                 } catch (Throwable $e) {
                     // Never the message: it could carry the address. Never the code.
                     Log::error('reset email failed', ['exception' => $e::class]);
+                    // A55: counted (no address) for the ops status.
+                    app(OpsMetrics::class)->recordMailFailure(app(Clock::class)->now());
                 }
             });
         }

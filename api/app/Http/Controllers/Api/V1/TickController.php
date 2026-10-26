@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Application\Ops\OpsMetrics;
+use App\Domain\Clock;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Artisan;
@@ -20,7 +22,7 @@ final class TickController
     /** Longer than the worker's own limit, so the lock never expires under a running tick. */
     private const int LOCK_SECONDS = 120;
 
-    public function __invoke(Request $request): Response
+    public function __invoke(Request $request, OpsMetrics $metrics, Clock $clock): Response
     {
         $secret = config()->string('api.tick_secret');
         $given = (string) $request->header('X-Tick-Secret', '');
@@ -41,6 +43,8 @@ final class TickController
                 '--memory' => config()->integer('api.tick_memory_mb'),
                 '--tries' => 3,
             ]);
+            // A55: the ops status shows when the scheduler last ran.
+            $metrics->recordTick($clock->now());
         } finally {
             $lock->release();
         }

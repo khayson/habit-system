@@ -597,4 +597,11 @@ PHP,
         'replace' => 'if (false) {',
         'tests' => 'tests/Feature/TickTest.php',
     ],
+    [
+        'name' => '7b: the ops status secret check is removed',
+        'file' => 'app/Http/Controllers/Api/V1/OpsStatusController.php',
+        'search' => "if (\$secret === '' || ! hash_equals(\$secret, \$given)) {",
+        'replace' => 'if (false) {',
+        'tests' => 'tests/Feature/OpsStatusTest.php',
+    ],
 ];

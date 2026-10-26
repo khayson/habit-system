@@ -94,6 +94,7 @@ function New-Secret([int]$bytes) { $b = New-Object byte[] $bytes; [Security.Cryp
 'APP_KEY=base64:' + [Convert]::ToBase64String((New-Secret 32))
 'TICK_SECRET=' + (-join ((New-Secret 32) | ForEach-Object { $_.ToString('x2') }))
 'EXPORT_SIGNING_KEYS=prod-1:' + (-join ((New-Secret 32) | ForEach-Object { $_.ToString('x2') }))
+'OPS_SECRET=' + (-join ((New-Secret 32) | ForEach-Object { $_.ToString('x2') }))
 ```
 
 - **APP_KEY** includes the `base64:` prefix.
@@ -155,6 +156,7 @@ This is the same **New Web Service** form you used for the movies app. `render.y
    TICK_SECRET=<TICK_SECRET from step 4>
    TICK_MAX_SECONDS=25
    MIN_APP_VERSION=1
+   OPS_SECRET=<OPS_SECRET from step 4>
    ```
 
    Do not add `PORT`: Render sets it and the image listens on it.
@@ -258,6 +260,32 @@ It checks health, registers a throwaway account, syncs a habit, makes an export 
 - A reset email from your Brevo sender should arrive (look in spam too).
 - Use a new `+` tag each time.
 - Leaving out `-TickSecret` waits for cron-job.org instead (up to 7 minutes).
+
+## 9b. Checking the system's health (A55)
+
+A read-only status in numbers only:
+- accounts, and deletions pending;
+- today's check-ins;
+- jobs waiting and failed;
+- when the timer last ran;
+- reset-email failures in the last 7 days;
+- how full the database is.
+
+It shows no names, emails or habits. Run this in your own PowerShell window (it needs `OPS_SECRET`, not the tick secret):
+
+```powershell
+(Invoke-RestMethod -Uri https://<your service>.onrender.com/api/v1/internal/status -Headers @{ 'X-Ops-Secret' = '<OPS_SECRET>' }).data | ConvertTo-Json -Depth 3
+```
+
+What to look for:
+- `last_tick_at` within the last 5 to 10 minutes;
+- `queue.failed` at 0, and `queue.oldest_waiting_seconds` under about 600;
+- `mail_failures.last_7_days` at 0;
+- `database.used_percent` well under 80.
+
+Without the secret the address answers a plain 404. On a machine with the API, `php artisan ops:status` prints the same numbers.
+
+If you added the service before this step existed: generate `OPS_SECRET` (step 4), add it under Render, **Environment**, then **Save and deploy**.
 
 ## 10. When something fails
 

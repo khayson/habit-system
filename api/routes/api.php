@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\ExportController;
 use App\Http\Controllers\Api\V1\HabitController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\InsightsController;
+use App\Http\Controllers\Api\V1\OpsStatusController;
 use App\Http\Controllers\Api\V1\PasswordResetController;
 use App\Http\Controllers\Api\V1\RewardsController;
 use App\Http\Controllers\Api\V1\SyncController;
@@ -20,6 +21,8 @@ Route::get('/health', HealthController::class)->middleware('throttle:api')->name
 
 // A54: the outside timer (no cron on Render's free tier). No API auth: a shared secret, 404 otherwise.
 Route::post('/internal/tick', TickController::class)->middleware('throttle:tick')->name('internal.tick');
+// A55: the read-only ops status, numbers only; its own secret, 404 otherwise.
+Route::get('/internal/status', OpsStatusController::class)->middleware('throttle:ops')->name('internal.status');
 
 Route::middleware('throttle:auth')->group(function () {
     Route::post('/auth/register', [AuthController::class, 'register'])->name('auth.register');
