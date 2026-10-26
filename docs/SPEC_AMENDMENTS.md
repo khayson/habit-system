@@ -580,7 +580,7 @@ Khay Studios supplied mockups (`docs/spec/redesign/`: Today, Insights, New habit
 
 - **Colours (light):**
   - cream background `#F7F2EF`; white cards `#FFFFFF`;
-  - ink `#1E1F22`; muted text `#6B6B6B`;
+  - ink `#1E1F22`; muted text `#646464`;
   - orange `#FF7616` for primary buttons, toggles and done checks;
   - dark brown `#682E08` for small buttons and the + button;
   - near-black `#292C31` for selection (the chosen day);
@@ -590,7 +590,8 @@ Khay Studios supplied mockups (`docs/spec/redesign/`: Today, Insights, New habit
   Dark values are derived from these (the mockups have no dark version).
 - **Contrast (Khay Studios' choice):**
   - The orange is used exactly, but labels on it are near-black, not white: white on `#FF7616` is 2.7:1, near-black is 6.2:1.
-  - The mockups' light-grey captions (2.5:1) are darkened to `#6B6B6B`, which reads 4.8:1 on cream.
+  - The mockups' light-grey captions (2.5:1) are darkened to `#646464`, which reads 4.5:1 or more on cream and on the canvas.
+  - Orange text and icons on light surfaces are 2.6:1, so links, text buttons, chevrons, ticks and the selected tab use the dark brown instead; orange stays on buttons, switches, done checks and decoration.
   - Every other rule stays: 4.5:1 for text, 44 px targets, status never by colour alone.
 - **Shapes:**
   - rounded white cards on cream, with no borders;
@@ -600,7 +601,7 @@ Khay Studios supplied mockups (`docs/spec/redesign/`: Today, Insights, New habit
   - square pastel tiles behind each habit's icon;
   - type is a rounded geometric sans.
 - **Today:** "Morning, <name>" with the date and the avatar, a week strip, a reminder card while no reminder is set, a "Daily routine" timeline (a done check or an open circle, the habit's tile, name and streak, and its target at the right), and a dark-brown + button for a new habit.
-- **Insights:** a tall bar per habit with its completion, on a hatched track, plus a summary card for the period (XP earned and two totals), with **Share progress**.
+- **Insights:** a tall bar per category with its completion (the share of closed, eligible periods that GET /insights already sends; there is no per-habit figure), on a hatched track, plus a summary card for the period (XP earned and two totals), with **Share progress**.
 - **New and Edit habit:** the habit's icon large in a tile (tap to choose), then:
   - the name;
   - the goal (type and amount);
@@ -608,4 +609,38 @@ Khay Studios supplied mockups (`docs/spec/redesign/`: Today, Insights, New habit
   - a reminders switch;
   - an orange Save button.
 - **Artwork:** where the mockups draw illustrations (a mascot, a bell, a calendar), the app shows its own Hugeicons or the stacked-cards mark in coloured tiles. The avatar is the profile photo or the initial.
-- **Share progress (changes invariant 12):** the app draws a picture of the person's own summary (numbers and habit names only) and opens Android's share sheet. The person chooses where it goes; the app posts nothing, uploads nothing and keeps no copy. The privacy policy says so. There is still no public profile, feed or social feature.
+- **Share progress (changes invariant 12):** the app draws a picture of the person's own summary card (XP and totals; no habit names) and opens Android's share sheet. The person chooses where it goes; the app posts nothing, uploads nothing and keeps no copy (the image is written to a temporary folder and deleted when the sheet returns). The privacy policy should say so: its wording is Khay Studios' to add (docs/legal/README.md). There is still no public profile, feed or social feature.
+
+### A57 — Today's carousel, with notices from Khay Studios · ADOPT (Khay Studios, 2026-10-26)
+The reminder card on Today becomes a carousel. It holds cards built into the app and short notices that Khay Studios publishes from the server ("Both now").
+
+- **The carousel:**
+  - a swipeable row of cards with page dots, announced as "Card 2 of 3";
+  - no auto-advance (it would move under a reader's finger);
+  - with a single card, no dots;
+  - with no cards, nothing is shown.
+- **Built-in cards:**
+  - "Set a reminder", while no reminder is set (A56);
+  - two tips, each with a dismiss control.
+
+  Dismissed cards and notices are remembered on the device, per account, in a file in the account's folder (no schema change).
+- **Notices:**
+  - **Table** `notices`:
+    - `id` (UUIDv7) and `title` (1 to 60 characters);
+    - `body` (1 to 280 characters, plain text);
+    - `starts_at` and an optional `ends_at` (`timestamptz`), plus `created_at`;
+    - CHECK constraints on the lengths and on `ends_at > starts_at`.
+  - **Endpoint** `GET /api/v1/notices` (signed in, the `api` throttle). It returns the notices active at server time, newest first, at most 5: `[{id, title, body, starts_at, ends_at}]`.
+    - Notices are the same for every account and hold no personal data. This is the one read that is not owner-scoped (invariant 2 is about owner data).
+    - It is read-only and outside `/sync`; it changes no domain state.
+  - **Publishing** is by artisan only, with no admin page (A55):
+    - `notices:publish --title= --body= [--starts=] [--ends=]` (ISO-8601);
+    - `notices:list`;
+    - `notices:retire {id}`, which ends it now.
+  - **Content:** plain text only, with no links, images or tracking. Invariant 12's copy rules apply to what is published.
+  - **App:**
+    - fetched when Today opens, at most once every 15 minutes, and cached in the account's folder;
+    - shown from the cache offline, and hidden once `ends_at` has passed;
+    - a failed fetch is silent: the carousel still shows its built-in cards.
+  - **Old apps** never call the endpoint and are unaffected.
+- **Privacy:** no new data is collected and no third party is added; the request is the signed-in call the app already makes. The privacy policy is unchanged.
