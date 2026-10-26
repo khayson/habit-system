@@ -2,12 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
 
 import '../app/router.dart';
 import '../config/habit_tokens.dart';
 import '../core/time_zones.dart';
 import '../data/local_view.dart';
+import '../data/profile_view.dart';
 import '../data/rewards_view.dart';
 import '../data/timer_draft_view.dart';
 import '../domain/calendar/local_date.dart';
@@ -18,7 +20,9 @@ import '../providers/account_context.dart';
 import '../providers/stream_model.dart';
 import '../widgets/habit_format.dart';
 import '../widgets/habit_ui.dart';
+import '../widgets/avatar_view.dart';
 import '../widgets/sync_status_chip.dart';
+import '../widgets/week_strip.dart';
 import 'timezone_screen.dart';
 import 'widgets/needs_attention.dart';
 import '../widgets/app_icons.dart';
@@ -74,7 +78,21 @@ class _TodayBody extends StatelessWidget {
     } else {
       body = _TodayList(today: today, clock: clock);
     }
-    return Scaffold(body: SafeArea(child: body));
+    return Scaffold(
+      body: SafeArea(child: body),
+      // A56: the mockups' dark-brown + for a new habit.
+      floatingActionButton: today == null || today.items.isEmpty
+          ? null
+          : FloatingActionButton(
+              onPressed: () => context.push(Routes.newHabit),
+              tooltip: l10n.todayCreateHabit,
+              backgroundColor: HabitTokens.of(context).accent,
+              foregroundColor: HabitTokens.of(context).onAccent,
+              shape: const CircleBorder(),
+              elevation: 2,
+              child: const AppIcon(AppIcons.add, size: 26),
+            ),
+    );
   }
 }
 
@@ -98,28 +116,67 @@ class _TodayList extends StatelessWidget {
     // A44: the numbers exactly as reward_state confirmed them; no line without them.
     final rewards = context.watch<StreamModel<ConfirmedRewardNumbers?>>().value;
 
+    // A56: the avatar beside the greeting, from Today's own read of the account.
+    final account = context.read<AccountContext?>()!;
+    final name = today.userName?.trim() ?? '';
+    final avatar = today.avatarFile;
+
     return ListView(
-      padding: const EdgeInsets.all(HabitSpace.margin),
+      // Room under the last card for the + button.
+      padding: const EdgeInsets.fromLTRB(
+        HabitSpace.margin,
+        HabitSpace.margin,
+        HabitSpace.margin,
+        96,
+      ),
       children: [
         const AskZoneCard(),
-        Semantics(header: true, child: Text(_greeting(l10n, today), style: text.headlineMedium)),
-        const SizedBox(height: HabitSpace.s4),
-        Wrap(
-          alignment: WrapAlignment.spaceBetween,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          spacing: HabitSpace.s12,
-          runSpacing: HabitSpace.s8,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(date, style: text.bodyLarge?.copyWith(color: tokens.muted)),
-            SyncStatusChip(onTap: () => context.push(Routes.queue)),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Semantics(
+                    header: true,
+                    child: Text(_greeting(l10n, today), style: text.headlineMedium),
+                  ),
+                  const SizedBox(height: HabitSpace.s4),
+                  Text(date, style: text.bodyMedium?.copyWith(color: tokens.ink)),
+                ],
+              ),
+            ),
+            if (name.isNotEmpty || avatar != null) ...[
+              const SizedBox(width: HabitSpace.s12),
+              AvatarView(
+                photoPath: avatar == null ? null : p.join(account.filesRoot, avatar),
+                initials: initialsOf(name),
+                name: name,
+                size: AvatarSize.medium,
+                onTap: () => context.go(Routes.profile),
+                tapHint: l10n.todayAvatarHint,
+              ),
+            ],
           ],
         ),
+        const SizedBox(height: HabitSpace.s12),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: SyncStatusChip(onTap: () => context.push(Routes.queue)),
+        ),
         const SizedBox(height: HabitSpace.s24),
+        WeekStrip(today: today.date),
+        const SizedBox(height: HabitSpace.s24),
+        if (!today.hasReminders) ...[
+          _ReminderCard(habitId: today.items.first.habit.id),
+          const SizedBox(height: HabitSpace.s16),
+        ],
         Container(
-          padding: const EdgeInsets.all(HabitSpace.s24),
+          padding: const EdgeInsets.all(HabitSpace.s16),
           decoration: BoxDecoration(
-            color: tokens.positiveBg,
-            borderRadius: BorderRadius.circular(HabitRadius.r16),
+            color: tokens.surface,
+            borderRadius: BorderRadius.circular(HabitRadius.r20),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -133,19 +190,19 @@ class _TodayList extends StatelessWidget {
                   excludeSemantics: true,
                   child: Text(
                     l10n.todayRewardLine(rewards.xp, rewards.level),
-                    style: text.bodyMedium?.copyWith(color: tokens.positiveInk),
+                    style: text.bodyMedium?.copyWith(color: tokens.accent),
                   ),
                 ),
               ],
-              const SizedBox(height: HabitSpace.s16),
+              const SizedBox(height: HabitSpace.s12),
               ExcludeSemantics(
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(HabitRadius.r4),
+                  borderRadius: BorderRadius.circular(HabitRadius.r8),
                   child: LinearProgressIndicator(
                     value: total == 0 ? 0 : done / total,
                     minHeight: 8,
                     color: tokens.progress,
-                    backgroundColor: tokens.border,
+                    backgroundColor: tokens.chartTrack,
                   ),
                 ),
               ),
@@ -160,10 +217,24 @@ class _TodayList extends StatelessWidget {
           ),
         ),
         const SizedBox(height: HabitSpace.s24),
-        for (final item in today.items) ...[
-          _HabitRow(item: item, clock: clock),
-          const SizedBox(height: HabitSpace.s12),
-        ],
+        Row(
+          children: [
+            Expanded(
+              child: Semantics(
+                header: true,
+                child: Text(l10n.todayRoutine, style: text.titleLarge),
+              ),
+            ),
+            TextButton(
+              onPressed: () => context.go(Routes.habits),
+              style: TextButton.styleFrom(foregroundColor: tokens.ink),
+              child: Text(l10n.todaySeeAll),
+            ),
+          ],
+        ),
+        const SizedBox(height: HabitSpace.s8),
+        for (final (i, item) in today.items.indexed)
+          _HabitRow(item: item, clock: clock, first: i == 0, last: i == today.items.length - 1),
       ],
     );
   }
@@ -183,9 +254,13 @@ class _HabitRow extends StatelessWidget {
   final TodayItem item;
   final DateTime Function() clock;
 
+  /// A56: the timeline's dotted line runs between rows, not above the first or below the last.
+  final bool first;
+  final bool last;
+
   static final _types = HabitTypeUiRegistry.builtins();
 
-  const _HabitRow({required this.item, required this.clock});
+  const _HabitRow({required this.item, required this.clock, this.first = false, this.last = false});
 
   @override
   Widget build(BuildContext context) {
@@ -199,7 +274,12 @@ class _HabitRow extends StatelessWidget {
     // 4.3b C2 / C3: quantity and duration cards (design 05). Attention and unknown types keep
     // their rows (4.3c handles attention).
     if (!item.needsAttention && item.rules != null && type != null && type.hasAmountEntry) {
-      return _AmountRow(item: item, type: type, clock: clock);
+      return _Timeline(
+        first: first,
+        last: last,
+        dot: _Dot(done: item.complete),
+        card: _AmountRow(item: item, type: type, clock: clock),
+      );
     }
 
     final String subtitle;
@@ -231,6 +311,7 @@ class _HabitRow extends StatelessWidget {
     final lines = [
       subtitle,
       if (week != null) l10n.todayWeek(week.distinctCompletedDays, week.targetDays),
+      if (item.streak case final streak? when streak > 0) l10n.todayStreak(streak),
     ];
 
     VoidCallback? onAction;
@@ -243,14 +324,20 @@ class _HabitRow extends StatelessWidget {
       action = item.complete ? l10n.todayUndo(item.name) : l10n.todayCheckIn(item.name);
     }
     final ink = tone == Tone.neutral ? tokens.muted : tone.ink(tokens);
+    // A56: the one-tap check sits in the timeline at the left, as the mockups draw it; other
+    // states keep their symbol at the right of the card.
+    final checkInTimeline = item.canToggle && !item.needsAttention;
 
-    return SurfaceCard(
+    final card = SurfaceCard(
       onTap: () => context.go(Routes.habit(item.habit.id)),
       semanticsLabel: '${l10n.todayOpenDetail(item.name)}. ${lines.join('. ')}',
       child: Row(
         children: [
           ExcludeSemantics(
-            child: IconTile(icon: HabitFormat.icon(item.habit.icon, item.habit.category)),
+            child: IconTile(
+              icon: HabitFormat.icon(item.habit.icon, item.habit.category),
+              tile: HabitTile.forCategory(item.habit.category),
+            ),
           ),
           const SizedBox(width: HabitSpace.s16),
           Expanded(
@@ -267,19 +354,198 @@ class _HabitRow extends StatelessWidget {
               ),
             ),
           ),
+          if (!checkInTimeline) ...[
+            const SizedBox(width: HabitSpace.s8),
+            if (onAction != null)
+              IconButton(
+                onPressed: onAction,
+                tooltip: action,
+                icon: AppIcon(trailing, color: ink),
+                constraints: const BoxConstraints(
+                  minWidth: HabitSize.minTarget,
+                  minHeight: HabitSize.minTarget,
+                ),
+              )
+            else
+              ExcludeSemantics(child: AppIcon(trailing, color: ink)),
+          ],
+        ],
+      ),
+    );
+    return _Timeline(
+      first: first,
+      last: last,
+      dot: checkInTimeline
+          ? _Dot(done: item.complete, onPressed: onAction, tooltip: action)
+          : _Dot(done: item.complete),
+      card: card,
+    );
+  }
+}
+
+/// A56: one row of the mockups' "Daily routine" timeline: the check (or open circle) on a dotted
+/// line at the left, the habit's card at the right.
+class _Timeline extends StatelessWidget {
+  final bool first;
+  final bool last;
+  final Widget dot;
+  final Widget card;
+
+  const _Timeline({required this.first, required this.last, required this.dot, required this.card});
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = HabitTokens.of(context);
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            width: HabitSize.minTarget,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                if (!(first && last))
+                  Positioned(
+                    top: 0,
+                    bottom: 0,
+                    child: CustomPaint(
+                      size: const Size(2, 0),
+                      painter: _DottedLine(
+                        color: tokens.border,
+                        topHalf: !first,
+                        bottomHalf: !last,
+                      ),
+                    ),
+                  ),
+                dot,
+              ],
+            ),
+          ),
           const SizedBox(width: HabitSpace.s8),
-          if (onAction != null)
-            IconButton(
-              onPressed: onAction,
-              tooltip: action,
-              icon: AppIcon(trailing, color: ink),
-              constraints: const BoxConstraints(
-                minWidth: HabitSize.minTarget,
-                minHeight: HabitSize.minTarget,
-              ),
-            )
-          else
-            ExcludeSemantics(child: AppIcon(trailing, color: ink)),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: HabitSpace.s12),
+              child: card,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The timeline's mark: an orange disc with a check when done, an open circle otherwise. With
+/// [onPressed] it is the one-tap check-in (44 px target, its own words for screen readers).
+class _Dot extends StatelessWidget {
+  final bool done;
+  final VoidCallback? onPressed;
+  final String? tooltip;
+
+  const _Dot({required this.done, this.onPressed, this.tooltip});
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = HabitTokens.of(context);
+    final mark = Container(
+      width: 22,
+      height: 22,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: done ? tokens.primary : tokens.surface,
+        shape: BoxShape.circle,
+        border: done ? null : Border.all(color: tokens.muted, width: 1.5),
+      ),
+      child: done ? AppIcon(AppIcons.check, size: 14, color: tokens.onPrimary) : null,
+    );
+    if (onPressed == null) return ExcludeSemantics(child: mark);
+    return IconButton(
+      onPressed: onPressed,
+      tooltip: tooltip,
+      icon: mark,
+      constraints: const BoxConstraints(
+        minWidth: HabitSize.minTarget,
+        minHeight: HabitSize.minTarget,
+      ),
+    );
+  }
+}
+
+class _DottedLine extends CustomPainter {
+  final Color color;
+  final bool topHalf;
+  final bool bottomHalf;
+
+  const _DottedLine({required this.color, required this.topHalf, required this.bottomHalf});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round;
+    final mid = size.height / 2;
+    final from = topHalf ? 0.0 : mid;
+    final to = bottomHalf ? size.height : mid;
+    for (var y = from; y < to; y += 7) {
+      canvas.drawLine(
+        Offset(size.width / 2, y),
+        Offset(size.width / 2, (y + 2).clamp(0, to)),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DottedLine old) =>
+      old.color != color || old.topHalf != topHalf || old.bottomHalf != bottomHalf;
+}
+
+/// A56: the mockups' reminder card on Today, while no reminder is set. Calm words, no loss
+/// threat (invariant 12); "Set now" opens the reminder editor for the first habit on Today.
+class _ReminderCard extends StatelessWidget {
+  final String habitId;
+
+  const _ReminderCard({required this.habitId});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final text = Theme.of(context).textTheme;
+    final tokens = HabitTokens.of(context);
+    return Container(
+      padding: const EdgeInsets.all(HabitSpace.s16),
+      decoration: BoxDecoration(
+        color: tokens.tilePeach,
+        borderRadius: BorderRadius.circular(HabitRadius.r20),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l10n.todayReminderTitle, style: text.titleLarge?.copyWith(color: tokens.ink)),
+                const SizedBox(height: HabitSpace.s4),
+                Text(l10n.todayReminderBody, style: text.bodySmall?.copyWith(color: tokens.ink)),
+                const SizedBox(height: HabitSpace.s12),
+                FilledButton(
+                  onPressed: () => context.push(Routes.habitReminder(habitId)),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: tokens.accent,
+                    foregroundColor: tokens.onAccent,
+                    minimumSize: const Size(HabitSize.minTarget, HabitSize.minTarget),
+                    padding: const EdgeInsets.symmetric(horizontal: HabitSpace.s16),
+                  ),
+                  child: Text(l10n.todayReminderAction),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: HabitSpace.s12),
+          const ExcludeSemantics(
+            child: IconTile(icon: AppIcons.reminder, tile: HabitTile.peach, size: 72),
+          ),
         ],
       ),
     );
@@ -351,7 +617,10 @@ class _AmountRow extends StatelessWidget {
       child: Row(
         children: [
           ExcludeSemantics(
-            child: IconTile(icon: HabitFormat.icon(item.habit.icon, item.habit.category)),
+            child: IconTile(
+              icon: HabitFormat.icon(item.habit.icon, item.habit.category),
+              tile: HabitTile.forCategory(item.habit.category),
+            ),
           ),
           const SizedBox(width: HabitSpace.s16),
           Expanded(
@@ -362,6 +631,13 @@ class _AmountRow extends StatelessWidget {
                   Text(item.name, style: text.titleMedium ?? text.bodyLarge),
                   const SizedBox(height: HabitSpace.s4),
                   line,
+                  if (item.streak case final streak? when streak > 0) ...[
+                    const SizedBox(height: HabitSpace.s4),
+                    Text(
+                      l10n.todayStreak(streak),
+                      style: text.bodySmall?.copyWith(color: tokens.muted),
+                    ),
+                  ],
                   if (item.pending) ...[
                     const SizedBox(height: HabitSpace.s4),
                     Text(l10n.editWaiting, style: text.bodySmall?.copyWith(color: tokens.muted)),

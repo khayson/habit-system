@@ -12,6 +12,7 @@ import '../sync/outbox_states.dart';
 import 'account_calendar.dart';
 import 'app_database.dart';
 import 'entity_codec.dart';
+import 'reminder_view.dart';
 import 'log_overlay.dart';
 import 'timer_draft_view.dart';
 import 'timezone_view.dart';
@@ -200,6 +201,9 @@ class LocalView {
                 db.localSettings,
                 // 4.3b C1: a timer started, paused or finished changes its card.
                 db.timerDrafts,
+                // A56: the confirmed streak on each row, and the reminder card.
+                db.habitProgress,
+                db.reminders,
               },
             )
             .watch()
@@ -237,6 +241,8 @@ class LocalView {
     final timers = {
       for (final d in await db.select(db.timerDrafts).get()) d.habitId: TimerDraftView(d),
     };
+    // A56: the server's streak only (invariant 9: never computed on the device).
+    final streaks = {for (final p in await db.select(db.habitProgress).get()) p.habitId: p.current};
     final items = <TodayItem>[];
     for (final habit in await habits()) {
       // A34: an archived habit (confirmed, or archived on this device) leaves Today.
@@ -261,6 +267,7 @@ class LocalView {
           complete: complete,
           attention: attention[habit.id],
           week: await _week(habit, schedule, date),
+          streak: streaks[habit.id],
           completedAt: complete && log.changedAt != null
               ? calendar.localTimeAt(log.changedAt!)
               : null,
@@ -278,6 +285,8 @@ class LocalView {
       userName: user is Map ? user['name'] as String? : null,
       items: items,
       timezone: await DeviceSettings(db).status(deviceNow),
+      hasReminders: (await reminders()).any((r) => !r.deleted && r.enabled),
+      avatarFile: state.avatarFile,
     );
   }
 
@@ -354,12 +363,20 @@ class TodayView {
   /// For the ask-on-change card (screen 04).
   final TimezoneStatus? timezone;
 
+  /// A56: whether any live, enabled reminder exists (Today's reminder card shows while none).
+  final bool hasReminders;
+
+  /// A56: the profile photo's file in the account's folder (Today's avatar), or null.
+  final String? avatarFile;
+
   const TodayView({
     required this.date,
     required this.localNow,
     required this.userName,
     required this.items,
     this.timezone,
+    this.hasReminders = false,
+    this.avatarFile,
   });
 
   int get completeCount => items.where((i) => i.complete).length;
@@ -391,6 +408,9 @@ class TodayItem {
   /// Wall-clock time of the check-in in the habit calendar, when complete.
   final DateTime? completedAt;
 
+  /// A56: the current streak as the server confirmed it (habit_progress); null until it has.
+  final int? streak;
+
   const TodayItem({
     required this.habit,
     required this.log,
@@ -401,6 +421,7 @@ class TodayItem {
     required this.attention,
     this.week,
     this.completedAt,
+    this.streak,
   });
 
   String get name => habit.payload['name'] as String? ?? '';

@@ -186,8 +186,11 @@ class ProfileState {
   });
 
   /// Initials for the avatar fallback: the first letters of the first two words.
-  String get initials {
-    final words = name.trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).take(2);
-    return words.map((w) => String.fromCharCode(w.runes.first).toUpperCase()).join();
-  }
+  String get initials => initialsOf(name);
+}
+
+/// The first letters of a name's first two words (the avatar's fallback; also Today's, A56).
+String initialsOf(String name) {
+  final words = name.trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).take(2);
+  return words.map((w) => String.fromCharCode(w.runes.first).toUpperCase()).join();
 }

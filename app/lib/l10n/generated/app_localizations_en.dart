@@ -238,6 +238,41 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get todayRoutine => 'Daily routine';
+
+  @override
+  String get todaySeeAll => 'See all';
+
+  @override
+  String todayStreak(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Streak $count days',
+      one: 'Streak 1 day',
+      zero: 'No streak yet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String todayWeekSpoken(String start, String end, String today) {
+    return 'This week, $start to $end. Today is $today.';
+  }
+
+  @override
+  String get todayReminderTitle => 'Set a reminder';
+
+  @override
+  String get todayReminderBody => 'A gentle nudge at the time you choose helps a routine stick.';
+
+  @override
+  String get todayReminderAction => 'Set now';
+
+  @override
+  String get todayAvatarHint => 'Opens your profile';
+
+  @override
   String get todayCreateHabit => 'Create a habit';
 
   @override

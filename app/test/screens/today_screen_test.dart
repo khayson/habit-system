@@ -29,6 +29,7 @@ void main() {
   });
 
   testWidgets('a queued habit is labelled; a tap checks in and stays provisional', (tester) async {
+    useTallPhone(tester);
     final account = (await tester.runAsync(() => testAccount(FakeSyncServer())))!;
     await tester.runAsync(
       () => account.actions.createOneTapHabit(name: 'Stretch', category: 'health'),
@@ -59,6 +60,7 @@ void main() {
   });
 
   testWidgets('after sync the check-in is confirmed and the chip says Synced', (tester) async {
+    useTallPhone(tester);
     final server = FakeSyncServer();
     final account = (await tester.runAsync(() => testAccount(server)))!;
     await tester.runAsync(() async {
@@ -168,6 +170,7 @@ void main() {
   testWidgets('a habit-day that needs a look opens the resolve sheet instead of queueing', (
     tester,
   ) async {
+    useTallPhone(tester);
     final server = FakeSyncServer();
     final account = (await tester.runAsync(() => testAccount(server)))!;
     await tester.runAsync(() async {
@@ -206,6 +209,7 @@ void main() {
   });
 
   testWidgets('a habit type this version does not know shows an update card', (tester) async {
+    useTallPhone(tester);
     final server = FakeSyncServer()
       ..extraBootstrapHabits.add({
         'id': 'future-1',
@@ -240,6 +244,7 @@ void main() {
   });
 
   testWidgets('text scales without clipping the summary', (tester) async {
+    useTallPhone(tester);
     final account = (await tester.runAsync(() => testAccount(FakeSyncServer())))!;
     await tester.runAsync(
       () => account.actions.createOneTapHabit(name: 'Stretch', category: 'health'),

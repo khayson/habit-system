@@ -512,6 +512,54 @@ abstract class AppLocalizations {
   /// **'Undo check-in for {name}'**
   String todayUndo(String name);
 
+  /// A56: the heading above Today's habits.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily routine'**
+  String get todayRoutine;
+
+  /// No description provided for @todaySeeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'See all'**
+  String get todaySeeAll;
+
+  /// A56: the server-confirmed current streak on a Today row.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No streak yet} =1{Streak 1 day} other{Streak {count} days}}'**
+  String todayStreak(int count);
+
+  /// No description provided for @todayWeekSpoken.
+  ///
+  /// In en, this message translates to:
+  /// **'This week, {start} to {end}. Today is {today}.'**
+  String todayWeekSpoken(String start, String end, String today);
+
+  /// No description provided for @todayReminderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a reminder'**
+  String get todayReminderTitle;
+
+  /// No description provided for @todayReminderBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A gentle nudge at the time you choose helps a routine stick.'**
+  String get todayReminderBody;
+
+  /// No description provided for @todayReminderAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Set now'**
+  String get todayReminderAction;
+
+  /// No description provided for @todayAvatarHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens your profile'**
+  String get todayAvatarHint;
+
   /// No description provided for @todayCreateHabit.
   ///
   /// In en, this message translates to:
