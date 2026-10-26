@@ -13,9 +13,10 @@ final class PublishNotice extends Command
         {--title= : 1 to 60 characters}
         {--body= : 1 to 280 characters, plain text}
         {--starts= : ISO-8601 with a zone; now when left out}
-        {--ends= : ISO-8601 with a zone; optional}';
+        {--ends= : ISO-8601 with a zone; optional}
+        {--to=* : an account email; repeat for more people. Without it, everyone sees the notice}';
 
-    protected $description = 'Publish a notice to every account\'s Today carousel (A57).';
+    protected $description = 'Publish a notice to Today\'s carousel, for everyone or chosen people (A57).';
 
     public function handle(NoticeBoard $board): int
     {
@@ -25,6 +26,7 @@ final class PublishNotice extends Command
                 (string) $this->option('body'),
                 $this->option('starts') === null ? null : (string) $this->option('starts'),
                 $this->option('ends') === null ? null : (string) $this->option('ends'),
+                array_values(array_map(strval(...), (array) $this->option('to'))),
             );
         } catch (InvalidArgumentException $e) {
             $this->error($e->getMessage());

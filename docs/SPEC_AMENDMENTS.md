@@ -615,7 +615,9 @@ Khay Studios supplied mockups (`docs/spec/redesign/`: Today, Insights, New habit
 The reminder card on Today becomes a carousel. It holds cards built into the app and short notices that Khay Studios publishes from the server ("Both now").
 
 - **The carousel:**
-  - a swipeable row of cards with page dots, announced as "Card 2 of 3";
+  - a swipeable pager, with the next card peeking in at the edge;
+  - each card keeps its own height, and the page dots sit right under the card on show;
+  - the dots are announced as "Card 2 of 3";
   - no auto-advance (it would move under a reader's finger);
   - with a single card, no dots;
   - with no cards, nothing is shown.
@@ -629,12 +631,18 @@ The reminder card on Today becomes a carousel. It holds cards built into the app
     - `id` (UUIDv7) and `title` (1 to 60 characters);
     - `body` (1 to 280 characters, plain text);
     - `starts_at` and an optional `ends_at` (`timestamptz`), plus `created_at`;
-    - CHECK constraints on the lengths and on `ends_at > starts_at`.
-  - **Endpoint** `GET /api/v1/notices` (signed in, the `api` throttle). It returns the notices active at server time, newest first, at most 5: `[{id, title, body, starts_at, ends_at}]`.
-    - Notices are the same for every account and hold no personal data. This is the one read that is not owner-scoped (invariant 2 is about owner data).
+    - `audience`: `everyone` or `people`;
+    - CHECK constraints on the lengths, on the audience and on `ends_at > starts_at`.
+  - **Recipients** (Khay Studios, 2026-10-26): a notice can go to chosen people.
+    - `notice_recipients (notice_id, user_id)` records who it is for.
+    - These rows belong to the account and are purged with it.
+    - The audience is explicit, so a notice for people whose accounts are gone reaches nobody, never everyone.
+    - Recipient lists are never sent to the app.
+  - **Endpoint** `GET /api/v1/notices` (signed in, the `api` throttle). It returns the notices active at server time for the caller, newest first, at most 5: `[{id, title, body, starts_at, ends_at}]`. "For the caller" means everyone's, plus those addressed to them.
+    - The everyone notices are the one read that is not owner-scoped (invariant 2 is about owner data).
     - It is read-only and outside `/sync`; it changes no domain state.
   - **Publishing** is by artisan only, with no admin page (A55):
-    - `notices:publish --title= --body= [--starts=] [--ends=]` (ISO-8601);
+    - `notices:publish --title= --body= [--starts=] [--ends=] [--to=email ...]` (ISO-8601). An email with no account stops the publish;
     - `notices:list`;
     - `notices:retire {id}`, which ends it now.
   - **Content:** plain text only, with no links, images or tracking. Invariant 12's copy rules apply to what is published.
@@ -643,4 +651,6 @@ The reminder card on Today becomes a carousel. It holds cards built into the app
     - shown from the cache offline, and hidden once `ends_at` has passed;
     - a failed fetch is silent: the carousel still shows its built-in cards.
   - **Old apps** never call the endpoint and are unaffected.
-- **Privacy:** no new data is collected and no third party is added; the request is the signed-in call the app already makes. The privacy policy is unchanged.
+- **Privacy:**
+  - No third party is added, and the request is the signed-in call the app already makes.
+  - A notice addressed to chosen people records which accounts it is for (purged with the account). Whether the privacy policy should mention that is Khay Studios' call (docs/legal/README.md).

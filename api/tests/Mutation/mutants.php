@@ -612,6 +612,13 @@ PHP,
         'tests' => 'tests/Feature/NoticesTest.php',
     ],
     [
+        'name' => 'A57: a notice for chosen people reaches everyone',
+        'file' => 'app/Application/Notices/NoticeBoard.php',
+        'search' => "->where('notice_recipients.user_id', \$userId),",
+        'replace' => ',',
+        'tests' => 'tests/Feature/NoticesTest.php',
+    ],
+    [
         'name' => 'A57: notices not started yet are sent',
         'file' => 'app/Application/Notices/NoticeBoard.php',
         'search' => "->where('starts_at', '<=', \$now)\n",

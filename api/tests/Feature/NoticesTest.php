@@ -23,6 +23,19 @@ function publishNotice(string $title, string $body, ?string $starts = null, ?str
     ], fn ($v) => $v !== null));
 }
 
+/**
+ * GET /notices as [$user]; the test client caches the first signed-in user, so forget it.
+ *
+ * @param  array{token: string}  $user
+ * @return list<array<string, mixed>>
+ */
+function noticesFor(object $test, array $user): array
+{
+    app('auth')->forgetGuards();
+
+    return $test->withToken($user['token'])->getJson('/api/v1/notices')->assertOk()->json('data');
+}
+
 it('needs a signed-in account', function () {
     $this->getJson('/api/v1/notices')->assertUnauthorized();
 });
@@ -73,8 +86,7 @@ it('is the same for every account', function () {
     $maya = $this->registerUser('Maya', 'maya@example.test');
     $kofi = $this->registerUser('Kofi', 'kofi@example.test');
 
-    expect($this->withToken($maya['token'])->getJson('/api/v1/notices')->json('data'))
-        ->toBe($this->withToken($kofi['token'])->getJson('/api/v1/notices')->json('data'));
+    expect(noticesFor($this, $maya))->toBe(noticesFor($this, $kofi));
 });
 
 it('publish starts now by default; list shows it; retire ends it now', function () {
@@ -124,3 +136,44 @@ it('the table refuses bad rows itself (CHECK constraints)', function (array $row
     'long body' => [['body' => str_repeat('a', 281)]],
     'end not after start' => [['ends_at' => '2026-10-26 10:00:00+00']],
 ]);
+
+it('a notice for chosen people reaches only them; everyone notices still reach all', function () {
+    $this->freezeClock('2026-10-26T10:00:00Z');
+    $maya = $this->registerUser('Maya', 'maya@example.test');
+    $kofi = $this->registerUser('Kofi', 'kofi@example.test');
+    $ama = $this->registerUser('Ama', 'ama@example.test');
+    publishNotice('For all', 'Everyone sees this.', '2026-10-25T00:00:00Z');
+    expect(Artisan::call('notices:publish', [
+        '--title' => 'Just for you', '--body' => 'Thanks for the bug report.',
+        '--to' => ['Maya@Example.test', 'kofi@example.test'],
+    ]))->toBe(0);
+
+    $titles = fn (array $user) => collect(noticesFor($this, $user))->pluck('title')->all();
+
+    expect($titles($maya))->toBe(['Just for you', 'For all'])
+        ->and($titles($kofi))->toBe(['Just for you', 'For all'])
+        ->and($titles($ama))->toBe(['For all']);
+    expect(Artisan::call('notices:list'))->toBe(0)
+        ->and(Artisan::output())->toContain('2 people')->toContain('everyone');
+});
+
+it('an unknown email stops the publish; nothing is written', function () {
+    $this->registerUser('Maya', 'maya@example.test');
+    expect(Artisan::call('notices:publish', [
+        '--title' => 'Hi', '--body' => 'Body.', '--to' => ['maya@example.test', 'nobody@example.test'],
+    ]))->toBe(1)
+        ->and(Artisan::output())->toContain('nobody@example.test')
+        ->and(DB::table('notices')->count())->toBe(0)
+        ->and(DB::table('notice_recipients')->count())->toBe(0);
+});
+
+it('a targeted notice never falls back to everyone when its people are gone', function () {
+    $this->freezeClock('2026-10-26T10:00:00Z');
+    $maya = $this->registerUser('Maya', 'maya@example.test');
+    $kofi = $this->registerUser('Kofi', 'kofi@example.test');
+    Artisan::call('notices:publish', ['--title' => 'Hi', '--body' => 'Body.', '--to' => ['maya@example.test']]);
+    DB::table('notice_recipients')->delete();
+
+    expect(noticesFor($this, $kofi))->toBe([])
+        ->and(noticesFor($this, $maya))->toBe([]);
+});

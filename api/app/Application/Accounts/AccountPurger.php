@@ -33,6 +33,7 @@ final readonly class AccountPurger
         ['freeze_ledger', 'user'],
         ['period_evaluations', 'user'],
         ['reminders', 'user'],
+        ['notice_recipients', 'user'],
         ['habit_logs', 'user'],
         ['habit_streak_cache', 'habit'],
         ['habit_active_ranges', 'habit'],

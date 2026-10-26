@@ -295,11 +295,13 @@ Open the service in Render, then **Shell**, and run:
 
 ```sh
 php artisan notices:publish --title="Weekly habits are here" --body="A habit can now count the days you choose each week." --ends=2026-11-15T00:00:00Z
+php artisan notices:publish --title="Thanks for the report" --body="The fix is in the next update." --to=maya@example.com --to=kofi@example.com
 php artisan notices:list
 php artisan notices:retire <id>
 ```
 
 - `--starts` and `--ends` are optional ISO-8601 times with a zone. Without `--starts`, the notice starts now.
+- `--to` sends it only to those accounts; repeat it for more people. An email with no account stops the publish. Without `--to`, everyone sees it.
 - The app shows at most 5 at once, newest first, and refreshes them at most every 15 minutes.
 - Each person can dismiss a notice on their phone.
 - `notices:retire` ends a notice now. One that has not started yet is removed.

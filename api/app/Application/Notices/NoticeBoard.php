@@ -11,9 +11,9 @@ use InvalidArgumentException;
 use stdClass;
 
 /**
- * A57: notices Khay Studios publishes (artisan) and every account reads (GET /notices). Plain
- * text, the same for everyone, no personal data. The table's CHECK constraints repeat the
- * limits, so a row written any other way is refused too.
+ * A57: notices Khay Studios publishes (artisan) for everyone or for chosen people, read through
+ * GET /notices. Plain text. The table's CHECK constraints repeat the limits, so a row written
+ * any other way is refused too.
  */
 final class NoticeBoard
 {
@@ -26,15 +26,21 @@ final class NoticeBoard
     public function __construct(private readonly Clock $clock) {}
 
     /**
-     * Notices active now (started, not yet ended; the end is exclusive), newest first.
+     * The notices active now for [$userId] (started, not yet ended; the end is exclusive):
+     * everyone's, and those addressed to that account. Newest first.
      *
      * @return list<array{id: string, title: string, body: string, starts_at: string, ends_at: string|null}>
      */
-    public function active(): array
+    public function activeFor(string $userId): array
     {
         $now = UtcTime::format($this->clock->now());
 
         return array_values(DB::table('notices')
+            ->where(fn ($q) => $q->where('audience', 'everyone')->orWhereExists(
+                fn ($r) => $r->from('notice_recipients')
+                    ->whereColumn('notice_recipients.notice_id', 'notices.id')
+                    ->where('notice_recipients.user_id', $userId),
+            ))
             ->where('starts_at', '<=', $now)
             ->where(fn ($q) => $q->whereNull('ends_at')->orWhere('ends_at', '>', $now))
             ->orderByDesc('starts_at')
@@ -46,20 +52,38 @@ final class NoticeBoard
     }
 
     /**
-     * @return list<array{id: string, title: string, body: string, starts_at: string, ends_at: string|null}>
+     * Every notice with who it is for ('everyone', or a count of people), for the console.
+     *
+     * @return list<array{id: string, title: string, starts_at: string, ends_at: string|null, audience: string}>
      */
     public function all(): array
     {
+        $counts = DB::table('notice_recipients')->selectRaw('notice_id, count(*) as n')
+            ->groupBy('notice_id')->pluck('n', 'notice_id');
+
         return array_values(DB::table('notices')->orderByDesc('starts_at')->get()
-            ->map(fn (stdClass $row) => $this->present($row))->all());
+            ->map(function (stdClass $row) use ($counts) {
+                $n = $this->present($row);
+
+                return [
+                    'id' => $n['id'],
+                    'title' => $n['title'],
+                    'starts_at' => $n['starts_at'],
+                    'ends_at' => $n['ends_at'],
+                    'audience' => $row->audience === 'everyone' ? 'everyone' : ((int) ($counts[$row->id] ?? 0)).' people',
+                ];
+            })->all());
     }
 
     /**
-     * Publishes a notice; it starts now unless [$starts] is given (ISO-8601).
+     * Publishes a notice; it starts now unless [$starts] is given (ISO-8601). With [$to] (account
+     * emails), only those people see it; an email with no account stops the publish.
+     *
+     * @param  list<string>  $to
      *
      * @throws InvalidArgumentException with a plain message for the console
      */
-    public function publish(string $title, string $body, ?string $starts = null, ?string $ends = null): string
+    public function publish(string $title, string $body, ?string $starts = null, ?string $ends = null, array $to = []): string
     {
         $title = trim($title);
         $body = trim($body);
@@ -74,15 +98,27 @@ final class NoticeBoard
         if ($until !== null && $until <= $from) {
             throw new InvalidArgumentException('The end must be after the start.');
         }
+        $emails = array_values(array_unique(array_map(fn (string $e) => mb_strtolower(trim($e)), $to)));
+        $users = DB::table('users')->whereIn('email', $emails)->pluck('id', 'email');
+        $missing = array_diff($emails, $users->keys()->all());
+        if ($missing !== []) {
+            throw new InvalidArgumentException('No account for: '.implode(', ', $missing).'.');
+        }
         $id = (string) Str::uuid7();
-        DB::table('notices')->insert([
-            'id' => $id,
-            'title' => $title,
-            'body' => $body,
-            'starts_at' => UtcTime::format($from),
-            'ends_at' => $until === null ? null : UtcTime::format($until),
-            'created_at' => UtcTime::format($this->clock->now()),
-        ]);
+        DB::transaction(function () use ($id, $title, $body, $from, $until, $users) {
+            DB::table('notices')->insert([
+                'id' => $id,
+                'title' => $title,
+                'body' => $body,
+                'starts_at' => UtcTime::format($from),
+                'ends_at' => $until === null ? null : UtcTime::format($until),
+                'audience' => $users->isEmpty() ? 'everyone' : 'people',
+                'created_at' => UtcTime::format($this->clock->now()),
+            ]);
+            DB::table('notice_recipients')->insert(
+                $users->values()->map(fn ($userId) => ['notice_id' => $id, 'user_id' => $userId])->all(),
+            );
+        });
 
         return $id;
     }
