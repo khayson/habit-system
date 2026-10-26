@@ -1,9 +1,9 @@
 {
   "app_name": "Habit System",
   "publisher": "Khay Studios",
-  "contact_email": null,
-  "postal_address": null,
-  "governing_law": null,
+  "contact_email": "nanaotoo77@gmail.com",
+  "postal_address": "Accra, Ghana",
+  "governing_law": "Ghanaian Law",
   "hosting_provider": "Render (servers) and Neon (database)",
   "hosting_region": "Frankfurt, Germany",
   "file_storage_provider": "Cloudflare (R2 storage)",
