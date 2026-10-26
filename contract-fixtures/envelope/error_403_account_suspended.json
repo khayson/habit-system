@@ -1,0 +1,8 @@
+{
+  "description": "A58: POST /auth/login with the right password for an account Khay Studios has suspended. Never sent for a wrong password, so the status is not revealed to anyone else.",
+  "status": 403,
+  "body": {
+    "error": { "code": "account_suspended", "message": "This account is paused. Contact the Habit team to ask about it." },
+    "meta": { "request_id": "{{uuid}}", "server_time": "{{timestamp}}" }
+  }
+}

@@ -28,6 +28,7 @@ Every error response uses one envelope (CLAUDE.md, A25):
 | `bad_request` | 400 | Request rejected as unreadable. | — | `error_400_bad_request.json` |
 | `unauthenticated` | 401 | Missing, expired or revoked bearer token. | — | `error_401_unauthenticated.json` |
 | `forbidden` | 403 | Authenticated, but blocked by policy. | — | `error_403_forbidden.json` |
+| `account_suspended` | 403 | Sign-in with the right password to an account Khay Studios has suspended (A58). | — | `error_403_account_suspended.json` |
 | `not_found` | 404 | Missing **or foreign** resource or route. Identical for both. | — | `error_404_not_found.json` |
 | `method_not_allowed` | 405 | Route exists, wrong method. | `Allow` header | `error_405_method_not_allowed.json` |
 | `version_conflict` | 409 | Stale `base_version` on an absolute edit. | `resource_id`, `expected_version`, `current_version`, `current` (canonical resource) | `error_409_version_conflict.json` |

@@ -654,3 +654,31 @@ The reminder card on Today becomes a carousel. It holds cards built into the app
 - **Privacy:**
   - No third party is added, and the request is the signed-in call the app already makes.
   - A notice addressed to chosen people records which accounts it is for (purged with the account). Whether the privacy policy should mention that is Khay Studios' call (docs/legal/README.md).
+
+### A58 — An admin page for Khay Studios: system, accounts and notices · ADOPT (Khay Studios, 2026-10-26)
+This replaces A55's "no admin page". Khay Studios asked for one page to check the system and manage accounts, "we won't access their data but their user account", plus notices and small server tasks.
+
+- **Where:** `/admin` on the API service (not under `/api/v1`).
+  - Plain server-rendered pages with no JavaScript, no outside fonts or scripts, and no third party.
+  - Headers: a strict Content-Security-Policy, `X-Frame-Options: DENY`, `Cache-Control: no-store` and `Referrer-Policy: no-referrer`.
+- **Sign-in:** one admin, never an app account.
+  - `ADMIN_EMAIL`, `ADMIN_PASSWORD_HASH` (bcrypt) and `ADMIN_TOTP_SECRET` (base32, RFC 6238: 30-second steps, one step of drift, a used step never accepted again).
+  - If any of the three is missing, every `/admin` address answers a plain 404.
+  - `php artisan admin:setup`, run on Khay Studios' own computer, prints the hash and a fresh secret with its `otpauth://` link. The values go into Render and never into the repository or a chat.
+  - Login is throttled per IP. A wrong email, password or code gets one neutral answer.
+  - The session lives in an encrypted cookie scoped to `/admin` (`HttpOnly`, `Secure`, `SameSite=Strict`). It ends after 30 minutes idle or 8 hours in all, and every form carries a CSRF token.
+- **Dashboard:** A55's numbers, plus two actions: run the timer now, and retry failed jobs.
+- **Accounts:**
+  - **List:** search by email or name, 25 per page. Each row shows the email, name, sign-up date, status (active, suspended, deletion pending) and the number of signed-in devices.
+  - **Account page:** name, email, timezone, sign-up date, status and each device's name and last use. Never habits, logs, notes, rewards, photos or exports.
+  - **Actions** (each asks first):
+    - **Sign out all devices:** deletes every token.
+    - **Suspend:** sets `users.suspended_at` and signs the person out. Sign-in then answers 403 `account_suspended`, but only after a correct password, so the status is never revealed to anyone else. **Resume** clears it.
+    - **Delete:** runs A49's deletion. You type the account's email to confirm.
+    - **Send a notice:** opens the notice form addressed to that person (A57).
+
+  Their habit data is never read or changed.
+- **Notices:** A57's publish (for everyone or chosen emails, with an optional end) and retire, from a form.
+- **Audit:** every admin action and sign-in appends a row to `admin_actions` (action, subject id, small details, time). The dashboard shows the last 20. The rows hold no IP address and no secret.
+- **App:** `account_suspended` at sign-in shows a calm line (the account is paused; contact the Habit team). Old apps show it by its 403 status class (A21).
+- **Privacy:** Khay Studios can see account details (name, email, timezone, sign-up date and devices) and the audit of its own actions. Whether the privacy policy should say so is Khay Studios' call (docs/legal/README.md).
