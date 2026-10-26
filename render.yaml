@@ -1,0 +1,83 @@
+# A54: Render Blueprint for the API. Free web service in Frankfurt, built from api/Dockerfile.
+# Every secret is `sync: false`: Render asks for it when the Blueprint is applied and it never
+# lives in this file. docs/DEPLOY.md says what to paste where.
+services:
+  - type: web
+    name: habit-api
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./api/Dockerfile
+    dockerContext: ./api
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
+    # One instance only: the start script migrates, and the tick holds a single lock.
+    numInstances: 1
+    envVars:
+      - key: APP_NAME
+        value: Habit System
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_KEY
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: warning
+      - key: TRUSTED_PROXIES
+        value: "*"
+      # Neon, Frankfurt: the DIRECT connection string with sslmode=require (A54).
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_URL
+        sync: false
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: SESSION_DRIVER
+        value: array
+      # Cloudflare R2, the private bucket habit-files (Western Europe).
+      - key: AVATAR_DISK
+        value: r2
+      - key: EXPORT_DISK
+        value: r2
+      - key: R2_BUCKET
+        value: habit-files
+      - key: R2_ENDPOINT
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      # Brevo SMTP relay, STARTTLS on 587.
+      - key: MAIL_MAILER
+        value: smtp
+      - key: MAIL_SCHEME
+        value: smtp
+      - key: MAIL_HOST
+        value: smtp-relay.brevo.com
+      - key: MAIL_PORT
+        value: "587"
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: MAIL_FROM_ADDRESS
+        sync: false
+      - key: MAIL_FROM_NAME
+        value: Habit System
+      # A48: export manifests are signed; kid:secret pairs, the current kid below.
+      - key: EXPORT_SIGNING_KEYS
+        sync: false
+      - key: EXPORT_SIGNING_KID
+        value: prod-1
+      # A54: the outside timer's secret, and the lowest app build the server accepts.
+      - key: TICK_SECRET
+        sync: false
+      - key: MIN_APP_VERSION
+        value: "1"
