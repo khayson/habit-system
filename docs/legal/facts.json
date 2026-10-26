@@ -4,8 +4,10 @@
   "contact_email": null,
   "postal_address": null,
   "governing_law": null,
-  "hosting_provider": "Render and Neon",
-  "hosting_region": null,
+  "hosting_provider": "Render (servers) and Neon (database)",
+  "hosting_region": "Frankfurt, Germany",
+  "file_storage_provider": "Cloudflare (R2 storage)",
+  "file_storage_region": "Western Europe",
   "minimum_age": 16,
   "log_retention_days": 30,
   "email_provider": "Brevo"

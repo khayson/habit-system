@@ -1,7 +1,7 @@
 ---
 title: Privacy Policy
-version: 2026-10-25
-effective: 2026-10-25
+version: 2026-10-26
+effective: 2026-10-26
 status: draft
 ---
 
@@ -54,7 +54,8 @@ We do not use your data for advertising, we do not sell it, and we make no autom
 
 Only with companies that help us run the service, under contract and only on our instructions:
 
-- our hosting provider, {{hosting_provider}}, which stores your data on our behalf;
+- our hosting providers, {{hosting_provider}}, which run our servers and store your account and habit data on our behalf in {{hosting_region}};
+- {{file_storage_provider}}, which stores your profile photo and your data exports for us in {{file_storage_region}}. These files are private: only our server can read them, and it gives them only to you;
 - {{email_provider}}, which delivers our account emails (such as a password reset code) and so processes your email address and the content of those emails;
 - a breached-password check. When you choose a password, our server asks the Have I Been Pwned service whether it has appeared in a known data breach. Only the first five characters of a one-way hash of the password are sent. Your password and your email address are not;
 - GitHub, which hosts these Terms and Privacy pages. Opening them is like visiting any website: GitHub may log your IP address and the request under its own privacy statement. We set no cookies and run no analytics on these pages.
@@ -63,7 +64,7 @@ We may also disclose data if the law or a valid legal request requires it, or to
 
 ## 6. Where your data lives
 
-Our servers are with {{hosting_provider}} in {{hosting_region}}. If you live elsewhere, your data is transferred to that region to provide the service. A copy of your data is also stored on your own device, where it is protected by your phone's security. We recommend using a screen lock.
+Our servers and database are with {{hosting_provider}} in {{hosting_region}}. Profile photos and data exports are stored with {{file_storage_provider}} in {{file_storage_region}}. If you live elsewhere, your data is transferred to those regions to provide the service. A copy of your data is also stored on your own device, where it is protected by your phone's security. We recommend using a screen lock.
 
 ## 7. How long we keep it
 

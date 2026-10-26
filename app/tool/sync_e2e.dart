@@ -1037,7 +1037,7 @@ Future<void> main(List<String> args) async {
       'password': password,
       'timezone': 'America/Los_Angeles',
       'terms_version': '2026-10-25',
-      'privacy_version': '2026-10-25',
+      'privacy_version': '2026-10-26',
     });
     final e2 = await _Device.signIn(baseUrl, dir, 'E2', '/auth/login', {
       'email': email,
