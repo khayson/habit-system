@@ -149,6 +149,8 @@
   "@updateTitle": {"description": "A54: the server needs a newer app build."},
   "updateBody": "This version can no longer sync. Your habits are safe on this phone and sync again after you update.",
   "updateButton": "Get the update",
+  "close": "Close",
+  "@close": {"description": "A56: the white-circle ✕ that closes a screen."},
   "toastClose": "Close message",
   "@toastClose": {
     "description": "A52: tooltip and label of the close button on a toast."

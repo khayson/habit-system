@@ -28,12 +28,16 @@ extension ToneColors on Tone {
 }
 
 /// Back arrow (when there is somewhere to go back to), an optional trailing chip, then the
-/// screen title and subtitle, as in the design file.
+/// screen title and subtitle. A56: with [onClose], a ✕ in a white circle sits beside the title,
+/// as the mockups close a screen.
 class ScreenHeader extends StatelessWidget {
   final String title;
   final String? subtitle;
   final VoidCallback? onBack;
   final Widget? trailing;
+
+  /// A56: closes the screen (the ✕ beside the title).
+  final VoidCallback? onClose;
 
   /// Used instead of [subtitle] when part of the line is a link (07's "2 archived").
   final Widget? subtitleWidget;
@@ -45,6 +49,7 @@ class ScreenHeader extends StatelessWidget {
     this.onBack,
     this.trailing,
     this.subtitleWidget,
+    this.onClose,
   });
 
   @override
@@ -72,7 +77,18 @@ class ScreenHeader extends StatelessWidget {
             ],
           ),
         const SizedBox(height: HabitSpace.s16),
-        Semantics(header: true, child: Text(title, style: text.headlineMedium)),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Semantics(header: true, child: Text(title, style: text.headlineMedium)),
+            ),
+            if (onClose != null) ...[
+              const SizedBox(width: HabitSpace.s12),
+              CircleCloseButton(onPressed: onClose!),
+            ],
+          ],
+        ),
         if (subtitleWidget != null) ...[
           const SizedBox(height: HabitSpace.s4),
           subtitleWidget!,
@@ -200,29 +216,93 @@ class StatusChip extends StatelessWidget {
   }
 }
 
-/// The 44 px tinted square holding a habit or status icon.
+/// A56: the mockups' pastel tiles behind a habit's icon.
+enum HabitTile {
+  peach,
+  lime,
+  pink;
+
+  /// A habit's tile follows its category, so a list reads in the mockups' mix of colours.
+  static HabitTile forCategory(String? category) => switch (category) {
+    'mindfulness' => HabitTile.lime,
+    'learning' => HabitTile.pink,
+    'other' => HabitTile.lime,
+    _ => HabitTile.peach,
+  };
+
+  Color background(HabitTokens t) => switch (this) {
+    HabitTile.peach => t.tilePeach,
+    HabitTile.lime => t.tileLime,
+    HabitTile.pink => t.tilePink,
+  };
+
+  Color ink(HabitTokens t) => switch (this) {
+    HabitTile.peach => t.tilePeachInk,
+    HabitTile.lime => t.tileLimeInk,
+    HabitTile.pink => t.tilePinkInk,
+  };
+}
+
+/// The 44 px tinted square holding a habit or status icon. A56: a habit's icon sits on its
+/// pastel [tile]; a status icon on its [tone].
 class IconTile extends StatelessWidget {
   final AppIconData icon;
   final Tone tone;
 
-  /// The icon's own colour where the design gives one (04's orange bell on the usual tile).
+  /// A56: the pastel tile for a habit (overrides [tone]).
+  final HabitTile? tile;
+
+  /// The icon's own colour where the design gives one.
   final Color? iconColor;
 
-  const IconTile({super.key, required this.icon, this.tone = Tone.positive, this.iconColor});
+  /// The square's side; 44 by default (the mockups' Today rows).
+  final double size;
+
+  const IconTile({
+    super.key,
+    required this.icon,
+    this.tone = Tone.positive,
+    this.tile,
+    this.iconColor,
+    this.size = HabitSize.minTarget,
+  });
 
   @override
   Widget build(BuildContext context) {
     final tokens = HabitTokens.of(context);
+    final background =
+        tile?.background(tokens) ??
+        (tone == Tone.neutral ? tokens.positiveBg : tone.background(tokens));
+    final ink =
+        iconColor ??
+        tile?.ink(tokens) ??
+        (tone.ink(tokens) == tokens.ink ? tokens.accent : tone.ink(tokens));
     return Container(
-      width: HabitSize.minTarget,
-      height: HabitSize.minTarget,
-      decoration: BoxDecoration(
-        color: tone == Tone.neutral ? tokens.positiveBg : tone.background(tokens),
-        borderRadius: BorderRadius.circular(HabitRadius.r12),
-      ),
-      child: AppIcon(
-        icon,
-        color: iconColor ?? (tone.ink(tokens) == tokens.ink ? tokens.primary : tone.ink(tokens)),
+      width: size,
+      height: size,
+      decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(size * 0.3)),
+      child: AppIcon(icon, size: size * 0.5, color: ink),
+    );
+  }
+}
+
+/// A56: the mockups' close control, a ✕ in a white circle (48 px).
+class CircleCloseButton extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const CircleCloseButton({super.key, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = HabitTokens.of(context);
+    return Material(
+      color: tokens.surface,
+      shape: const CircleBorder(),
+      child: IconButton(
+        onPressed: onPressed,
+        tooltip: AppLocalizations.of(context).close,
+        constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+        icon: AppIcon(AppIcons.close, size: 22, color: tokens.ink),
       ),
     );
   }
@@ -245,12 +325,12 @@ class SurfaceCard extends StatelessWidget {
       label: semanticsLabel,
       child: Material(
         color: tokens.surface,
-        borderRadius: BorderRadius.circular(HabitRadius.r16),
+        borderRadius: BorderRadius.circular(HabitRadius.r20),
         child: onTap == null
             ? content
             : InkWell(
                 onTap: onTap,
-                borderRadius: BorderRadius.circular(HabitRadius.r16),
+                borderRadius: BorderRadius.circular(HabitRadius.r20),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(minHeight: HabitSize.controlLarge),
                   child: content,
@@ -387,9 +467,9 @@ class FieldLabel extends StatelessWidget {
   }
 }
 
-/// The design's segmented control (07 categories, 13 Today / History): a tinted track with the
-/// selected segment raised on the surface colour. Each segment is a 44 px+ target and announces
-/// its selection.
+/// The segmented control (07 categories, 13 Today / History). A56: white pills on a soft track,
+/// the selected one dark, as the mockups mark the chosen day. Each segment is a 44 px+ target and
+/// announces its selection.
 class SegmentedTabs extends StatelessWidget {
   final List<String> labels;
   final int selected;
@@ -409,8 +489,8 @@ class SegmentedTabs extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(HabitSpace.s4),
       decoration: BoxDecoration(
-        color: tokens.border.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(HabitRadius.r16),
+        color: tokens.border.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(HabitSize.control),
       ),
       child: Row(
         children: [
@@ -420,11 +500,11 @@ class SegmentedTabs extends StatelessWidget {
                 button: true,
                 selected: i == selected,
                 child: Material(
-                  color: i == selected ? tokens.surface : Colors.transparent,
-                  borderRadius: BorderRadius.circular(HabitRadius.r12),
+                  color: i == selected ? tokens.selected : Colors.transparent,
+                  shape: const StadiumBorder(),
                   child: InkWell(
                     onTap: () => onSelected(i),
-                    borderRadius: BorderRadius.circular(HabitRadius.r12),
+                    customBorder: const StadiumBorder(),
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(minHeight: HabitSize.control),
                       child: Center(
@@ -434,7 +514,7 @@ class SegmentedTabs extends StatelessWidget {
                             labels[i],
                             textAlign: TextAlign.center,
                             style: text.bodyMedium?.copyWith(
-                              color: i == selected ? tokens.primary : tokens.muted,
+                              color: i == selected ? tokens.onSelected : tokens.ink,
                             ),
                           ),
                         ),

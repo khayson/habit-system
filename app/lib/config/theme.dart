@@ -9,8 +9,9 @@ abstract final class AppTheme {
   static ThemeData get dark => _build(HabitTokens.dark, Brightness.dark);
 
   /// Type ramp (size / line height) from HABIT DESIGN SYSTEM / 3.
-  /// Bundled Inter (variable). Glyphs Inter lacks fall back to the platform font.
-  static const String fontFamily = 'Inter';
+  /// Bundled Urbanist (variable), the redesign's rounded geometric sans (A56). Glyphs it lacks
+  /// fall back to the platform font.
+  static const String fontFamily = 'Urbanist';
 
   static TextTheme textTheme(Color ink) {
     // A variable font needs the weight on its `wght` axis as well as in fontWeight.
@@ -71,15 +72,13 @@ abstract final class AppTheme {
       inversePrimary: t.pressed,
     );
     final text = textTheme(t.ink);
-    final controlShape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(HabitRadius.r12),
-    );
+    // A56: pill buttons, and soft-cornered white fields and cards with no outline.
+    const controlShape = StadiumBorder();
+    final fieldRadius = BorderRadius.circular(HabitRadius.r16);
 
     return ThemeData(
       useMaterial3: true,
       fontFamily: fontFamily,
-      // A51: a snackbar's action (Undo) in the light positive tone, readable on the inverse bar
-      // in both themes (inversePrimary, the pressed green, was 1.65:1 on light).
       brightness: brightness,
       colorScheme: scheme,
       textTheme: text,
@@ -100,15 +99,12 @@ abstract final class AppTheme {
         color: t.surface,
         elevation: 0,
         margin: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(HabitRadius.r16),
-          side: BorderSide(color: t.border),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(HabitRadius.r20)),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: ButtonStyle(
           minimumSize: const WidgetStatePropertyAll(Size(HabitSize.minTarget, HabitSize.control)),
-          shape: WidgetStatePropertyAll(controlShape),
+          shape: const WidgetStatePropertyAll(controlShape),
           textStyle: WidgetStatePropertyAll(text.labelLarge),
           backgroundColor: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.disabled)) return t.disabledBg;
@@ -127,10 +123,11 @@ abstract final class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: ButtonStyle(
           minimumSize: const WidgetStatePropertyAll(Size(HabitSize.minTarget, HabitSize.control)),
-          shape: WidgetStatePropertyAll(controlShape),
+          shape: const WidgetStatePropertyAll(controlShape),
           textStyle: WidgetStatePropertyAll(text.labelLarge),
+          backgroundColor: WidgetStatePropertyAll(t.surface),
           foregroundColor: WidgetStateProperty.resolveWith(
-            (states) => states.contains(WidgetState.disabled) ? t.disabledInk : t.primary,
+            (states) => states.contains(WidgetState.disabled) ? t.disabledInk : t.ink,
           ),
           side: WidgetStateProperty.resolveWith(
             (states) => BorderSide(
@@ -140,25 +137,46 @@ abstract final class AppTheme {
           ),
         ),
       ),
+      // A56: text actions are the brown accent (the orange is never text, 2.7:1 on white).
       textButtonTheme: TextButtonThemeData(
         style: ButtonStyle(
           minimumSize: const WidgetStatePropertyAll(Size(HabitSize.minTarget, HabitSize.minTarget)),
+          textStyle: WidgetStatePropertyAll(text.labelLarge),
           foregroundColor: WidgetStateProperty.resolveWith(
-            (states) => states.contains(WidgetState.disabled) ? t.disabledInk : t.primary,
+            (states) => states.contains(WidgetState.disabled) ? t.disabledInk : t.accent,
           ),
         ),
       ),
-      // Design file 08: a muted track; the selected segment is surface-white with primary text.
+      // A56: the orange switch of the mockups ("Get reminders").
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected) ? t.surface : t.muted,
+        ),
+        trackColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected) ? t.primary : t.border,
+        ),
+        trackOutlineColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected) ? t.primary : t.muted,
+        ),
+      ),
+      checkboxTheme: CheckboxThemeData(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(HabitRadius.r4)),
+        side: BorderSide(color: t.muted, width: 1.5),
+        fillColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected) ? t.selected : Colors.transparent,
+        ),
+        checkColor: WidgetStatePropertyAll(t.onSelected),
+      ),
+      // A56: white options; the selected one is the dark "selected" pill, as the chosen day.
       segmentedButtonTheme: SegmentedButtonThemeData(
         style: ButtonStyle(
           minimumSize: const WidgetStatePropertyAll(Size(HabitSize.minTarget, HabitSize.control)),
           textStyle: WidgetStatePropertyAll(text.titleSmall),
           backgroundColor: WidgetStateProperty.resolveWith(
-            (states) => states.contains(WidgetState.selected) ? t.surface : t.border,
+            (states) => states.contains(WidgetState.selected) ? t.selected : t.surface,
           ),
           foregroundColor: WidgetStateProperty.resolveWith(
-            // Not `muted`: muted on the border colour is about 4.2:1, under the 4.5:1 text rule.
-            (states) => states.contains(WidgetState.selected) ? t.primary : t.ink,
+            (states) => states.contains(WidgetState.selected) ? t.onSelected : t.ink,
           ),
           side: WidgetStateProperty.resolveWith(
             (states) => BorderSide(
@@ -166,29 +184,29 @@ abstract final class AppTheme {
               width: states.contains(WidgetState.focused) ? 2 : 1,
             ),
           ),
-          shape: WidgetStatePropertyAll(controlShape),
+          shape: const WidgetStatePropertyAll(controlShape),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: t.surface,
         constraints: const BoxConstraints(minHeight: HabitSize.control),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(HabitRadius.r12),
-          borderSide: BorderSide(color: t.border),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(HabitRadius.r12),
-          borderSide: BorderSide(color: t.border),
-        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: HabitSpace.s16, vertical: 14),
+        border: OutlineInputBorder(borderRadius: fieldRadius, borderSide: BorderSide.none),
+        enabledBorder: OutlineInputBorder(borderRadius: fieldRadius, borderSide: BorderSide.none),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(HabitRadius.r12),
+          borderRadius: fieldRadius,
           borderSide: BorderSide(color: t.focus, width: 2),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(HabitRadius.r12),
-          borderSide: BorderSide(color: t.errorInk),
+          borderRadius: fieldRadius,
+          borderSide: BorderSide(color: t.errorInk, width: 1.5),
         ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: fieldRadius,
+          borderSide: BorderSide(color: t.errorInk, width: 2),
+        ),
+        hintStyle: text.bodyMedium?.copyWith(color: t.muted),
         labelStyle: text.bodyMedium?.copyWith(color: t.muted),
         errorStyle: text.bodySmall?.copyWith(color: t.errorInk),
         errorMaxLines: 4,

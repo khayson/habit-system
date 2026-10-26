@@ -226,7 +226,7 @@ class _ToastState extends State<_Toast> with SingleTickerProviderStateMixin {
                         TextButton(
                           style: TextButton.styleFrom(
                             minimumSize: const Size(HabitSize.minTarget, HabitSize.minTarget),
-                            foregroundColor: tokens.primary,
+                            foregroundColor: tokens.accent,
                           ),
                           onPressed: () {
                             widget.onAction!();

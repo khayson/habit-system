@@ -373,6 +373,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get updateButton => 'Get the update';
 
   @override
+  String get close => 'Close';
+
+  @override
   String get toastClose => 'Close message';
 
   @override

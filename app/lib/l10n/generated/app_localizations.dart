@@ -758,6 +758,12 @@ abstract class AppLocalizations {
   /// **'Get the update'**
   String get updateButton;
 
+  /// A56: the white-circle ✕ that closes a screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
+
   /// A52: tooltip and label of the close button on a toast.
   ///
   /// In en, this message translates to:

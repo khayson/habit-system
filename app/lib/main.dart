@@ -26,7 +26,7 @@ Future<void> main() async {
   ApiConfig.ensureSafe();
   LegalConfig.ensureSafe();
   AppVersion.ensureSafe();
-  LicenseRegistry.addLicense(_interLicense);
+  LicenseRegistry.addLicense(_fontLicense);
 
   // Phase 3b: each account's files (the profile photo) live next to its database.
   final support = (await getApplicationSupportDirectory()).path;
@@ -73,8 +73,8 @@ Future<void> main() async {
   });
 }
 
-/// Inter is bundled under the SIL Open Font License; its notice ships with the app.
-Stream<LicenseEntry> _interLicense() async* {
-  final text = await rootBundle.loadString('assets/fonts/inter/LICENSE.txt');
-  yield LicenseEntryWithLineBreaks(const ['Inter'], text);
+/// Urbanist is bundled under the SIL Open Font License; its notice ships with the app.
+Stream<LicenseEntry> _fontLicense() async* {
+  final text = await rootBundle.loadString('assets/fonts/urbanist/OFL.txt');
+  yield LicenseEntryWithLineBreaks(const ['Urbanist'], text);
 }

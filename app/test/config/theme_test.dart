@@ -16,23 +16,23 @@ void main() {
   const roleOrder = [
     'canvas', 'background', 'surface', 'ink', 'muted', 'border', 'primary', 'pressed', //
     'onPrimary', 'positiveBg', 'positiveInk', 'infoBg', 'infoInk', 'warningBg', 'warningInk',
-    'errorBg', 'errorInk', 'disabledBg', 'disabledInk', 'progress', 'focus',
+    'errorBg', 'errorInk', 'disabledBg', 'disabledInk', 'progress', 'focus', 'selected',
+    'onSelected', 'accent', 'onAccent', 'tilePeach', 'tilePeachInk', 'tileLime', 'tileLimeInk',
+    'tilePink', 'tilePinkInk', 'chartBrown', 'chartRust', 'chartLime', 'chartPink', 'chartTrack',
   ];
 
-  test('both themes define the 21 design roles in design-file order (A13e)', () {
+  test('both themes define the same roles in the same order (A56)', () {
     expect(HabitTokens.light.roles.keys.toList(), roleOrder);
     expect(HabitTokens.dark.roles.keys.toList(), roleOrder);
   });
 
-  test('spot-checks design values', () {
-    expect(HabitTokens.light.primary, const Color(0xFF2F7B45));
-    expect(HabitTokens.light.canvas, const Color(0xFFF0F4EF));
-    expect(HabitTokens.dark.canvas, const Color(0xFF101A14));
-    expect(HabitTokens.dark.focus, const Color(0xFFA1D7F3));
-  });
-
-  test('applies the A13d infoInk correction', () {
-    expect(HabitTokens.light.infoInk, const Color(0xFF256E82));
+  test("spot-checks the mockups' values (A56)", () {
+    expect(HabitTokens.light.background, const Color(0xFFF7F2EF));
+    expect(HabitTokens.light.primary, const Color(0xFFFF7616));
+    expect(HabitTokens.light.accent, const Color(0xFF682E08));
+    expect(HabitTokens.light.selected, const Color(0xFF292C31));
+    expect(HabitTokens.light.tilePeach, const Color(0xFFFFD5BC));
+    expect(HabitTokens.light.chartLime, const Color(0xFF8AA232));
   });
 
   // Body text 4.5:1 (design file, page 8). Disabled and progress are exempt: disabled is
@@ -46,7 +46,11 @@ void main() {
     ('muted', 'canvas'),
     ('onPrimary', 'primary'),
     ('onPrimary', 'pressed'),
-    ('primary', 'surface'),
+    // A56: text actions and links are the brown accent; the orange is never text.
+    ('accent', 'surface'),
+    ('accent', 'background'),
+    ('onAccent', 'accent'),
+    ('onSelected', 'selected'),
     ('positiveInk', 'positiveBg'),
     ('infoInk', 'infoBg'),
     ('infoInk', 'surface'),
@@ -59,9 +63,9 @@ void main() {
   // because a progress mark is always accompanied by a number or text (A13d, Phase 0 review
   // F11). See HabitTokens.progress.
   const nonTextExceptions = {
-    'light/progress/surface': 2.79,
-    'light/progress/background': 2.67,
-    'light/progress/canvas': 2.52,
+    'light/progress/surface': 2.67,
+    'light/progress/background': 2.43,
+    'light/progress/canvas': 2.21,
   };
 
   for (final (name, tokens) in [('light', HabitTokens.light), ('dark', HabitTokens.dark)]) {
@@ -69,6 +73,13 @@ void main() {
       test('$name: $fg on $bg meets 4.5:1', () {
         final ratio = contrast(tokens.roles[fg]!, tokens.roles[bg]!);
         expect(ratio, greaterThanOrEqualTo(4.5), reason: '${ratio.toStringAsFixed(2)}:1');
+      });
+    }
+    // Pastel tiles: each icon colour reads 3:1 on its tile (non-text).
+    for (final tile in ['tilePeach', 'tileLime', 'tilePink']) {
+      test('$name: ${tile}Ink on $tile meets 3:1 non-text contrast', () {
+        final ratio = contrast(tokens.roles['${tile}Ink']!, tokens.roles[tile]!);
+        expect(ratio, greaterThanOrEqualTo(3), reason: '${ratio.toStringAsFixed(2)}:1');
       });
     }
     // Non-text contrast (WCAG 1.4.11): 3:1 against every surface a mark can sit on.
@@ -114,7 +125,7 @@ void main() {
   test('toast text, action and marks meet contrast on the toast in both themes', () {
     for (final tokens in [HabitTokens.light, HabitTokens.dark]) {
       expect(contrast(tokens.ink, tokens.surface), greaterThanOrEqualTo(4.5));
-      expect(contrast(tokens.primary, tokens.surface), greaterThanOrEqualTo(4.5), reason: 'action');
+      expect(contrast(tokens.accent, tokens.surface), greaterThanOrEqualTo(4.5), reason: 'action');
       expect(contrast(tokens.muted, tokens.surface), greaterThanOrEqualTo(3), reason: 'close mark');
       expect(contrast(tokens.positiveInk, tokens.positiveBg), greaterThanOrEqualTo(3));
       expect(contrast(tokens.infoInk, tokens.infoBg), greaterThanOrEqualTo(3));
@@ -137,22 +148,23 @@ void main() {
     check(t.labelSmall, 11, 16);
   });
 
-  test('uses the bundled Inter font with weights on the wght axis', () {
+  test('uses the bundled Urbanist font with weights on the wght axis (A56)', () {
     final t = AppTheme.textTheme(Colors.black);
-    expect(AppTheme.light.textTheme.bodyLarge!.fontFamily, 'Inter');
+    expect(AppTheme.light.textTheme.bodyLarge!.fontFamily, 'Urbanist');
     expect(t.titleLarge!.fontVariations, [const FontVariation.weight(600)]);
     expect(t.titleSmall!.fontVariations, [const FontVariation.weight(500)]);
     expect(t.bodyLarge!.fontVariations, [const FontVariation.weight(400)]);
   });
 
-  test('Inter files and their OFL licence are bundled', () {
-    for (final f in ['InterVariable.ttf', 'InterVariable-Italic.ttf', 'LICENSE.txt']) {
-      expect(File('assets/fonts/inter/$f').existsSync(), isTrue, reason: f);
+  test('the Urbanist file and its OFL licence are bundled', () {
+    for (final f in ['Urbanist-Variable.ttf', 'OFL.txt']) {
+      expect(File('assets/fonts/urbanist/$f').existsSync(), isTrue, reason: f);
     }
     expect(
-      File('assets/fonts/inter/LICENSE.txt').readAsStringSync(),
+      File('assets/fonts/urbanist/OFL.txt').readAsStringSync(),
       contains('SIL Open Font License'),
     );
+    expect(Directory('assets/fonts/inter').existsSync(), isFalse, reason: 'Inter is replaced');
   });
 
   test('scales: space, radius, control heights', () {

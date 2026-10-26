@@ -1,17 +1,27 @@
 import 'package:flutter/material.dart';
 
-/// The 21 semantic colour roles from the design file (HABIT DESIGN SYSTEM / 2).
-/// Dark values are mapped to the light roles by order (A13e).
+/// The colour roles of the 2026-10-26 redesign (A56): the mockups' palette in light, a warm
+/// derivation in dark (the mockups have none). Text pairs meet 4.5:1 (theme_test).
 @immutable
 class HabitTokens extends ThemeExtension<HabitTokens> {
   final Color canvas;
+
+  /// The warm cream every screen sits on.
   final Color background;
+
+  /// Cards, fields and the round chips.
   final Color surface;
   final Color ink;
+
+  /// The mockups' captions are lighter (#A5A5A5, 2.5:1); darkened to 4.5:1 or more on every light surface (A56).
   final Color muted;
   final Color border;
+
+  /// The orange of buttons, switches and done checks.
   final Color primary;
   final Color pressed;
+
+  /// Near-black, not white: white on the orange is 2.7:1 (A56, Khay Studios).
   final Color onPrimary;
   final Color positiveBg;
   final Color positiveInk;
@@ -24,12 +34,32 @@ class HabitTokens extends ThemeExtension<HabitTokens> {
   final Color disabledBg;
   final Color disabledInk;
 
-  /// Never the only indicator: values are always also printed as text (A13d).
-  /// Light `progress` is below the 3:1 non-text contrast rule (about 2.8:1 on white). That is a
-  /// documented exception, valid only because a number or text always accompanies it; the
-  /// theme test pins the measured ratios.
+  /// Never the only indicator: a number or text always accompanies it (A13d).
   final Color progress;
   final Color focus;
+
+  /// The chosen day or option: a dark circle (A56).
+  final Color selected;
+  final Color onSelected;
+
+  /// Dark brown: small buttons, the + button and text actions (A56); light brown in dark.
+  final Color accent;
+  final Color onAccent;
+
+  /// Pastel tiles behind habit icons; each with its icon colour.
+  final Color tilePeach;
+  final Color tilePeachInk;
+  final Color tileLime;
+  final Color tileLimeInk;
+  final Color tilePink;
+  final Color tilePinkInk;
+
+  /// Insights bars (A56), on a hatched [chartTrack].
+  final Color chartBrown;
+  final Color chartRust;
+  final Color chartLime;
+  final Color chartPink;
+  final Color chartTrack;
 
   const HabitTokens({
     required this.canvas,
@@ -53,58 +83,102 @@ class HabitTokens extends ThemeExtension<HabitTokens> {
     required this.disabledInk,
     required this.progress,
     required this.focus,
+    required this.selected,
+    required this.onSelected,
+    required this.accent,
+    required this.onAccent,
+    required this.tilePeach,
+    required this.tilePeachInk,
+    required this.tileLime,
+    required this.tileLimeInk,
+    required this.tilePink,
+    required this.tilePinkInk,
+    required this.chartBrown,
+    required this.chartRust,
+    required this.chartLime,
+    required this.chartPink,
+    required this.chartTrack,
   });
 
   static const light = HabitTokens(
-    canvas: Color(0xFFF0F4EF),
-    background: Color(0xFFFAFAFA),
+    canvas: Color(0xFFEFE8E3),
+    background: Color(0xFFF7F2EF),
     surface: Color(0xFFFFFFFF),
-    ink: Color(0xFF323B35),
-    muted: Color(0xFF647269),
-    border: Color(0xFFE6EBE7),
-    primary: Color(0xFF2F7B45),
-    pressed: Color(0xFF246538),
-    onPrimary: Color(0xFFFFFFFF),
-    positiveBg: Color(0xFFE7F4E7),
-    positiveInk: Color(0xFF2F7B45),
-    infoBg: Color(0xFFE1F2F6),
-    // A13d: design value #318297 is 3.8:1 on infoBg, below the file's 4.5:1 body-text rule.
-    infoInk: Color(0xFF256E82),
-    warningBg: Color(0xFFFFF3D8),
-    warningInk: Color(0xFFA85816),
-    errorBg: Color(0xFFFFF0EC),
-    errorInk: Color(0xFFA44234),
-    disabledBg: Color(0xFFE6EBE7),
-    disabledInk: Color(0xFF7C8980),
-    progress: Color(0xFF5CAC60),
-    focus: Color(0xFF236899),
+    ink: Color(0xFF1E1F22),
+    muted: Color(0xFF646464),
+    border: Color(0xFFECE4DE),
+    primary: Color(0xFFFF7616),
+    pressed: Color(0xFFE8650F),
+    onPrimary: Color(0xFF1E1F22),
+    positiveBg: Color(0xFFFFD5BC),
+    positiveInk: Color(0xFF682E08),
+    infoBg: Color(0xFFE5EFBA),
+    infoInk: Color(0xFF475610),
+    warningBg: Color(0xFFFFE8C2),
+    warningInk: Color(0xFF87470A),
+    errorBg: Color(0xFFFCE1DE),
+    errorInk: Color(0xFFA3271B),
+    disabledBg: Color(0xFFECE6E1),
+    disabledInk: Color(0xFF6F6862),
+    progress: Color(0xFFFF7616),
+    focus: Color(0xFF292C31),
+    selected: Color(0xFF292C31),
+    onSelected: Color(0xFFFFFFFF),
+    accent: Color(0xFF682E08),
+    onAccent: Color(0xFFFFFFFF),
+    tilePeach: Color(0xFFFFD5BC),
+    tilePeachInk: Color(0xFFB14E0C),
+    tileLime: Color(0xFFE5EFBA),
+    tileLimeInk: Color(0xFF5A7016),
+    tilePink: Color(0xFFFFDEF8),
+    tilePinkInk: Color(0xFFA33A8B),
+    chartBrown: Color(0xFF523632),
+    chartRust: Color(0xFF99470F),
+    chartLime: Color(0xFF8AA232),
+    chartPink: Color(0xFFE586CA),
+    chartTrack: Color(0xFFE4DDD5),
   );
 
   static const dark = HabitTokens(
-    canvas: Color(0xFF101A14),
-    background: Color(0xFF142018),
-    surface: Color(0xFF1D2D22),
-    ink: Color(0xFFEEF6EE),
-    muted: Color(0xFFB8C8BC),
-    border: Color(0xFF53685A),
-    primary: Color(0xFF8BD799),
-    pressed: Color(0xFFADE7B6),
-    onPrimary: Color(0xFF13251A),
-    positiveBg: Color(0xFF25472F),
-    positiveInk: Color(0xFF9FE0AE),
-    infoBg: Color(0xFF203F48),
-    infoInk: Color(0xFF99D9E8),
-    warningBg: Color(0xFF493C22),
-    warningInk: Color(0xFFECCC93),
-    errorBg: Color(0xFF492F2B),
-    errorInk: Color(0xFFF2B9AB),
-    disabledBg: Color(0xFF34463A),
-    disabledInk: Color(0xFF8B9D91),
-    progress: Color(0xFF8BD799),
-    focus: Color(0xFFA1D7F3),
+    canvas: Color(0xFF120D0A),
+    background: Color(0xFF1A1411),
+    surface: Color(0xFF262019),
+    ink: Color(0xFFF7F2EF),
+    muted: Color(0xFFC2B8B0),
+    border: Color(0xFF3E342D),
+    primary: Color(0xFFFF8A3D),
+    pressed: Color(0xFFFFA366),
+    onPrimary: Color(0xFF1E1F22),
+    positiveBg: Color(0xFF4A2A16),
+    positiveInk: Color(0xFFFFD5BC),
+    infoBg: Color(0xFF34401A),
+    infoInk: Color(0xFFE5EFBA),
+    warningBg: Color(0xFF4A3416),
+    warningInk: Color(0xFFFFD9A0),
+    errorBg: Color(0xFF4D2320),
+    errorInk: Color(0xFFFFB4AA),
+    disabledBg: Color(0xFF332B25),
+    disabledInk: Color(0xFF9A9088),
+    progress: Color(0xFFFF8A3D),
+    focus: Color(0xFFF7F2EF),
+    selected: Color(0xFFF7F2EF),
+    onSelected: Color(0xFF1E1F22),
+    accent: Color(0xFFE8A070),
+    onAccent: Color(0xFF1E1F22),
+    tilePeach: Color(0xFF4A2E1E),
+    tilePeachInk: Color(0xFFFFB98A),
+    tileLime: Color(0xFF343F1C),
+    tileLimeInk: Color(0xFFC9DB7E),
+    tilePink: Color(0xFF47253F),
+    tilePinkInk: Color(0xFFF2A8DD),
+    chartBrown: Color(0xFFA88780),
+    chartRust: Color(0xFFD27A3A),
+    chartLime: Color(0xFFA8C24A),
+    chartPink: Color(0xFFE586CA),
+    chartTrack: Color(0xFF3A302A),
   );
 
-  /// All roles by design-file name, in design-file order.
+  /// All roles by name, in this order.
   Map<String, Color> get roles => {
     'canvas': canvas,
     'background': background,
@@ -127,6 +201,21 @@ class HabitTokens extends ThemeExtension<HabitTokens> {
     'disabledInk': disabledInk,
     'progress': progress,
     'focus': focus,
+    'selected': selected,
+    'onSelected': onSelected,
+    'accent': accent,
+    'onAccent': onAccent,
+    'tilePeach': tilePeach,
+    'tilePeachInk': tilePeachInk,
+    'tileLime': tileLime,
+    'tileLimeInk': tileLimeInk,
+    'tilePink': tilePink,
+    'tilePinkInk': tilePinkInk,
+    'chartBrown': chartBrown,
+    'chartRust': chartRust,
+    'chartLime': chartLime,
+    'chartPink': chartPink,
+    'chartTrack': chartTrack,
   };
 
   static HabitTokens of(BuildContext context) => Theme.of(context).extension<HabitTokens>()!;
@@ -154,6 +243,21 @@ class HabitTokens extends ThemeExtension<HabitTokens> {
     Color? disabledInk,
     Color? progress,
     Color? focus,
+    Color? selected,
+    Color? onSelected,
+    Color? accent,
+    Color? onAccent,
+    Color? tilePeach,
+    Color? tilePeachInk,
+    Color? tileLime,
+    Color? tileLimeInk,
+    Color? tilePink,
+    Color? tilePinkInk,
+    Color? chartBrown,
+    Color? chartRust,
+    Color? chartLime,
+    Color? chartPink,
+    Color? chartTrack,
   }) {
     return HabitTokens(
       canvas: canvas ?? this.canvas,
@@ -177,6 +281,21 @@ class HabitTokens extends ThemeExtension<HabitTokens> {
       disabledInk: disabledInk ?? this.disabledInk,
       progress: progress ?? this.progress,
       focus: focus ?? this.focus,
+      selected: selected ?? this.selected,
+      onSelected: onSelected ?? this.onSelected,
+      accent: accent ?? this.accent,
+      onAccent: onAccent ?? this.onAccent,
+      tilePeach: tilePeach ?? this.tilePeach,
+      tilePeachInk: tilePeachInk ?? this.tilePeachInk,
+      tileLime: tileLime ?? this.tileLime,
+      tileLimeInk: tileLimeInk ?? this.tileLimeInk,
+      tilePink: tilePink ?? this.tilePink,
+      tilePinkInk: tilePinkInk ?? this.tilePinkInk,
+      chartBrown: chartBrown ?? this.chartBrown,
+      chartRust: chartRust ?? this.chartRust,
+      chartLime: chartLime ?? this.chartLime,
+      chartPink: chartPink ?? this.chartPink,
+      chartTrack: chartTrack ?? this.chartTrack,
     );
   }
 
@@ -206,6 +325,21 @@ class HabitTokens extends ThemeExtension<HabitTokens> {
       disabledInk: l(disabledInk, other.disabledInk),
       progress: l(progress, other.progress),
       focus: l(focus, other.focus),
+      selected: l(selected, other.selected),
+      onSelected: l(onSelected, other.onSelected),
+      accent: l(accent, other.accent),
+      onAccent: l(onAccent, other.onAccent),
+      tilePeach: l(tilePeach, other.tilePeach),
+      tilePeachInk: l(tilePeachInk, other.tilePeachInk),
+      tileLime: l(tileLime, other.tileLime),
+      tileLimeInk: l(tileLimeInk, other.tileLimeInk),
+      tilePink: l(tilePink, other.tilePink),
+      tilePinkInk: l(tilePinkInk, other.tilePinkInk),
+      chartBrown: l(chartBrown, other.chartBrown),
+      chartRust: l(chartRust, other.chartRust),
+      chartLime: l(chartLime, other.chartLime),
+      chartPink: l(chartPink, other.chartPink),
+      chartTrack: l(chartTrack, other.chartTrack),
     );
   }
 }
@@ -233,6 +367,9 @@ abstract final class HabitRadius {
   static const double r12 = 12;
   static const double r14 = 14;
   static const double r16 = 16;
+
+  /// A56: cards and the round-cornered tiles of the redesign.
+  static const double r20 = 20;
   static const double r24 = 24;
 }
 
