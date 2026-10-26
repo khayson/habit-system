@@ -346,6 +346,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get iconPickerSearch => 'Search icons';
 
   @override
+  String get iconPickerUseCategory => 'Use the category\'s icon';
+
+  @override
   String get iconPickerSuggested => 'Suggested';
 
   @override

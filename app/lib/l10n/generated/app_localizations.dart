@@ -710,6 +710,12 @@ abstract class AppLocalizations {
   /// **'Search icons'**
   String get iconPickerSearch;
 
+  /// No description provided for @iconPickerUseCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the category\'s icon'**
+  String get iconPickerUseCategory;
+
   /// No description provided for @iconPickerSuggested.
   ///
   /// In en, this message translates to:

@@ -115,10 +115,10 @@ class _CreateHabitScreenState extends State<CreateHabitScreen> {
 
   /// A53: the picker; a pick is the person's own and stops the name suggestion.
   Future<void> _pickIcon() async {
-    final picked = await pickHabitIcon(context, current: HabitIconCatalog.keyFor(_icon, _category));
+    final picked = await pickHabitIcon(context, icon: _icon, category: _category);
     if (picked != null && mounted) {
       setState(() {
-        _icon = picked;
+        _icon = picked.icon;
         _iconPicked = true;
       });
     }

@@ -138,6 +138,7 @@
   "@habitIconRow": {"description": "A53: the Icon row on create and edit habit."},
   "iconPickerTitle": "Choose an icon",
   "iconPickerSearch": "Search icons",
+  "iconPickerUseCategory": "Use the category's icon",
   "iconPickerSuggested": "Suggested",
   "iconPickerAll": "All icons",
   "iconPickerNoMatch": "No icon matches \"{query}\".",

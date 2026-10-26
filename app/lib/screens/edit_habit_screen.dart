@@ -94,10 +94,10 @@ class _EditState extends State<_Edit> {
 
   /// A53: the picker.
   Future<void> _pickIcon() async {
-    final picked = await pickHabitIcon(context, current: HabitIconCatalog.keyFor(_icon, _category));
+    final picked = await pickHabitIcon(context, icon: _icon, category: _category);
     if (picked != null && mounted) {
       setState(() {
-        _icon = picked;
+        _icon = picked.icon;
       });
     }
   }

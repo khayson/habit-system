@@ -238,4 +238,87 @@ void main() {
     expect(find.text('Changes saved.'), findsOneWidget);
     await tearDownApp(tester, a);
   });
+  // 6.8 review L2: a way back to the category's icon.
+  testWidgets("create: Use the category's icon sends no icon and stops the suggestion", (
+    tester,
+  ) async {
+    final a = await account(tester);
+    await open(tester, a, '/habits/new');
+    await tester.enterText(find.byType(TextFormField).first, 'Reading');
+    await tester.pump();
+    await openPicker(tester);
+    final useCategory = find.byKey(const ValueKey('icon-use-category'));
+    expect(useCategory, findsOneWidget);
+    expect(find.text("Use the category's icon"), findsOneWidget);
+    expect(tester.getSize(useCategory).height, greaterThanOrEqualTo(48));
+    expect(
+      tester.getSemantics(useCategory),
+      isSemantics(label: "Use the category's icon", isButton: true, isSelected: false),
+    );
+    await tester.tap(useCategory);
+    await tester.pumpAndSettle();
+    expect(rowGlyph('heart-check'), findsOneWidget, reason: "health's default");
+    await tester.enterText(find.byType(TextFormField).first, 'Drink water');
+    await tester.pump();
+    expect(
+      rowGlyph('heart-check'),
+      findsOneWidget,
+      reason: 'a choice, so the name no longer changes it',
+    );
+    await tester.scrollUntilVisible(
+      find.text('Create habit'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('Create habit'));
+    await settle(tester);
+    expect((await sent(tester, a, 'habit.create')).single['icon'], isNull);
+    await tearDownApp(tester, a);
+  });
+
+  testWidgets("edit: back to the category's icon sends icon null; it shows as selected", (
+    tester,
+  ) async {
+    final a = await account(tester, offline: false);
+    final id = (await tester.runAsync(
+      () => a.writer.createHabitUnchecked(
+        name: 'Reading',
+        type: 'binary',
+        target: 1,
+        category: 'learning',
+        icon: 'book-open-01',
+        startLocalDate: LocalDate.parse('2026-05-01'),
+        backdate: true,
+      ),
+    ))!;
+    await syncNow(tester, a);
+    server.failNextSync.addAll(List.filled(50, const SyncTransportException(SyncFailure.network)));
+    await open(tester, a, '/habits/$id/edit');
+    await openPicker(tester);
+    await tester.tap(find.byKey(const ValueKey('icon-use-category')));
+    await tester.pumpAndSettle();
+    expect(rowGlyph('book-02'), findsOneWidget, reason: "learning's default");
+    await openPicker(tester);
+    expect(
+      tester.getSemantics(find.byKey(const ValueKey('icon-use-category'))),
+      isSemantics(isSelected: true),
+    );
+    expect(
+      find.descendant(of: cell('book-02'), matching: byAppIcon(AppIcons.check)),
+      findsNothing,
+      reason: "the default is chosen as the category's, not as book-02",
+    );
+    await tester.tapAt(const Offset(20, 20));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('Save changes'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('Save changes'));
+    await settle(tester);
+    final update = (await sent(tester, a, 'habit.update')).single;
+    expect(update.containsKey('icon') && update['icon'] == null, isTrue);
+    await tearDownApp(tester, a);
+  });
 }
