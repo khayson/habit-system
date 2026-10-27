@@ -657,7 +657,7 @@ PHP,
         'name' => 'A59: the daily cap is ignored',
         'file' => 'app/Application/Admin/EmailCampaigns.php',
         'search' => "max(0, (int) config('admin.email_daily_limit') - \$sentToday)",
-        'replace' => "PHP_INT_MAX",
+        'replace' => 'PHP_INT_MAX',
         'tests' => 'tests/Feature/AdminPageTest.php',
     ],
     [
