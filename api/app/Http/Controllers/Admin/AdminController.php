@@ -144,7 +144,7 @@ final readonly class AdminController
         } catch (InvalidArgumentException $e) {
             return back()->withErrors(['email' => $e->getMessage()])->withInput();
         }
-        $sample = $campaigns->recipients($audience)->orderBy('created_at')->first(['name']);
+        $sample = $campaigns->recipients($audience)->orderBy('created_at')->orderBy('id')->first(['name']);
         $name = $sample === null ? 'Ama Mensah' : (string) $sample->name;
 
         return view('admin.email-new', ['preview' => [
