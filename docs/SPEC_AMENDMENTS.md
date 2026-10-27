@@ -682,3 +682,35 @@ This replaces A55's "no admin page". Khay Studios asked for one page to check th
 - **Audit:** every admin action and sign-in appends a row to `admin_actions` (action, subject id, small details, time). The dashboard shows the last 20. The rows hold no IP address and no secret.
 - **App:** `account_suspended` at sign-in shows a calm line (the account is paused; contact the Habit team). Old apps show it by its 403 status class (A21).
 - **Privacy:** Khay Studios can see account details (name, email, timezone, sign-up date and devices) and the audit of its own actions. Whether the privacy policy should say so is Khay Studios' call (docs/legal/README.md).
+
+### A59 — Service announcement emails from the admin page · ADOPT (Khay Studios, 2026-10-27)
+Khay Studios asked to send emails from the admin page, "advanced, smart and dynamic", and chose **service announcements only**: news about the service (updates, changes to the terms, planned downtime, security). This keeps the privacy policy's "no marketing emails" claim true.
+
+- **Writing:**
+  - a subject (up to 120 characters) and a plain-text message (up to 5,000);
+  - personal fields `{name}` and `{first_name}`;
+  - blank lines make paragraphs, and plain `https://` links stay as text. No images, no tracking pixels, no link rewriting.
+- **Audiences:**
+  - everyone;
+  - accounts active in the last N days (a sync write);
+  - inactive for N days or more;
+  - signed up in the last N days;
+  - chosen emails.
+
+  N runs from 1 to 365, in rolling 24-hour windows (R4). Never included: accounts pending deletion, suspended accounts, and anyone who has stopped these emails.
+- **Before sending:** a preview shows the email as one recipient sees it, plus the number it will reach. "Send me a test" goes to `ADMIN_EMAIL`.
+- **Sending:**
+  - now or at a scheduled time;
+  - the timer sends in batches, at most `EMAIL_BATCH` (40) per tick;
+  - a daily cap, `EMAIL_DAILY_LIMIT` (250 per rolling 24 hours), leaves room under Brevo's free 300 for reset codes. A campaign that hits the cap carries on the next day by itself.
+  - A draft or scheduled campaign can be cancelled, and the rest of a sending one can be stopped.
+- **Records:**
+  - `email_campaigns`: subject, message, audience, status (`draft`, `scheduled`, `sending`, `sent`, `cancelled`), times and counts.
+  - `email_deliveries`: one row per recipient, with status (`queued`, `sent`, `failed`, `skipped`), an error class only, and a time. `UNIQUE(campaign_id, user_id)`, so no one gets a campaign twice.
+  - Delivery rows belong to the account and are purged with it.
+  - Every campaign action is audited (A58).
+- **Stopping them:** every announcement ends with why it was sent and a one-click "stop these emails" link.
+  - The link is a signed URL that never expires; opening it sets `users.service_emails_stopped_at`.
+  - The page that opens confirms in plain words and offers "turn them back on".
+  - Reset codes are unaffected: they are not announcements.
+- **Privacy:** the only new data is the time someone stopped these emails, plus the delivery rows. Whether the policy should mention announcement emails and their opt-out is Khay Studios' call (docs/legal/README.md).
