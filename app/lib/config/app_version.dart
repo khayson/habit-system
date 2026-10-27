@@ -3,11 +3,11 @@ import 'package:flutter/foundation.dart';
 /// This build's version, as in pubspec.yaml (a test keeps the two equal). Stored per account
 /// database so an update can replay items an older build could not decode (G5).
 abstract final class AppVersion {
-  static const String current = '1.1.0+2';
+  static const String current = '1.2.0+3';
 
   /// A54: the build number (the `+N` of [current]); the server's min_app_version is compared
   /// with it.
-  static const int build = 2;
+  static const int build = 3;
 
   /// The download page (A54); `--dart-define=DOWNLOAD_PAGE_URL=...` for a release build.
   static const String downloadPageUrl = String.fromEnvironment(

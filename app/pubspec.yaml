@@ -1,7 +1,7 @@
 name: habit
 description: "Habit System mobile client (offline-first)."
 publish_to: 'none'
-version: 1.1.0+2
+version: 1.2.0+3
 
 environment:
   sdk: ^3.13.4
