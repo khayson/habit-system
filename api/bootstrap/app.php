@@ -29,8 +29,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(StrictTransportSecurity::class);
         // API only: never redirect guests to a login page.
         $middleware->redirectGuestsTo(fn () => null);
-        // A58: the web group serves only /admin: its own cookie session and strict headers.
+        // A58: the web group serves /admin and the A59 email links: a cookie session, strict headers.
         $middleware->web(prepend: [UseAdminSession::class], append: [AdminSecurityHeaders::class]);
+        // A59: mail apps' one-click unsubscribe POSTs carry no CSRF token; the URL is signed.
+        $middleware->preventRequestForgery(except: ['emails/stop/*']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->dontFlash(['password', 'password_confirmation', 'current_password', 'token', 'reset_token', 'push_token']);
@@ -43,5 +45,5 @@ return Application::configure(basePath: dirname(__DIR__))
         });
         // A58: the admin pages keep Laravel's own HTML handling (redirect back with errors);
         // everything else is the API's JSON envelope.
-        $exceptions->render(fn (Throwable $e, Request $request) => $request->is('admin', 'admin/*') ? null : (new ApiExceptionRenderer)($e));
+        $exceptions->render(fn (Throwable $e, Request $request) => $request->is('admin', 'admin/*', 'emails/*') ? null : (new ApiExceptionRenderer)($e));
     })->create();

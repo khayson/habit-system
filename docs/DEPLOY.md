@@ -334,6 +334,19 @@ Keep the three values out of the repository, chats and screenshots. Until all th
 - **Lost phone:** run step 1 again to get a new secret, update Render, and set up the authenticator again.
 - **Suspending someone:** it signs them out. When they try to sign in, the app says the account is paused. **Resume** undoes it.
 
+## 9e. Announcement emails (A59)
+
+On the admin page, open **Emails**, then **New announcement**. These emails are for service news only: updates, changes to the terms, planned downtime and security. Never send marketing with it.
+
+1. Write the subject and message. `{name}` and `{first_name}` fill in each person's name.
+2. Choose who it is for, then choose **Preview**. You see the email as one person sees it, and how many people it reaches now.
+3. Choose **Send me a test**. Check it in your own inbox.
+4. Choose **Send now** or **Schedule**.
+
+The timer sends a batch each tick: 40 by default (`EMAIL_BATCH`). It sends no more than 250 in any 24 hours (`EMAIL_DAILY_LIMIT`), which leaves room under Brevo's free 300 for reset codes. A big send carries on the next day by itself.
+
+The campaign page shows each recipient's status. Every email ends with a "Stop these emails" link, which mail apps also show as an Unsubscribe button. Anyone who uses it is left out of later announcements.
+
 ## 10. When something fails
 
 **Where to look first:** Render, then **habit-api**, then **Logs**. The server logs warnings and errors only, never passwords, tokens or emails.

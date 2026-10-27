@@ -30,4 +30,9 @@ return [
 
     // Sign-in tries per IP per minute.
     'login_per_minute' => 5,
+
+    // A59: announcement emails sent per tick, and per rolling 24 hours (Brevo's free plan sends
+    // 300 a day; the rest is left for reset codes).
+    'email_batch' => (int) env('EMAIL_BATCH', 40),
+    'email_daily_limit' => (int) env('EMAIL_DAILY_LIMIT', 250),
 ];

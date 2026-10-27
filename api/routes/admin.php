@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\EmailPreferenceController;
 use App\Http\Middleware\Admin\EnsureAdmin;
 use Illuminate\Support\Facades\Route;
 
@@ -31,5 +32,22 @@ Route::prefix('admin')->group(function () {
         Route::get('/notices', [AdminController::class, 'notices'])->name('admin.notices');
         Route::post('/notices', [AdminController::class, 'publishNotice']);
         Route::post('/notices/{id}/retire', [AdminController::class, 'retireNotice']);
+        Route::get('/emails', [AdminController::class, 'emails'])->name('admin.emails');
+        Route::get('/emails/new', [AdminController::class, 'newEmail']);
+        Route::post('/emails/preview', [AdminController::class, 'previewEmail']);
+        Route::post('/emails', [AdminController::class, 'storeEmail']);
+        Route::get('/emails/{id}', [AdminController::class, 'showEmail']);
+        Route::post('/emails/{id}/send', [AdminController::class, 'sendDraft']);
+        Route::post('/emails/{id}/cancel', [AdminController::class, 'cancelEmail']);
     });
+});
+
+/*
+ * A59: the "stop these emails" link in every announcement, and "turn them back on". Signed URLs
+ * (no sign-in); the POST is the one-click unsubscribe mail apps send (RFC 8058).
+ */
+Route::middleware('signed')->group(function () {
+    Route::get('/emails/stop/{user}', [EmailPreferenceController::class, 'stop'])->name('emails.stop');
+    Route::post('/emails/stop/{user}', [EmailPreferenceController::class, 'stop']);
+    Route::get('/emails/start/{user}', [EmailPreferenceController::class, 'start'])->name('emails.start');
 });

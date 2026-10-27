@@ -4,6 +4,7 @@
     ['/admin/health', 'Health & jobs', 'admin/health*', 'M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z'],
     ['/admin/accounts', 'Accounts', 'admin/accounts*', 'M16 19v-1a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v1M10 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM20 19v-1a4 4 0 0 0-3-3.9M15 4.1a3 3 0 0 1 0 5.8'],
     ['/admin/notices', 'Notices', 'admin/notices*', 'M4 5h16v11H8l-4 4V5z'],
+    ['/admin/emails', 'Emails', 'admin/emails*', 'M3 6h18v12H3zM3 7l9 6 9-6'],
     ['/admin/activity', 'Activity log', 'admin/activity*', 'M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01'],
   ];
 @endphp

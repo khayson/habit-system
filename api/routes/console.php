@@ -17,3 +17,6 @@ Schedule::command('exports:expire')->everyFifteenMinutes()->withoutOverlapping(1
 
 // A49: any deletion whose purge is due and not completed (the job normally runs at once).
 Schedule::command('accounts:purge')->everyFiveMinutes()->withoutOverlapping(10);
+
+// A59: announcement emails, one batch per tick under the daily cap.
+Schedule::command('emails:send-due')->everyMinute()->withoutOverlapping(10);

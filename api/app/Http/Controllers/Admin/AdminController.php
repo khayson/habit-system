@@ -5,15 +5,18 @@ namespace App\Http\Controllers\Admin;
 use App\Application\Admin\AdminAuth;
 use App\Application\Admin\AdminConsole;
 use App\Application\Admin\AdminStats;
+use App\Application\Admin\EmailCampaigns;
 use App\Application\Notices\NoticeBoard;
 use App\Application\Ops\OpsStatus;
 use App\Application\Ops\Ticker;
 use App\Domain\Clock;
 use App\Support\UtcTime;
+use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use InvalidArgumentException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -112,6 +115,123 @@ final readonly class AdminController
         $this->console->audit('server.forget_failed_jobs', null, ['count' => $count]);
 
         return back()->with('status', "Cleared {$count} failed jobs.");
+    }
+
+    public function emails(EmailCampaigns $campaigns): View
+    {
+        $sentToday = DB::table('email_deliveries')->where('status', 'sent')
+            ->where('sent_at', '>=', UtcTime::format($this->clock->now()->subDay()))->count();
+
+        return view('admin.emails', [
+            'campaigns' => $campaigns->all(),
+            'sentToday' => $sentToday,
+            'dailyLimit' => (int) config('admin.email_daily_limit'),
+            'stopped' => DB::table('users')->whereNotNull('service_emails_stopped_at')->count(),
+        ]);
+    }
+
+    public function newEmail(): View
+    {
+        return view('admin.email-new', ['preview' => null]);
+    }
+
+    /** The form again with a preview: the email as one recipient sees it, and the reach. */
+    public function previewEmail(Request $request, EmailCampaigns $campaigns): View|RedirectResponse
+    {
+        $request->flash();
+        try {
+            $audience = $this->audienceFrom($request, $campaigns);
+        } catch (InvalidArgumentException $e) {
+            return back()->withErrors(['email' => $e->getMessage()])->withInput();
+        }
+        $sample = $campaigns->recipients($audience)->orderBy('created_at')->first(['name']);
+        $name = $sample === null ? 'Ama Mensah' : (string) $sample->name;
+
+        return view('admin.email-new', ['preview' => [
+            'reach' => $campaigns->count($audience),
+            'audience' => EmailCampaigns::describe($audience),
+            'name' => $name,
+            'subject' => EmailCampaigns::personalise((string) $request->input('subject', ''), $name),
+            'paragraphs' => array_values(array_filter(array_map('trim', preg_split("/\n\s*\n/", EmailCampaigns::personalise(
+                str_replace("\r\n", "\n", (string) $request->input('body', '')), $name)) ?: []))),
+        ]]);
+    }
+
+    public function storeEmail(Request $request, EmailCampaigns $campaigns): RedirectResponse
+    {
+        $action = (string) $request->input('action', 'draft');
+        try {
+            if ($action === 'test') {
+                $campaigns->sendTest((string) $request->input('subject', ''), (string) $request->input('body', ''));
+                $this->console->audit('email.test');
+
+                return back()->withInput()->with('status', 'A test is on its way to '.config('admin.email').'.');
+            }
+            $audience = $this->audienceFrom($request, $campaigns);
+            $sendAt = match ($action) {
+                'now' => $this->clock->now(),
+                'schedule' => $this->whenFromForm((string) $request->input('send_at', '')),
+                default => null,
+            };
+            $id = $campaigns->save((string) $request->input('subject', ''), (string) $request->input('body', ''), $audience, $sendAt);
+        } catch (InvalidArgumentException $e) {
+            return back()->withErrors(['email' => $e->getMessage()])->withInput();
+        }
+        $this->console->audit('email.'.($sendAt === null ? 'draft' : 'schedule'), $id, ['reach' => $campaigns->count($audience)]);
+
+        return redirect("/admin/emails/{$id}")->with('status', match ($action) {
+            'now' => 'Sending starts on the next tick.',
+            'schedule' => 'Scheduled.',
+            default => 'Saved as a draft.',
+        });
+    }
+
+    public function showEmail(EmailCampaigns $campaigns, string $id): View
+    {
+        $data = $campaigns->show($id) ?? throw new NotFoundHttpException;
+
+        return view('admin.email', $data);
+    }
+
+    public function sendDraft(EmailCampaigns $campaigns, string $id): RedirectResponse
+    {
+        if (! $campaigns->sendDraftNow($id)) {
+            return back()->with('status', 'Only a draft can be sent.');
+        }
+        $this->console->audit('email.schedule', $id);
+
+        return back()->with('status', 'Sending starts on the next tick.');
+    }
+
+    public function cancelEmail(EmailCampaigns $campaigns, string $id): RedirectResponse
+    {
+        $ok = $campaigns->cancel($id);
+        if ($ok) {
+            $this->console->audit('email.cancel', $id);
+        }
+
+        return back()->with('status', $ok ? 'Stopped. Nothing more is sent.' : 'That campaign had already finished.');
+    }
+
+    /** @return array{type: string, days?: int, emails?: list<string>} */
+    private function audienceFrom(Request $request, EmailCampaigns $campaigns): array
+    {
+        return $campaigns->audience(
+            (string) $request->input('audience', 'everyone'),
+            (string) $request->input('days', ''),
+            (string) $request->input('emails', ''),
+        );
+    }
+
+    private function whenFromForm(string $value): CarbonImmutable
+    {
+        $iso = $this->utcFromForm($value);
+        $at = CarbonImmutable::parse($iso);
+        if ($at <= $this->clock->now()) {
+            throw new InvalidArgumentException('Choose a time in the future, or Send now.');
+        }
+
+        return $at;
     }
 
     public function activity(Request $request): View

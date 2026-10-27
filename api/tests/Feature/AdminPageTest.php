@@ -1,12 +1,17 @@
 <?php
 
+use App\Application\Admin\EmailCampaigns;
 use App\Application\Admin\Totp;
 use App\Jobs\PurgeAccountJob;
+use App\Mail\AnnouncementMail;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Tests\Support\M;
 
@@ -310,4 +315,109 @@ it('retries and removes one failed job, by type only', function () {
     $this->post('/admin/health/failed/01900000-0000-7000-8000-0000000000f1/forget')->assertRedirect();
     expect(DB::table('failed_jobs')->count())->toBe(0)
         ->and(DB::table('admin_actions')->pluck('action')->all())->toContain('server.forget_job');
+});
+
+/** Three people: Maya (active), Kofi (no activity), Ama (stopped announcements); Esi suspended. */
+function emailPeople(object $test): array
+{
+    $test->freezeClock('2026-05-28T17:22:00Z');
+    $people = [];
+    foreach (['Maya Chen' => 'maya', 'Kofi Boateng' => 'kofi', 'Ama Owusu' => 'ama', 'Esi Mensah' => 'esi'] as $name => $key) {
+        $people[$key] = $test->registerUser($name, "{$key}@example.test");
+    }
+    $test->sync($people['maya']['token'], [M::habitCreate((string) Str::uuid7())])->assertJsonPath('data.acks.0.status', 'accepted');
+    DB::table('users')->where('id', $people['ama']['id'])->update(['service_emails_stopped_at' => '2026-05-28 17:00:00+00']);
+    DB::table('users')->where('id', $people['esi']['id'])->update(['suspended_at' => '2026-05-28 17:00:00+00']);
+
+    return $people;
+}
+
+it('previews with the reach and a real name, and sends a test only to the admin', function () {
+    Mail::fake();
+    $secret = configureAdmin();
+    emailPeople($this);
+    adminSignIn($this, $secret, '2026-05-28T18:00:00Z');
+
+    $this->post('/admin/emails/preview', ['subject' => 'Hello {first_name}', 'body' => "Hi {name},\n\nNews.", 'audience' => 'everyone'])
+        ->assertOk()->assertSeeText('2 people now')->assertSee('Hello Maya')->assertSee('Hi Maya Chen,');
+    $this->post('/admin/emails', ['action' => 'test', 'subject' => 'Hello {first_name}', 'body' => 'Hi {name}'])->assertRedirect();
+
+    Mail::assertSent(AnnouncementMail::class, fn (AnnouncementMail $m) => $m->hasTo(ADMIN_EMAIL) && $m->userId === null);
+    Mail::assertSentCount(1);
+});
+
+it('sends to the audience only, personalised, with a stop link, and never twice', function () {
+    Mail::fake();
+    $secret = configureAdmin();
+    emailPeople($this);
+    adminSignIn($this, $secret, '2026-05-28T18:00:00Z');
+
+    $this->post('/admin/emails', ['action' => 'now', 'subject' => 'Update for {first_name}', 'body' => 'Hi {name}', 'audience' => 'everyone'])
+        ->assertRedirect();
+    $campaigns = app(EmailCampaigns::class);
+    expect($campaigns->sendDue())->toBe(2)->and($campaigns->sendDue())->toBe(0);
+
+    Mail::assertSent(AnnouncementMail::class, fn (AnnouncementMail $m) => $m->hasTo('maya@example.test')
+        && $m->subjectLine === 'Update for Maya' && $m->text === 'Hi Maya Chen'
+        && str_contains((string) $m->headers()->text['List-Unsubscribe'], '/emails/stop/'));
+    Mail::assertSent(AnnouncementMail::class, fn (AnnouncementMail $m) => $m->hasTo('kofi@example.test'));
+    Mail::assertNotSent(AnnouncementMail::class, fn (AnnouncementMail $m) => $m->hasTo('ama@example.test') || $m->hasTo('esi@example.test'));
+    expect(DB::table('email_campaigns')->value('status'))->toBe('sent');
+});
+
+it('targets active, inactive and new accounts over rolling days', function () {
+    emailPeople($this);
+    $this->freezeClock('2026-05-28T18:00:00Z');
+    $c = app(EmailCampaigns::class);
+    $emails = fn (array $a) => $c->recipients($a)->orderBy('email')->pluck('email')->all();
+
+    expect($emails(['type' => 'active', 'days' => 7]))->toBe(['maya@example.test'])
+        ->and($emails(['type' => 'new', 'days' => 1]))->toBe(['kofi@example.test', 'maya@example.test']);
+    $this->freezeClock('2026-06-20T18:00:00Z');
+    expect($emails(['type' => 'inactive', 'days' => 14]))->toBe(['kofi@example.test', 'maya@example.test'])
+        ->and($emails(['type' => 'active', 'days' => 14]))->toBe([]);
+});
+
+it('keeps under the daily cap and carries on the next day by itself', function () {
+    Mail::fake();
+    config(['admin.email_daily_limit' => 1]);
+    emailPeople($this);
+    $this->freezeClock('2026-05-28T18:00:00Z');
+    $c = app(EmailCampaigns::class);
+    $c->save('Hi', 'Body', ['type' => 'everyone'], CarbonImmutable::parse('2026-05-28T18:00:00Z'));
+
+    expect($c->sendDue())->toBe(1)->and($c->sendDue())->toBe(0)
+        ->and(DB::table('email_campaigns')->value('status'))->toBe('sending');
+    $this->freezeClock('2026-05-29T18:01:00Z');
+    expect($c->sendDue())->toBe(1)->and(DB::table('email_campaigns')->value('status'))->toBe('sent');
+});
+
+it('a failed send records the error class only; stopping skips the rest', function () {
+    emailPeople($this);
+    $this->freezeClock('2026-05-28T18:00:00Z');
+    $c = app(EmailCampaigns::class);
+    Mail::shouldReceive('to')->andThrow(new RuntimeException('smtp said no to maya@example.test'));
+    $id = $c->save('Hi', 'Body', ['type' => 'everyone'], CarbonImmutable::parse('2026-05-28T18:00:00Z'));
+    config(['admin.email_batch' => 1]);
+    $c->sendDue();
+
+    expect(DB::table('email_deliveries')->where('status', 'failed')->value('error'))->toBe('RuntimeException')
+        ->and($c->cancel($id))->toBeTrue()
+        ->and(DB::table('email_deliveries')->where('status', 'skipped')->count())->toBe(1)
+        ->and(DB::table('email_campaigns')->value('status'))->toBe('cancelled');
+});
+
+it('the stop link works signed (GET and one-click POST), never unsigned, and can be undone', function () {
+    $people = emailPeople($this);
+    $id = $people['maya']['id'];
+    $this->get("/emails/stop/{$id}")->assertForbidden();
+
+    $this->get(URL::signedRoute('emails.stop', ['user' => $id]))->assertOk()->assertSee("You won't get announcement emails", false);
+    expect(DB::table('users')->where('id', $id)->value('service_emails_stopped_at'))->not->toBeNull();
+
+    $this->get(URL::signedRoute('emails.start', ['user' => $id]))->assertOk()->assertSee('Announcement emails are on');
+    expect(DB::table('users')->where('id', $id)->value('service_emails_stopped_at'))->toBeNull();
+
+    $this->post(URL::signedRoute('emails.stop', ['user' => $id]), ['List-Unsubscribe' => 'One-Click'])->assertOk();
+    expect(DB::table('users')->where('id', $id)->value('service_emails_stopped_at'))->not->toBeNull();
 });
