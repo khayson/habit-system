@@ -1,7 +1,7 @@
 {
   "releases_url": "https://github.com/khayson/habit-system/releases",
   "apks": [
-    { "abi": "arm64-v8a", "file": "app-arm64-v8a-release.apk", "sha256": "b29063c87e98c3c50a2798a371ddb7f195dd8727d911b66475f39ba98161cbc2" },
-    { "abi": "armeabi-v7a", "file": "app-armeabi-v7a-release.apk", "sha256": "473d12db1c8860b3c3133f10f8a4b997cc8dbcd2323e94c940b0683224cf197d" }
+    { "abi": "arm64-v8a", "file": "app-arm64-v8a-release.apk", "sha256": "df8de1e79a974568249e39ce692546b5e3d5ed16e1c288af86346c6e6188f51a" },
+    { "abi": "armeabi-v7a", "file": "app-armeabi-v7a-release.apk", "sha256": "ba17e43cd55d9123141ac4493d726631ac35fdea8d3217dc817f35fdef62c862" }
   ]
 }
