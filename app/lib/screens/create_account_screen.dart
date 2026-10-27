@@ -11,6 +11,7 @@ import '../core/url_opener.dart';
 import '../core/validation.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../providers/session_provider.dart';
+import '../widgets/brand_mark.dart';
 import '../widgets/error_text.dart';
 import '../widgets/habit_ui.dart';
 import '../widgets/legal_links.dart';
@@ -95,6 +96,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
             child: ListView(
               padding: const EdgeInsets.all(HabitSpace.margin),
               children: [
+                BrandHeader(name: l10n.appTitle),
                 ScreenHeader(
                   title: l10n.createAccountTitle,
                   subtitle: l10n.createAccountSubtitle,
@@ -169,12 +171,10 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                   const SizedBox(height: HabitSpace.s16),
                 ],
                 PrimaryButton(label: l10n.createAccountButton, loading: _busy, onPressed: _submit),
-                const SizedBox(height: HabitSpace.s16),
-                Center(
-                  child: TextButton(
-                    onPressed: () => context.go(Routes.signIn),
-                    child: Text(l10n.createAccountSignIn, textAlign: TextAlign.center),
-                  ),
+                const SizedBox(height: HabitSpace.s12),
+                OutlinedButton(
+                  onPressed: () => context.go(Routes.signIn),
+                  child: Text(l10n.createAccountSignIn, textAlign: TextAlign.center),
                 ),
               ],
             ),

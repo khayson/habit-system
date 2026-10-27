@@ -117,7 +117,8 @@ void main() {
     await pumpScreen(tester, textScale: 2);
     expect(tester.takeException(), isNull);
 
-    await tester.ensureVisible(link('Terms'));
+    // A56: the brand header sits above the form, so the links start below the fold.
+    await tester.scrollUntilVisible(link('Terms'), 200, scrollable: find.byType(Scrollable).first);
     await settle(tester);
     expect(tester.getSize(link('Terms')).height, greaterThanOrEqualTo(44));
     await tester.tap(link('Terms'));

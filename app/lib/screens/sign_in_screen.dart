@@ -8,6 +8,7 @@ import '../core/exceptions/app_exception.dart';
 import '../core/validation.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../providers/session_provider.dart';
+import '../widgets/brand_mark.dart';
 import '../widgets/error_text.dart';
 import '../widgets/habit_ui.dart';
 import 'widgets/password_field.dart';
@@ -79,6 +80,8 @@ class _SignInScreenState extends State<SignInScreen> {
             child: ListView(
               padding: const EdgeInsets.all(HabitSpace.margin),
               children: [
+                // A56: the brand on top, then the welcome, as the redesign opens the app.
+                BrandHeader(name: l10n.appTitle),
                 ScreenHeader(title: l10n.signInTitle, subtitle: l10n.signInSubtitle),
                 // A49: after this device deleted the account; A50: after a password reset.
                 if (context.watch<SessionProvider>().signInNotice case final notice?) ...[
@@ -134,15 +137,14 @@ class _SignInScreenState extends State<SignInScreen> {
                   const SizedBox(height: HabitSpace.s16),
                 ],
                 PrimaryButton(label: l10n.signInButton, loading: _busy, onPressed: _submit),
+                const SizedBox(height: HabitSpace.s12),
+                // A56: the other way in is a full-width secondary pill, not a small link.
+                OutlinedButton(
+                  onPressed: () => context.go(Routes.createAccount),
+                  child: Text(l10n.signInCreateAccount, textAlign: TextAlign.center),
+                ),
                 const SizedBox(height: HabitSpace.s32),
                 InfoCard(title: l10n.signInPrivateTitle, body: l10n.signInPrivateBody),
-                const SizedBox(height: HabitSpace.s32),
-                Center(
-                  child: TextButton(
-                    onPressed: () => context.go(Routes.createAccount),
-                    child: Text(l10n.signInCreateAccount, textAlign: TextAlign.center),
-                  ),
-                ),
               ],
             ),
           ),
