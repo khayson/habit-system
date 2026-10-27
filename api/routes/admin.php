@@ -17,6 +17,11 @@ Route::prefix('admin')->group(function () {
         Route::post('/logout', [AdminController::class, 'logout']);
         Route::post('/server/tick', [AdminController::class, 'runTick']);
         Route::post('/server/retry-jobs', [AdminController::class, 'retryJobs']);
+        Route::get('/health', [AdminController::class, 'health'])->name('admin.health');
+        Route::post('/health/failed/{uuid}/retry', [AdminController::class, 'retryJob']);
+        Route::post('/health/failed/{uuid}/forget', [AdminController::class, 'forgetJob']);
+        Route::post('/health/failed/forget-all', [AdminController::class, 'forgetAllJobs']);
+        Route::get('/activity', [AdminController::class, 'activity'])->name('admin.activity');
         Route::get('/accounts', [AdminController::class, 'accounts'])->name('admin.accounts');
         Route::get('/accounts/{id}', [AdminController::class, 'account'])->name('admin.account');
         Route::post('/accounts/{id}/sign-out', [AdminController::class, 'signOut']);

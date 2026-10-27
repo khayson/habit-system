@@ -275,3 +275,39 @@ it('reads the hash in the base64 form admin:setup prints, which has no "$" to lo
     }
     expect($admin['password_hash'])->toBe($hash);
 });
+
+it('shows trends, health, filtered accounts and the activity log, all counts and no habit data', function () {
+    Queue::fake();
+    $secret = configureAdmin();
+    $this->freezeClock('2026-05-28T17:22:00Z');
+    $maya = $this->registerUser('Maya Chen', 'maya@example.test');
+    $kofi = $this->registerUser('Kofi', 'kofi@example.test');
+    $this->sync($maya['token'], [M::habitCreate((string) Str::uuid7(), overrides: ['name' => 'Secret morning swim'])])
+        ->assertJsonPath('data.acks.0.status', 'accepted');
+    adminSignIn($this, $secret, '2026-05-29T09:00:00Z');
+    $this->post("/admin/accounts/{$kofi['id']}/suspend");
+
+    $this->get('/admin')->assertOk()
+        ->assertSee('Live accounts')->assertSee('Sign-ups')->assertSee('Active accounts per day')
+        ->assertSeeText('2 sign-ups this week')->assertDontSee('Secret morning swim');
+    $this->get('/admin/health')->assertOk()->assertSee('Failed jobs')->assertSee('No failed jobs.');
+    $this->get('/admin/accounts?status=suspended')->assertOk()->assertSee('kofi@example.test')->assertDontSee('maya@example.test');
+    $this->get('/admin/accounts?status=active&sort=email')->assertOk()->assertSee('maya@example.test')->assertDontSee('kofi@example.test');
+    $this->get('/admin/activity?action=account.suspend')->assertOk()->assertSee('account.suspend')->assertDontSee('admin.sign_in</b>', false);
+});
+
+it('retries and removes one failed job, by type only', function () {
+    $secret = configureAdmin();
+    DB::table('failed_jobs')->insert([
+        'uuid' => '01900000-0000-7000-8000-0000000000f1', 'connection' => 'database', 'queue' => 'default',
+        'payload' => json_encode(['displayName' => 'App\Jobs\PurgeAccountJob', 'data' => ['secret' => 'never shown']]),
+        'exception' => "RuntimeException: maya@example.test broke\n#0 trace", 'failed_at' => '2026-10-26 10:00:00',
+    ]);
+    adminSignIn($this, $secret);
+
+    $this->get('/admin/health')->assertOk()->assertSee('PurgeAccountJob')->assertSee('RuntimeException')
+        ->assertDontSee('never shown')->assertDontSee('maya@example.test');
+    $this->post('/admin/health/failed/01900000-0000-7000-8000-0000000000f1/forget')->assertRedirect();
+    expect(DB::table('failed_jobs')->count())->toBe(0)
+        ->and(DB::table('admin_actions')->pluck('action')->all())->toContain('server.forget_job');
+});

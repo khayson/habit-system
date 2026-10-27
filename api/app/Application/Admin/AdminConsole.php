@@ -7,6 +7,7 @@ use App\Domain\Clock;
 use App\Models\User;
 use App\Support\UtcTime;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use stdClass;
@@ -22,19 +23,35 @@ final readonly class AdminConsole
 
     public function __construct(private Clock $clock, private AccountDeletionService $deletions) {}
 
+    public const array STATUSES = ['all', 'active', 'suspended', 'deletion'];
+
+    public const array SORTS = ['newest', 'oldest', 'last_active', 'email'];
+
     /**
-     * @return array{rows: list<array{id: string, name: string, email: string, joined: string, status: string, devices: int}>, more: bool}
+     * One page of accounts, filtered by [$status] and ordered by [$sort]. Last active is the
+     * latest use of any of the account's sign-ins.
+     *
+     * @return array{rows: list<array{id: string, name: string, email: string, joined: string, last_active: string|null, status: string, devices: int}>, more: bool, counts: array<string, int>}
      */
-    public function accounts(string $search, int $page): array
+    public function accounts(string $search, int $page, string $status = 'all', string $sort = 'newest'): array
     {
-        $query = DB::table('users')->orderByDesc('created_at');
+        $tokens = DB::table('personal_access_tokens')->where('tokenable_type', (new User)->getMorphClass())
+            ->selectRaw('tokenable_id, max(last_used_at) as last_active, count(*) as devices')->groupBy('tokenable_id');
+        $query = DB::table('users')->leftJoinSub($tokens, 't', 't.tokenable_id', '=', 'users.id')
+            ->select('users.*', 't.last_active', 't.devices');
         $search = trim($search);
         if ($search !== '') {
             $like = '%'.addcslashes(mb_strtolower($search), '%_\\').'%';
-            $query->where(fn ($q) => $q->where('email', 'like', $like)->orWhereRaw('lower(name) like ?', [$like]));
+            $query->where(fn ($q) => $q->where('users.email', 'like', $like)->orWhereRaw('lower(users.name) like ?', [$like]));
         }
-        $rows = $query->offset(max(0, $page - 1) * self::PAGE_SIZE)->limit(self::PAGE_SIZE + 1)->get();
-        $devices = $this->deviceCounts(array_values(array_map(strval(...), $rows->pluck('id')->all())));
+        $this->whereStatus($query, $status);
+        match ($sort) {
+            'oldest' => $query->orderBy('users.created_at'),
+            'last_active' => $query->orderByRaw('t.last_active desc nulls last'),
+            'email' => $query->orderBy('users.email'),
+            default => $query->orderByDesc('users.created_at'),
+        };
+        $rows = $query->orderBy('users.id')->offset(max(0, $page - 1) * self::PAGE_SIZE)->limit(self::PAGE_SIZE + 1)->get();
 
         return [
             'rows' => array_values($rows->take(self::PAGE_SIZE)->map(fn (stdClass $u) => [
@@ -42,11 +59,56 @@ final readonly class AdminConsole
                 'name' => (string) $u->name,
                 'email' => (string) $u->email,
                 'joined' => UtcTime::format(CarbonImmutable::parse((string) $u->created_at)),
+                'last_active' => $u->last_active === null ? null : UtcTime::format(CarbonImmutable::parse((string) $u->last_active)),
                 'status' => $this->status($u),
-                'devices' => $devices[$u->id] ?? 0,
+                'devices' => (int) ($u->devices ?? 0),
             ])->all()),
             'more' => $rows->count() > self::PAGE_SIZE,
+            'counts' => array_combine(self::STATUSES, array_map(function (string $s) {
+                $q = DB::table('users');
+                $this->whereStatus($q, $s);
+
+                return $q->count();
+            }, self::STATUSES)),
         ];
+    }
+
+    /**
+     * The audit, newest first, optionally one action and a UTC date range (inclusive dates).
+     *
+     * @return array{rows: list<array{action: string, subject: string|null, detail: string, at: string}>, more: bool, actions: list<string>}
+     */
+    public function actions(string $action, string $from, string $to, int $page): array
+    {
+        $query = DB::table('admin_actions');
+        if ($action !== '') {
+            $query->where('action', $action);
+        }
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $from)) {
+            $query->where('created_at', '>=', "{$from} 00:00:00+00");
+        }
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $to)) {
+            $query->whereRaw("created_at < (?::date + 1)::timestamp at time zone 'UTC'", [$to]);
+        }
+        $rows = $query->orderByDesc('created_at')->orderByDesc('id')
+            ->offset(max(0, $page - 1) * 50)->limit(51)->get();
+
+        return [
+            'rows' => array_values($rows->take(50)->map(fn (stdClass $a) => $this->presentAction($a))->all()),
+            'more' => $rows->count() > 50,
+            'actions' => array_values(array_map(strval(...), DB::table('admin_actions')->distinct()->orderBy('action')->pluck('action')->all())),
+        ];
+    }
+
+    /** @param Builder $query */
+    private function whereStatus($query, string $status): void
+    {
+        match ($status) {
+            'active' => $query->whereNull('users.deleted_at')->whereNull('users.suspended_at'),
+            'suspended' => $query->whereNull('users.deleted_at')->whereNotNull('users.suspended_at'),
+            'deletion' => $query->whereNotNull('users.deleted_at'),
+            default => null,
+        };
     }
 
     /**
@@ -153,12 +215,18 @@ final readonly class AdminConsole
     public function recentActions(int $limit = 20): array
     {
         return array_values(DB::table('admin_actions')->orderByDesc('created_at')->orderByDesc('id')->limit($limit)->get()
-            ->map(fn (stdClass $a) => [
-                'action' => (string) $a->action,
-                'subject' => $a->subject === null ? null : (string) $a->subject,
-                'detail' => (string) $a->detail === '{}' || (string) $a->detail === '[]' ? '' : (string) $a->detail,
-                'at' => UtcTime::format(CarbonImmutable::parse((string) $a->created_at)),
-            ])->all());
+            ->map(fn (stdClass $a) => $this->presentAction($a))->all());
+    }
+
+    /** @return array{action: string, subject: string|null, detail: string, at: string} */
+    private function presentAction(stdClass $a): array
+    {
+        return [
+            'action' => (string) $a->action,
+            'subject' => $a->subject === null ? null : (string) $a->subject,
+            'detail' => (string) $a->detail === '{}' || (string) $a->detail === '[]' ? '' : (string) $a->detail,
+            'at' => UtcTime::format(CarbonImmutable::parse((string) $a->created_at)),
+        ];
     }
 
     /** An account not deleted (purge pending accounts are not managed here). */
@@ -184,20 +252,5 @@ final readonly class AdminConsole
             $user->suspended_at !== null => 'suspended',
             default => 'active',
         };
-    }
-
-    /**
-     * @param  list<string>  $ids
-     * @return array<string, int>
-     */
-    private function deviceCounts(array $ids): array
-    {
-        if ($ids === []) {
-            return [];
-        }
-
-        return DB::table('personal_access_tokens')->where('tokenable_type', (new User)->getMorphClass())
-            ->whereIn('tokenable_id', $ids)->selectRaw('tokenable_id, count(*) as n')->groupBy('tokenable_id')
-            ->pluck('n', 'tokenable_id')->map(fn ($n) => (int) $n)->all();
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Application\Admin\AdminAuth;
 use App\Application\Admin\AdminConsole;
+use App\Application\Admin\AdminStats;
 use App\Application\Notices\NoticeBoard;
 use App\Application\Ops\OpsStatus;
 use App\Application\Ops\Ticker;
@@ -70,9 +71,63 @@ final readonly class AdminController
         return redirect('/admin/login');
     }
 
-    public function dashboard(OpsStatus $status): View
+    public function dashboard(OpsStatus $status, AdminStats $stats): View
     {
-        return view('admin.dashboard', ['s' => $status->collect(), 'actions' => $this->console->recentActions()]);
+        return view('admin.dashboard', [
+            's' => $status->collect(),
+            'kpi' => $stats->kpis(),
+            'series' => $stats->series(),
+            'actions' => $this->console->recentActions(8),
+        ]);
+    }
+
+    public function health(OpsStatus $status, AdminStats $stats): View
+    {
+        return view('admin.health', ['s' => $status->collect(), 'jobs' => $stats->jobs()]);
+    }
+
+    public function retryJob(AdminStats $stats, string $uuid): RedirectResponse
+    {
+        $ok = $stats->retryFailed($uuid);
+        if ($ok) {
+            $this->console->audit('server.retry_job', $uuid);
+        }
+
+        return back()->with('status', $ok ? 'Queued again; the next tick runs it.' : 'That job is no longer in the failed list.');
+    }
+
+    public function forgetJob(AdminStats $stats, string $uuid): RedirectResponse
+    {
+        $ok = $stats->forgetFailed($uuid);
+        if ($ok) {
+            $this->console->audit('server.forget_job', $uuid);
+        }
+
+        return back()->with('status', $ok ? 'Removed from the failed list.' : 'That job is no longer in the failed list.');
+    }
+
+    public function forgetAllJobs(AdminStats $stats): RedirectResponse
+    {
+        $count = $stats->forgetAllFailed();
+        $this->console->audit('server.forget_failed_jobs', null, ['count' => $count]);
+
+        return back()->with('status', "Cleared {$count} failed jobs.");
+    }
+
+    public function activity(Request $request): View
+    {
+        $page = max(1, (int) $request->query('page', '1'));
+        $filters = [
+            'action' => (string) $request->query('action', ''),
+            'from' => (string) $request->query('from', ''),
+            'to' => (string) $request->query('to', ''),
+        ];
+
+        return view('admin.activity', [
+            ...$this->console->actions($filters['action'], $filters['from'], $filters['to'], $page),
+            'filters' => $filters,
+            'page' => $page,
+        ]);
     }
 
     public function runTick(Ticker $ticker): RedirectResponse
@@ -95,8 +150,13 @@ final readonly class AdminController
     {
         $page = max(1, (int) $request->query('page', '1'));
         $search = (string) $request->query('q', '');
+        $status = in_array($request->query('status'), AdminConsole::STATUSES, true) ? (string) $request->query('status') : 'all';
+        $sort = in_array($request->query('sort'), AdminConsole::SORTS, true) ? (string) $request->query('sort') : 'newest';
 
-        return view('admin.accounts', [...$this->console->accounts($search, $page), 'q' => $search, 'page' => $page]);
+        return view('admin.accounts', [
+            ...$this->console->accounts($search, $page, $status, $sort),
+            'q' => $search, 'page' => $page, 'status' => $status, 'sort' => $sort,
+        ]);
     }
 
     public function account(string $id): View
